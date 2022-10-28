@@ -58,6 +58,13 @@ function ENT:Initialize()
 end
 
 
+function ENT:SetupDataTables()
+
+
+
+end
+
+
 function ENT:Think()
 
 end
