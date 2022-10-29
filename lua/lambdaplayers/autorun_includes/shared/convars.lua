@@ -22,6 +22,11 @@ end
 -- Why not?
 local CreateLambdaConvar = CreateLambdaConvar 
 
-
+-- Voice Related Convars
 CreateLambdaConvar( "lambdaplayers_voicevolume", 1, true, true, false, "The volume of the lambda player voices", 0, 10 )
 CreateLambdaConvar( "lambdaplayers_globalvoice", 0, true, true, false, "If the lambda player voices should be heard globally", 0, 1 )
+--
+
+-- DEBUGGING CONVARS 
+CreateLambdaConvar( "lambdaplayers_debug", 0, false, false, false, "Debug mode", 0, 1 )
+--

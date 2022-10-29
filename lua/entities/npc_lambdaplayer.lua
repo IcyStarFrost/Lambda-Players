@@ -79,11 +79,10 @@ function ENT:Initialize()
         self:SwitchWeapon( self.l_Weapon )
         
         self:SetWeaponENT( self.WeaponEnt )
-        
+
     elseif CLIENT then
 
         self.GetPlayerColor = function() return self:GetPlyColor() end
-
 
     end
 
@@ -96,7 +95,7 @@ function ENT:Initialize()
         self:SetFlexWeight(sidewayFlex, 0.5)
     end
 
-    self:MoveMouth(0)
+    self:MoveMouth( 0 )
 
 end
 

@@ -5,12 +5,15 @@ local ipairs = ipairs
 local string_find = string.find
 local random = math.random
 local file_Find = file.Find
+local table_Empty = table.Empty
 local string_Replace = string.Replace
+local debugmode = GetConVar( "lambdaplayers_debug" )
 
 -- Anything Shared can go here
 
--- Function for debugging prints. TODO: Make a convar that controls this
+-- Function for debugging prints
 function ENT:DebugPrint( ... )
+    if !debugmode:GetBool() then return end
     print( self:GetLambdaName() .. " EntIndex = ( " .. self:EntIndex() .. " )" .. ": ", ... )
 end
 
@@ -133,6 +136,8 @@ if SERVER then
 
             filepath = string_Replace( filepath, "*", soundfiles[ random( #soundfiles ) ] )
             filepath = string_Replace( filepath, "sound/", "")
+
+            table_Empty( soundfiles )
         end
 
         net.Start( "lambdaplayers_playsoundfile" )
