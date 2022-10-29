@@ -56,6 +56,7 @@ function ENT:Initialize()
         self.IsMoving = false
         self.l_State = "Idle" -- See sv_states.lua
         self.l_Weapon = "NONE"
+        self.l_WeaponUseCooldown = 0
 
         self.loco:SetJumpHeight( 60 )
         self.loco:SetAcceleration( 1000 )
@@ -86,6 +87,7 @@ function ENT:Initialize()
 
     end
 
+    -- For some reason for the voice chat flexes we have to do this in order to get it to work
     local sidewayFlex = self:GetFlexIDByName("mouth_sideways")
     if sidewayFlex and self:GetFlexBounds(sidewayFlex) == -1 and self:GetFlexWeight(sidewayFlex) == 0.0 then
         self:SetFlexWeight(sidewayFlex, 0.5)
@@ -108,6 +110,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", 0, "Crouch" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
+    self:NetworkVar( "Entity", 1, "Enemy" )
 
     self:NetworkVar( "Vector", 0, "PlyColor" )
     self:NetworkVar( "Vector", 1, "PhysColor" )

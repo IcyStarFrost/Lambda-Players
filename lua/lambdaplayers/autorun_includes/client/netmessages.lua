@@ -8,6 +8,7 @@ local math_Clamp = math.Clamp
 net.Receive( "lambdaplayers_becomeragdoll", function() 
     local ent = net.ReadEntity()
     local force = net.ReadVector()
+    local offset = net.ReadVector()
     local colvec = net.ReadVector()
 
     if !IsValid( ent ) then return end
@@ -15,11 +16,11 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
     ent.ragdoll = ent:BecomeRagdollOnClient()
     ent.ragdoll.GetPlayerColor = function() return col end
 
-    for i=1, 2 do
+    for i=1, 3 do
         local phys = ent.ragdoll:GetPhysicsObjectNum( i )
 
         if IsValid( phys ) then
-            phys:ApplyForceCenter( force )
+            phys:ApplyForceOffset( force, offset )
         end
 
     end
