@@ -79,9 +79,7 @@ function ENT:Initialize()
         self:SwitchWeapon( self.l_Weapon )
         
         self:SetWeaponENT( self.WeaponEnt )
-
-        self:PlaySoundFile( "vo/k_lab/*", true )
-
+        
     elseif CLIENT then
 
         self.GetPlayerColor = function() return self:GetPlyColor() end

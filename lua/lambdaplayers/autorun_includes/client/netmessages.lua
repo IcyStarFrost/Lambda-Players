@@ -2,6 +2,7 @@
 local IsValid = IsValid
 local table_insert = table.insert
 local RealTime = RealTime
+local math_Clamp = math.Clamp
 
 -- Net sent from ENT:OnKilled()
 net.Receive( "lambdaplayers_becomeragdoll", function() 
@@ -39,7 +40,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
     sound.PlayFile( "sound/" .. soundname, flag, function( snd, ID, errorname )
         if ID == 21 then
             print( "Lambda Players Voice Chat Warning: Sound file " ..soundname .. " has a stereo track and won't be played in 3d. Sound will continue to play" )
-            PlaySoundFile( ent, soundname, false )
+            PlaySoundFile( ent, soundname, index, shouldstoponremove, false )
             return
         elseif ID == 2 then
             print( "Lambda Players Voice Chat Error: Sound file " ..soundname .. " failed to open!" )
@@ -70,7 +71,12 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                     local ply = LocalPlayer()
 
                     local dist = ply:GetPos():DistToSqr( ent:GetPos() )
-                    volume = math.Clamp( volumeconvar:GetFloat() / ( dist / ( 7000 * 7000 ) ), 0, volumeconvar:GetFloat() )
+
+                    if dist < ( 2000 * 2000 ) then
+                        volume = math_Clamp( volumeconvar:GetFloat() / ( dist / ( 90 * 90 ) ), 0, volumeconvar:GetFloat() )
+                    else
+                        volume = 0
+                    end
                 else
                     snd:SetPos( ent:GetPos() )
                     volume = volumeconvar:GetFloat()

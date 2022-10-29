@@ -6,7 +6,6 @@ if SERVER then
 
     function ENT:OnKilled( info )
         
-
         net.Start( "lambdaplayers_becomeragdoll" )
             net.WriteEntity( self )
             net.WriteVector( info:GetDamageForce() )
