@@ -18,6 +18,9 @@ print("\n")
 local sharedfiles = file.Find( "lambdaplayers/autorun_includes/shared/*", "LUA", "nameasc" )
 
 for k, luafile in ipairs( sharedfiles ) do
+    if SERVER then
+        AddCSLuaFile( "lambdaplayers/autorun_includes/shared/" .. luafile )
+    end
     include( "lambdaplayers/autorun_includes/shared/" .. luafile )
     print( "Lambda Players: Included Shared Lua File [ " .. luafile .. " ]" )
 end

@@ -2,15 +2,31 @@
 local RandomPairs = RandomPairs
 local IsValid = IsValid
 local ipairs = ipairs
-
+local string_find = string.find
+local random = math.random
+local file_Find = file.Find
+local string_Replace = string.Replace
 
 -- Anything Shared can go here
 
+-- Function for debugging prints. TODO: Make a convar that controls this
 function ENT:DebugPrint( ... )
-    print( self:GetLambdaName() .. " EntIndex = (" .. self:EntIndex() .. ")" .. ": ", ... )
+    print( self:GetLambdaName() .. " EntIndex = ( " .. self:EntIndex() .. " )" .. ": ", ... )
 end
 
+-- Creates a hook that will remove itself if it runs while the lambda is invalid
+function ENT:Hook( hookname, uniquename, func )
+    local id = self:EntIndex()
+    hook.Add( hookname, "lambdaplayershook" .. id .. "_" .. uniquename, function( ... )
+        if !IsValid( self ) then hook.Remove( hookname, "lambdaplayershook" .. id .. "_" .. uniquename ) return end 
+        func( ... )
+    end )
+end
 
+-- Removes a hook created by the function above
+function ENT:RemoveHook( hookname, uniquename )
+    hook.Remove( hookname, "lambdaplayershook" .. self:EntIndex() .. "_" .. uniquename )
+end
 
 function ENT:GetBoneTransformation( bone )
     local pos, ang = self:GetBonePosition( bone )
@@ -28,6 +44,7 @@ function ENT:GetBoneTransformation( bone )
     return { Pos = pos, Ang = ang }
 end
 
+-- Returns a table that contains a position and angle with the specified type. hand or eyes
 function ENT:GetAttachmentPoint( pointtype )
 
     if pointtype == "hand" then
@@ -106,6 +123,25 @@ if SERVER then
         end
     end
 
+    -- Makes the Lambda say the specified file or file path.
+    -- Random sound files for example, something/idle/*
+    function ENT:PlaySoundFile( filepath, stoponremove )
+        local isdir = string_find( filepath, "/*" )
+
+        if isdir then
+            local soundfiles = file_Find( "sound/" .. filepath, "GAME", "nameasc" )
+
+            filepath = string_Replace( filepath, "*", soundfiles[ random( #soundfiles ) ] )
+            filepath = string_Replace( filepath, "sound/", "")
+        end
+
+        net.Start( "lambdaplayers_playsoundfile" )
+            net.WriteEntity( self )
+            net.WriteString( filepath )
+            net.WriteBool( stoponremove )
+            net.WriteUInt( self:GetCreationID(), 32 )
+        net.Broadcast()
+    end
 
 elseif CLIENT then
 

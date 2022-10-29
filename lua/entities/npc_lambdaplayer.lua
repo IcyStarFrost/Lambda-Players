@@ -4,6 +4,7 @@ ENT.Base = "base_nextbot"
 ENT.Spawnable = true
 ENT.PrintName = "Lambda Player"
 ENT.Author = "StarFrost"
+ENT.IsLambdaPlayer = true
 
 --- Include files based on sv_ sh_ or cl_
 local ENTFiles = file.Find( "lambdaplayers/lambda/*", "LUA", "nameasc" )
@@ -47,17 +48,21 @@ function ENT:Initialize()
 
     if SERVER then
 
+        self:SetModel( _LAMBDAPLAYERSDEFAULTMDLS[ random( #_LAMBDAPLAYERSDEFAULTMDLS ) ] )
+
+        self:SetPlyColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
+        self:SetPhysColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
+
         self.IsMoving = false
         self.l_State = "Idle" -- See sv_states.lua
         self.l_Weapon = "NONE"
-        
-
-        self:SetModel( _LAMBDAPLAYERSDEFAULTMDLS[ random( #_LAMBDAPLAYERSDEFAULTMDLS ) ] )
 
         self.loco:SetJumpHeight( 60 )
         self.loco:SetAcceleration( 1000 )
         self.loco:SetDeceleration( 1000 )
         self.loco:SetStepHeight( 30 )
+        self:SetMaxHealth( 100 )
+        self:SetHealth( 100 )
         
         self:AddFlags( FL_OBJECT + FL_NPC + FL_CLIENT )
 
@@ -75,11 +80,25 @@ function ENT:Initialize()
         
         self:SetWeaponENT( self.WeaponEnt )
 
+        self:PlaySoundFile( "vo/k_lab/*", true )
+
     elseif CLIENT then
 
+        self.GetPlayerColor = function() return self:GetPlyColor() end
 
 
     end
+
+    local sidewayFlex = self:GetFlexIDByName("mouth_sideways")
+    if sidewayFlex and self:GetFlexBounds(sidewayFlex) == -1 and self:GetFlexWeight(sidewayFlex) == 0.0 then
+        self:SetFlexWeight(sidewayFlex, 0.5)
+    end
+    sidewayFlex = self:GetFlexIDByName("jaw_sideways")
+    if sidewayFlex and self:GetFlexBounds(sidewayFlex) == -1 and self:GetFlexWeight(sidewayFlex) == 0.0 then
+        self:SetFlexWeight(sidewayFlex, 0.5)
+    end
+
+    self:MoveMouth(0)
 
 end
 
@@ -92,6 +111,11 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", 0, "Crouch" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
+
+    self:NetworkVar( "Vector", 0, "PlyColor" )
+    self:NetworkVar( "Vector", 1, "PhysColor" )
+
+    self:SetLambdaName( "Lambda Player" )
 
 end
 
