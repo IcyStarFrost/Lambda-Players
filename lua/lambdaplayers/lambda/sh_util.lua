@@ -6,6 +6,7 @@ local string_find = string.find
 local random = math.random
 local file_Find = file.Find
 local table_Empty = table.Empty
+local timer_simple = timer.Simple
 local string_Replace = string.Replace
 local debugmode = GetConVar( "lambdaplayers_debug" )
 
@@ -32,6 +33,14 @@ end
 -- Removes a hook created by the function above
 function ENT:RemoveHook( hookname, uniquename )
     hook.Remove( hookname, "lambdaplayershook" .. self:EntIndex() .. "_" .. uniquename )
+end
+
+-- Creates a simple timer that won't run if we are invalid or dead. ignoredead var will run the timer even if self:GetIsDead() is true
+function ENT:SimpleTimer( delay, func, ignoredead )
+    timer_simple( delay, function() 
+        if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) then return end
+        func()
+    end )
 end
 
 function ENT:GetBoneTransformation( bone )
@@ -131,6 +140,7 @@ if SERVER then
 
     -- Respawns the lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time
     function ENT:LambdaRespawn()
+        self:DebugPrint( "Respawned" )
         self:SetIsDead( false )
         self:SetPos( self.l_SpawnPos )
         self:SetNoDraw( false )
@@ -146,6 +156,10 @@ if SERVER then
         self:SetState( "Idle" )
         self:SetCrouch( false )
         self:SetEnemy( nil )
+
+        net.Start( "lambdaplayers_invalidateragdoll" )
+        net.WriteEntity( self )
+        net.Broadcast()
     end
 
     -- Returns a sequential table full of nav areas new the position

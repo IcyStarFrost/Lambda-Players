@@ -9,7 +9,7 @@ if SERVER then
         self:SetIsDead( true )
         self.WeaponEnt:SetNoDraw( true )
         self.WeaponEnt:DrawShadow( false )
-        self:SetCollisionGroup( COLLISION_GROUP_VEHICLE )
+        self:SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE )
         self:SetNoDraw( true )
         self:DrawShadow( false )
         
@@ -21,9 +21,9 @@ if SERVER then
         net.Broadcast()
 
         if self:GetRespawn() then
-            SimpleTimer( 1, function() self:LambdaRespawn() end )
+            self:SimpleTimer( 1, function() self:LambdaRespawn() end, true )
         else
-            SimpleTimer( 0.1, function() self:Remove() end )
+            self:SimpleTimer( 0.1, function() self:Remove() end, true )
         end
 
     end

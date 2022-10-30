@@ -16,6 +16,8 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
     ent.ragdoll = ent:BecomeRagdollOnClient()
     ent.ragdoll.GetPlayerColor = function() return col end
 
+    table_insert( _LAMBDAPLAYERSClientSideRagdolls, ent.ragdoll )
+
     for i=1, 3 do
         local phys = ent.ragdoll:GetPhysicsObjectNum( i )
 
@@ -121,7 +123,15 @@ net.Receive("lambdaplayers_playsoundfile", function()
     local shouldstoponremove = net.ReadBool()
     local index = net.ReadUInt( 32 )
 
-    if !LambdaIsValid(lambda) then return end
+    if !IsValid(lambda) then return end
 
     PlaySoundFile( lambda, soundname, index, shouldstoponremove, true )
 end)
+
+net.Receive( "lambdaplayers_invalidateragdoll", function()
+    local ent = net.ReadEntity()
+
+    if !IsValid( ent ) then return end
+
+    ent.ragdoll = nil
+end )

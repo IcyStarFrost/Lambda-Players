@@ -47,7 +47,7 @@ end
 
 function ENT:Initialize()
 
-    self.l_SpawnPos = self:GetPos()
+    self.l_SpawnPos = self:GetPos() -- Used for Respawning
 
     if SERVER then
 
@@ -56,9 +56,12 @@ function ENT:Initialize()
         self:SetPlyColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
         self:SetPhysColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
 
+        self.l_PlyRealColor = self:GetPlyColor():ToColor()
+        self.l_PhysRealColor = self:GetPhysColor():ToColor()
+
         self.IsMoving = false
         self.l_State = "Idle" -- See sv_states.lua
-        self.l_Weapon = "NONE"
+        self.l_Weapon = ""
         self.l_WeaponUseCooldown = 0
 
         self.loco:SetJumpHeight( 60 )
@@ -92,6 +95,7 @@ function ENT:Initialize()
         self.GetPlayerColor = function() return self:GetPlyColor() end
 
     end
+
 
     -- For some reason for the voice chat flexes we have to do this in order to get it to work
     local sidewayFlex = self:GetFlexIDByName("mouth_sideways")
@@ -156,7 +160,7 @@ function ENT:Think()
 end
 
 function ENT:BodyUpdate()
-    if self.IsMoving then
+    if !self.loco:GetVelocity():IsZero() then
         self:BodyMoveXY()
         return
     end

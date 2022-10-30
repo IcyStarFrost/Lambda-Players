@@ -9,7 +9,7 @@ function ENT:SwitchWeapon( weaponname )
     if !weapondata or weaponname == self.l_Weapon then return end
 
     local oldwepdata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
-    if isfunction( oldwepdata.OnUnequip ) then oldwepdata.OnUnequip( self, wepent ) end
+    if oldwepdata and isfunction( oldwepdata.OnUnequip ) then oldwepdata.OnUnequip( self, wepent ) end
 
     local wepent = self.WeaponEnt
 
