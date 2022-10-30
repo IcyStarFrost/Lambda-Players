@@ -65,6 +65,7 @@ function ENT:Initialize()
         self.IsMoving = false
         self.l_State = "Idle" -- See sv_states.lua
         self.l_Weapon = ""
+        self.debuginitstart = SysTime()
         self.l_WeaponUseCooldown = 0
 
         self.loco:SetJumpHeight( 60 )
@@ -175,7 +176,7 @@ end
 
 
 function ENT:RunBehaviour()
-
+    self:DebugPrint( "Initialized their AI in ", SysTime() - self.debuginitstart, " seconds" )
 
     while true do
 

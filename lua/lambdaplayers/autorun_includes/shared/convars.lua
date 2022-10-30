@@ -39,7 +39,7 @@ local CreateLambdaConvar = CreateLambdaConvar
 -- These Convar Functions are capable of creating spawnmenu settings automatically.
 
 ---------- Valid Table options ----------
--- type | String | Must be one of the following: Slider, Bool
+-- type | String | Must be one of the following: Slider, Bool, Text
 -- name | String | Pretty name
 -- decimals | Number | Slider only! How much decimals the slider should have
 -- category | String | The Lambda Settings category to place the convar into. Will create one if one doesn't exist already

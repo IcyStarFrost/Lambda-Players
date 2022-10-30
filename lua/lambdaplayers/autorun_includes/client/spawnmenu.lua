@@ -16,10 +16,13 @@ local function AddLambdaPlayersoptions()
                 if v.category != categoryname then continue end
 
                 if v.type == "Slider" then
-                    panel:NumSlider( v.name, v.convar, v.min, v.max, v.decimals )
+                    panel:NumSlider( v.name, v.convar, v.min, v.max, v.decimals or 2 )
                     panel:ControlHelp( v.desc )
                 elseif v.type == "Bool" then
                     panel:CheckBox( v.name, v.convar )
+                    panel:ControlHelp( v.desc )
+                elseif v.type == "Text" then
+                    panel:TextEntry( v.name, v.convar )
                     panel:ControlHelp( v.desc )
                 end
 
@@ -33,7 +36,7 @@ local function AddLambdaPlayersoptions()
 end
 
 local function CreateLambdaPlayersSettings()
-    spawnmenu.AddToolTab( "Lambda Player", "#Lambda Player", "icon/physgun.png" )
+    spawnmenu.AddToolTab( "Lambda Player", "#Lambda Player", "lambdaplayers/icon/lambda.png" )
 end
 
 hook.Add( "AddToolMenuTabs", "AddLambdaPlayertabs", CreateLambdaPlayersSettings )

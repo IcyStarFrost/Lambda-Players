@@ -83,6 +83,10 @@ _LAMBDAPLAYERSDEFAULTMDLS = {
     "models/player/zombie_fast.mdl"
 }
 
+for k, v in ipairs( _LAMBDAPLAYERSDEFAULTMDLS ) do
+    util.PrecacheModel( v )
+end
+
 _LAMBDAPLAYERSFootstepMaterials = {
     [MAT_ANTLION] = {"physics/flesh/flesh_impact_hard1.wav","physics/flesh/flesh_impact_hard2.wav","physics/flesh/flesh_impact_hard3.wav","physics/flesh/flesh_impact_hard4.wav","physics/flesh/flesh_impact_hard5.wav","physics/flesh/flesh_impact_hard6.wav"},
     [MAT_BLOODYFLESH] = {"physics/flesh/flesh_impact_hard1.wav","physics/flesh/flesh_impact_hard2.wav","physics/flesh/flesh_impact_hard3.wav","physics/flesh/flesh_impact_hard4.wav","physics/flesh/flesh_impact_hard5.wav","physics/flesh/flesh_impact_hard6.wav"},

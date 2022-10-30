@@ -32,6 +32,7 @@ end
 
 -- Removes a hook created by the function above
 function ENT:RemoveHook( hookname, uniquename )
+    self:DebugPrint( "Removed a hook: " .. hookname .. " | " .. uniquename )
     hook.Remove( hookname, "lambdaplayershook" .. self:EntIndex() .. "_" .. uniquename )
 end
 
