@@ -2,6 +2,7 @@
 local LambdaIsValid = LambdaIsValid
 local table_insert = table.insert
 local RealTime = RealTime
+local IsValid = IsValid
 local math_Clamp = math.Clamp
 
 -- Net sent from ENT:OnKilled()
@@ -13,10 +14,14 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
 
     if !IsValid( ent ) then return end
 
-    ent.ragdoll = ent:BecomeRagdollOnClient()
-    ent.ragdoll.GetPlayerColor = function() return col end
+    local ragdoll = ent:BecomeRagdollOnClient()
+    ragdoll.GetPlayerColor = function() return col end
 
-    table_insert( _LAMBDAPLAYERSClientSideRagdolls, ent.ragdoll )
+    ent.ragdoll = ragdoll
+
+    --timer.Simple( 1, function() ragdoll:Remove() end )
+
+    table_insert( _LAMBDAPLAYERSClientSideRagdolls, ragdoll )
 
     for i=1, 3 do
         local phys = ent.ragdoll:GetPhysicsObjectNum( i )
@@ -34,7 +39,10 @@ local volumeconvar = GetConVar( "lambdaplayers_voicevolume" )
 local globalconvar = GetConVar( "lambdaplayers_globalvoice" )
 
 
+
 local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
+
+    if IsValid( ent.l_VoiceSnd ) then ent.l_VoiceSnd:Stop() end
 
     local flag = globalconvar:GetBool() and "" or is3d and "3d mono" or "mono"
 
@@ -48,7 +56,9 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             return
         end
 
-        if LambdaIsValid( snd ) then
+        if IsValid( snd ) then
+
+            ent.l_VoiceSnd = snd
 
             if !globalconvar:GetBool() and is3d then
                 snd:Set3DFadeDistance( 300, 0 )
@@ -62,18 +72,25 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             local num
             local realtime
             local num2 
+            local lastpos
             local tickent -- This variable is used so we don't redefine ent and can allow the sound to return to the Lambda when they respawn
 
+            -- This has proved to be a bit of a challenge.
+            -- There were issues with the sounds not going back the lambda player when they respawn and there were issues when the ragdoll gets removed.
+            -- Right now this code seems to work just as I think I want it to. Unsure if it could be optimized better but to me it looks as good as it is gonna get
+
             hook.Add( "Tick", "lambdaplayersvoicetick" .. index, function()
-                tickent = LambdaIsValid( ent ) and ent or IsValid( ent.ragdoll ) and ent.ragdoll or tickent
-                if !LambdaIsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
+                if !LambdaIsValid( ent ) and shouldstoponremove then snd:Stop() return end
+                if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
                 if RealTime() > RealTime() + length then hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
-                if !LambdaIsValid( tickent ) then if shouldstoponremove then snd:Stop() end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
+
+                tickent = LambdaIsValid( ent ) and ent or IsValid( ent.ragdoll ) and ent.ragdoll or tickent
 
                 if !globalconvar:GetBool() and !is3d then
                     local ply = LocalPlayer()
+                    lastpos = IsValid( tickent ) and tickent:GetPos() or lastpos
 
-                    local dist = ply:GetPos():DistToSqr( tickent:GetPos() )
+                    local dist = ply:GetPos():DistToSqr( lastpos )
 
                     if dist < ( 2000 * 2000 ) then
                         volume = math_Clamp( volumeconvar:GetFloat() / ( dist / ( 90 * 90 ) ), 0, volumeconvar:GetFloat() )
@@ -81,17 +98,19 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                         volume = 0
                     end
                 else
-                    snd:SetPos( tickent:GetPos() )
+                    lastpos = IsValid( tickent ) and tickent:GetPos() or lastpos
+                    snd:SetPos( lastpos )
                     volume = volumeconvar:GetFloat()
                 end
 
                 snd:SetVolume( volume )
 
-                local leftC, rightC = snd:GetLevel()
-                local voiceLvl = ((leftC + rightC) / 2)
-
 
                 if LambdaIsValid( tickent ) then 
+
+                    local leftC, rightC = snd:GetLevel()
+                    local voiceLvl = ((leftC + rightC) / 2)
+
                     snd:SetPos( tickent:GetPos() ) 
 
                     num = num or 0.0
@@ -124,6 +143,7 @@ net.Receive("lambdaplayers_playsoundfile", function()
     local index = net.ReadUInt( 32 )
 
     if !IsValid(lambda) then return end
+
 
     PlaySoundFile( lambda, soundname, index, shouldstoponremove, true )
 end)

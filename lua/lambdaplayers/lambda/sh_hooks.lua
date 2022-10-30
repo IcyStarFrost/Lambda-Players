@@ -15,8 +15,6 @@ if SERVER then
         self:DrawShadow( false )
 
         self:RemoveFlags( FL_OBJECT )
-
-        self:PlaySoundFile( "vo/breencast/*")
         
         net.Start( "lambdaplayers_becomeragdoll" )
             net.WriteEntity( self )
