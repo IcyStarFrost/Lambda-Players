@@ -5,6 +5,8 @@ local RealTime = RealTime
 local IsValid = IsValid
 local math_Clamp = math.Clamp
 
+local cleanupvar = GetConVar( "lambdaplayers_corpsecleanuptime" )
+
 -- Net sent from ENT:OnKilled()
 net.Receive( "lambdaplayers_becomeragdoll", function() 
     local ent = net.ReadEntity()
@@ -19,7 +21,9 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
 
     ent.ragdoll = ragdoll
 
-    --timer.Simple( 1, function() ragdoll:Remove() end )
+    local time = cleanupvar:GetInt()
+
+    if time != 0 then timer.Simple( time , function() ragdoll:Remove() end ) end
 
     table_insert( _LAMBDAPLAYERSClientSideRagdolls, ragdoll )
 
