@@ -5,6 +5,7 @@ local random = math.random
 if SERVER then
 
     function ENT:OnKilled( info )
+        if self:GetIsDead() then return end
 
         self:SetIsDead( true )
         self.WeaponEnt:SetNoDraw( true )
@@ -12,6 +13,10 @@ if SERVER then
         self:SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE )
         self:SetNoDraw( true )
         self:DrawShadow( false )
+
+        self:RemoveFlags( FL_OBJECT )
+
+        self:PlaySoundFile( "vo/breencast/*")
         
         net.Start( "lambdaplayers_becomeragdoll" )
             net.WriteEntity( self )
@@ -21,7 +26,7 @@ if SERVER then
         net.Broadcast()
 
         if self:GetRespawn() then
-            self:SimpleTimer( 1, function() self:LambdaRespawn() end, true )
+            self:SimpleTimer( 2, function() self:LambdaRespawn() end, true )
         else
             self:SimpleTimer( 0.1, function() self:Remove() end, true )
         end

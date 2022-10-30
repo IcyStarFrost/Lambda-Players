@@ -51,6 +51,9 @@ function ENT:Initialize()
 
     if SERVER then
 
+        self:SetSolid( SOLID_BBOX )
+        self:SetCollisionBounds( Vector( -17, -17, 0 ), Vector( 17, 17, 72 ) )
+        
         self:SetModel( _LAMBDAPLAYERSDEFAULTMDLS[ random( #_LAMBDAPLAYERSDEFAULTMDLS ) ] )
 
         self:SetPlyColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )

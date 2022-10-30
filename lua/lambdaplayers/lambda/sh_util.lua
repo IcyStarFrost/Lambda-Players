@@ -151,6 +151,7 @@ if SERVER then
         self.WeaponEnt:DrawShadow( false )
 
         self:SetHealth( self:GetMaxHealth() )
+        self:AddFlags( FL_OBJECT )
         self:SwitchWeapon( "NONE" )
         
         self:SetState( "Idle" )

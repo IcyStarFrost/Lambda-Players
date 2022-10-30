@@ -36,8 +36,6 @@ local globalconvar = GetConVar( "lambdaplayers_globalvoice" )
 
 local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
-    ent = LambdaIsValid( ent.ragdoll ) and ent.ragdoll or ent
-
     local flag = globalconvar:GetBool() and "" or is3d and "3d mono" or "mono"
 
     sound.PlayFile( "sound/" .. soundname, flag, function( snd, ID, errorname )
@@ -64,16 +62,18 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             local num
             local realtime
             local num2 
+            local tickent -- This variable is used so we don't redefine ent and can allow the sound to return to the Lambda when they respawn
 
             hook.Add( "Tick", "lambdaplayersvoicetick" .. index, function()
+                tickent = LambdaIsValid( ent ) and ent or IsValid( ent.ragdoll ) and ent.ragdoll or tickent
                 if !LambdaIsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
                 if RealTime() > RealTime() + length then hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
-                if !LambdaIsValid( ent ) then if shouldstoponremove then snd:Stop() end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
+                if !LambdaIsValid( tickent ) then if shouldstoponremove then snd:Stop() end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
 
                 if !globalconvar:GetBool() and !is3d then
                     local ply = LocalPlayer()
 
-                    local dist = ply:GetPos():DistToSqr( ent:GetPos() )
+                    local dist = ply:GetPos():DistToSqr( tickent:GetPos() )
 
                     if dist < ( 2000 * 2000 ) then
                         volume = math_Clamp( volumeconvar:GetFloat() / ( dist / ( 90 * 90 ) ), 0, volumeconvar:GetFloat() )
@@ -81,7 +81,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                         volume = 0
                     end
                 else
-                    snd:SetPos( ent:GetPos() )
+                    snd:SetPos( tickent:GetPos() )
                     volume = volumeconvar:GetFloat()
                 end
 
@@ -91,8 +91,8 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                 local voiceLvl = ((leftC + rightC) / 2)
 
 
-                if LambdaIsValid( ent ) then 
-                    snd:SetPos( ent:GetPos() ) 
+                if LambdaIsValid( tickent ) then 
+                    snd:SetPos( tickent:GetPos() ) 
 
                     num = num or 0.0
                     realtime = realtime or RealTime()
@@ -108,7 +108,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                     end
 
                     num2 = ( num <= 0.2 and num2 or ( voiceLvl / num ) )
-                    ent:LambdaMoveMouth( num2 )
+                    tickent:LambdaMoveMouth( num2 )
                 end
 
             end )    
