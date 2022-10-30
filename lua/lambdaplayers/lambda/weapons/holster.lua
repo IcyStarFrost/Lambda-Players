@@ -19,6 +19,8 @@
     callback | function | A function that will be called when the weapon is used. Return true if you are making a custom shooting/swinging code
     OnEquip | function | A function that will be called when the weapon is equipped
     OnUnequip | function | a function that will be called when the weapon is unequipped
+    bulletcount | Number | The amount of bullets to fire when used
+    tracername | String | Tracer name. Valid entries are Tracer, AR2Tracer, LaserTracer, AirboatGunHeavyTracer, and ToolTracer
 ]]
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {

@@ -1,6 +1,7 @@
 
 local isfunction = isfunction
 local random = math.random
+local RandomPairs = RandomPairs
 
 -- Switch to a weapon with the provided name.
 -- See the lambda/weapons folder for weapons. Check out the holster.lua file to see the current valid weapon settings
@@ -47,6 +48,8 @@ local function TranslateRandomization( string )
     end
 end
 
+local bullettbl = {}
+
 function ENT:UseWeapon( target )
     local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
     if !weapondata or CurTime() < self.l_WeaponUseCooldown then return end
@@ -59,18 +62,22 @@ function ENT:UseWeapon( target )
     local gesture = weapondata.attackanim
     local snd = weapondata.attacksnd
     local damage = weapondata.damage
-    local rateoffire = weapondata.rateoffire
+    local rateoffire = weapondata.rateoffire or 0
+    local num = weapondata.bulletcount or 1
+    local tracer = weapondata.tracername or "Tracer"
 
-    if ismelee then
+        
 
-        local hitsnd = weapondata.hitsnd
+    if callback == nil or isfunction( callback ) and !callback( self, wepent, target) then
 
-        if callback == nil or isfunction( callback ) and !callback( self, wepent, target) then
+        if ismelee then
+
+            local hitsnd = weapondata.hitsnd
 
             self.l_WeaponUseCooldown = CurTime() + rateoffire
 
             wepent:EmitSound( TranslateRandomization( snd ), 70, 100, 1, CHAN_WEAPON )
-        
+            
             self:RemoveGesture( gesture )
             self:AddGesture( gesture )
 
@@ -84,8 +91,43 @@ function ENT:UseWeapon( target )
             target:EmitSound( TranslateRandomization( hitsnd ), 70 )
 
             target:TakeDamageInfo( dmg )
+
+        else
+
+            self.l_WeaponUseCooldown = CurTime() + rateoffire
+
+            wepent:EmitSound( TranslateRandomization( snd ), 70, 100, 1, CHAN_WEAPON )
+
+            self:RemoveGesture( gesture )
+            self:AddGesture( gesture )
+
+            bullettbl.Attacker = self
+            bullettbl.Damage = damage
+            bullettbl.Force = damage
+            bullettbl.HullSize = 5
+            bullettbl.Num = num or 1
+            bullettbl.TracerName = tracer or "Tracer"
+            bullettbl.Dir = ( target:WorldSpaceCenter() - wepent:GetPos() ):GetNormalized()
+            bullettbl.Src = wepent:GetPos()
+            bullettbl.IgnoreEntity = self
+
+
         end
-        
+
+
     end
 
+
+
+
+end
+
+function ENT:SwitchToLethalWeapon()
+    if self.l_HasLethal then return end
+    for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
+        if v.islethal then
+            self:SwitchWeapon( k )
+            break
+        end
+    end
 end

@@ -63,10 +63,17 @@ function ENT:Initialize()
         self.l_PhysRealColor = self:GetPhysColor():ToColor()
 
         self.IsMoving = false
-        self.l_State = "Idle" -- See sv_states.lua
+        self.l_State = "ToolgunState" -- See sv_states.lua
         self.l_Weapon = ""
         self.debuginitstart = SysTime()
         self.l_WeaponUseCooldown = 0
+
+        self.l_Personality = { -- See sv_chances.lua
+            build = { "Build", random( 1, 100 ) },
+            combat = { "Combat", random( 1, 100 ) },
+        }
+
+        table.sort( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
         self.loco:SetJumpHeight( 60 )
         self.loco:SetAcceleration( 1000 )
@@ -89,7 +96,7 @@ function ENT:Initialize()
 
         self:InitializeMiniHooks()
 
-        self:SwitchWeapon( "NONE" )
+        self:SwitchWeapon( "TOOLGUN" )
 
         
         
@@ -141,27 +148,65 @@ end
 function ENT:Think()
     if self:GetIsDead() then return end
 
-    -- Animations --
+    
     if SERVER then
 
+        -- Animations --
+            local anims = _LAMBDAPLAYERSHoldTypeAnimations[ self.l_HoldType ]
 
-        local anims = _LAMBDAPLAYERSHoldTypeAnimations[ self.l_HoldType ]
+
+            if self:IsOnGround() and !self.loco:GetVelocity():IsZero() and !self:GetCrouch() and self:GetActivity() != anims.run then
+                self:StartActivity( anims.run )
+            elseif self:IsOnGround() and !self.loco:GetVelocity():IsZero() and self:GetCrouch() and self:GetActivity() != anims.crouchWalk then
+                self:StartActivity( anims.crouchWalk )
+            elseif self:IsOnGround() and self.loco:GetVelocity():IsZero() and self:GetCrouch() then
+                self:StartActivity( anims.crouchIdle )
+            elseif self:IsOnGround() and self.loco:GetVelocity():IsZero() and !self:GetCrouch() then
+                self:StartActivity( anims.idle )
+            elseif !self:IsOnGround() and self:GetActivity() != anims.jump then
+                self:StartActivity( anims.jump )
+            end
+
+        --
 
 
-        if self:IsOnGround() and !self.loco:GetVelocity():IsZero() and !self:GetCrouch() and self:GetActivity() != anims.run then
-            self:StartActivity( anims.run )
-        elseif self:IsOnGround() and !self.loco:GetVelocity():IsZero() and self:GetCrouch() and self:GetActivity() != anims.crouchWalk then
-            self:StartActivity( anims.crouchWalk )
-        elseif self:IsOnGround() and self.loco:GetVelocity():IsZero() and self:GetCrouch() then
-            self:StartActivity( anims.crouchIdle )
-        elseif self:IsOnGround() and self.loco:GetVelocity():IsZero() and !self:GetCrouch() then
-            self:StartActivity( anims.idle )
-        elseif !self:IsOnGround() and self:GetActivity() != anims.jump then
-            self:StartActivity( anims.jump )
+
+        if self.Face then
+            if self.l_Faceend and CurTime() > self.l_Faceend then self.Face = nil return end
+            if isentity( self.Face ) and !IsValid( self.Face ) then self.Face = nil return end
+            local pos = ( isentity( self.Face ) and self.Face:WorldSpaceCenter() or self.Face )
+            self.loco:FaceTowards( pos )
+            self.loco:FaceTowards( pos )
+
+
+            local aimangle = ( pos - self:GetAttachmentPoint( "eyes" ).Pos ):Angle()
+
+            local loca = self:WorldToLocalAngles( aimangle )
+            local approachy = Lerp( 5 * FrameTime(), self:GetPoseParameter('head_yaw'), loca[2] )
+            local approachp = Lerp( 5 * FrameTime(), self:GetPoseParameter('head_pitch'), loca[1] )
+            local approachaimy = Lerp( 5 * FrameTime(), self:GetPoseParameter('aim_yaw'), loca[2] )
+            local approachaimp = Lerp( 5 * FrameTime(), self:GetPoseParameter('aim_pitch'), loca[1] )
+
+            self:SetPoseParameter( 'head_yaw', approachy )
+            self:SetPoseParameter( 'head_pitch', approachp )
+            self:SetPoseParameter( 'aim_yaw', approachaimy )
+            self:SetPoseParameter( 'aim_pitch', approachaimp )
+ 
+        else
+            local approachy = Lerp( 4 * FrameTime(), self:GetPoseParameter('head_yaw'), 0 )
+            local approachp = Lerp( 4 * FrameTime(), self:GetPoseParameter('head_pitch'), 0 )
+            local approachaimy = Lerp( 4 * FrameTime(), self:GetPoseParameter('aim_yaw'), 0 )
+            local approachaimp = Lerp( 4 * FrameTime(), self:GetPoseParameter('aim_pitch'), 0 )
+
+            self:SetPoseParameter( 'head_yaw', approachy )
+            self:SetPoseParameter( 'head_pitch', approachp )
+            self:SetPoseParameter( 'aim_yaw', approachaimy )
+            self:SetPoseParameter( 'aim_pitch', approachaimp )
+
         end
 
     end
-    --
+    
 
 end
 

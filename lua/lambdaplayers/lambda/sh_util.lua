@@ -2,8 +2,10 @@
 local RandomPairs = RandomPairs
 local LambdaIsValid = LambdaIsValid
 local ipairs = ipairs
+local IsValid = IsValid
 local string_find = string.find
 local random = math.random
+local FindInSphere = ents.FindInSphere
 local file_Find = file.Find
 local table_Empty = table.Empty
 local timer_simple = timer.Simple
@@ -20,13 +22,18 @@ end
 
 -- Creates a hook that will remove itself if it runs while the lambda is invalid or if the provided function returns false
 -- preserve makes the hook not remove itself when the Entity is considered "dead" by self:GetIsDead(). Mainly used by Respawning
-function ENT:Hook( hookname, uniquename, func, preserve )
+-- cooldown arg is meant to be used with Tick and Think hooks
+function ENT:Hook( hookname, uniquename, func, preserve, cooldown )
     local id = self:EntIndex()
+    local curtime = CurTime() + ( cooldown or 0 )
+
     self:DebugPrint( "Created a hook: " .. hookname .. " | " .. uniquename )
     hook.Add( hookname, "lambdaplayershook" .. id .. "_" .. uniquename, function( ... )
+        if CurTime() < curtime then return end
         if preserve and !IsValid( self ) or !preserve and !LambdaIsValid( self ) then hook.Remove( hookname, "lambdaplayershook" .. id .. "_" .. uniquename ) return end 
         local result = func( ... )
         if result == false then self:DebugPrint( "Removed a hook: " .. hookname .. " | " .. uniquename ) hook.Remove( hookname, "lambdaplayershook" .. id .. "_" .. uniquename) end
+        curtime = CurTime() + ( cooldown or 0 )
     end )
 end
 
@@ -42,6 +49,20 @@ function ENT:SimpleTimer( delay, func, ignoredead )
         if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) then return end
         func()
     end )
+end
+
+
+function ENT:FindInSphere( pos, radius, filter )
+    pos = pos or self:GetPos()
+    local enttbl = {}
+
+    for k, v in ipairs( FindInSphere( pos, radius ) ) do
+        if IsValid( v ) and v != self and ( filter == nil or filter( v ) ) then
+            enttbl[ #enttbl + 1 ] = v
+        end
+    end 
+
+    return enttbl
 end
 
 function ENT:GetBoneTransformation( bone )
@@ -105,6 +126,18 @@ if SERVER then
 
     local GetAllNavAreas = navmesh.GetAllNavAreas
 
+    
+
+
+    function ENT:CanTarget( ent )
+        return self:Visible( ent ) and ( ent:IsNPC() or ent:IsNextBot() )
+    end
+
+    -- Makes the lambda face the position or a entity if provided
+    function ENT:LookTo( pos, time )
+        self.Face = pos
+        self.l_Faceend = time and CurTime() + time or nil
+    end
 
     -- Sets our state
     function ENT:SetState( state )

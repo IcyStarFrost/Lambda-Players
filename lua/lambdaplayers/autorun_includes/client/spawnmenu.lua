@@ -2,7 +2,7 @@
 
 local categories = {}
 
-for k, v in ipairs( _LAMBDAConVarSettings ) do
+for k, v in ipairs( _LAMBDAConVarSettings ) do -- See convars.lua 
     categories[ v.category ] = v.category
 end
 
