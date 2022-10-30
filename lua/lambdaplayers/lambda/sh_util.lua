@@ -1,6 +1,6 @@
 
 local RandomPairs = RandomPairs
-local IsValid = IsValid
+local LambdaIsValid = LambdaIsValid
 local ipairs = ipairs
 local string_find = string.find
 local random = math.random
@@ -17,12 +17,15 @@ function ENT:DebugPrint( ... )
     print( self:GetLambdaName() .. " EntIndex = ( " .. self:EntIndex() .. " )" .. ": ", ... )
 end
 
--- Creates a hook that will remove itself if it runs while the lambda is invalid
-function ENT:Hook( hookname, uniquename, func )
+-- Creates a hook that will remove itself if it runs while the lambda is invalid or if the provided function returns false
+-- preserve makes the hook not remove itself when the Entity is considered "dead" by self:GetIsDead(). Mainly used by Respawning
+function ENT:Hook( hookname, uniquename, func, preserve )
     local id = self:EntIndex()
+    self:DebugPrint( "Created a hook: " .. hookname .. " | " .. uniquename )
     hook.Add( hookname, "lambdaplayershook" .. id .. "_" .. uniquename, function( ... )
-        if !IsValid( self ) then hook.Remove( hookname, "lambdaplayershook" .. id .. "_" .. uniquename ) return end 
-        func( ... )
+        if preserve and !IsValid( self ) or !preserve and !LambdaIsValid( self ) then hook.Remove( hookname, "lambdaplayershook" .. id .. "_" .. uniquename ) return end 
+        local result = func( ... )
+        if result == false then self:DebugPrint( "Removed a hook: " .. hookname .. " | " .. uniquename ) hook.Remove( hookname, "lambdaplayershook" .. id .. "_" .. uniquename) end
     end )
 end
 
@@ -93,6 +96,58 @@ if SERVER then
     local GetAllNavAreas = navmesh.GetAllNavAreas
 
 
+    -- Sets our state
+    function ENT:SetState( state )
+        if state == self.l_State then return end
+        self:DebugPrint( "Changed state from " .. self.l_State .. " to " .. state )
+        self.l_LastState = self.l_State
+        self.l_State = state
+    end
+
+    -- Obviously returns the current state
+    function ENT:GetState()
+        return self.l_State
+    end
+
+    -- Returns the last state we were in
+    function ENT:GetLastState()
+        return self.l_LastState
+    end
+
+    -- Returns the walk speed
+    function ENT:GetWalkSpeed()
+        return 200
+    end
+
+    -- If we have a lethal weapon
+    function ENT:HasLethalWeapon()
+        return self.l_HasLethal or false
+    end
+
+    -- Returns the run speed
+    function ENT:GetRunSpeed()
+        return 400
+    end
+
+    -- Respawns the lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time
+    function ENT:LambdaRespawn()
+        self:SetIsDead( false )
+        self:SetPos( self.l_SpawnPos )
+        self:SetNoDraw( false )
+        self:DrawShadow( true )
+        self:SetCollisionGroup( COLLISION_GROUP_NONE )
+
+        self.WeaponEnt:SetNoDraw( true )
+        self.WeaponEnt:DrawShadow( false )
+
+        self:SetHealth( self:GetMaxHealth() )
+        self:SwitchWeapon( "NONE" )
+        
+        self:SetState( "Idle" )
+        self:SetCrouch( false )
+        self:SetEnemy( nil )
+    end
+
     -- Returns a sequential table full of nav areas new the position
     function ENT:GetNavAreas( pos, dist )
         pos = pos or self:GetPos()
@@ -104,7 +159,7 @@ if SERVER then
         local squared = dist * dist
 
         for k, v in ipairs( areas ) do
-            if IsValid( v ) and v:GetSizeX() > 75 and v:GetSizeY() > 75 and !v:IsUnderwater() and v:GetClosestPointOnArea( pos ):DistToSqr( pos ) <= squared then
+            if LambdaIsValid( v ) and v:GetSizeX() > 75 and v:GetSizeY() > 75 and !v:IsUnderwater() and v:GetClosestPointOnArea( pos ):DistToSqr( pos ) <= squared then
                 neartbl[ #neartbl + 1 ] = v
             end
         end
@@ -120,7 +175,7 @@ if SERVER then
         local areas = self:GetNavAreas( pos, dist )
 
         for k, v in RandomPairs( areas ) do
-            if IsValid( v ) then
+            if LambdaIsValid( v ) then
                 return v:GetRandomPoint()
             end
         end

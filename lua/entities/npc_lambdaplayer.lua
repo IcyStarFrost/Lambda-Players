@@ -34,6 +34,7 @@ end
 -- Localization
 
     local random = math.random
+    local aidisable = GetConVar( "ai_disabled" )
 
 --
 
@@ -45,6 +46,8 @@ end
 
 
 function ENT:Initialize()
+
+    self.l_SpawnPos = self:GetPos()
 
     if SERVER then
 
@@ -77,8 +80,11 @@ function ENT:Initialize()
         self.WeaponEnt:Spawn()
         self.WeaponEnt:SetNoDraw( true )
 
-        self:SwitchWeapon( self.l_Weapon )
+        self:InitializeMiniHooks()
+
+        self:SwitchWeapon( "NONE" )
         
+        self:SetRespawn( true )
         self:SetWeaponENT( self.WeaponEnt )
 
     elseif CLIENT then
@@ -108,6 +114,8 @@ function ENT:SetupDataTables()
     self:NetworkVar( "String", 0, "LambdaName" ) -- Player name
  
     self:NetworkVar( "Bool", 0, "Crouch" )
+    self:NetworkVar( "Bool", 1, "IsDead" )
+    self:NetworkVar( "Bool", 2, "Respawn" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )
@@ -121,20 +129,22 @@ end
 
 
 function ENT:Think()
+    if self:GetIsDead() then return end
 
     -- Animations --
     if SERVER then
 
+
         local anims = _LAMBDAPLAYERSHoldTypeAnimations[ self.l_HoldType ]
 
 
-        if self:IsOnGround() and self.IsMoving and !self:GetCrouch() and self:GetActivity() != anims.run then
+        if self:IsOnGround() and !self.loco:GetVelocity():IsZero() and !self:GetCrouch() and self:GetActivity() != anims.run then
             self:StartActivity( anims.run )
-        elseif self:IsOnGround() and self.IsMoving and self:GetCrouch() and self:GetActivity() != anims.crouchWalk then
+        elseif self:IsOnGround() and !self.loco:GetVelocity():IsZero() and self:GetCrouch() and self:GetActivity() != anims.crouchWalk then
             self:StartActivity( anims.crouchWalk )
-        elseif self:IsOnGround() and !self.IsMoving and self:GetCrouch() then
+        elseif self:IsOnGround() and self.loco:GetVelocity():IsZero() and self:GetCrouch() then
             self:StartActivity( anims.crouchIdle )
-        elseif self:IsOnGround() and !self.IsMoving and !self:GetCrouch() then
+        elseif self:IsOnGround() and self.loco:GetVelocity():IsZero() and !self:GetCrouch() then
             self:StartActivity( anims.idle )
         elseif !self:IsOnGround() and self:GetActivity() != anims.jump then
             self:StartActivity( anims.jump )
@@ -157,11 +167,17 @@ end
 
 function ENT:RunBehaviour()
 
+
     while true do
 
-        local statefunc = self[ self.l_State ] -- I forgot this was possible. See sv_states.lua
+        if self:GetIsDead() or aidisable:GetBool() then
+        else
 
-        if statefunc then statefunc( self ) end
+            local statefunc = self[ self:GetState() ] -- I forgot this was possible. See sv_states.lua
+
+            if statefunc then statefunc( self ) end
+
+        end
 
         coroutine.wait( 0.3 )
     end

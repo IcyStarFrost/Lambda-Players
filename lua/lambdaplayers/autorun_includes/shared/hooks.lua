@@ -31,7 +31,7 @@ elseif CLIENT then
         local traceent = LocalPlayer():GetEyeTrace().Entity
 
 
-        if IsValid( traceent ) and traceent.IsLambdaPlayer then
+        if LambdaIsValid( traceent ) and traceent.IsLambdaPlayer then
             local name = traceent:GetLambdaName()
             local colvec = traceent:GetPlyColor()
 

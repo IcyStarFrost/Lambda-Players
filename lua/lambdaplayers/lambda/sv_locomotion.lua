@@ -1,19 +1,24 @@
 
 
-local IsValid = IsValid
+local LambdaIsValid = LambdaIsValid
 local dev = GetConVar( "developer" )
+local aidisable = GetConVar( "ai_disabled" )
+local math_max = math.max
 
 -- Start off simple
 function ENT:MoveToPos( pos, options )
     local isent = !isvector( pos )
-    if isent and !IsValid( isent ) then return "failed" end
+    if isent and !LambdaIsValid( pos ) then return "failed" end
 
 	local options = options or {}
+    local timeout = options.timeout
+    local update = options.update
+    local callback = options.callback
 
 	local path = Path( "Follow" )
 	path:SetMinLookAheadDistance( options.lookahead or 300 )
 	path:SetGoalTolerance( options.tol or 20 )
-	path:Compute( self, ( isent and pos:GetPos() or pos) )
+	path:Compute( self, ( isent and pos:GetPos() or pos), self:PathGenerator() )
 
     self.loco:SetDesiredSpeed( options.speed or 200 )
 
@@ -22,9 +27,19 @@ function ENT:MoveToPos( pos, options )
     self.IsMoving = true
 
 	while ( path:IsValid() ) do
+        if isent and !LambdaIsValid( pos ) then return "invalid" end
+        if self:GetIsDead() then return "dead" end
         if self.AbortMovement then self.AbortMovement = false self.IsMoving = false return "aborted" end
 
-		path:Update( self )
+        local goal = path:GetCurrentGoal()
+
+        if callback and isfunction( callback ) then callback( goal ) end 
+
+        if !aidisable:GetBool() then
+
+		    path:Update( self )
+
+        end
 
         if dev:GetBool() then
             path:Draw()
@@ -37,12 +52,13 @@ function ENT:MoveToPos( pos, options )
 			return "stuck"
 		end
 
-		if options.timeout then
-			if path:GetAge() > options.timeout then self.IsMoving = false return "timeout" end
+		if timeout then
+			if path:GetAge() > timeout then self.IsMoving = false return "timeout" end
 		end
 
-		if options.update then
-			if path:GetAge() > options.update then path:Compute( self, ( isent and pos:GetPos() or pos ) ) end
+		if update then
+            local updateTime = math_max( update, update * ( path:GetLength() / 400 ) )
+			if path:GetAge() > updateTime then path:Compute( self, ( isent and pos:GetPos() or pos ), self:PathGenerator() ) end
 		end
 
 		coroutine.yield()
@@ -66,11 +82,11 @@ function ENT:PathGenerator()
     local deathHeight = -self.loco:GetDeathDropHeight()
 
     return function(area, fromArea, ladder, elevator, length)
-        if !IsValid(fromArea) then return 0 end
+        if !LambdaIsValid(fromArea) then return 0 end
         if !self.loco:IsAreaTraversable(area) then return -1 end
 
         local dist = 0
-        if IsValid(ladder) then
+        if LambdaIsValid(ladder) then
             dist = ladder:GetBottom():DistToSqr(ladder:GetTop())
         elseif length > 0 then
             dist = length
@@ -79,7 +95,7 @@ function ENT:PathGenerator()
         end
 
         local cost = (dist + fromArea:GetCostSoFar())
-        if !IsValid(ladder) then
+        if !LambdaIsValid(ladder) then
             local deltaZ = fromArea:ComputeAdjacentConnectionHeightChange(area)
             if deltaZ > stepHeight then
                 if deltaZ > jumpHeight then return -1 end

@@ -1,5 +1,5 @@
 
-local IsValid = IsValid
+local LambdaIsValid = LambdaIsValid
 local table_insert = table.insert
 local RealTime = RealTime
 local math_Clamp = math.Clamp
@@ -34,7 +34,7 @@ local globalconvar = GetConVar( "lambdaplayers_globalvoice" )
 
 local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
-    ent = IsValid( ent.ragdoll ) and ent.ragdoll or ent
+    ent = LambdaIsValid( ent.ragdoll ) and ent.ragdoll or ent
 
     local flag = globalconvar:GetBool() and "" or is3d and "3d mono" or "mono"
 
@@ -48,7 +48,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             return
         end
 
-        if IsValid( snd ) then
+        if LambdaIsValid( snd ) then
 
             if !globalconvar:GetBool() and is3d then
                 snd:Set3DFadeDistance( 300, 0 )
@@ -64,9 +64,9 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             local num2 
 
             hook.Add( "Tick", "lambdaplayersvoicetick" .. index, function()
-                if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
+                if !LambdaIsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
                 if RealTime() > RealTime() + length then hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
-                if !IsValid( ent ) then if shouldstoponremove then snd:Stop() end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
+                if !LambdaIsValid( ent ) then if shouldstoponremove then snd:Stop() end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
 
                 if !globalconvar:GetBool() and !is3d then
                     local ply = LocalPlayer()
@@ -89,7 +89,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                 local voiceLvl = ((leftC + rightC) / 2)
 
 
-                if IsValid( ent ) then 
+                if LambdaIsValid( ent ) then 
                     snd:SetPos( ent:GetPos() ) 
 
                     num = num or 0.0
@@ -121,7 +121,7 @@ net.Receive("lambdaplayers_playsoundfile", function()
     local shouldstoponremove = net.ReadBool()
     local index = net.ReadUInt( 32 )
 
-    if !IsValid(lambda) then return end
+    if !LambdaIsValid(lambda) then return end
 
     PlaySoundFile( lambda, soundname, index, shouldstoponremove, true )
 end)

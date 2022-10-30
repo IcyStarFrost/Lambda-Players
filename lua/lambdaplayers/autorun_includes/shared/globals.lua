@@ -40,3 +40,15 @@ function LambdaReadFile( filename, path )
 	if ( !str ) then str = "" end
 	return str
 end
+
+local IsValid = IsValid
+function LambdaIsValid( object )
+	if !object then return false end
+
+	local isvalid = object.IsValid
+	if !isvalid then return false end
+
+	if IsValid( object ) and object.IsLambdaPlayer and object:GetIsDead() then return false end
+
+	return IsValid( object )
+end

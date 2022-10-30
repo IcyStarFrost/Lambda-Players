@@ -5,6 +5,13 @@ local random = math.random
 if SERVER then
 
     function ENT:OnKilled( info )
+
+        self:SetIsDead( true )
+        self.WeaponEnt:SetNoDraw( true )
+        self.WeaponEnt:DrawShadow( false )
+        self:SetCollisionGroup( COLLISION_GROUP_VEHICLE )
+        self:SetNoDraw( true )
+        self:DrawShadow( false )
         
         net.Start( "lambdaplayers_becomeragdoll" )
             net.WriteEntity( self )
@@ -13,7 +20,36 @@ if SERVER then
             net.WriteVector( self:GetPlyColor() )
         net.Broadcast()
 
-        SimpleTimer( 0.1, function() self:Remove() end )
+        if self:GetRespawn() then
+            SimpleTimer( 1, function() self:LambdaRespawn() end )
+        else
+            SimpleTimer( 0.1, function() self:Remove() end )
+        end
+
+    end
+
+    function ENT:OnInjured( info )
+
+
+    end
+
+
+    -- A function for holding self:Hook() functions. Called in the ENT:Initialize() in npc_lambdaplayer
+    function ENT:InitializeMiniHooks()
+
+        -- Hoookay so interesting stuff here. When a nextbot actually dies by reaching 0 or below hp, no matter how high you set their health after the fact, they will no longer take damage.
+        -- To get around that we basically predict if the lambda is gonna die and completely block the damage so we don't actually die. This of course is exclusive to Respawning
+        self:Hook( "EntityTakeDamage", "DamageHandling", function( target, info )
+            if target != self then return end
+
+            local potentialdeath = ( self:Health() - info:GetDamage() ) <= 0
+
+            if self:GetRespawn() and potentialdeath then
+                self:OnKilled( info )
+                return true
+            end
+        
+        end, true )
 
     end
 

@@ -16,9 +16,11 @@ function ENT:SwitchWeapon( weaponname )
     if weapondata.bonemerge then wepent:AddEffects( EF_BONEMERGE ) else wepent:RemoveEffects( EF_BONEMERGE ) end
 
     self.l_Weapon = weaponname
+    self.l_HasLethal = weapondata.islethal
     self.l_HoldType = weapondata.holdtype
-    self.l_CombatKeepDistance = keepdistance
-    self.l_CombatAttackRange = attackrange
+    self.l_CombatKeepDistance = weapondata.keepdistance
+    self.l_CombatAttackRange = weapondata.attackrange
+    self.l_CombatSpeedAdd = weapondata.addspeed or 0
     
     wepent:SetNoDraw( weapondata.nodraw or false )
     wepent:DrawShadow( !weapondata.nodraw ) -- Prevent Shadows from rendering
@@ -46,7 +48,7 @@ local function TranslateRandomization( string )
 end
 
 function ENT:UseWeapon( target )
-    local weapondata = _LAMBDAPLAYERSWEAPONS[ weaponname ]
+    local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
     if !weapondata or CurTime() < self.l_WeaponUseCooldown then return end
     local wepent = self.WeaponEnt
 
@@ -67,7 +69,7 @@ function ENT:UseWeapon( target )
 
             self.l_WeaponUseCooldown = CurTime() + rateoffire
 
-            wepent:EmitSound( TranslateRandomization( attacksnd ), 70, 100, 1, CHAN_WEAPON )
+            wepent:EmitSound( TranslateRandomization( snd ), 70, 100, 1, CHAN_WEAPON )
         
             self:RemoveGesture( gesture )
             self:AddGesture( gesture )
