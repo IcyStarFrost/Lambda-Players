@@ -2,6 +2,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     CROWBAR = {
         model = "models/weapons/w_crowbar.mdl",
+        prettyname = "Crowbar",
         holdtype = "melee",
         ismelee = true,
         bonemerge = true,

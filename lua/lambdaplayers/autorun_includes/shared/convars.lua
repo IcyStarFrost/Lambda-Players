@@ -1,4 +1,5 @@
 local table_insert = table.insert
+local pairs = pairs
 
 -- Will be used for presets
 _LAMBDAPLAYERSCONVARS = {}
@@ -11,14 +12,15 @@ end
 function CreateLambdaConvar( name, val, shouldsave, isclient, userinfo, desc, min, max, settingstbl )
     isclient = isclient == nil and false or isclient
     shouldsave = shouldsave == nil and true or shouldsave
+    local convar
 
     if isclient and SERVER then return end
 
 
     if isclient then
-        CreateClientConVar( name, tostring( val ), shouldsave, userinfo, desc, min, max )
+        convar = CreateClientConVar( name, tostring( val ), shouldsave, userinfo, desc, min, max )
     elseif SERVER then
-        CreateConVar( name, tostring( val ), shouldsave and FCVAR_ARCHIVE or FCVAR_NONE, desc, min, max )
+        convar = CreateConVar( name, tostring( val ), shouldsave and FCVAR_ARCHIVE or FCVAR_NONE, desc, min, max )
     end
 
     _LAMBDAPLAYERSCONVARS[ name ] = tostring( val )
@@ -31,6 +33,7 @@ function CreateLambdaConvar( name, val, shouldsave, isclient, userinfo, desc, mi
         table_insert( _LAMBDAConVarSettings, settingstbl )
     end
 
+    return convar
 end
 
 -- Why not?
@@ -58,3 +61,4 @@ CreateLambdaConvar( "lambdaplayers_voicepitchmin", 100, true, false, false, "The
 -- DEBUGGING CONVARS. Server-side only
 CreateLambdaConvar( "lambdaplayers_debug", 0, false, false, false, "Enables the debugging features", 0, 1, { type = "Bool", name = "Enable Debug", category = "Debugging" } )
 --
+

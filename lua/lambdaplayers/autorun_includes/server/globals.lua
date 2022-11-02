@@ -252,11 +252,3 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
 
 
 
-_LAMBDAPLAYERSWEAPONS = {}
-
-local weaponluafiles = file.Find( "lambdaplayers/lambda/weapons/*", "LUA", "nameasc" )
-
-for k, luafile in ipairs( weaponluafiles ) do
-    include( "lambdaplayers/lambda/weapons/" .. luafile )
-    print( "Lambda Players: Merged Weapon from [ " .. luafile .. " ]" )
-end

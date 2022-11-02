@@ -1,4 +1,25 @@
 
+
+_LAMBDAPLAYERSWEAPONS = {}
+
+local weaponluafiles = file.Find( "lambdaplayers/lambda/weapons/*", "LUA", "nameasc" )
+
+for k, luafile in ipairs( weaponluafiles ) do
+	AddCSLuaFile( "lambdaplayers/lambda/weapons/" .. luafile )
+    include( "lambdaplayers/lambda/weapons/" .. luafile )
+    print( "Lambda Players: Merged Weapon from [ " .. luafile .. " ]" )
+end
+
+
+
+_LAMBDAWEAPONALLOWCONVARS = {}
+for k, v in pairs( _LAMBDAPLAYERSWEAPONS ) do
+    local convar = CreateLambdaConvar( "lambdaplayers_weapons_allow" .. k, 1, true, false, false, "Allows the Lambda Players to equip " .. v.prettyname, 0, 1, { type = "Bool", name = "Allow " .. v.prettyname, category = "Weapon Permissions" } )
+	_LAMBDAWEAPONALLOWCONVARS[ k ] = v
+end
+
+
+
 local EntMeta = FindMetaTable("Entity")
 
 function EntMeta:LambdaMoveMouth( weight )
