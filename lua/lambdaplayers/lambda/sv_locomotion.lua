@@ -33,13 +33,13 @@ function ENT:MoveToPos( pos, options )
 
         local goal = path:GetCurrentGoal()
 
-        if callback and isfunction( callback ) then callback( goal ) end 
 
         if !aidisable:GetBool() then
-
-		    path:Update( self )
-
+            if callback and isfunction( callback ) then callback( goal ) end 
+            path:Update( self )
         end
+
+        
 
         if dev:GetBool() then
             path:Draw()

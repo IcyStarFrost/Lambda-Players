@@ -26,6 +26,7 @@ local function AddLambdaPlayersoptions()
                 panel:AddItem( togglebutton )
 
                 function togglebutton:DoClick()
+                    if !LocalPlayer():IsSuperAdmin() then return end
                     for id, box in ipairs( weaponcheckboxes ) do
                         box:SetChecked( check )
                     end

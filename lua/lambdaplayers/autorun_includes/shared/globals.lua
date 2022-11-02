@@ -17,10 +17,22 @@ end
 _LAMBDAWEAPONALLOWCONVARS = {}
 for k, v in pairs( _LAMBDAPLAYERSWEAPONS ) do
     local convar = CreateLambdaConvar( "lambdaplayers_weapons_allow" .. k, 1, true, false, false, "Allows the Lambda Players to equip " .. v.prettyname, 0, 1 )
-	_LAMBDAWEAPONALLOWCONVARS[ k ] = v
+	_LAMBDAWEAPONALLOWCONVARS[ k ] = convar
 	if CLIENT then _LAMBDAPLAYERSWEAPONORIGINS[ v.origin ] = v.origin end
 end
 
+-- Register the Lambdas so the duplicator knows how to handle these guys
+duplicator.RegisterEntityClass( "npc_lambdaplayer", function( ply, Pos, Ang, info )
+
+	local lambda = ents.Create( "npc_lambdaplayer" )
+	lambda:SetPos( Pos )
+	lambda:SetAngles( Ang )
+	lambda:Spawn()
+
+	lambda:ApplyLambdaInfo( info ) -- Apply our exported info
+
+	return lambda
+end, "Pos", "Ang", "LambdaPlayerPersonalInfo" )
 
 
 local EntMeta = FindMetaTable("Entity")

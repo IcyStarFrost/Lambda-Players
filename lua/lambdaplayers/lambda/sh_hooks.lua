@@ -54,8 +54,21 @@ if SERVER then
         local attacker = info:GetAttacker()
 
 
+        -- If we killed the victim
+        if attacker == self then
+            
+
+        else -- Someone else killed the victim
+
+
+        end
+
     end
 
+    function ENT:PreEntityCopy()
+        self.LambdaPlayerPersonalInfo = self:ExportLambdaInfo()
+    end
+    
 
 end
 
@@ -74,8 +87,9 @@ function ENT:InitializeMiniHooks()
             if target != self then return end
 
             local potentialdeath = ( self:Health() - info:GetDamage() ) <= 0
-
+            print( self:Health(), info:GetDamage(), ( self:Health() - info:GetDamage() ) )
             if self:GetRespawn() and potentialdeath then
+                info:SetDamage( 0 ) -- We need this because apparently the nextbot would think it is dead and do some wacky health issues without it
                 self:OnKilled( info )
                 return true
             end
@@ -85,7 +99,7 @@ function ENT:InitializeMiniHooks()
     elseif CLIENT then
 
         self:Hook( "PreDrawEffects", "CustomWeaponRenderEffects", function()
-            if self:GetIsDead() then return end
+            if self:GetIsDead() or RealTime() > self.l_lastdraw then return end
 
             if self:GetHasCustomDrawFunction() then
                 self.l_weapondrawfunction = self.l_weapondrawfunction or _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ].Draw

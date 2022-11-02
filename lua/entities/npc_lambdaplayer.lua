@@ -39,7 +39,7 @@ end
     local pitchmin = GetConVar( "lambdaplayers_voicepitchmin" )
     local pitchmax = GetConVar( "lambdaplayers_voicepitchmax" )
     local isfunction = isfunction
-    
+    local RealTime = RealTime
     
 --
 
@@ -71,16 +71,20 @@ function ENT:Initialize()
 
         -- Personal Stats --
 
+        self:SetMaxHealth( 100 )
+        self:SetNWMaxHealth( 100 )
+        self:SetHealth( 100 )
         
         self:SetPlyColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
         self:SetPhysColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
-
         self.l_PlyRealColor = self:GetPlyColor():ToColor()
         self.l_PhysRealColor = self:GetPhysColor():ToColor()
 
+        self:SetBuildChance( random( 1, 100 ) )
+        self:SetCombatChance( random( 1, 100 ) )
         self.l_Personality = { -- See sv_chances.lua
-            { "Build", random( 1, 100 ) },
-            { "Combat", random( 1, 100 ) },
+            { "Build", self:GetBuildChance() },
+            { "Combat", self:GetCombatChance() },
         }
 
         self:SetVoicePitch( random( pitchmin:GetInt(), pitchmax:GetInt() ) )
@@ -93,8 +97,7 @@ function ENT:Initialize()
         self.loco:SetAcceleration( 1000 )
         self.loco:SetDeceleration( 1000 )
         self.loco:SetStepHeight( 30 )
-        self:SetMaxHealth( 100 )
-        self:SetHealth( 100 )
+
         
         self:AddFlags( FL_OBJECT + FL_NPC + FL_CLIENT )
 
@@ -117,6 +120,8 @@ function ENT:Initialize()
         self:SetRespawn( true )
 
     elseif CLIENT then
+
+        self.l_lastdraw = 0
 
         self:InitializeMiniHooks()
 
@@ -167,6 +172,9 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Vector", 1, "PhysColor" )
 
     self:NetworkVar( "Int", 0, "VoicePitch" )
+    self:NetworkVar( "Int", 1, "NWMaxHealth" )
+    self:NetworkVar( "Int", 2, "BuildChance" )
+    self:NetworkVar( "Int", 3, "CombatChance" )
 
     self:SetLambdaName( "Lambda Player" )
 
@@ -174,6 +182,7 @@ end
 
 function ENT:Draw()
     if self:GetIsDead() then return end
+    self.l_lastdraw = RealTime() + 0.1
     self:DrawModel()
 end
 

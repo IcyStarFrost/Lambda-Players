@@ -9,10 +9,12 @@ function ENT:SwitchWeapon( weaponname )
     local weapondata = _LAMBDAPLAYERSWEAPONS[ weaponname ]
     if !weapondata or weaponname == self.l_Weapon then return end
 
+    local wepent = self.WeaponEnt
+
     local oldwepdata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
     if oldwepdata and isfunction( oldwepdata.OnUnequip ) then oldwepdata.OnUnequip( self, wepent ) end
 
-    local wepent = self.WeaponEnt
+    
 
     if weapondata.bonemerge then wepent:AddEffects( EF_BONEMERGE ) else wepent:RemoveEffects( EF_BONEMERGE ) end
 

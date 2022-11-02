@@ -117,15 +117,62 @@ function ENT:GetAttachmentPoint( pointtype )
     end
   
   end
-
-
 --
+
+
+-- Turns the Lambda Player into a table of its personal data
+-- See function ENT:ApplyLambdaInfo() to use this data with
+-- This function is shared so that means the client can get a Lambda Player's info and save it for themselves
+function ENT:ExportLambdaInfo()
+    local info = {
+        name = self:GetLambdaName(),
+        model = self:GetModel(),
+        health = self:GetNWMaxHealth(),
+
+        plycolor = self:GetPlyColor(),
+        physcolor = self:GetPhysColor(),
+
+        -- Chances
+        build = self:GetBuildChance(),
+        combat = self:GetCombatChance(),
+        --
+
+        voicepitch = self:GetVoicePitch()
+    }
+
+    return info
+end
 
 
 if SERVER then
 
     local GetAllNavAreas = navmesh.GetAllNavAreas
     local ignoreplayer = GetConVar( "ai_ignoreplayers" )
+
+
+    -- Applies info data from :ExportLambdaInfo() to the Lambda Player
+    function ENT:ApplyLambdaInfo( info )
+
+        self:SetLambdaName( info.name )
+        self:SetModel( info.model )
+        self:SetMaxHealth( info.health )
+        self:SetHealth( info.health )
+        self:SetNWMaxHealth( info.health )
+
+        self:SetPlyColor( info.plycolor )
+        self:SetPhysColor( info.physcolor )
+        self.WeaponEnt:SetNW2Vector( "lambda_weaponcolor", info.physcolor )
+
+        self:SetBuildChance( info.build )
+        self:SetCombatChance( info.combat )
+        self.l_Personality = {
+            { "Build", info.build },
+            { "Combat", info.combat },
+        }
+
+        self:SetVoicePitch( info.voicepitch )
+
+    end
     
 
     function ENT:CanTarget( ent )
@@ -192,6 +239,7 @@ if SERVER then
         self:SetHealth( self:GetMaxHealth() )
         self:AddFlags( FL_OBJECT )
         self:SwitchWeapon( "NONE" )
+        self:UpdateHealthDisplay()
         
         self:SetState( "Idle" )
         self:SetCrouch( false )
