@@ -22,7 +22,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             if IsValid( wepent ) then
                 
-                local size = math.random(30, 50)
+                local size = math.random( 30, 50 )
                 local drawPos = ( wepent:GetPos() + wepent:GetUp() * 2 )
                 local color = lambda:GetPhysColor()
 
