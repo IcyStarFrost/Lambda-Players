@@ -24,6 +24,8 @@ function ENT:SwitchWeapon( weaponname )
     self.l_CombatSpeedAdd = weapondata.addspeed or 0
     
     self:ClientSideNoDraw( self.WeaponEnt, weapondata.nodraw )
+    self:SetHasCustomDrawFunction( isfunction( weapondata.Draw ) )
+    self:SetWeaponName( weaponname )
     self.WeaponEnt:SetNoDraw( weapondata.nodraw )
     self.WeaponEnt:DrawShadow( !weapondata.nodraw )
 

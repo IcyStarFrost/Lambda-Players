@@ -2,6 +2,8 @@
 local SimpleTimer = timer.Simple
 local random = math.random
 
+
+
 if SERVER then
 
     function ENT:OnKilled( info )
@@ -53,11 +55,18 @@ if SERVER then
 
 
     end
-    
 
 
-    -- A function for holding self:Hook() functions. Called in the ENT:Initialize() in npc_lambdaplayer
-    function ENT:InitializeMiniHooks()
+end
+
+
+------ SHARED ------
+
+-- A function for holding self:Hook() functions. Called in the ENT:Initialize() in npc_lambdaplayer
+function ENT:InitializeMiniHooks()
+
+
+    if SERVER then
 
         -- Hoookay so interesting stuff here. When a nextbot actually dies by reaching 0 or below hp, no matter how high you set their health after the fact, they will no longer take damage.
         -- To get around that we basically predict if the lambda is gonna die and completely block the damage so we don't actually die. This of course is exclusive to Respawning
@@ -73,8 +82,21 @@ if SERVER then
         
         end, true )
 
+    elseif CLIENT then
+
+        self:Hook( "PreDrawEffects", "CustomWeaponRenderEffects", function()
+            if self:GetIsDead() then return end
+
+            if self:GetHasCustomDrawFunction() then
+                self.l_weapondrawfunction = self.l_weapondrawfunction or _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ].Draw
+        
+                if isfunction( self.l_weapondrawfunction ) then self.l_weapondrawfunction( self, self:GetWeaponENT() ) end
+            else
+                self.l_weapondrawfunction = nil
+            end
+        
+        end, true )
+
     end
-
-
 
 end

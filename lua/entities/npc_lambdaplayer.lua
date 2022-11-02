@@ -38,6 +38,7 @@ end
     local developer = GetConVar( "developer" )
     local pitchmin = GetConVar( "lambdaplayers_voicepitchmin" )
     local pitchmax = GetConVar( "lambdaplayers_voicepitchmax" )
+    local isfunction = isfunction
     
     
 --
@@ -105,16 +106,19 @@ function ENT:Initialize()
         self.WeaponEnt:SetAngles( attachpoint.Ang )
         self.WeaponEnt:SetParent( self, ap )
         self.WeaponEnt:Spawn()
+        self.WeaponEnt:SetNW2Vector( "lambda_weaponcolor", self:GetPhysColor() )
         self.WeaponEnt:SetNoDraw( true )
 
         self:InitializeMiniHooks()
         
-        self:SwitchWeapon( "TOOLGUN" )
+        self:SwitchWeapon( "PHYSGUN" )
         
         self:SetWeaponENT( self.WeaponEnt )
         self:SetRespawn( true )
 
     elseif CLIENT then
+
+        self:InitializeMiniHooks()
 
         -- For some reason having this properly makes the weapon go invisible when the lambda dies in multiplayer
         timer.Simple( 0, function()
@@ -149,10 +153,12 @@ end
 function ENT:SetupDataTables()
 
     self:NetworkVar( "String", 0, "LambdaName" ) -- Player name
+    self:NetworkVar( "String", 1, "WeaponName" )
  
     self:NetworkVar( "Bool", 0, "Crouch" )
     self:NetworkVar( "Bool", 1, "IsDead" )
     self:NetworkVar( "Bool", 2, "Respawn" )
+    self:NetworkVar( "Bool", 3, "HasCustomDrawFunction" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )

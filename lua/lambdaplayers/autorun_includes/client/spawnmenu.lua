@@ -1,5 +1,7 @@
 
-
+local pairs = pairs
+local ipairs = ipairs
+local table_insert = table.insert
 local categories = {}
 
 for k, v in ipairs( _LAMBDAConVarSettings ) do -- See convars.lua 
@@ -9,6 +11,38 @@ end
 local function AddLambdaPlayersoptions()
 
     for categoryname, _ in pairs( categories ) do
+
+        spawnmenu.AddToolMenuOption( "Lambda Player", "Lambda Player", "lambdaplayer_weaponpermissions" , "Weapon Permissions", "", "", function( panel ) 
+
+            for k, v in pairs( _LAMBDAPLAYERSWEAPONORIGINS ) do
+
+                local weaponcheckboxes = {}
+                local check = false
+
+                panel:Help("------ " .. k .. " ------")
+
+                local togglebutton = vgui.Create( "DButton", panel )
+                togglebutton:SetText( "Toggle " .. k .. " Category" )
+                panel:AddItem( togglebutton )
+
+                function togglebutton:DoClick()
+                    for id, box in ipairs( weaponcheckboxes ) do
+                        box:SetChecked( check )
+                    end
+                    check = !check
+                end
+
+                for weaponclass, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
+                    if data.origin == k then
+                        local box = panel:CheckBox( "Allow " .. data.prettyname, "lambdaplayers_weapons_allow" .. weaponclass )
+                        panel:ControlHelp( "Server-Side | Allows the Lambda Players to equip " .. data.prettyname )
+                        table_insert( weaponcheckboxes, box )
+                    end
+                end
+
+            end
+
+        end)
 
         spawnmenu.AddToolMenuOption( "Lambda Player", "Lambda Player", "lambdaplayer_" .. categoryname , categoryname, "", "", function( panel ) 
 

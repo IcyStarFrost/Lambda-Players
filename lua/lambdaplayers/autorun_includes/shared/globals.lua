@@ -1,4 +1,4 @@
-
+local table_insert = table.insert
 
 _LAMBDAPLAYERSWEAPONS = {}
 
@@ -10,12 +10,15 @@ for k, luafile in ipairs( weaponluafiles ) do
     print( "Lambda Players: Merged Weapon from [ " .. luafile .. " ]" )
 end
 
-
+if CLIENT then
+	_LAMBDAPLAYERSWEAPONORIGINS = {}
+end
 
 _LAMBDAWEAPONALLOWCONVARS = {}
 for k, v in pairs( _LAMBDAPLAYERSWEAPONS ) do
-    local convar = CreateLambdaConvar( "lambdaplayers_weapons_allow" .. k, 1, true, false, false, "Allows the Lambda Players to equip " .. v.prettyname, 0, 1, { type = "Bool", name = "Allow " .. v.prettyname, category = "Weapon Permissions" } )
+    local convar = CreateLambdaConvar( "lambdaplayers_weapons_allow" .. k, 1, true, false, false, "Allows the Lambda Players to equip " .. v.prettyname, 0, 1 )
 	_LAMBDAWEAPONALLOWCONVARS[ k ] = v
+	if CLIENT then _LAMBDAPLAYERSWEAPONORIGINS[ v.origin ] = v.origin end
 end
 
 

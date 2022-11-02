@@ -6,6 +6,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     TOOLGUN = {
         model = "models/weapons/w_toolgun.mdl",
+        origin = "Garry's Mod",
         prettyname = "Toolgun",
         holdtype = "revolver",
         bonemerge = true,
