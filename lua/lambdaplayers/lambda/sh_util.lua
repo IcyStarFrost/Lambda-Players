@@ -169,6 +169,7 @@ if SERVER then
             { "Build", info.build },
             { "Combat", info.combat },
         }
+        table.sort( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
         self:SetVoicePitch( info.voicepitch )
 
