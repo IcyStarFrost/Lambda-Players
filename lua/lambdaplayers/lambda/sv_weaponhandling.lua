@@ -123,12 +123,23 @@ function ENT:UseWeapon( target )
 
 end
 
+function ENT:SwitchToRandomWeapon()
+    for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
+        if _LAMBDAWEAPONALLOWCONVARS[ k ]:GetBool() and k != self.l_Weapon then
+            self:SwitchWeapon( k )
+            return
+        end
+    end
+    self:SwitchWeapon( "NONE" )
+end
+
 function ENT:SwitchToLethalWeapon()
     if self.l_HasLethal then return end
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if v.islethal then
+        if v.islethal and _LAMBDAWEAPONALLOWCONVARS[ k ]:GetBool() and k != self.l_Weapon then
             self:SwitchWeapon( k )
-            break
+            return
         end
     end
+    self:SwitchWeapon( "NONE" )
 end

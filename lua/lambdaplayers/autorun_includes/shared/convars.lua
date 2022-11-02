@@ -62,3 +62,5 @@ CreateLambdaConvar( "lambdaplayers_voicepitchmin", 100, true, false, false, "The
 CreateLambdaConvar( "lambdaplayers_debug", 0, false, false, false, "Enables the debugging features", 0, 1, { type = "Bool", name = "Enable Debug", category = "Debugging" } )
 --
 
+
+-- Note, Weapon allowing convars are located in the shared/globals.lua
