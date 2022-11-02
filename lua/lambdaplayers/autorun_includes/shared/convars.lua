@@ -17,7 +17,7 @@ function CreateLambdaConvar( name, val, shouldsave, isclient, userinfo, desc, mi
 
     if isclient then
         CreateClientConVar( name, tostring( val ), shouldsave, userinfo, desc, min, max )
-    else
+    elseif SERVER then
         CreateConVar( name, tostring( val ), shouldsave and FCVAR_ARCHIVE or FCVAR_NONE, desc, min, max )
     end
 
@@ -26,7 +26,7 @@ function CreateLambdaConvar( name, val, shouldsave, isclient, userinfo, desc, mi
     if CLIENT and settingstbl then
         settingstbl.convar = name
         settingstbl.min = min
-        settingstbl.desc = desc
+        settingstbl.desc = ( isclient and "Client-Side | " or "Server-Side | " ) .. desc
         settingstbl.max = max
         table_insert( _LAMBDAConVarSettings, settingstbl )
     end
@@ -48,9 +48,11 @@ local CreateLambdaConvar = CreateLambdaConvar
 CreateLambdaConvar( "lambdaplayers_corpsecleanuptime", 15, true, true, false, "The amount of time before a corpse is removed. Set to zero to disable this", 0, 190, { type = "Slider", name = "Corpse Cleanup Time", decimals = 0, category = "Utilities" } )
 --
 
--- Voice Related Convars. Client-side only
-CreateLambdaConvar( "lambdaplayers_voicevolume", 1, true, true, false, "The volume of the lambda player voices", 0, 10, { type = "Slider", name = "Voice Volume", decimals = 2, category = "Voice Options" } )
+-- Voice Related Convars. Mostly Client-side
 CreateLambdaConvar( "lambdaplayers_globalvoice", 0, true, true, false, "If the lambda player voices should be heard globally", 0, 1, { type = "Bool", name = "Global Voices", category = "Voice Options" } )
+CreateLambdaConvar( "lambdaplayers_voicevolume", 1, true, true, false, "The volume of the lambda player voices", 0, 10, { type = "Slider", name = "Voice Volume", decimals = 2, category = "Voice Options" } )
+CreateLambdaConvar( "lambdaplayers_voicepitchmax", 100, true, false, false, "The highest pitch a Lambda Voice can get", 100, 255, { type = "Slider", decimals = 0, name = "Voice Pitch Max", category = "Voice Options" } )
+CreateLambdaConvar( "lambdaplayers_voicepitchmin", 100, true, false, false, "The lowest pitch a Lambda Voice can get", 10, 100, { type = "Slider", decimals = 0, name = "Voice Pitch Min", category = "Voice Options" } )
 --
 
 -- DEBUGGING CONVARS. Server-side only

@@ -7,12 +7,17 @@ if SERVER then
     function ENT:OnKilled( info )
         if self:GetIsDead() then return end
 
+        self:PlaySoundFile( "vo/npc/male01/pain0" .. random( 1, 9 ) .. ".wav" )
+
         self:SetIsDead( true )
-        self.WeaponEnt:SetNoDraw( true )
-        self.WeaponEnt:DrawShadow( false )
         self:SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE )
+
+        self:ClientSideNoDraw( self, true )
+        self:ClientSideNoDraw( self.WeaponEnt, true )
         self:SetNoDraw( true )
         self:DrawShadow( false )
+        self.WeaponEnt:SetNoDraw( true )
+        self.WeaponEnt:DrawShadow( false )
 
         self:RemoveFlags( FL_OBJECT )
         
@@ -32,9 +37,23 @@ if SERVER then
     end
 
     function ENT:OnInjured( info )
+        local attacker = info:GetAttacker()
+
+        if self:CanTarget( attacker ) and self:GetEnemy() != attacker then
+            if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
+            self:CancelMovement()
+            self:SetEnemy( attacker )
+            self:SetState( "Combat" )
+        end
+
+    end
+
+    function ENT:OnOtherKilled( victim, info )
+        local attacker = info:GetAttacker()
 
 
     end
+    
 
 
     -- A function for holding self:Hook() functions. Called in the ENT:Initialize() in npc_lambdaplayer

@@ -10,8 +10,12 @@ local IsValid = IsValid
 
 function ENT:Idle()
 
-    local pos = self:GetRandomPosition()
-    self:MoveToPos( pos )
+    if random( 1, 3 ) != 1 then
+        local pos = self:GetRandomPosition()
+        self:MoveToPos( pos )
+    else
+        self:ComputeChance()
+    end
 
 end
 

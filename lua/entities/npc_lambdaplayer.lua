@@ -35,7 +35,11 @@ end
 
     local random = math.random
     local aidisable = GetConVar( "ai_disabled" )
-
+    local developer = GetConVar( "developer" )
+    local pitchmin = GetConVar( "lambdaplayers_voicepitchmin" )
+    local pitchmax = GetConVar( "lambdaplayers_voicepitchmax" )
+    
+    
 --
 
 if CLIENT then
@@ -56,22 +60,31 @@ function ENT:Initialize()
 
         self:SetModel( _LAMBDAPLAYERSDEFAULTMDLS[ random( #_LAMBDAPLAYERSDEFAULTMDLS ) ] )
 
+        self.IsMoving = false
+        self.l_State = "Idle" -- See sv_states.lua
+        self.l_Weapon = ""
+        self.debuginitstart = SysTime()
+        self.l_NexthealthUpdate = 0
+        self.l_WeaponUseCooldown = 0
+
+
+        -- Personal Stats --
+
+        
         self:SetPlyColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
         self:SetPhysColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
 
         self.l_PlyRealColor = self:GetPlyColor():ToColor()
         self.l_PhysRealColor = self:GetPhysColor():ToColor()
 
-        self.IsMoving = false
-        self.l_State = "ToolgunState" -- See sv_states.lua
-        self.l_Weapon = ""
-        self.debuginitstart = SysTime()
-        self.l_WeaponUseCooldown = 0
-
         self.l_Personality = { -- See sv_chances.lua
-            build = { "Build", random( 1, 100 ) },
-            combat = { "Combat", random( 1, 100 ) },
+            { "Build", random( 1, 100 ) },
+            { "Combat", random( 1, 100 ) },
         }
+
+        self:SetVoicePitch( random( pitchmin:GetInt(), pitchmax:GetInt() ) )
+
+        ----
 
         table.sort( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
@@ -95,15 +108,22 @@ function ENT:Initialize()
         self.WeaponEnt:SetNoDraw( true )
 
         self:InitializeMiniHooks()
-
+        
         self:SwitchWeapon( "TOOLGUN" )
-
         
-        
-        self:SetRespawn( true )
         self:SetWeaponENT( self.WeaponEnt )
+        self:SetRespawn( true )
 
     elseif CLIENT then
+
+        -- For some reason having this properly makes the weapon go invisible when the lambda dies in multiplayer
+        timer.Simple( 0, function()
+            local wep = self:GetWeaponENT()
+            wep.Draw = function( entity )
+                if self:GetIsDead() then return end
+                entity:DrawModel()
+            end
+        end )
 
         self.GetPlayerColor = function() return self:GetPlyColor() end
 
@@ -140,8 +160,15 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Vector", 0, "PlyColor" )
     self:NetworkVar( "Vector", 1, "PhysColor" )
 
+    self:NetworkVar( "Int", 0, "VoicePitch" )
+
     self:SetLambdaName( "Lambda Player" )
 
+end
+
+function ENT:Draw()
+    if self:GetIsDead() then return end
+    self:DrawModel()
 end
 
 
@@ -150,6 +177,11 @@ function ENT:Think()
 
     
     if SERVER then
+        
+        if CurTime() > self.l_NexthealthUpdate then
+            self:UpdateHealthDisplay()
+            self.l_NexthealthUpdate = CurTime() + 0.1
+        end
 
         -- Animations --
             local anims = _LAMBDAPLAYERSHoldTypeAnimations[ self.l_HoldType ]

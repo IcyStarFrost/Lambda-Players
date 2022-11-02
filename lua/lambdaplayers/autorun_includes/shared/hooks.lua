@@ -25,6 +25,8 @@ if SERVER then
 
 elseif CLIENT then
     
+    local DrawText = draw.DrawText
+    local tostring = tostring
 
     hook.Add( "HUDPaint", "LambdaPlayers_NameDisplay", function()
         local sw, sh = ScrW(), ScrH()
@@ -34,8 +36,10 @@ elseif CLIENT then
         if LambdaIsValid( traceent ) and traceent.IsLambdaPlayer then
             local name = traceent:GetLambdaName()
             local colvec = traceent:GetPlyColor()
-
-            draw.DrawText(name, "lambdaplayers_displayname", sw / 2, sh / 1.95, placeholdercolor, TEXT_ALIGN_CENTER)
+            local hp = traceent:GetNW2Float( "lambda_health", "NAN" )
+            
+            DrawText( name, "lambdaplayers_displayname", sw / 2, sh / 1.95, placeholdercolor, TEXT_ALIGN_CENTER )
+            DrawText( tostring( hp ) .. "%", "ChatFont", sw / 2, sh / 1.87, placeholdercolor, TEXT_ALIGN_CENTER)
         end
     
     end )

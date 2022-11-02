@@ -4,6 +4,9 @@ local table_insert = table.insert
 local RealTime = RealTime
 local IsValid = IsValid
 local math_Clamp = math.Clamp
+local cam = cam
+local hook = hook
+local surface = surface
 
 local cleanupvar = GetConVar( "lambdaplayers_corpsecleanuptime" )
 
@@ -17,6 +20,7 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
     if !IsValid( ent ) then return end
 
     local ragdoll = ent:BecomeRagdollOnClient()
+    ragdoll:DrawShadow( true )
     ragdoll.GetPlayerColor = function() return col end
 
     ent.ragdoll = ragdoll
@@ -41,9 +45,10 @@ end )
 
 local volumeconvar = GetConVar( "lambdaplayers_voicevolume" )
 local globalconvar = GetConVar( "lambdaplayers_globalvoice" )
+local voiceicon = Material( "voice/icntlk_pl" )
 
 
-
+-- Voice icons, voice positioning, all that stuff will be handled in here.
 local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
     if IsValid( ent.l_VoiceSnd ) then ent.l_VoiceSnd:Stop() end
@@ -62,7 +67,33 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
         if IsValid( snd ) then
 
+            local followEnt
+            local id = ent:EntIndex()
+            local length = snd:GetLength()
+
+            hook.Add( "PreDrawEffects", "lambdavoiceicon" .. id,function()
+                followEnt = LambdaIsValid( ent ) and ent or IsValid( ent.ragdoll ) and ent.ragdoll or followEnt
+
+                if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then hook.Remove( "PreDrawEffects", "zetavoiceicon" .. id ) return end
+                if RealTime() > RealTime() + length then hook.Remove( "PreDrawEffects", "zetavoiceicon" .. id ) return end
+                if !IsValid( followEnt ) then hook.Remove( "PreDrawEffects", "zetavoiceicon" .. id ) return end
+
+                local ang = EyeAngles()
+                local pos = followEnt:GetPos() + Vector( 0, 0, 80 )
+                ang:RotateAroundAxis( ang:Up(), -90 )
+                ang:RotateAroundAxis( ang:Forward(), 90 )
+            
+                cam.Start3D2D( pos, ang, 1 )
+                    surface.SetMaterial( voiceicon )
+                    surface.SetDrawColor( 255, 255, 255 )
+                    surface.DrawTexturedRect( -8, -8, 16, 16 )
+                cam.End3D2D()
+            end)
+            
+
             ent.l_VoiceSnd = snd
+
+            snd:SetPlaybackRate( ent:GetVoicePitch() / 100 )
 
             if !globalconvar:GetBool() and is3d then
                 snd:Set3DFadeDistance( 300, 0 )
@@ -159,3 +190,14 @@ net.Receive( "lambdaplayers_invalidateragdoll", function()
 
     ent.ragdoll = nil
 end )
+
+
+net.Receive( "lambdaplayers_setnodraw", function() 
+    local ent = net.ReadEntity()
+    local bool = net.ReadBool()
+    if !IsValid( ent ) then return end
+    ent:SetNoDraw( bool or false )
+    ent:DrawShadow( !bool or true )
+end )
+
+

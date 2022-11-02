@@ -23,8 +23,9 @@ function ENT:SwitchWeapon( weaponname )
     self.l_CombatAttackRange = weapondata.attackrange
     self.l_CombatSpeedAdd = weapondata.addspeed or 0
     
-    wepent:SetNoDraw( weapondata.nodraw or false )
-    wepent:DrawShadow( !weapondata.nodraw ) -- Prevent Shadows from rendering
+    self:ClientSideNoDraw( self.WeaponEnt, weapondata.nodraw )
+    self.WeaponEnt:SetNoDraw( weapondata.nodraw )
+    self.WeaponEnt:DrawShadow( !weapondata.nodraw )
 
     wepent:SetModel( weapondata.model )
 

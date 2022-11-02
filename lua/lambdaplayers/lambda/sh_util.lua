@@ -125,12 +125,15 @@ function ENT:GetAttachmentPoint( pointtype )
 if SERVER then
 
     local GetAllNavAreas = navmesh.GetAllNavAreas
-
+    local ignoreplayer = GetConVar( "ai_ignoreplayers" )
     
 
-
     function ENT:CanTarget( ent )
-        return self:Visible( ent ) and ( ent:IsNPC() or ent:IsNextBot() )
+        return self:Visible( ent ) and ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() )
+    end
+
+    function ENT:UpdateHealthDisplay()
+        self:SetNW2Float( "lambda_health", self:Health() )
     end
 
     -- Makes the lambda face the position or a entity if provided
@@ -177,12 +180,14 @@ if SERVER then
         self:DebugPrint( "Respawned" )
         self:SetIsDead( false )
         self:SetPos( self.l_SpawnPos )
-        self:SetNoDraw( false )
-        self:DrawShadow( true )
         self:SetCollisionGroup( COLLISION_GROUP_NONE )
 
-        self.WeaponEnt:SetNoDraw( true )
-        self.WeaponEnt:DrawShadow( false )
+        self:ClientSideNoDraw( self, false )
+        self:ClientSideNoDraw( self.WeaponEnt, false )
+        self:SetNoDraw( false )
+        self:DrawShadow( true )
+        self.WeaponEnt:SetNoDraw( false )
+        self.WeaponEnt:DrawShadow( true )
 
         self:SetHealth( self:GetMaxHealth() )
         self:AddFlags( FL_OBJECT )
@@ -252,7 +257,17 @@ if SERVER then
         net.Broadcast()
     end
 
+    -- Makes the entity no longer draw on the client if bool is set to true.
+    -- Making a entity nodraw server side seemed to have issues in multiplayer
+    function ENT:ClientSideNoDraw( ent, bool )
+        net.Start( "lambdaplayers_setnodraw" )
+            net.WriteEntity( ent )
+            net.WriteBool( bool or false )
+        net.Broadcast()
+    end
+
 elseif CLIENT then
+
 
 
 end
