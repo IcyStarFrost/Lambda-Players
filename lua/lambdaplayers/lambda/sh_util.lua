@@ -10,6 +10,7 @@ local FindInSphere = ents.FindInSphere
 local table_empty = table.Empty
 local file_Find = file.Find
 local table_Empty = table.Empty
+local SortTable = table.sort
 local timer_simple = timer.Simple
 local table_add = table.Add
 local EndsWith = string.EndsWith
@@ -124,6 +125,14 @@ function ENT:GetAttachmentPoint( pointtype )
   end
 --
 
+-- AI/Nextbot creators can assign .LambdaPlayerSTALP = true to their entities if they want the Lambda Players to treat them as a lambda player
+function ENT:ShouldTreatAsLPlayer( ent )
+    if ent.LambdaPlayerSTALP then return true end
+    if ent.IsLambdaPlayer then return true end
+    if ent:IsPlayer() then return true end
+    if ent:IsNPC() or ent:IsNextBot() then return false end
+end
+
 
 -- Turns the Lambda Player into a table of its personal data
 -- See function ENT:ApplyLambdaInfo() to use this data with
@@ -177,7 +186,7 @@ if SERVER then
             { "Build", info.build },
             { "Combat", info.combat },
         }
-        table.sort( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
+        SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
         self:SetVoicePitch( info.voicepitch )
 

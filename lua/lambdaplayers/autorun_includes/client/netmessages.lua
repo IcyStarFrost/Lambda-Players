@@ -10,6 +10,7 @@ local surface = surface
 
 local cleanupvar = GetConVar( "lambdaplayers_corpsecleanuptime" )
 
+
 -- Net sent from ENT:OnKilled()
 net.Receive( "lambdaplayers_becomeragdoll", function() 
     local ent = net.ReadEntity()
@@ -27,9 +28,9 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
 
     local time = cleanupvar:GetInt()
 
-    if time != 0 then timer.Simple( time , function() ragdoll:Remove() end ) end
+    if time != 0 then timer.Simple( time , function() if IsValid( ragdoll ) then ragdoll:Remove() end end ) end
 
-    table_insert( _LAMBDAPLAYERSClientSideRagdolls, ragdoll )
+    table_insert( _LAMBDAPLAYERS_ClientSideEnts, ragdoll )
 
     for i=1, 3 do
         local phys = ent.ragdoll:GetPhysicsObjectNum( i )
@@ -39,6 +40,37 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
         end
 
     end
+
+end )
+
+net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
+    local ent = net.ReadEntity()
+    local force = net.ReadVector()
+    local offset = net.ReadVector()
+    local colvec = net.ReadVector()
+
+    if !IsValid( ent ) then return end
+
+    local cs_prop = ents.CreateClientProp( ent:GetModel() )
+    cs_prop:SetPos( ent:GetPos() )
+    cs_prop:SetAngles( ent:GetAngles() )
+    cs_prop:SetSkin( ent:GetSkin() )
+    cs_prop:SetSubMaterial( 1, ent:GetSubMaterial( 1 ) )
+    cs_prop:SetNW2Vector( "lambda_weaponcolor", colvec )
+    cs_prop:Spawn()
+
+    table_insert( _LAMBDAPLAYERS_ClientSideEnts, cs_prop )
+
+    local phys = cs_prop:GetPhysicsObject()
+
+    if IsValid( phys ) then
+        force = force / 2
+        phys:ApplyForceOffset( force, offset )
+    end
+
+    local time = cleanupvar:GetInt()
+
+    if time != 0 then timer.Simple( time , function() if IsValid( cs_prop ) then cs_prop:Remove() end end ) end
 
 end )
 

@@ -3,8 +3,7 @@ local IsValid = IsValid
 local null_vector = Vector(0, 0, 0)
 local color_white_vector = Vector(1, 1, 1)
 
-
-_LAMBDAPLAYERSClientSideRagdolls = {}
+_LAMBDAPLAYERS_ClientSideEnts = {}
 _LAMBDAPLAYERS_Voicechannels = {}
 
 matproxy.Add({

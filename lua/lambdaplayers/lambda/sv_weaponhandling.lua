@@ -127,6 +127,12 @@ function ENT:UseWeapon( target )
 
 end
 
+-- If the lambda's weapon data has nodraw enabled
+function ENT:IsWeaponMarkedNodraw()
+    local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
+    return weapondata.nodraw
+end
+
 function ENT:SwitchToRandomWeapon()
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
         if _LAMBDAWEAPONALLOWCONVARS[ k ]:GetBool() and k != self.l_Weapon then

@@ -35,6 +35,7 @@ end
 
     local random = math.random
     local rand = math.Rand
+    local SortTable = table.sort
     local aidisable = GetConVar( "ai_disabled" )
     local developer = GetConVar( "developer" )
     local pitchmin = GetConVar( "lambdaplayers_voicepitchmin" )
@@ -99,7 +100,7 @@ function ENT:Initialize()
 
         ----
 
-        table.sort( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
+        SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
         self.loco:SetJumpHeight( 60 )
         self.loco:SetAcceleration( 1000 )

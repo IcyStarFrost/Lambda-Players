@@ -30,6 +30,15 @@ if SERVER then
             net.WriteVector( self:GetPlyColor() )
         net.Broadcast()
 
+        if !self:IsWeaponMarkedNodraw() then
+            net.Start( "lambdaplayers_createclientsidedroppedweapon" )
+                net.WriteEntity( self.WeaponEnt )
+                net.WriteVector( info:GetDamageForce() )
+                net.WriteVector( info:GetDamagePosition() )
+                net.WriteVector( self:GetPhysColor() )
+            net.Broadcast()
+        end
+
         if self:GetRespawn() then
             self:SimpleTimer( 2, function() self:LambdaRespawn() end, true )
         else
@@ -41,7 +50,7 @@ if SERVER then
     function ENT:OnInjured( info )
         local attacker = info:GetAttacker()
 
-        if self:CanTarget( attacker ) and self:GetEnemy() != attacker then
+        if ( self:ShouldTreatAsLPlayer( attacker ) and random( 1, 3 ) == 1 or !self:ShouldTreatAsLPlayer( attacker ) and true ) and self:CanTarget( attacker ) and self:GetEnemy() != attacker  then
             if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
             self:CancelMovement()
             self:SetEnemy( attacker )
