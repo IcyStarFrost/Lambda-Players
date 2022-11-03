@@ -34,6 +34,7 @@ end
 -- Localization
 
     local random = math.random
+    local rand = math.Rand
     local aidisable = GetConVar( "ai_disabled" )
     local developer = GetConVar( "developer" )
     local pitchmin = GetConVar( "lambdaplayers_voicepitchmin" )
@@ -56,6 +57,9 @@ function ENT:Initialize()
 
     if SERVER then
 
+        LambdaPlayerNames = LambdaPlayerNames or LAMBDAFS:GetNameTable()
+        LambdaPlayerProps = LambdaPlayerProps or LAMBDAFS:GetPropTable()
+
         self:SetSolid( SOLID_BBOX )
         self:SetCollisionBounds( Vector( -17, -17, 0 ), Vector( 17, 17, 72 ) )
 
@@ -65,16 +69,19 @@ function ENT:Initialize()
         self.l_State = "Idle" -- See sv_states.lua
         self.l_Weapon = ""
         self.debuginitstart = SysTime()
+        self.l_nextidlesound = CurTime() + 5
+        self.l_lastspeakingtime = 0
         self.l_NexthealthUpdate = 0
         self.l_WeaponUseCooldown = 0
 
 
         -- Personal Stats --
+        self:SetLambdaName( LambdaPlayerNames[ random( #LambdaPlayerNames ) ] )
 
         self:SetMaxHealth( 100 )
         self:SetNWMaxHealth( 100 )
         self:SetHealth( 100 )
-        
+
         self:SetPlyColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
         self:SetPhysColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
         self.l_PlyRealColor = self:GetPlyColor():ToColor()
@@ -82,6 +89,7 @@ function ENT:Initialize()
 
         self:SetBuildChance( random( 1, 100 ) )
         self:SetCombatChance( random( 1, 100 ) )
+        self:SetVoiceChance( random( 1, 100 ) )
         self.l_Personality = { -- See sv_chances.lua
             { "Build", self:GetBuildChance() },
             { "Combat", self:GetCombatChance() },
@@ -98,7 +106,7 @@ function ENT:Initialize()
         self.loco:SetDeceleration( 1000 )
         self.loco:SetStepHeight( 30 )
 
-        
+        self:SetLagCompensated( true )
         self:AddFlags( FL_OBJECT + FL_NPC + FL_CLIENT )
 
         local ap = self:LookupAttachment( "anim_attachment_RH" )
@@ -113,7 +121,6 @@ function ENT:Initialize()
         self.WeaponEnt:SetNoDraw( true )
 
         self:InitializeMiniHooks()
-        
         self:SwitchWeapon( "PHYSGUN" )
         
         self:SetWeaponENT( self.WeaponEnt )
@@ -175,8 +182,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 1, "NWMaxHealth" )
     self:NetworkVar( "Int", 2, "BuildChance" )
     self:NetworkVar( "Int", 3, "CombatChance" )
-
-    self:SetLambdaName( "Lambda Player" )
+    self:NetworkVar( "Int", 4, "VoiceChance" )
 
 end
 
@@ -192,6 +198,11 @@ function ENT:Think()
 
     
     if SERVER then
+
+        if CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 100 ) < self:GetVoiceChance() then
+            self:PlaySoundFile( self:GetRandomSound(), true )
+            self.l_nextidlesound = CurTime() + 5
+        end
         
         if CurTime() > self.l_NexthealthUpdate then
             self:UpdateHealthDisplay()
@@ -269,6 +280,8 @@ end
 
 function ENT:RunBehaviour()
     self:DebugPrint( "Initialized their AI in ", SysTime() - self.debuginitstart, " seconds" )
+
+
 
     while true do
 

@@ -59,6 +59,9 @@ local function AddLambdaPlayersoptions()
                 elseif v.type == "Text" then
                     panel:TextEntry( v.name, v.convar )
                     panel:ControlHelp( v.desc )
+                elseif v.type == "Button" then
+                    panel:Button( v.name, v.concmd )
+                    panel:ControlHelp( v.desc )
                 end
 
             end

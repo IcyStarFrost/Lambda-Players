@@ -53,7 +53,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
     if IsValid( ent.l_VoiceSnd ) then ent.l_VoiceSnd:Stop() end
 
-    local flag = globalconvar:GetBool() and "" or is3d and "3d mono" or "mono"
+    local flag = globalconvar:GetBool() and "" or is3d and "3d mono noplay" or "mono noplay"
 
     sound.PlayFile( "sound/" .. soundname, flag, function( snd, ID, errorname )
         if ID == 21 then
@@ -67,9 +67,16 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
         if IsValid( snd ) then
 
+
+            local volume
             local followEnt
             local id = ent:EntIndex()
             local length = snd:GetLength()
+            local pitch = IsValid( ent ) and ent:GetVoicePitch() or 100
+
+            volume = volumeconvar:GetFloat()
+            snd:SetVolume( volume )
+            snd:Play()
 
             hook.Add( "PreDrawEffects", "lambdavoiceicon" .. id,function()
                 followEnt = LambdaIsValid( ent ) and ent or IsValid( ent.ragdoll ) and ent.ragdoll or followEnt
@@ -93,7 +100,12 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
             ent.l_VoiceSnd = snd
 
-            snd:SetPlaybackRate( ent:GetVoicePitch() / 100 )
+            net.Start( "lambdaplayers_server_sendsoundduration" )
+            net.WriteEntity( ent )
+            net.WriteFloat( length )
+            net.SendToServer()
+
+            snd:SetPlaybackRate( pitch / 100 )
 
             if !globalconvar:GetBool() and is3d then
                 snd:Set3DFadeDistance( 300, 0 )
@@ -103,7 +115,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             local length = snd:GetLength()
             table_insert( _LAMBDAPLAYERS_Voicechannels, { snd, lambda, length } )
         
-            local volume
+            
             local num
             local realtime
             local num2 

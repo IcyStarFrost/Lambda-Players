@@ -6,9 +6,12 @@ local IsValid = IsValid
 local string_find = string.find
 local random = math.random
 local FindInSphere = ents.FindInSphere
+local table_empty = table.Empty
 local file_Find = file.Find
 local table_Empty = table.Empty
 local timer_simple = timer.Simple
+local table_add = table.Add
+local EndsWith = string.EndsWith
 local string_Replace = string.Replace
 local debugmode = GetConVar( "lambdaplayers_debug" )
 
@@ -208,6 +211,10 @@ if SERVER then
         return self.l_LastState
     end
 
+    function ENT:IsSpeaking() 
+        return CurTime() < self.l_lastspeakingtime
+    end
+
     -- Returns the walk speed
     function ENT:GetWalkSpeed()
         return 200
@@ -284,10 +291,34 @@ if SERVER then
         end
     end
 
+    -- Gets a entirely random sound from the source engine sound folder
+    function ENT:GetRandomSound()
+        local dir = "sound/"
+        
+        for i = 1, 10 do
+            local files, directories = file.Find( dir .. "*", "GAME", "nameasc" )
+
+            if #files > 0 and ( i != 10 and random( 1, 2 ) ==  1 ) then
+                local selectedfile = files[ random( #files ) ]
+                if selectedfile and EndsWith( selectedfile, ".mp3" ) or selectedfile and EndsWith( selectedfile, ".wav" ) then return dir .. selectedfile end
+            else
+                local rnd = directories[ random( #directories ) ]
+                if rnd then
+                    dir = dir .. rnd .. "/"
+                end
+            end
+            table_Empty( files ) table_Empty( directories )
+        end
+
+        return ""
+    end
+
     -- Makes the Lambda say the specified file or file path.
     -- Random sound files for example, something/idle/*
     function ENT:PlaySoundFile( filepath, stoponremove )
         local isdir = string_find( filepath, "/*" )
+
+        self.l_lastspeakingtime = CurTime() + 2
 
         if isdir then
             local soundfiles = file_Find( "sound/" .. filepath, "GAME", "nameasc" )

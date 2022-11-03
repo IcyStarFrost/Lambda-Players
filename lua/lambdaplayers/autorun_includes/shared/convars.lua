@@ -51,7 +51,7 @@ local CreateLambdaConvar = CreateLambdaConvar
 CreateLambdaConvar( "lambdaplayers_corpsecleanuptime", 15, true, true, false, "The amount of time before a corpse is removed. Set to zero to disable this", 0, 190, { type = "Slider", name = "Corpse Cleanup Time", decimals = 0, category = "Utilities" } )
 --
 
--- Voice Related Convars. Mostly Client-side
+-- Voice Related Convars.
 CreateLambdaConvar( "lambdaplayers_globalvoice", 0, true, true, false, "If the lambda player voices should be heard globally", 0, 1, { type = "Bool", name = "Global Voices", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voicevolume", 1, true, true, false, "The volume of the lambda player voices", 0, 10, { type = "Slider", name = "Voice Volume", decimals = 2, category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voicepitchmax", 100, true, false, false, "The highest pitch a Lambda Voice can get", 100, 255, { type = "Slider", decimals = 0, name = "Voice Pitch Max", category = "Voice Options" } )
