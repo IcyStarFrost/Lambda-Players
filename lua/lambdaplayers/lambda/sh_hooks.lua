@@ -65,6 +65,7 @@ if SERVER then
 
     end
 
+    -- Part of Duplicator Support. See shared/globals.lua for the other part of the duplicator support
     function ENT:PreEntityCopy()
         self.LambdaPlayerPersonalInfo = self:ExportLambdaInfo()
     end

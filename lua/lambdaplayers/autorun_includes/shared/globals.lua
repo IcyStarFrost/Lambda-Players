@@ -2,6 +2,7 @@ local table_insert = table.insert
 
 _LAMBDAPLAYERSWEAPONS = {}
 
+-- Merge all weapon lua files
 local weaponluafiles = file.Find( "lambdaplayers/lambda/weapons/*", "LUA", "nameasc" )
 
 for k, luafile in ipairs( weaponluafiles ) do
@@ -14,12 +15,15 @@ if CLIENT then
 	_LAMBDAPLAYERSWEAPONORIGINS = {}
 end
 
+-- Automatically creates convars for each weapon
 _LAMBDAWEAPONALLOWCONVARS = {}
 for k, v in pairs( _LAMBDAPLAYERSWEAPONS ) do
     local convar = CreateLambdaConvar( "lambdaplayers_weapons_allow" .. k, 1, true, false, false, "Allows the Lambda Players to equip " .. v.prettyname, 0, 1 )
 	_LAMBDAWEAPONALLOWCONVARS[ k ] = convar
 	if CLIENT then _LAMBDAPLAYERSWEAPONORIGINS[ v.origin ] = v.origin end
 end
+
+
 
 -- Register the Lambdas so the duplicator knows how to handle these guys
 duplicator.RegisterEntityClass( "npc_lambdaplayer", function( ply, Pos, Ang, info )
@@ -29,10 +33,12 @@ duplicator.RegisterEntityClass( "npc_lambdaplayer", function( ply, Pos, Ang, inf
 	lambda:SetAngles( Ang )
 	lambda:Spawn()
 
-	lambda:ApplyLambdaInfo( info ) -- Apply our exported info
+	lambda:ApplyLambdaInfo( info ) -- Apply our exported info when we were originally copied
 
 	return lambda
 end, "Pos", "Ang", "LambdaPlayerPersonalInfo" )
+
+
 
 
 local EntMeta = FindMetaTable("Entity")

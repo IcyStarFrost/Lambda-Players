@@ -3,6 +3,7 @@ local RandomPairs = RandomPairs
 local LambdaIsValid = LambdaIsValid
 local ipairs = ipairs
 local IsValid = IsValid
+local file_Find = file.Find
 local string_find = string.find
 local random = math.random
 local FindInSphere = ents.FindInSphere
@@ -54,7 +55,7 @@ function ENT:SimpleTimer( delay, func, ignoredead )
     end )
 end
 
-
+-- Find in sphere function with a filter
 function ENT:FindInSphere( pos, radius, filter )
     pos = pos or self:GetPos()
     local enttbl = {}
@@ -68,6 +69,7 @@ function ENT:FindInSphere( pos, radius, filter )
     return enttbl
 end
 
+-- Returns bone position and angles
 function ENT:GetBoneTransformation( bone )
     local pos, ang = self:GetBonePosition( bone )
 
@@ -155,6 +157,7 @@ if SERVER then
 
     -- Applies info data from :ExportLambdaInfo() to the Lambda Player
     function ENT:ApplyLambdaInfo( info )
+        self:DebugPrint( "had Lambda Info applied to them" )
 
         self:SetLambdaName( info.name )
         self:SetModel( info.model )
@@ -178,11 +181,12 @@ if SERVER then
 
     end
     
-
+    -- If the we can target the ent
     function ENT:CanTarget( ent )
         return self:Visible( ent ) and ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() )
     end
 
+    -- Updates our networked health
     function ENT:UpdateHealthDisplay()
         self:SetNW2Float( "lambda_health", self:Health() )
     end
@@ -296,7 +300,7 @@ if SERVER then
         local dir = "sound/"
         
         for i = 1, 10 do
-            local files, directories = file.Find( dir .. "*", "GAME", "nameasc" )
+            local files, directories = file_Find( dir .. "*", "GAME", "nameasc" )
 
             if #files > 0 and ( i != 10 and random( 1, 2 ) ==  1 ) then
                 local selectedfile = files[ random( #files ) ]
@@ -338,7 +342,10 @@ if SERVER then
     end
 
     -- Makes the entity no longer draw on the client if bool is set to true.
-    -- Making a entity nodraw server side seemed to have issues in multiplayer
+    -- Making a entity nodraw server side seemed to have issues in multiplayer.
+
+    -- As of 11/2/2022, it seems we need the server nodraw, client nodraw, and usage of Draw functions to make this work right in multiplayer
+
     function ENT:ClientSideNoDraw( ent, bool )
         net.Start( "lambdaplayers_setnodraw" )
             net.WriteEntity( ent )

@@ -6,6 +6,7 @@ local Compress = util.Compress
 local table_Add = table.Add
 file.CreateDir( "lambdaplayers" )
 
+-- Lambda File System
 LAMBDAFS = {}
 
 function LAMBDAFS:WriteFile( filename, content, type ) 

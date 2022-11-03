@@ -44,6 +44,7 @@ end )
 
 
 local volumeconvar = GetConVar( "lambdaplayers_voicevolume" )
+local warnstereo = GetConVar( "lambdaplayers_warnvoicestereo" )
 local globalconvar = GetConVar( "lambdaplayers_globalvoice" )
 local voiceicon = Material( "voice/icntlk_pl" )
 
@@ -57,7 +58,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
     sound.PlayFile( "sound/" .. soundname, flag, function( snd, ID, errorname )
         if ID == 21 then
-            print( "Lambda Players Voice Chat Warning: Sound file " ..soundname .. " has a stereo track and won't be played in 3d. Sound will continue to play" )
+            if warnstereo:GetBool() then print( "Lambda Players Voice Chat Warning: Sound file " ..soundname .. " has a stereo track and won't be played in 3d. Sound will continue to play. You can disable these warnings in Lambda Player>Utilities" ) end
             PlaySoundFile( ent, soundname, index, shouldstoponremove, false )
             return
         elseif ID == 2 then
@@ -78,6 +79,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             snd:SetVolume( volume )
             snd:Play()
 
+            -- Render the voice icon
             hook.Add( "PreDrawEffects", "lambdavoiceicon" .. id,function()
                 followEnt = LambdaIsValid( ent ) and ent or IsValid( ent.ragdoll ) and ent.ragdoll or followEnt
 
@@ -100,6 +102,8 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
             ent.l_VoiceSnd = snd
 
+            -- Tell the server the duration of this sound file
+            -- See server/netmessages.lua
             net.Start( "lambdaplayers_server_sendsoundduration" )
             net.WriteEntity( ent )
             net.WriteFloat( length )
