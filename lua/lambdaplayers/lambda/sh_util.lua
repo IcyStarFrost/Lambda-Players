@@ -140,6 +140,7 @@ function ENT:ExportLambdaInfo()
         -- Chances
         build = self:GetBuildChance(),
         combat = self:GetCombatChance(),
+        voice = self:GetVoiceChance(),
         --
 
         voicepitch = self:GetVoicePitch()
@@ -171,6 +172,7 @@ if SERVER then
 
         self:SetBuildChance( info.build )
         self:SetCombatChance( info.combat )
+        self:SetVoiceChance( info.voice )
         self.l_Personality = {
             { "Build", info.build },
             { "Combat", info.combat },
