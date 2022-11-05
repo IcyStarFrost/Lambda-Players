@@ -19,6 +19,7 @@ local table_add = table.Add
 local EndsWith = string.EndsWith
 local string_Replace = string.Replace
 local eyetracetable = {}
+local GetLambdaPlayers = GetLambdaPlayers
 local debugmode = GetConVar( "lambdaplayers_debug" )
 
 ---- Anything Shared can go here ----
@@ -246,7 +247,7 @@ if SERVER then
 
     -- Returns if we are currently speaking
     function ENT:IsSpeaking() 
-        return CurTime() < self.l_lastspeakingtime
+        return CurTime() < self:GetLastSpeakingTime()
     end
 
     -- Returns the walk speed
@@ -358,7 +359,7 @@ if SERVER then
     function ENT:PlaySoundFile( filepath, stoponremove )
         local isdir = string_find( filepath, "/*" )
 
-        self.l_lastspeakingtime = CurTime() + 2
+        self:SetLastSpeakingTime( CurTime() + 2 )
 
         if isdir then
             local soundfiles = file_Find( "sound/" .. filepath, "GAME", "nameasc" )

@@ -8,5 +8,5 @@ net.Receive( "lambdaplayers_server_sendsoundduration", function( len, ply )
     local dur = net.ReadFloat()
 
     if !IsValid( ent ) then return end
-    ent.l_lastspeakingtime = CurTime() + dur
+    ent:SetLastSpeakingTime( CurTime() + dur )
 end )

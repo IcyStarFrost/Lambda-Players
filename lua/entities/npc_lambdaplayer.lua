@@ -75,7 +75,6 @@ function ENT:Initialize()
         self.debuginitstart = SysTime()
         self.l_nextidlesound = CurTime() + 5
         self.l_SpawnedEntities = {}
-        self.l_lastspeakingtime = 0
         self.l_NexthealthUpdate = 0
         self.l_WeaponUseCooldown = 0
         self.l_currentnavarea = navmesh.GetNavArea( self:WorldSpaceCenter(), 400 )
@@ -192,6 +191,8 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 2, "BuildChance" )
     self:NetworkVar( "Int", 3, "CombatChance" )
     self:NetworkVar( "Int", 4, "VoiceChance" )
+    
+    self:NetworkVar( "Float", 0, "LastSpeakingTime" )
 end
 
 function ENT:Draw()

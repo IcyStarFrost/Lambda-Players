@@ -55,15 +55,15 @@ local function AddLambdaPlayersoptions()
                 if v.category != categoryname then continue end
                 if v.type == "Slider" then
                     panel:NumSlider( v.name, v.convar, v.min, v.max, v.decimals or 2 )
-                    local lbl = panel:ControlHelp( v.desc )
+                    local lbl = panel:ControlHelp( v.desc .. "\nDefault Value: " .. v.default )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
                 elseif v.type == "Bool" then
                     panel:CheckBox( v.name, v.convar )
-                    local lbl = panel:ControlHelp( v.desc )
+                    local lbl = panel:ControlHelp( v.desc .. "\nDefault Value: " .. ( v.default == 1 and "True" or "False") )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
                 elseif v.type == "Text" then
                     panel:TextEntry( v.name, v.convar )
-                    local lbl = panel:ControlHelp( v.desc )
+                    local lbl = panel:ControlHelp( v.desc .. "\nDefault Value: " .. v.default )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
                 elseif v.type == "Button" then
                     panel:Button( v.name, v.concmd )

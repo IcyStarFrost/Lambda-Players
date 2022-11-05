@@ -9,6 +9,7 @@ local Left = string.Left
 local cam = cam
 local hook = hook
 local surface = surface
+local origin = Vector()
 
 local cleanupvar = GetConVar( "lambdaplayers_corpsecleanuptime" )
 
@@ -80,6 +81,7 @@ end )
 local volumeconvar = GetConVar( "lambdaplayers_voice_voicevolume" )
 local warnstereo = GetConVar( "lambdaplayers_voice_warnvoicestereo" )
 local globalconvar = GetConVar( "lambdaplayers_voice_globalvoice" )
+local speaklimit = GetConVar( "lambdaplayers_voice_talklimit" )
 local voiceicon = Material( "voice/icntlk_pl" )
 
 
@@ -87,6 +89,7 @@ local voiceicon = Material( "voice/icntlk_pl" )
 
 -- Voice icons, voice positioning, all that stuff will be handled in here.
 local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
+    if speaklimit:GetInt() > 0 and #_LAMBDAPLAYERS_Voicechannels >= speaklimit:GetInt() then return end
 
     if IsValid( ent.l_VoiceSnd ) then ent.l_VoiceSnd:Stop() end
 
@@ -112,7 +115,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             local pitch = IsValid( ent ) and ent:GetVoicePitch() or 100
 
 
-            local dist = LocalPlayer():GetPos():DistToSqr( ent:GetPos() )
+            local dist = LocalPlayer():GetPos():DistToSqr( IsValid( ent ) and ent:GetPos() or origin )
 
             if dist < ( 2000 * 2000 ) then
                 volume = math_Clamp( volumeconvar:GetFloat() / ( dist / ( 90 * 90 ) ), 0, volumeconvar:GetFloat() )
@@ -191,6 +194,8 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
                 tickent = LambdaIsValid( ent ) and ent or IsValid( ent.ragdoll ) and ent.ragdoll or tickent
 
+                snd:Set3DEnabled( ( !globalconvar:GetBool() and is3d ) )
+
                 if !globalconvar:GetBool() and !is3d then
                     local ply = LocalPlayer()
                     lastpos = IsValid( tickent ) and tickent:GetPos() or lastpos
@@ -248,7 +253,6 @@ net.Receive("lambdaplayers_playsoundfile", function()
     local index = net.ReadUInt( 32 )
 
     if !IsValid(lambda) then return end
-
 
     PlaySoundFile( lambda, soundname, index, shouldstoponremove, true )
 end)
