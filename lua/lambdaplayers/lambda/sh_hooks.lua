@@ -47,6 +47,10 @@ if SERVER then
 
     end
 
+    function ENT:OnRemove()
+        self:CleanSpawnedEntities()
+    end
+
     function ENT:OnInjured( info )
         local attacker = info:GetAttacker()
 
@@ -78,6 +82,11 @@ if SERVER then
     function ENT:PreEntityCopy()
         self.LambdaPlayerPersonalInfo = self:ExportLambdaInfo()
     end
+
+    function ENT:OnNavAreaChanged( old , new ) 
+        self.l_currentnavarea = new
+    end
+    
     
 
 end
@@ -103,6 +112,14 @@ function ENT:InitializeMiniHooks()
                 return true
             end
         
+        end, true )
+
+        self:Hook( "OnEntityCreated", "NPCRelationshipHandle", function( ent )
+            self:SimpleTimer( 0, function() 
+                if IsValid( ent ) and ent:IsNPC() then
+                    self:HandleNPCRelations( ent )
+                end
+            end )
         end, true )
 
     elseif CLIENT then

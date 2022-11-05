@@ -75,9 +75,9 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
 end )
 
 
-local volumeconvar = GetConVar( "lambdaplayers_voicevolume" )
-local warnstereo = GetConVar( "lambdaplayers_warnvoicestereo" )
-local globalconvar = GetConVar( "lambdaplayers_globalvoice" )
+local volumeconvar = GetConVar( "lambdaplayers_voice_voicevolume" )
+local warnstereo = GetConVar( "lambdaplayers_voice_warnvoicestereo" )
+local globalconvar = GetConVar( "lambdaplayers_voice_globalvoice" )
 local voiceicon = Material( "voice/icntlk_pl" )
 
 
@@ -107,7 +107,15 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             local length = snd:GetLength()
             local pitch = IsValid( ent ) and ent:GetVoicePitch() or 100
 
-            volume = volumeconvar:GetFloat()
+
+            local dist = LocalPlayer():GetPos():DistToSqr( ent:GetPos() )
+
+            if dist < ( 2000 * 2000 ) then
+                volume = math_Clamp( volumeconvar:GetFloat() / ( dist / ( 90 * 90 ) ), 0, volumeconvar:GetFloat() )
+            else
+                volume = 0
+            end
+
             snd:SetVolume( volume )
             snd:Play()
 
@@ -249,3 +257,13 @@ net.Receive( "lambdaplayers_setnodraw", function()
 end )
 
 
+net.Receive( "lambdaplayers_notification", function()
+    local text = net.ReadString()
+    local notify = net.ReadUInt( 3 )
+    local snd = net.ReadString()
+
+    notification.AddLegacy( text, notify, 3 )
+
+    if snd then surface.PlaySound( snd ) end
+    
+end )

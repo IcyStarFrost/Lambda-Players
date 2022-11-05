@@ -1,6 +1,6 @@
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
-    CROWBAR = {
+    crowbar = {
         model = "models/weapons/w_crowbar.mdl",
         origin = "Half Life: 2",
         prettyname = "Crowbar",
@@ -8,7 +8,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         ismelee = true,
         bonemerge = true,
         keepdistance = 10,
-        attackrange = 72,
+        attackrange = 50,
 
         damage = 10,
         rateoffire = 0.5,

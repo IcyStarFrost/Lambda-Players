@@ -9,14 +9,12 @@ local IsValid = IsValid
 
 
 function ENT:Idle()
-
-    if random( 1, 3 ) != 1 then
+    if random( 1, 2 ) == 1 then
+        self:ComputeChance()
+    else
         local pos = self:GetRandomPosition()
         self:MoveToPos( pos )
-    else
-        self:ComputeChance()
     end
-
 end
 
 local combattbl = { update = 0.2 }

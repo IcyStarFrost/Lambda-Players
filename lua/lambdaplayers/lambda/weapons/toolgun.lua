@@ -4,7 +4,7 @@ local random = math.random
 local tracetbl = {}
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
-    TOOLGUN = {
+    toolgun = {
         model = "models/weapons/w_toolgun.mdl",
         origin = "Garry's Mod",
         prettyname = "Toolgun",

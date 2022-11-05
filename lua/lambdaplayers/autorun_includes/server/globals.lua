@@ -251,4 +251,44 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
 }
 
 
+_LAMBDAPLAYERSEnemyRelations = {
+    
+    ['npc_combine_s'] = true,
+    ['npc_metropolice'] = true,
+    ['npc_zombie'] = true,
+    ['npc_fastzombie'] = true,
+    ['npc_fastzombie_torso'] = true,
+    ['npc_headcrab_fast'] = true,
+    ['npc_zombie_torso'] = true,
+    ['npc_poisonzombie'] = true,
+    ['npc_headcrab_black'] = true,
+    ['npc_headcrab'] = true,
+    ['npc_zombine'] = true,
+    ['npc_antlion'] = true,
+    ['npc_antlionguard'] = true,
+    ['npc_antlionguardian'] = true,
+    ['npc_antlion_worker'] = true,
+    ['npc_manhack'] = true,
+    ['npc_rollermine'] = true,
+    ['npc_turret_floor'] = true,
+    ['npc_turret_ceiling'] = true,
+    ['npc_combine_camera'] = true,
+    ['npc_combinegunship'] = true,
+    ['npc_helicopter'] = true,
+    ['npc_cscanner'] = true,
+    ['npc_clawscanner'] = true,
+    ['npc_hunter'] = true,
+    ['npc_strider'] = true,
 
+
+  }
+
+
+function LambdaPlayers_Notify( ply, text, notifynum, snd )
+    if !IsValid( ply ) then return end
+    net.Start( "lambdaplayers_notification" )
+    net.WriteString( text )
+    net.WriteUInt( notifynum or NOTIFY_GENERIC, 3 )
+    net.WriteString( snd or "" )
+    net.Send( ply )
+end

@@ -38,9 +38,12 @@ end
     local SortTable = table.sort
     local aidisable = GetConVar( "ai_disabled" )
     local developer = GetConVar( "developer" )
-    local pitchmin = GetConVar( "lambdaplayers_voicepitchmin" )
-    local pitchmax = GetConVar( "lambdaplayers_voicepitchmax" )
+    local pitchmin = GetConVar( "lambdaplayers_voice_voicepitchmin" )
+    local pitchmax = GetConVar( "lambdaplayers_voice_voicepitchmax" )
     local isfunction = isfunction
+    local Lerp = Lerp
+    local color_white = color_white
+    local FrameTime = FrameTime
     local RealTime = RealTime
     
 --
@@ -71,12 +74,15 @@ function ENT:Initialize()
         self.l_Weapon = ""
         self.debuginitstart = SysTime()
         self.l_nextidlesound = CurTime() + 5
+        self.l_SpawnedEntities = {}
         self.l_lastspeakingtime = 0
         self.l_NexthealthUpdate = 0
         self.l_WeaponUseCooldown = 0
+        self.l_currentnavarea = navmesh.GetNavArea( self:WorldSpaceCenter(), 400 )
 
 
         -- Personal Stats --
+        
         self:SetLambdaName( LambdaPlayerNames[ random( #LambdaPlayerNames ) ] )
 
         self:SetMaxHealth( 100 )
@@ -122,10 +128,12 @@ function ENT:Initialize()
         self.WeaponEnt:SetNoDraw( true )
 
         self:InitializeMiniHooks()
-        self:SwitchWeapon( "PHYSGUN" )
+        self:SwitchWeapon( "physgun" )
         
         self:SetWeaponENT( self.WeaponEnt )
         self:SetRespawn( true )
+
+        self:HandleAllValidNPCRelations()
 
     elseif CLIENT then
 
@@ -184,7 +192,6 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 2, "BuildChance" )
     self:NetworkVar( "Int", 3, "CombatChance" )
     self:NetworkVar( "Int", 4, "VoiceChance" )
-
 end
 
 function ENT:Draw()
@@ -208,6 +215,11 @@ function ENT:Think()
         if CurTime() > self.l_NexthealthUpdate then
             self:UpdateHealthDisplay()
             self.l_NexthealthUpdate = CurTime() + 0.1
+        end
+
+        if developer:GetBool() then
+            local attach = self:GetAttachmentPoint( "eyes" )
+            debugoverlay.Line( attach.Pos, self:GetEyeTrace().HitPos, 0.1, color_white, true  )
         end
 
         -- Animations --
@@ -266,7 +278,8 @@ function ENT:Think()
 
     end
     
-
+    if SERVER then self:NextThink( CurTime() + 0.05 ) else self:SetNextClientThink( 0.1 ) end
+    return true
 end
 
 function ENT:BodyUpdate()

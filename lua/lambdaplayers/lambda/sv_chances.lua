@@ -1,5 +1,6 @@
 local ipairs = ipairs
 local random = math.random
+local rand = math.Rand
 
 local function Get100Percents( tbl )
     local count = 0
@@ -33,8 +34,13 @@ end
 -- In the self.l_Personality table, The first args in the internal tables will correspond to these functions
 
 function ENT:Chance_Build()
-
+    self.Face = self:GetPos() + VectorRand( -100, 100 )
+    coroutine.wait( rand( 0.2, 1 ) )
+    self:SpawnProp()
+    coroutine.wait( rand( 0.2, 1 ) )
+    self.Face = nil
 end
+
 
 function ENT:Chance_Combat() 
 

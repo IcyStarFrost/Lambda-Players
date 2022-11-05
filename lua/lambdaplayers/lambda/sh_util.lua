@@ -10,14 +10,18 @@ local FindInSphere = ents.FindInSphere
 local table_empty = table.Empty
 local file_Find = file.Find
 local table_Empty = table.Empty
+local ents_GetAll = ents.GetAll
+local VectorRand = VectorRand
 local SortTable = table.sort
 local timer_simple = timer.Simple
+local Trace = util.TraceLine
 local table_add = table.Add
 local EndsWith = string.EndsWith
 local string_Replace = string.Replace
+local eyetracetable = {}
 local debugmode = GetConVar( "lambdaplayers_debug" )
 
--- Anything Shared can go here
+---- Anything Shared can go here ----
 
 -- Function for debugging prints
 function ENT:DebugPrint( ... )
@@ -89,13 +93,10 @@ end
 
 -- Returns a table that contains a position and angle with the specified type. hand or eyes
 function ENT:GetAttachmentPoint( pointtype )
-
     if pointtype == "hand" then
         local lookup = self:LookupAttachment( 'anim_attachment_RH' )
-  
         if lookup == 0 then
             local bone = self:LookupBone( "ValveBiped.Bip01_R_Hand" )
-
             if !bone then
                 return { Pos = self:WorldSpaceCenter(), Ang = self:GetForward():Angle() }
             else
@@ -105,32 +106,49 @@ function ENT:GetAttachmentPoint( pointtype )
                     return { Pos = self:WorldSpaceCenter(), Ang = self:GetForward():Angle() }
                 end
             end
-
         else
             return self:GetAttachment( lookup )
         end
-  
     elseif pointtype == "eyes" then
-        
         local lookup = self:LookupAttachment( 'eyes' )
-    
         if lookup == 0 then
             return { Pos = self:WorldSpaceCenter() + Vector( 0, 0, 5 ), Ang = self:GetForward():Angle() + Angle( 20, 0, 0 ) }
         else
             return self:GetAttachment( lookup )
         end
-    
     end
-  
-  end
+end
 --
 
--- AI/Nextbot creators can assign .LambdaPlayerSTALP = true to their entities if they want the Lambda Players to treat them as a lambda player
+-- AI/Nextbot creators can assign .LambdaPlayerSTALP = true to their entities if they want the Lambda Players to treat them like players
 function ENT:ShouldTreatAsLPlayer( ent )
     if ent.LambdaPlayerSTALP then return true end
     if ent.IsLambdaPlayer then return true end
     if ent:IsPlayer() then return true end
     if ent:IsNPC() or ent:IsNextBot() then return false end
+end
+
+
+function ENT:EyePos()
+    return self:GetAttachmentPoint( "eyes" ).Pos
+end
+
+function ENT:EyeAngles()
+    return self:GetAttachmentPoint( "eyes" ).Ang
+end
+
+function ENT:GetAimVector()
+    return self:GetAttachmentPoint( "eyes" ).Ang:Forward()
+end
+
+-- Similar to Real Player's :GetEyeTrace()
+function ENT:GetEyeTrace()
+    local attach = self:GetAttachmentPoint( "eyes" )
+    eyetracetable.start = attach.Pos
+    eyetracetable.endpos = attach.Ang:Forward() * 30000
+    eyetracetable.filter = self
+    local result = Trace( eyetracetable )
+    return result
 end
 
 
@@ -226,6 +244,7 @@ if SERVER then
         return self.l_LastState
     end
 
+    -- Returns if we are currently speaking
     function ENT:IsSpeaking() 
         return CurTime() < self.l_lastspeakingtime
     end
@@ -261,7 +280,7 @@ if SERVER then
 
         self:SetHealth( self:GetMaxHealth() )
         self:AddFlags( FL_OBJECT )
-        self:SwitchWeapon( "NONE" )
+        self:SwitchWeapon( "none" )
         self:UpdateHealthDisplay()
         
         self:SetState( "Idle" )
@@ -297,12 +316,18 @@ if SERVER then
         pos = pos or self:GetPos()
         dist = dist or 1500
 
-        local areas = self:GetNavAreas( pos, dist )
+        if navmesh.IsLoaded() then -- If the navmesh is loaded then find a nav area to go to
 
-        for k, v in RandomPairs( areas ) do
-            if LambdaIsValid( v ) then
-                return v:GetRandomPoint()
+            local areas = self:GetNavAreas( pos, dist )
+
+            for k, v in RandomPairs( areas ) do
+                if IsValid( v ) then
+                    return v:GetRandomPoint()
+                end
             end
+
+        else -- If not, try to go to a entirely random spot
+            return self:GetPos() + VectorRand( -dist, dist )
         end
     end
 
@@ -337,6 +362,7 @@ if SERVER then
 
         if isdir then
             local soundfiles = file_Find( "sound/" .. filepath, "GAME", "nameasc" )
+            if !soundfiles then return end
 
             filepath = string_Replace( filepath, "*", soundfiles[ random( #soundfiles ) ] )
             filepath = string_Replace( filepath, "sound/", "")
@@ -355,13 +381,29 @@ if SERVER then
     -- Makes the entity no longer draw on the client if bool is set to true.
     -- Making a entity nodraw server side seemed to have issues in multiplayer.
 
-    -- As of 11/2/2022, it seems we need the server nodraw, client nodraw, and usage of Draw functions to make this work right in multiplayer
+    -- As of 11/2/2022, it seems we need the server nodraw, client nodraw, and usage of Draw functions to make the lambda players to not draw. Kinda cringe but alright
 
     function ENT:ClientSideNoDraw( ent, bool )
         net.Start( "lambdaplayers_setnodraw" )
             net.WriteEntity( ent )
             net.WriteBool( bool or false )
         net.Broadcast()
+    end
+
+    function ENT:Disposition( ent )
+        if _LAMBDAPLAYERSEnemyRelations[ ent:GetClass() ] then return D_HT end
+        return D_NU
+    end
+
+    function ENT:HandleNPCRelations( ent )
+        self:DebugPrint( "handling relationship with ", ent )
+        ent:AddEntityRelationship( self , self:Disposition( ent ), 1 )
+    end
+
+    function ENT:HandleAllValidNPCRelations()
+        for k, v in ipairs( ents_GetAll() ) do 
+            if IsValid( v ) and v:IsNPC() then self:HandleNPCRelations( v ) end
+        end
     end
 
 elseif CLIENT then

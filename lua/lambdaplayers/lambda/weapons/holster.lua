@@ -28,7 +28,7 @@
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
-    NONE = {
+    none = {
         model = "models/hunter/plates/plate.mdl",
         origin = "Misc",
         prettyname = "Holster",

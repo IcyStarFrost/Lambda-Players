@@ -2,6 +2,8 @@
 local pairs = pairs
 local ipairs = ipairs
 local table_insert = table.insert
+local clientcolor = Color( 255, 145, 0 )
+local servercolor = Color( 0, 174, 255 )
 local categories = {}
 
 for k, v in ipairs( _LAMBDAConVarSettings ) do -- See convars.lua 
@@ -13,7 +15,7 @@ local function AddLambdaPlayersoptions()
     for categoryname, _ in pairs( categories ) do
 
         spawnmenu.AddToolMenuOption( "Lambda Player", "Lambda Player", "lambdaplayer_weaponpermissions" , "Weapon Permissions", "", "", function( panel ) 
-
+            panel:Help( "All weapon convars start with lambdaplayers_weapons" )
             for k, v in pairs( _LAMBDAPLAYERSWEAPONORIGINS ) do
 
                 local weaponcheckboxes = {}
@@ -36,7 +38,8 @@ local function AddLambdaPlayersoptions()
                 for weaponclass, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
                     if data.origin == k then
                         local box = panel:CheckBox( "Allow " .. data.prettyname, "lambdaplayers_weapons_allow" .. weaponclass )
-                        panel:ControlHelp( "Server-Side | Allows the Lambda Players to equip " .. data.prettyname )
+                        local lbl = panel:ControlHelp( "Server-Side | Allows the Lambda Players to equip " .. data.prettyname .. "\nConVar: lambdaplayers_weapons_allow" .. weaponclass )
+                        lbl:SetColor( servercolor )
                         table_insert( weaponcheckboxes, box )
                     end
                 end
@@ -47,23 +50,26 @@ local function AddLambdaPlayersoptions()
 
         spawnmenu.AddToolMenuOption( "Lambda Player", "Lambda Player", "lambdaplayer_" .. categoryname , categoryname, "", "", function( panel ) 
 
+
             for k, v in ipairs( _LAMBDAConVarSettings ) do
                 if v.category != categoryname then continue end
-
                 if v.type == "Slider" then
                     panel:NumSlider( v.name, v.convar, v.min, v.max, v.decimals or 2 )
-                    panel:ControlHelp( v.desc )
+                    local lbl = panel:ControlHelp( v.desc )
+                    lbl:SetColor( v.isclient and clientcolor or servercolor )
                 elseif v.type == "Bool" then
                     panel:CheckBox( v.name, v.convar )
-                    panel:ControlHelp( v.desc )
+                    local lbl = panel:ControlHelp( v.desc )
+                    lbl:SetColor( v.isclient and clientcolor or servercolor )
                 elseif v.type == "Text" then
                     panel:TextEntry( v.name, v.convar )
-                    panel:ControlHelp( v.desc )
+                    local lbl = panel:ControlHelp( v.desc )
+                    lbl:SetColor( v.isclient and clientcolor or servercolor )
                 elseif v.type == "Button" then
                     panel:Button( v.name, v.concmd )
-                    panel:ControlHelp( v.desc )
+                    local lbl = panel:ControlHelp( v.desc )
+                    lbl:SetColor( v.isclient and clientcolor or servercolor )
                 end
-
             end
 
         end)

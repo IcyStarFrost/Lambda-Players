@@ -5,7 +5,7 @@ local physgunGlowMat2 = Material("sprites/physg_glow2")
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
-    PHYSGUN = {
+    physgun = {
         model = "models/weapons/w_physics.mdl",
         origin = "Garry's Mod",
         prettyname = "Physics Gun",
