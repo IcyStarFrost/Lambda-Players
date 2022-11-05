@@ -79,6 +79,9 @@ CreateLambdaConvar( "lambdaplayers_building_canedityourents", 1, true, true, tru
 
 -- Voice Related Convars
 CreateLambdaConvar( "lambdaplayers_voice_globalvoice", 0, true, true, false, "If the lambda player voices should be heard globally", 0, 1, { type = "Bool", name = "Global Voices", category = "Voice Options" } )
+CreateLambdaConvar( "lambdaplayers_voice_voicepopups", 1, true, true, false, "If Lambda Players who are speaking should have a Voice Popup", 0, 1, { type = "Bool", name = "Allow Voice Popups", category = "Voice Options" } )
+CreateLambdaConvar( "lambdaplayers_voice_voicepopupxpos", 278, true, true, false, "The position of the voice popups on the x axis of your screen", 0, ( CLIENT and ScrW() or 1 ), { type = "Slider", decimals = 0, name = "Voice Popup X", category = "Voice Options" } )
+CreateLambdaConvar( "lambdaplayers_voice_voicepopupypos", 150, true, true, false, "The position of the voice popups on the y axis of your screen", 0, ( CLIENT and ScrH() or 1 ), { type = "Slider", decimals = 0, name = "Voice Popup Y", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_voicevolume", 1, true, true, false, "The volume of the lambda player voices", 0, 10, { type = "Slider", name = "Voice Volume", decimals = 2, category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_voicepitchmax", 100, true, false, false, "The highest pitch a Lambda Voice can get", 100, 255, { type = "Slider", decimals = 0, name = "Voice Pitch Max", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_voicepitchmin", 100, true, false, false, "The lowest pitch a Lambda Voice can get", 10, 100, { type = "Slider", decimals = 0, name = "Voice Pitch Min", category = "Voice Options" } )

@@ -17,3 +17,9 @@ shadow = true,
 additive = false,
 outline = false,
 } )
+
+surface.CreateFont("VoicePopupText", {
+    font = "Trebuchet MS",
+    size = 24,
+    shadows = true
+})

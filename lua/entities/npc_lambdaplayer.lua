@@ -165,7 +165,7 @@ function ENT:Initialize()
         self:SetFlexWeight(sidewayFlex, 0.5)
     end
 
-    self:MoveMouth( 0 )
+    self:LambdaMoveMouth( 0 )
 
 end
 
@@ -278,7 +278,6 @@ function ENT:Think()
 
     end
     
-    if SERVER then self:NextThink( CurTime() + 0.05 ) else self:SetNextClientThink( 0.1 ) end
     return true
 end
 

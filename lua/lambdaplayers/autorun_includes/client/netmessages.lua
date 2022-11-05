@@ -4,6 +4,8 @@ local table_insert = table.insert
 local RealTime = RealTime
 local IsValid = IsValid
 local math_Clamp = math.Clamp
+local sub = string.sub
+local Left = string.Left
 local cam = cam
 local hook = hook
 local surface = surface
@@ -81,6 +83,8 @@ local globalconvar = GetConVar( "lambdaplayers_voice_globalvoice" )
 local voiceicon = Material( "voice/icntlk_pl" )
 
 
+
+
 -- Voice icons, voice positioning, all that stuff will be handled in here.
 local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
@@ -138,6 +142,8 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                     surface.DrawTexturedRect( -8, -8, 16, 16 )
                 cam.End3D2D()
             end)
+
+            
             
 
             ent.l_VoiceSnd = snd
@@ -157,9 +163,17 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             end
 
             local length = snd:GetLength()
-            table_insert( _LAMBDAPLAYERS_Voicechannels, { snd, lambda, length } )
-        
-            
+            local replaced = false
+
+            for k, v in ipairs( _LAMBDAPLAYERS_Voicechannels ) do
+                if v[ 5 ] == ent:EntIndex() then
+                    _LAMBDAPLAYERS_Voicechannels[ k ] = { snd, ent:GetLambdaName(), Material( "spawnicons/".. sub( ent:GetModel(), 1, #ent:GetModel() - 4 ).. ".png" ), length, ent:EntIndex() }
+                    replaced = true
+                    break
+                end
+            end
+            if !replaced then table_insert( _LAMBDAPLAYERS_Voicechannels, { snd, ent:GetLambdaName(), Material( "spawnicons/".. sub( ent:GetModel(), 1, #ent:GetModel() - 4 ).. ".png" ), length, ent:EntIndex() } ) end
+
             local num
             local realtime
             local num2 
