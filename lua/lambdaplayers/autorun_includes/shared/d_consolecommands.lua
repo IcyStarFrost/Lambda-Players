@@ -30,6 +30,9 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedata", function( ply )
 
     LambdaPlayerNames = LAMBDAFS:GetNameTable()
     LambdaPlayerProps = LAMBDAFS:GetPropTable()
+    Lambdaprofilepictures = LAMBDAFS:GetProfilePictures()
+
+    LambdaPlayers_Notify( ply, "Updated Lambda Data", NOTIFY_HINT, "buttons/button15.wav" )
 
 end, false, "Updates data such as names, props, ect. ", { name = "Update Lambda Data", category = "Utilities" } )
 
@@ -38,6 +41,9 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cleanupclientsideents", function(
     for k, v in ipairs( _LAMBDAPLAYERS_ClientSideEnts ) do
         if IsValid( v ) then v:Remove() end
     end
+
+    surface.PlaySound( "buttons/button15.wav" )
+    notification.AddLegacy( "Cleaned up Client Side Entities!", NOTIFY_CLEANUP, 3 )
 
 end, true, "Removes lambda client side entities such as ragdolls and dropped weapons", { name = "Remove Lambda Client Side ents", category = "Utilities" } )
 

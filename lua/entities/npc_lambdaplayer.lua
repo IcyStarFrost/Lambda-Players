@@ -44,6 +44,7 @@ end
     local Lerp = Lerp
     local color_white = color_white
     local FrameTime = FrameTime
+    local sub = string.sub
     local RealTime = RealTime
     
 --
@@ -63,6 +64,7 @@ function ENT:Initialize()
 
         LambdaPlayerNames = LambdaPlayerNames or LAMBDAFS:GetNameTable()
         LambdaPlayerProps = LambdaPlayerProps or LAMBDAFS:GetPropTable()
+        Lambdaprofilepictures = Lambdaprofilepictures or LAMBDAFS:GetProfilePictures()
 
         self:SetSolid( SOLID_BBOX )
         self:SetCollisionBounds( Vector( -17, -17, 0 ), Vector( 17, 17, 72 ) )
@@ -83,6 +85,7 @@ function ENT:Initialize()
         -- Personal Stats --
         
         self:SetLambdaName( LambdaPlayerNames[ random( #LambdaPlayerNames ) ] )
+        self:SetProfilePicture( #Lambdaprofilepictures > 0 and Lambdaprofilepictures[ random( #Lambdaprofilepictures ) ] or "spawnicons/".. sub( self:GetModel(), 1, #self:GetModel() - 4 ).. ".png" )
 
         self:SetMaxHealth( 100 )
         self:SetNWMaxHealth( 100 )
@@ -174,6 +177,7 @@ function ENT:SetupDataTables()
 
     self:NetworkVar( "String", 0, "LambdaName" ) -- Player name
     self:NetworkVar( "String", 1, "WeaponName" )
+    self:NetworkVar( "String", 2, "ProfilePicture" )
  
     self:NetworkVar( "Bool", 0, "Crouch" )
     self:NetworkVar( "Bool", 1, "IsDead" )

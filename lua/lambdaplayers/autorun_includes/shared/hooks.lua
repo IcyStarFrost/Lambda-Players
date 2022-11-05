@@ -48,7 +48,7 @@ elseif CLIENT then
     
     end )
 
-
+    -- Zeta's old voice pop up
     local function LegacyVoicePopUp( x, y, name, icon, volume, alpha )
         if #name > 17 then name = Left( name, 17 ) .. "..." end
 
@@ -60,6 +60,7 @@ elseif CLIENT then
         draw.DrawText( name, "VoicePopupText", x + 40, y + 12, Color( 255, 255, 255, alpha ), TEXT_ALIGN_LEFT )
     end
 
+    -- Lambda's newer and accurate Voice Pop up
     local function LambdaVoicePopUp( x, y, name, icon, volume, alpha )
         if #name > 20 then name = Left( name, 20 ) .. "..." end
         

@@ -3,6 +3,7 @@ local JSONToTable = util.JSONToTable
 local Decompress = util.Decompress
 local TableToJSON = util.TableToJSON
 local Compress = util.Compress
+local table_insert = table.insert
 local table_Add = table.Add
 file.CreateDir( "lambdaplayers" )
 
@@ -58,4 +59,19 @@ function LAMBDAFS:GetPropTable()
     local defaultcontent = LAMBDAFS:ReadFile( "materials/lambdaplayers/data/props.vmt", "json", "GAME" )
     local mergedtable = table_Add( defaultcontent, customcontent )
     return mergedtable
+end
+
+function LAMBDAFS:GetProfilePictures()
+    Lambdaprofilepictures = {}
+
+    local function MergeDirectory( dir )
+        dir = dir .. "/"
+        local files, dirs = file.Find( dir .. "*", "DATA", "nameasc" )
+        for k, v in ipairs( files ) do table_insert( Lambdaprofilepictures, "../data/" .. dir .. v ) end
+        for k, v in ipairs( dirs ) do MergeDirectory( dir .. v ) end
+    end
+
+    MergeDirectory( "lambdaplayers/custom_profilepictures" )
+    
+    return Lambdaprofilepictures
 end
