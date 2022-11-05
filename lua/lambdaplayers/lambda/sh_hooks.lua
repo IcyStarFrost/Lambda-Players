@@ -128,11 +128,9 @@ function ENT:InitializeMiniHooks()
             if self:GetIsDead() or RealTime() > self.l_lastdraw then return end
 
             if self:GetHasCustomDrawFunction() then
-                self.l_weapondrawfunction = self.l_weapondrawfunction or _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ].Draw
+                local func = _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ].Draw
         
-                if isfunction( self.l_weapondrawfunction ) then self.l_weapondrawfunction( self, self:GetWeaponENT() ) end
-            else
-                self.l_weapondrawfunction = nil
+                if isfunction( func ) then func( self, self:GetWeaponENT() ) end
             end
         
         end, true )

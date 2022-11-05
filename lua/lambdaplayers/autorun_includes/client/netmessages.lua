@@ -31,6 +31,10 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
 
     local time = cleanupvar:GetInt()
 
+--[[     timer.Simple( 2, function()
+        ragdoll:LambdaDisintegrate()
+    end )
+ ]]
     if time != 0 then timer.Simple( time , function() if IsValid( ragdoll ) then ragdoll:Remove() end end ) end
 
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, ragdoll )

@@ -212,7 +212,7 @@ function ENT:Think()
     
     if SERVER then
 
-        if CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 100 ) < self:GetVoiceChance() then
+        if CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 1, 100 ) <= self:GetVoiceChance() then
             self:PlaySoundFile( self:GetRandomSound(), true )
             self.l_nextidlesound = CurTime() + 5
         end

@@ -29,3 +29,24 @@ matproxy.Add({
         mat:SetVector( self.ResultTo, ( col + col * mul ) )
     end
 })
+
+local EntMeta = FindMetaTable("Entity")
+
+
+--[[ function EntMeta:LambdaDisintegrate()
+    local id = self:EntIndex()
+    local uppos = self:GetPos() + self:GetForward() * 100
+    local downpos = self:GetPos() - self:GetForward() * 100
+    local curpos = uppos
+    self:SetRenderClipPlaneEnabled( true )
+    local pos = -self:GetForward():Dot( curpos )
+    hook.Add( "Think", "lambdadisintegrateeffect" .. id, function()
+        if !IsValid( self ) then hook.Remove( "Think", "lambdadisintegrateeffect" .. id ) return end
+        curpos = LerpVector( 0.2 * FrameTime(), curpos, downpos )
+        pos = -self:GetForward():Dot( curpos )
+
+        self:SetRenderClipPlane( -self:GetForward(), pos )
+    end )
+    
+end
+ ]]

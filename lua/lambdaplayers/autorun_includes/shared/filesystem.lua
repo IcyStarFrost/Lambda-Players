@@ -6,7 +6,7 @@ local Compress = util.Compress
 local table_insert = table.insert
 local table_Add = table.Add
 file.CreateDir( "lambdaplayers" )
-
+file.CreateDir( "lambdaplayers/custom_profilepictures" )
 -- Lambda File System
 LAMBDAFS = {}
 
