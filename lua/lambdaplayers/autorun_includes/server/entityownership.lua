@@ -1,6 +1,8 @@
 local IsValid = IsValid
 local ipairs = ipairs
 
+-- We need to know the creators of whatever entities so we can test if we have permission to edit their props or not.
+
 hook.Add( "PlayerSpawnedProp", "lambdaplayers_setCreator", function( ply, mdl, prop )
     timer.Simple( 0, function()
         if IsValid( prop ) then

@@ -12,7 +12,8 @@ function ENT:MoveToPos( pos, options )
     local isent = !isvector( pos )
     if isent and !LambdaIsValid( pos ) then return "failed" end
 
-    if !navmesh.IsLoaded() or !IsValid( self.l_currentnavarea ) then self:MoveToPosOFFNAV( pos, options ) return end
+    -- If there is no nav mesh, try to go to the postion anyway
+    if !navmesh.IsLoaded() or !IsValid( self.l_currentnavarea ) then self:MoveToPosOFFNAV( pos, options ) return end 
 
 	local options = options or {}
     local timeout = options.timeout
@@ -128,11 +129,12 @@ function ENT:MoveToPosOFFNAV( pos, options )
     return "ok"
 end
 
+-- Stops movement from :MoveToPos() and :MoveToPosOFFNAV()
 function ENT:CancelMovement()
     self.AbortMovement = self.IsMoving
 end
 
-
+-- Returns a pathfinding function for the :Compute() function
 function ENT:PathGenerator()
     local stepHeight = self.loco:GetStepHeight()
     local jumpHeight = self.loco:GetJumpHeight()

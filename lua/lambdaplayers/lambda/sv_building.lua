@@ -13,7 +13,7 @@ local caneditnonworld = GetConVar( "lambdaplayers_building_caneditnonworld" )
 
 -- Building Helper functions --
 
-
+-- Removes every entity we spawned
 function ENT:CleanSpawnedEntities()
     self:DebugPrint( "cleaned up all their entities" )
     for k, v in ipairs( self.l_SpawnedEntities ) do
@@ -21,12 +21,14 @@ function ENT:CleanSpawnedEntities()
     end
 end
 
+-- Removes the last entity we spawned
 function ENT:UndoLastSpawnedEnt()
     local ent = self.l_SpawnedEntities[ 1 ]
     table_remove( self.l_SpawnedEntities, 1 )
     if IsValid( ent ) then ent:Remove() self:DebugPrint( "undone", ent ) self:EmitSound( "buttons/button15.wav", 60 ) end
 end
 
+-- If we are able to do whatever on the specified entity
 function ENT:HasPermissionToEdit( ent )
     if !ent:GetPhysicsObject():IsValid() then return false end
     if ent.IsLambdaPlayer then return false end
@@ -40,6 +42,7 @@ end
 
 -- Building Functions --
 
+-- Spawns a prop to where we are looking
 function ENT:SpawnProp()
     if !self:IsUnderLimit( "Prop" ) then return end
 
