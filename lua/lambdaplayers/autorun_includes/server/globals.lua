@@ -240,6 +240,22 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_PHYSGUN,
         crouchWalk = ACT_HL2MP_WALK_CROUCH_PHYSGUN
     },
+    ["zombie"] = {
+        idle = ACT_HL2MP_IDLE_ZOMBIE,
+        run = ACT_HL2MP_RUN_ZOMBIE,
+        walk = ACT_HL2MP_WALK_ZOMBIE,
+        jump = ACT_ZOMBIE_LEAPING,
+        crouchIdle = ACT_HL2MP_IDLE_CROUCH_ZOMBIE,
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_ZOMBIE
+    },
+    ["knife"] = {
+        idle = ACT_HL2MP_IDLE_KNIFE,
+        run = ACT_HL2MP_RUN_KNIFE,
+        walk = ACT_HL2MP_WALK_KNIFE,
+        jump = ACT_HL2MP_JUMP_KNIFE,
+        crouchIdle = ACT_HL2MP_IDLE_CROUCH_KNIFE,
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_KNIFE
+    },
     ["crossbow"] = {
         idle = ACT_HL2MP_IDLE_CROSSBOW,
         run = ACT_HL2MP_RUN_CROSSBOW,
