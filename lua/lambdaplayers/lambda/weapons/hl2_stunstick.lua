@@ -1,5 +1,6 @@
 local util_Effect = util.Effect
 local random = math.random
+local stunstickGlow = Material("effects/blueflare1")
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     stunstick = {
@@ -15,8 +16,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         -- Custom effect similar to player stunstick
         Draw = function( lambda, wepent )
             if IsValid( wepent ) then
-            
-                local stunstickGlow = Material("effects/blueflare1")
+
                 local size = random(4, 6)
                 local drawPos = ( wepent:GetPos() - wepent:GetForward() * 12 - wepent:GetRight() + wepent:GetUp() )
                 local color = Color(255, 255, 255)
@@ -41,7 +41,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         callback = function( self, wepent, target )
             
             local effect = EffectData()
-                effect:SetOrigin(target:GetPos()+target:OBBCenter())
+                effect:SetOrigin( target:WorldSpaceCenter() ) -- World space center is the same as GetPos + ObbCenter
                 effect:SetMagnitude(1)
                 effect:SetScale(2)
                 effect:SetRadius(4)
