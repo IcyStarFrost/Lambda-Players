@@ -52,7 +52,7 @@ function EntMeta:LambdaDisintegrate()
     local curpos
     local pos
     local nextparticle = 0
-    local endtime = RealTime() + 4
+    local endtime = RealTime() + 5
     self:SetRenderClipPlaneEnabled( true )
     self:EmitSound( "lambdaplayers/misc/disintegrate.mp3", 65 )
 

@@ -39,7 +39,9 @@ duplicator.RegisterEntityClass( "npc_lambdaplayer", function( ply, Pos, Ang, inf
 end, "Pos", "Ang", "LambdaPlayerPersonalInfo" )
 
 
-
+function LambdaScreenScale( x )
+	return x * ( ScrW() / 640.0 )
+end
 
 local EntMeta = FindMetaTable("Entity")
 

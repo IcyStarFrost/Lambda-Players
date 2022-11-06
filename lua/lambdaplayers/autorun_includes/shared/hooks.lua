@@ -3,8 +3,11 @@ local IsValid = IsValid
 local ipairs = ipairs
 local table_remove = table.remove
 local RealTime = RealTime
+local ScreenScale = ScreenScale
+local LambdaScreenScale = LambdaScreenScale
 local Left = string.Left
 local placeholdercolor = Color( 255,136,0)
+local uiscale = GetConVar( "lambdaplayers_uiscale" )
 
 if SERVER then
 
@@ -42,14 +45,14 @@ elseif CLIENT then
             local colvec = traceent:GetPlyColor()
             local hp = traceent:GetNW2Float( "lambda_health", "NAN" )
             
-            DrawText( name, "lambdaplayers_displayname", sw / 2, sh / 1.95, placeholdercolor, TEXT_ALIGN_CENTER )
-            DrawText( tostring( hp ) .. "%", "ChatFont", sw / 2, sh / 1.87, placeholdercolor, TEXT_ALIGN_CENTER)
+            DrawText( name, "lambdaplayers_displayname", ( sw / 2 ), ( sh / 1.95 ) , placeholdercolor, TEXT_ALIGN_CENTER )
+            DrawText( tostring( hp ) .. "%", "lambdaplayers_healthfont", ( sw / 2 ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), placeholdercolor, TEXT_ALIGN_CENTER)
         end
     
     end )
 
     -- Zeta's old voice pop up
-    local function LegacyVoicePopUp( x, y, name, icon, volume, alpha )
+--[[     local function LegacyVoicePopUp( x, y, name, icon, volume, alpha )
         if #name > 17 then name = Left( name, 17 ) .. "..." end
 
         local popupColor = Color(0, 255 * volume, 0, alpha )
@@ -57,19 +60,25 @@ elseif CLIENT then
         surface.SetDrawColor( Color(255, 255, 255, alpha ) )
         surface.SetMaterial( icon )
         surface.DrawTexturedRect(x + 5, y + 9, 32, 32)
-        draw.DrawText( name, "VoicePopupText", x + 40, y + 12, Color( 255, 255, 255, alpha ), TEXT_ALIGN_LEFT )
-    end
+        draw.DrawText( name, "lambdaplayers_voicepopuptext", x + 40, y + 12, Color( 255, 255, 255, alpha ), TEXT_ALIGN_LEFT )
+    end ]]
+
+    local draw_RoundedBox = draw.RoundedBox
+    local surface_SetDrawColor = surface.SetDrawColor
+    local surface_SetMaterial = surface.SetMaterial
+    local surface_DrawTexturedRect = surface.DrawTexturedRect
+    local draw_DrawText = draw.DrawText
 
     -- Lambda's newer and accurate Voice Pop up
     local function LambdaVoicePopUp( x, y, name, icon, volume, alpha )
-        if #name > 20 then name = Left( name, 20 ) .. "..." end
+        if #name > 20 + uiscale:GetFloat() then name = Left( name, 20 + uiscale:GetFloat() ) .. "..." end
         
         local popupColor = Color(0, 255 * volume, 0, alpha )
-        draw.RoundedBox(4, x - 24, y, 250, 40, popupColor)
-        surface.SetDrawColor( Color(255, 255, 255, alpha ) )
-        surface.SetMaterial( icon )
-        surface.DrawTexturedRect(x - 19, y + 5, 32, 32)
-        draw.DrawText( name, "VoicePopupText", x + 16, y + 7, Color( 255, 255, 255, alpha ), TEXT_ALIGN_LEFT )
+        draw_RoundedBox(4, x - 24, y, LambdaScreenScale( 83.5 + uiscale:GetFloat() ), LambdaScreenScale( 13.5 + uiscale:GetFloat() ), popupColor)
+        surface_SetDrawColor( Color(255, 255, 255, alpha ) )
+        surface_SetMaterial( icon )
+        surface_DrawTexturedRect(x - 19, y + 5, LambdaScreenScale( 11 + uiscale:GetFloat() ), LambdaScreenScale( 11 + uiscale:GetFloat() ))
+        draw_DrawText( name, "lambdaplayers_voicepopuptext", x + LambdaScreenScale( 9 + uiscale:GetFloat() ), y + 10, Color( 255, 255, 255, alpha ), TEXT_ALIGN_LEFT )
     end
 
     local allowvoicepopups = GetConVar( "lambdaplayers_voice_voicepopups" )
@@ -82,7 +91,7 @@ elseif CLIENT then
         for k, v in ipairs( _LAMBDAPLAYERS_Voicechannels ) do
             local w, h = ScrW(), ScrH()
             local x, y = ( w - xvar:GetFloat() ), ( h - yvar:GetFloat() )
-            y = y + k*-60
+            y = y + ( k*-LambdaScreenScale( 20 + uiscale:GetFloat() ) )
 
             v[ "alpha" ] = v[ "alpha" ] or 245
 
