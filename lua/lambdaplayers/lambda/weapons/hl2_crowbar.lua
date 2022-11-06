@@ -11,7 +11,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 50,
 
         damage = 10,
-        rateoffire = 0.5,
+        rateoffire = 0.4,
         attackanim = ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE,
         attacksnd = "weapons/iceaxe/iceaxe_swing1.wav",
         hitsnd = "physics/flesh/flesh_impact_bullet*5*.wav",
