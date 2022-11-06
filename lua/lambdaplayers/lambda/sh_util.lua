@@ -190,26 +190,26 @@ if SERVER then
     function ENT:ApplyLambdaInfo( info )
         self:DebugPrint( "had Lambda Info applied to them" )
 
-        self:SetLambdaName( info.name )
-        self:SetModel( info.model )
-        self:SetMaxHealth( info.health )
-        self:SetHealth( info.health )
-        self:SetNWMaxHealth( info.health )
+        self:SetLambdaName( info.name or self:GetLambdaName() )
+        self:SetModel( info.model or self:GetModel() )
+        self:SetMaxHealth( info.health or self:GetMaxHealth() )
+        self:SetHealth( info.health or self:GetMaxHealth() )
+        self:SetNWMaxHealth( info.health or self:GetMaxHealth() )
 
-        self:SetPlyColor( info.plycolor )
-        self:SetPhysColor( info.physcolor )
-        self.WeaponEnt:SetNW2Vector( "lambda_weaponcolor", info.physcolor )
+        self:SetPlyColor( info.plycolor or self:GetPlyColor() )
+        self:SetPhysColor( info.physcolor or self:GetPhysColor() )
+        self.WeaponEnt:SetNW2Vector( "lambda_weaponcolor", ( info.physcolor or self:GetPhysColor() ) )
 
-        self:SetBuildChance( info.build )
-        self:SetCombatChance( info.combat )
-        self:SetVoiceChance( info.voice )
+        self:SetBuildChance( info.build or self:GetBuildChance() )
+        self:SetCombatChance( info.combat or self:GetCombatChance() )
+        self:SetVoiceChance( info.voice or self:GetVoiceChance() )
         self.l_Personality = {
-            { "Build", info.build },
-            { "Combat", info.combat },
+            { "Build", info.build or self:GetBuildChance() },
+            { "Combat", info.combat or self:GetCombatChance() },
         }
         SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
-        self:SetVoicePitch( info.voicepitch )
+        self:SetVoicePitch( info.voicepitch or self:GetVoicePitch() )
 
     end
     
