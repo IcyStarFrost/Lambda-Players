@@ -19,8 +19,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             
             -- To make sure damage syncs with the animation
-            timer.Simple(0.3, function()
-                if !IsValid(self) or self:GetIsDead() or !IsValid(target) or self:GetRangeTo(target) > (65) then return end
+            self:SimpleTimer(0.3, function()
+                if self:GetRangeTo(target) > (65) then return end
                 
                 local dmg = random(40,50)
                 local dmginfo = DamageInfo()
