@@ -26,7 +26,7 @@ local debugmode = GetConVar( "lambdaplayers_debug" )
 
 -- Function for debugging prints
 function ENT:DebugPrint( ... )
-    if !debugmode:GetBool() then return end
+    if debugmode and !debugmode:GetBool() then return end
     print( self:GetLambdaName() .. " EntIndex = ( " .. self:EntIndex() .. " )" .. ": ", ... )
 end
 

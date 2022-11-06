@@ -74,8 +74,12 @@ CreateLambdaConvar( "lambdaplayers_corpsecleanupeffect", 0, true, true, false, "
 CreateLambdaConvar( "lambdaplayers_voice_warnvoicestereo", 0, true, true, false, "If console should warn you about voice lines that have stereo channels", 0, 1, { type = "Bool", name = "Warn Stereo Voices", category = "Utilities" } )
 --
 
+-- Lambda Player Server Convars
+CreateLambdaConvar( "lambdaplayers_lambda_allownonadminrespawn", 0, true, false, false, "If Non Admins are allowed to spawn respawning Lambda Players. If off, only admins can spawn respawning lambda players", 0, 1, { type = "Bool", name = "Allow Non Admin Respawn", category = "Lambda Server Settings" } )
+--
+
 -- Lambda Player Convars
-CreateLambdaConvar( "lambdaplayers_lambda_shouldrespawn", 0, true, true, true, "If lambda players should respawn when they die. Note: Changing this will only apply to newly spawned lambda players", 0, 1, { type = "Bool", name = "Respawn", category = "Lambda Player Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_shouldrespawn", 0, true, true, true, "If lambda players should respawn when they die. Note: Changing this will only apply to newly spawned lambda players AND only if the server allows the respawn option for non admins", 0, 1, { type = "Bool", name = "Respawn", category = "Lambda Player Settings" } )
 --
 
 -- Building Convars

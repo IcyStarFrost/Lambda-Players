@@ -134,11 +134,12 @@ if SERVER then
         end
     end
 
-
+    local canuserespawn = GetConVar( "lambdaplayers_lambda_allownonadminrespawn" )
     function ENT:OnSpawnedByPlayer( ply )
         local respawn = tobool( ply:GetInfoNum( "lambdaplayers_lambda_shouldrespawn", 0 ) )
 
-        self:SetRespawn( respawn )
+        self:SetRespawn( ply:IsAdmin() or !ply:IsAdmin() and canuserespawn:GetBool() )
+
         self:DebugPrint( "Applied client settings from ", ply )
     end
 
