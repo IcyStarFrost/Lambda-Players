@@ -67,11 +67,13 @@ if SERVER then
         local attacker = info:GetAttacker()
 
         if victim == self:GetEnemy() then
+            self:DebugPrint( "Enemy was killed ", victim )
             self:SetEnemy( nil )
         end
 
         -- If we killed the victim
         if attacker == self then
+            self:DebugPrint( "killed ", victim )
 
         else -- Someone else killed the victim
 
