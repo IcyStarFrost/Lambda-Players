@@ -165,6 +165,8 @@ function ENT:InitializeMiniHooks()
 
             local potentialdeath = ( self:Health() - info:GetDamage() ) <= 0
             if self:GetRespawn() and potentialdeath then
+                info:SetDamageBonus( 0 )
+                info:SetBaseDamage( 0 )
                 info:SetDamage( 0 ) -- We need this because apparently the nextbot would think it is dead and do some wacky health issues without it
                 self:OnKilled( info )
                 return true

@@ -145,7 +145,7 @@ function ENT:Initialize()
         self.WeaponEnt:SetNoDraw( true )
 
         self:InitializeMiniHooks()
-        self:SwitchWeapon( "pistol" )
+        self:SwitchWeapon( "physgun" )
         
         self:SetWeaponENT( self.WeaponEnt )
 
@@ -302,7 +302,7 @@ function ENT:Think()
 
     end
     
-    return true
+
 end
 
 function ENT:BodyUpdate()
