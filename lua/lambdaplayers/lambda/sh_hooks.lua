@@ -6,7 +6,22 @@ local tobool = tobool
 
 if SERVER then
 
-    function ENT:OnKilled( info )
+    function ENT:OnKilled()
+        ErrorNoHaltWithStack( "WARNING! ", self:GetLambdaName(), " was killed on a engine level! This should never happen!" )
+    end
+
+
+    function ENT:OnTraceAttack( info, dir, trace )
+        local potentialdeath = ( self:Health() - info:GetDamage() ) <= 0
+        if self:GetRespawn() and potentialdeath then
+            info:SetDamageBonus( 0 )
+            info:SetBaseDamage( 0 )
+            info:SetDamage( 0 )
+            self:LambdaOnKilled( info )
+        end
+    end
+
+    function ENT:LambdaOnKilled( info )
         if self:GetIsDead() then return end
 
         self:PlaySoundFile( "vo/npc/male01/pain0" .. random( 1, 9 ) .. ".wav" )
@@ -168,7 +183,7 @@ function ENT:InitializeMiniHooks()
                 info:SetDamageBonus( 0 )
                 info:SetBaseDamage( 0 )
                 info:SetDamage( 0 ) -- We need this because apparently the nextbot would think it is dead and do some wacky health issues without it
-                self:OnKilled( info )
+                self:LambdaOnKilled( info )
                 return true
             end
         
