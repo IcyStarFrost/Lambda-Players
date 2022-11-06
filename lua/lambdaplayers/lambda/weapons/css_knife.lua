@@ -26,8 +26,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 			local backstabCheck = self:WorldToLocalAngles(target:GetAngles() + Angle(0,-90,0))
 			
             self.l_WeaponUseCooldown = CurTime() + 0.5
-            print(self.l_WeaponUseCooldown)
-            print(CurTime())
             
             --if CurTime() > self.l_WeaponUseCooldown + 0.4 then firstSwing = true end
 
@@ -48,7 +46,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             dmginfo:SetInflictor( wepent )
             dmginfo:SetDamageType( DMG_SLASH )
             dmginfo:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg )
-            print(dmg)
 
 			self.l_WeaponUseCooldown = CurTime() + (isBackstab and 1.0 or 0.5)
             target:EmitSound( "weapons/knife/knife_hit"..random(4)..".wav", 70 )

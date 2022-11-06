@@ -43,10 +43,13 @@ hook.Add( "PlayerSpawnedSWEP", "lambdaplayers_setCreator", function( ply, swep )
     end)
 end)
 
-hook.Add( 'PlayerSpawnedNPC', 'lambdaplayers_setCreator', function( ply, ent )
+hook.Add( "PlayerSpawnedNPC", "lambdaplayers_setCreator", function( ply, ent )
     timer.Simple( 0, function()
         if IsValid( ent ) then
             ent:SetCreator( ply )
+            if ent.IsLambdaPlayer then
+                ent:OnSpawnedByPlayer( ply )
+            end
         end
     end) 
 end)

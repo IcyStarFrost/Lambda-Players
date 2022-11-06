@@ -86,7 +86,7 @@ if SERVER then
         self.LambdaPlayerPersonalInfo = self:ExportLambdaInfo()
     end
 
-    
+
     -- Sets our current nav area
     function ENT:OnNavAreaChanged( old , new ) 
         self.l_currentnavarea = new
@@ -132,6 +132,14 @@ if SERVER then
                 self:TakeDamageInfo( dmginfo )
             end
         end
+    end
+
+
+    function ENT:OnSpawnedByPlayer( ply )
+        local respawn = tobool( ply:GetInfoNum( "lambdaplayers_lambda_shouldrespawn", 0 ) )
+
+        self:SetRespawn( respawn )
+        self:DebugPrint( "Applied client settings from ", ply )
     end
 
 end

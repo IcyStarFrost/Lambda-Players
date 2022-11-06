@@ -1,4 +1,6 @@
 local random = math.random
+local math_min = math.min
+local CurTime = CurTime
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 -- Missing leap attack and HP on kill
 
@@ -26,7 +28,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             -- HP Auto Regen
             lambda:Hook( "Think", "ZombieClawsThink", function( )
                 if NextHPRegenTime and CurTime() > NextHPRegenTime and lambda:Health() < lambda:GetMaxHealth() then
-                    lambda:SetHealth(math.min(lambda:Health() + 1, lambda:GetMaxHealth()))
+                    lambda:SetHealth(math_min(lambda:Health() + 1, lambda:GetMaxHealth()))
                     NextHPRegenTime = CurTime() + 0.5
                 end
             end)
