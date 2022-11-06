@@ -3,6 +3,9 @@ local IsValid = IsValid
 local null_vector = Vector(0, 0, 0)
 local color_white_vector = Vector(1, 1, 1)
 local random = math.random
+local Vector = Vector
+local LerpVector = LerpVector
+local VectorRand = VectorRand
 local table_insert = table.insert
 local table_remove = table.remove
 

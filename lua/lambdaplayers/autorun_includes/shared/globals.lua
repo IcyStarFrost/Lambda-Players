@@ -25,6 +25,7 @@ end
 
 
 
+-- One part of the duplicator support
 -- Register the Lambdas so the duplicator knows how to handle these guys
 duplicator.RegisterEntityClass( "npc_lambdaplayer", function( ply, Pos, Ang, info )
 
@@ -39,6 +40,9 @@ duplicator.RegisterEntityClass( "npc_lambdaplayer", function( ply, Pos, Ang, inf
 end, "Pos", "Ang", "LambdaPlayerPersonalInfo" )
 
 
+
+-- Custom ScreenScale function
+-- Mostly used for testing but it's here if we want to do something with it
 function LambdaScreenScale( x )
 	return x * ( ScrW() / 640.0 )
 end

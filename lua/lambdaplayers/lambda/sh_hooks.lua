@@ -1,8 +1,8 @@
 
 local SimpleTimer = timer.Simple
 local random = math.random
-
-
+local ents_Create = ents.Create
+local tobool = tobool
 
 if SERVER then
 
@@ -70,6 +70,9 @@ if SERVER then
         -- If we killed the victim
         if attacker == self then
             
+            if victim == self:GetEnemy() then
+                self:SetEnemy( nil )
+            end
 
         else -- Someone else killed the victim
 
@@ -83,11 +86,13 @@ if SERVER then
         self.LambdaPlayerPersonalInfo = self:ExportLambdaInfo()
     end
 
+    
+    -- Sets our current nav area
     function ENT:OnNavAreaChanged( old , new ) 
         self.l_currentnavarea = new
     end
     
-    
+    -- Called when we collide with something
     function ENT:HandleCollision( data )
         local collider = data.HitEntity
         if !IsValid( collider ) then return end

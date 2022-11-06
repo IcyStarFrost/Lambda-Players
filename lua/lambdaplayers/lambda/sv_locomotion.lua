@@ -6,11 +6,16 @@ local aidisable = GetConVar( "ai_disabled" )
 local IsValid = IsValid
 local math_max = math.max
 local color_white = color_white
+local isvector = isvector
 local Trace = util.TraceLine
+local isfunction = isfunction
+local debugoverlay = debugoverlay
+local CurTime = CurTime
 local tracetable = {}
 local ents_FindByName = ents.FindByName
 
 -- Start off simple
+-- Pos arg can be a vector or a entity.
 function ENT:MoveToPos( pos, options )
     local isent = !isvector( pos )
     if isent and !LambdaIsValid( pos ) then return "failed" end
@@ -180,6 +185,8 @@ local doorClasses = {
     ["func_door_rotating"] = true
 }
 
+
+-- Fires a trace in front of the player that will open doors if it hits a door
 function ENT:DoorCheck()
     if CurTime() < self.l_nextdoorcheck then return end
 

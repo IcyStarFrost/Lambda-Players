@@ -1,7 +1,6 @@
 AddCSLuaFile()
 
 ENT.Base = "base_nextbot"
-ENT.Spawnable = true
 ENT.PrintName = "Lambda Player"
 ENT.Author = "StarFrost"
 ENT.IsLambdaPlayer = true
@@ -40,8 +39,13 @@ end
     local developer = GetConVar( "developer" )
     local pitchmin = GetConVar( "lambdaplayers_voice_voicepitchmin" )
     local pitchmax = GetConVar( "lambdaplayers_voice_voicepitchmax" )
+    local idledir = GetConVar( "lambdaplayers_voice_idledir" )
     local isfunction = isfunction
     local Lerp = Lerp
+    local isentity = isentity
+    local Vector = Vector
+    local debugoverlay = debugoverlay
+    local CurTime = CurTime
     local color_white = color_white
     local FrameTime = FrameTime
     local sub = string.sub
@@ -142,7 +146,6 @@ function ENT:Initialize()
         self:SwitchWeapon( "physgun" )
         
         self:SetWeaponENT( self.WeaponEnt )
-        self:SetRespawn( true )
 
         self:HandleAllValidNPCRelations()
 
@@ -223,7 +226,7 @@ function ENT:Think()
         if self.l_ispickedupbyphysgun then self.loco:SetVelocity( Vector() ) end
 
         if CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 1, 100 ) <= self:GetVoiceChance() then
-            self:PlaySoundFile( self:GetRandomSound(), true )
+            self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or idledir:GetString() .. "/*", true )
             self.l_nextidlesound = CurTime() + 5
         end
         
@@ -258,7 +261,6 @@ function ENT:Think()
             elseif !self:IsOnGround() and self:GetActivity() != anims.jump then
                 self:StartActivity( anims.jump )
             end
-
         --
 
 
@@ -283,7 +285,6 @@ function ENT:Think()
             self:SetPoseParameter( 'head_pitch', approachp )
             self:SetPoseParameter( 'aim_yaw', approachaimy )
             self:SetPoseParameter( 'aim_pitch', approachaimp )
- 
         else
             local approachy = Lerp( 4 * FrameTime(), self:GetPoseParameter('head_yaw'), 0 )
             local approachp = Lerp( 4 * FrameTime(), self:GetPoseParameter('head_pitch'), 0 )
@@ -294,7 +295,6 @@ function ENT:Think()
             self:SetPoseParameter( 'head_pitch', approachp )
             self:SetPoseParameter( 'aim_yaw', approachaimy )
             self:SetPoseParameter( 'aim_pitch', approachaimp )
-
         end
 
     end
@@ -310,6 +310,8 @@ function ENT:BodyUpdate()
     
     self:FrameAdvance()
 end
+
+
 
 
 function ENT:RunBehaviour()

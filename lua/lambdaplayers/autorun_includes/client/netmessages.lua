@@ -9,6 +9,7 @@ local Left = string.Left
 local cam = cam
 local hook = hook
 local surface = surface
+local LocalPlayer = LocalPlayer
 local origin = Vector()
 
 local cleanupvar = GetConVar( "lambdaplayers_corpsecleanuptime" )

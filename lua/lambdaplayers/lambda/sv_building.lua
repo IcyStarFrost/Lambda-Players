@@ -5,6 +5,7 @@ local ipairs = ipairs
 local table_insert = table.insert
 local table_remove = table.remove
 local tobool = tobool
+local Angle = Angle
 
 local caneditworld = GetConVar( "lambdaplayers_building_caneditworld" )
 local caneditnonworld = GetConVar( "lambdaplayers_building_caneditnonworld" )

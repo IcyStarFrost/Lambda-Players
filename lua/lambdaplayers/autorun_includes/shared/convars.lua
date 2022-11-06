@@ -74,6 +74,10 @@ CreateLambdaConvar( "lambdaplayers_corpsecleanupeffect", 0, true, true, false, "
 CreateLambdaConvar( "lambdaplayers_voice_warnvoicestereo", 0, true, true, false, "If console should warn you about voice lines that have stereo channels", 0, 1, { type = "Bool", name = "Warn Stereo Voices", category = "Utilities" } )
 --
 
+-- Lambda Player Convars
+CreateLambdaConvar( "lambdaplayers_lambda_shouldrespawn", 0, true, true, true, "If lambda players should respawn when they die. Note: Changing this will only apply to newly spawned lambda players", 0, 1, { type = "Bool", name = "Respawn", category = "Lambda Player Settings" } )
+--
+
 -- Building Convars
 CreateLambdaConvar( "lambdaplayers_building_caneditworld", 1, true, false, false, "If the lambda players are allowed to use the Physgun and Toolgun on world entities", 0, 1, { type = "Bool", name = "Allow Edit World", category = "Building" } )
 CreateLambdaConvar( "lambdaplayers_building_caneditnonworld", 1, true, false, false, "If the lambda players are allowed to use the Physgun and Toolgun on non world entities. Typically player spawned entities and addon spawned entities", 0, 1, { type = "Bool", name = "Allow Edit Non World", category = "Building" } )
@@ -89,6 +93,7 @@ CreateLambdaConvar( "lambdaplayers_voice_voicepopupxpos", 278, true, true, false
 CreateLambdaConvar( "lambdaplayers_voice_voicepopupypos", 150, true, true, false, "The position of the voice popups on the y axis of your screen", 0, ( CLIENT and ScrH() or 1 ), { type = "Slider", decimals = 0, name = "Voice Popup Y", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_voicepitchmax", 100, true, false, false, "The highest pitch a Lambda Voice can get", 100, 255, { type = "Slider", decimals = 0, name = "Voice Pitch Max", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_voicepitchmin", 100, true, false, false, "The lowest pitch a Lambda Voice can get", 10, 100, { type = "Slider", decimals = 0, name = "Voice Pitch Min", category = "Voice Options" } )
+CreateLambdaConvar( "lambdaplayers_voice_idledir", "randomengine", true, false, false, "The directory to get idle voice lines from", nil, nil, { type = "Text", name = "Idle Directory", category = "Voice Options" } )
 --
 
 -- Limits
