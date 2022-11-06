@@ -12,6 +12,7 @@ local surface = surface
 local origin = Vector()
 
 local cleanupvar = GetConVar( "lambdaplayers_corpsecleanuptime" )
+local cleanupeffect = GetConVar( "lambdaplayers_corpsecleanupeffect" )
 
 
 -- Net sent from ENT:OnKilled()
@@ -31,11 +32,16 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
 
     local time = cleanupvar:GetInt()
 
---[[     timer.Simple( 2, function()
-        ragdoll:LambdaDisintegrate()
-    end )
- ]]
-    if time != 0 then timer.Simple( time , function() if IsValid( ragdoll ) then ragdoll:Remove() end end ) end
+
+    if time != 0 then 
+        timer.Simple( time , function()
+            if cleanupeffect:GetBool() then
+                ragdoll:LambdaDisintegrate()
+            elseif IsValid( ragdoll ) then 
+                ragdoll:Remove()
+            end 
+        end ) 
+    end
 
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, ragdoll )
 
@@ -77,7 +83,15 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
 
     local time = cleanupvar:GetInt()
 
-    if time != 0 then timer.Simple( time , function() if IsValid( cs_prop ) then cs_prop:Remove() end end ) end
+    if time != 0 then 
+        timer.Simple( time , function()
+            if cleanupeffect:GetBool() then
+                cs_prop:LambdaDisintegrate()
+            elseif IsValid( cs_prop ) then 
+                cs_prop:Remove()
+            end 
+        end ) 
+    end
 
 end )
 

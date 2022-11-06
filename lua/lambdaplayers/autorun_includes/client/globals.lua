@@ -2,10 +2,14 @@ local sin = math.sin
 local IsValid = IsValid
 local null_vector = Vector(0, 0, 0)
 local color_white_vector = Vector(1, 1, 1)
+local random = math.random
+local table_insert = table.insert
+local table_remove = table.remove
 
 _LAMBDAPLAYERS_ClientSideEnts = {}
 _LAMBDAPLAYERS_Voicechannels = {}
 
+-- Physgun color proxy
 matproxy.Add({
     name = "LambdaPlayerWeaponColor",
     init = function( self, mat, values )
@@ -31,22 +35,63 @@ matproxy.Add({
 })
 
 local EntMeta = FindMetaTable("Entity")
+local downvector = Vector( 0, 0, -100 )
+local upvector = Vector( 0, 0, 50 )
+local disintegratingents = {}
 
+local function ClearInvalids( tbl )
+    for k, v in ipairs( tbl ) do if !IsValid( v ) then table_remove( tbl, k ) end end
+end
 
---[[ function EntMeta:LambdaDisintegrate()
-    local id = self:EntIndex()
-    local uppos = self:GetPos() + self:GetForward() * 100
-    local downpos = self:GetPos() - self:GetForward() * 100
-    local curpos = uppos
+-- The Disintegration effect used in corpse cleanup
+function EntMeta:LambdaDisintegrate()
+    ClearInvalids( disintegratingents )
+    if #disintegratingents > 8 then self:Remove() return end -- The effect is limitted so we don't overload the emitters
+
+    local id = random( 1, 10000000 )
+    local curpos
+    local pos
+    local nextparticle = 0
+    local endtime = RealTime() + 4
     self:SetRenderClipPlaneEnabled( true )
-    local pos = -self:GetForward():Dot( curpos )
+    self:EmitSound( "lambdaplayers/misc/disintegrate.mp3", 65 )
+
+    table_insert( disintegratingents, self )
+    
     hook.Add( "Think", "lambdadisintegrateeffect" .. id, function()
         if !IsValid( self ) then hook.Remove( "Think", "lambdadisintegrateeffect" .. id ) return end
-        curpos = LerpVector( 0.2 * FrameTime(), curpos, downpos )
+        if RealTime() > endtime then self:Remove() hook.Remove( "Think", "lambdadisintegrateeffect" .. id ) return end
+        local uppos = self:GetPos() + self:GetForward() * ( self:GetModelRadius() - 25 )
+        local downpos = self:GetPos() - self:GetForward() * ( self:GetModelRadius() )
+
+        curpos = curpos and LerpVector( 0.25 * FrameTime(), curpos, downpos ) or uppos
         pos = -self:GetForward():Dot( curpos )
+
+        if RealTime() > nextparticle then
+
+            local emitpos = curpos + VectorRand( -10, 10 )
+            local emitter = ParticleEmitter( emitpos )
+            if emitter then
+                local part = emitter:Add( "effects/spark", emitpos )
+                if part then
+                    part:SetDieTime( 4 )
+                    part:SetStartAlpha( 255 )
+                    part:SetEndAlpha( 0 )
+                    part:SetStartSize( 3 )
+                    part:SetEndSize( 0 )
+                    part:SetCollide( true )
+                    part:SetGravity( random( 1, 10 ) == 1 and upvector or downvector )
+                    part:SetVelocity( VectorRand() * 40 )
+                    part:SetAngleVelocity( AngleRand( -10, 10 ) )
+                    part:SetColor( 255, 174, 0 )
+                end
+                emitter:Finish()
+            end
+
+            nextparticle = RealTime() + 0.01
+        end
 
         self:SetRenderClipPlane( -self:GetForward(), pos )
     end )
     
 end
- ]]
