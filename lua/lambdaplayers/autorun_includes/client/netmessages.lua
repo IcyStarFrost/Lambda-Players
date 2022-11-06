@@ -227,7 +227,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                         volume = 0
                     end
                 else
-                    lastpos = IsValid( tickent ) and tickent:GetPos() or lastpos
+                    lastpos = IsValid( tickent ) and tickent:GetPos() or lastpos or origin
                     snd:SetPos( lastpos )
                     volume = volumeconvar:GetFloat()
                 end

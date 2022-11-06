@@ -21,6 +21,7 @@ if SERVER then
         self.WeaponEnt:SetNoDraw( true )
         self.WeaponEnt:DrawShadow( false )
 
+        self:RemoveTimers()
         self:RemoveFlags( FL_OBJECT )
         
         net.Start( "lambdaplayers_becomeragdoll" )
@@ -48,6 +49,7 @@ if SERVER then
     end
 
     function ENT:OnRemove()
+        self:RemoveTimers()
         self:CleanSpawnedEntities()
     end
 

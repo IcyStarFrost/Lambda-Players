@@ -81,6 +81,7 @@ function ENT:Initialize()
         self.debuginitstart = SysTime()
         self.l_nextidlesound = CurTime() + 5
         self.l_SpawnedEntities = {}
+        self.l_Timers = {}
         self.l_NexthealthUpdate = 0
         self.l_movepos = nil
         self.l_nextdoorcheck = 0
@@ -144,7 +145,7 @@ function ENT:Initialize()
         self.WeaponEnt:SetNoDraw( true )
 
         self:InitializeMiniHooks()
-        self:SwitchWeapon( "physgun" )
+        self:SwitchWeapon( "pistol" )
         
         self:SetWeaponENT( self.WeaponEnt )
 
@@ -196,6 +197,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", 1, "IsDead" )
     self:NetworkVar( "Bool", 2, "Respawn" )
     self:NetworkVar( "Bool", 3, "HasCustomDrawFunction" )
+    self:NetworkVar( "Bool", 4, "IsReloading" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )

@@ -18,8 +18,7 @@ local ents_FindByName = ents.FindByName
 -- Pos arg can be a vector or a entity.
 function ENT:MoveToPos( pos, options )
     self.l_movepos = pos
-    local isent = !isvector( self.l_movepos )
-    if isent and !LambdaIsValid( self.l_movepos ) then return "failed" end
+    if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "failed" end
 
     -- If there is no nav mesh, try to go to the postion anyway
     if !navmesh.IsLoaded() or !IsValid( self.l_currentnavarea ) then self:MoveToPosOFFNAV( self.l_movepos, options ) return end 
@@ -32,7 +31,7 @@ function ENT:MoveToPos( pos, options )
 	local path = Path( "Follow" )
 	path:SetMinLookAheadDistance( options.lookahead or 300 )
 	path:SetGoalTolerance( options.tol or 20 )
-	path:Compute( self, ( isent and self.l_movepos:GetPos() or self.l_movepos), self:PathGenerator() )
+	path:Compute( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos), self:PathGenerator() )
 
     self.loco:SetDesiredSpeed( options.speed or 200 )
 
@@ -41,7 +40,7 @@ function ENT:MoveToPos( pos, options )
     self.IsMoving = true
 
 	while ( path:IsValid() ) do
-        if isent and !LambdaIsValid( self.l_movepos ) then return "invalid" end
+        if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end
         if self:GetIsDead() then return "dead" end
         if self.AbortMovement then self.AbortMovement = false self.IsMoving = false return "aborted" end
 
@@ -72,7 +71,7 @@ function ENT:MoveToPos( pos, options )
 
 		if update then
             local updateTime = math_max( update, update * ( path:GetLength() / 400 ) )
-			if path:GetAge() > updateTime then path:Compute( self, ( isent and self.l_movepos:GetPos() or self.l_movepos ), self:PathGenerator() ) end
+			if path:GetAge() > updateTime then path:Compute( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), self:PathGenerator() ) end
 		end
 
 		coroutine.yield()
@@ -94,8 +93,7 @@ end
 -- If the map we are on does not have a navmesh, the Lambda Players will default their movement to this so they can actually move
 function ENT:MoveToPosOFFNAV( pos, options )
     self.l_movepos = pos
-    local isent = !isvector( self.l_movepos )
-    if isent and !LambdaIsValid( self.l_movepos ) then return "failed" end
+    if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "failed" end
 
 	local options = options or {}
     local timeout = options.timeout
@@ -106,21 +104,21 @@ function ENT:MoveToPosOFFNAV( pos, options )
     self.IsMoving = true
 
     while IsValid( self ) do 
-        if isent and !LambdaIsValid( self.l_movepos ) then return "invalid" end
+        if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end
         if self:GetIsDead() then return "dead" end
         if self.AbortMovement then self.AbortMovement = false self.IsMoving = false return "aborted" end
-        if self:GetRangeSquaredTo( ReplaceZ( self, ( isent and self.l_movepos:GetPos() or self.l_movepos ) ) ) <= ( tolerance * tolerance ) then break end
+        if self:GetRangeSquaredTo( ReplaceZ( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ) ) ) <= ( tolerance * tolerance ) then break end
 
         if !aidisable:GetBool() then
             if callback and isfunction( callback ) then callback() end 
-            local approchpos = ( isent and self.l_movepos:GetPos() or self.l_movepos )
+            local approchpos = ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos )
             self.loco:FaceTowards( approchpos )
             self.loco:Approach( approchpos, 1 )
             self:DoorCheck()
         end
 
         if dev:GetBool() then
-            debugoverlay.Line( self:GetPos(), ( isent and self.l_movepos:GetPos() or self.l_movepos ), 0.1, color_white, true )
+            debugoverlay.Line( self:GetPos(), ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), 0.1, color_white, true )
         end
 
         if ( self.loco:IsStuck() ) then

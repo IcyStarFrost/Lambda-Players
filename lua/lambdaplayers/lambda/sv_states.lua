@@ -25,8 +25,17 @@ function ENT:Combat()
     self:Hook( "Tick", "CombatTick", function()
         if !LambdaIsValid( self:GetEnemy() ) or self:GetState() != "Combat" then return false end -- Returns and removes this hook because we returned false. See sh_util.lua for source
 
+        self.Face = self:GetEnemy()
+        self.l_Faceend = CurTime() + 1
+
         if self:GetRangeSquaredTo( self:GetEnemy() ) <= ( self.l_CombatAttackRange * self.l_CombatAttackRange ) then
             self:UseWeapon( self:GetEnemy() )
+        end
+
+        if self.l_CombatKeepDistance and LambdaIsValid( self:GetEnemy() ) and self:GetRangeSquaredTo( self:GetEnemy() ) < ( self.l_CombatKeepDistance * self.l_CombatKeepDistance ) then
+            self.l_movepos = self:GetPos() + ( self:GetPos() - self:GetEnemy():GetPos() ):GetNormalized() * 200
+        elseif self.l_CombatKeepDistance and LambdaIsValid( self:GetEnemy() ) and self:GetRangeSquaredTo( self:GetEnemy() ) > ( self.l_CombatKeepDistance * self.l_CombatKeepDistance ) then
+            self.l_movepos = self:GetEnemy()
         end
     
     end )

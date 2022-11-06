@@ -91,7 +91,7 @@ elseif CLIENT then
         for k, v in ipairs( _LAMBDAPLAYERS_Voicechannels ) do
             local w, h = ScrW(), ScrH()
             local x, y = ( w - xvar:GetFloat() ), ( h - yvar:GetFloat() )
-            y = y + ( k*-LambdaScreenScale( 20 + uiscale:GetFloat() ) )
+            y = y + ( k*-LambdaScreenScale( 17 + uiscale:GetFloat() ) )
 
             v[ "alpha" ] = v[ "alpha" ] or 245
 

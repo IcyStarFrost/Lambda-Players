@@ -2,6 +2,9 @@
 local isfunction = isfunction
 local random = math.random
 local RandomPairs = RandomPairs
+local ipairs = ipairs
+local Effect = util.Effect
+local CurTime = CurTime
 
 -- Switch to a weapon with the provided name.
 -- See the lambda/weapons folder for weapons. Check out the holster.lua file to see the current valid weapon settings
@@ -20,10 +23,13 @@ function ENT:SwitchWeapon( weaponname )
 
     self.l_Weapon = weaponname
     self.l_HasLethal = weapondata.islethal
+    self.l_HasMelee = weapondata.ismelee
     self.l_HoldType = weapondata.holdtype
     self.l_CombatKeepDistance = weapondata.keepdistance
     self.l_CombatAttackRange = weapondata.attackrange
     self.l_CombatSpeedAdd = weapondata.addspeed or 0
+    self.l_Clip = weapondata.clip or 0
+    self.l_MaxClip = weapondata.clip or 0
     
     self:ClientSideNoDraw( self.WeaponEnt, weapondata.nodraw )
     self:SetHasCustomDrawFunction( isfunction( weapondata.Draw ) )
@@ -55,7 +61,10 @@ end
 
 local bullettbl = {}
 
+
+-- Will need a rewrite
 function ENT:UseWeapon( target )
+    if self:GetIsReloading() then return end
     local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
     if !weapondata or CurTime() < self.l_WeaponUseCooldown then return end
     local wepent = self.WeaponEnt
@@ -70,6 +79,9 @@ function ENT:UseWeapon( target )
     local rateoffire = weapondata.rateoffire or 0
     local num = weapondata.bulletcount or 1
     local tracer = weapondata.tracername or "Tracer"
+    local spread = weapondata.spread
+    local muzzleflash = weapondata.muzzleflash or 1
+    local shelleject = weapondata.shelleject or "ShellEject"
 
         
 
@@ -98,6 +110,7 @@ function ENT:UseWeapon( target )
             target:TakeDamageInfo( dmg )
 
         else
+            if self.l_Clip <= 0 then self:ReloadWeapon() return end
 
             self.l_WeaponUseCooldown = CurTime() + rateoffire
 
@@ -105,6 +118,9 @@ function ENT:UseWeapon( target )
 
             self:RemoveGesture( gesture )
             self:AddGesture( gesture )
+            
+            self:HandleMuzzleFlash( muzzleflash )
+            self:HandleShellEject( shelleject )
 
             bullettbl.Attacker = self
             bullettbl.Damage = damage
@@ -114,9 +130,12 @@ function ENT:UseWeapon( target )
             bullettbl.TracerName = tracer or "Tracer"
             bullettbl.Dir = ( target:WorldSpaceCenter() - wepent:GetPos() ):GetNormalized()
             bullettbl.Src = wepent:GetPos()
+            bullettbl.Spread = Vector( spread, spread, 0 )
             bullettbl.IgnoreEntity = self
 
+            self.l_Clip = self.l_Clip - 1
 
+            wepent:FireBullets( bullettbl )
         end
 
 
@@ -125,6 +144,72 @@ function ENT:UseWeapon( target )
 
 
 
+end
+
+
+-- Will need a rewrite
+function ENT:ReloadWeapon()
+    if self.l_HasMelee or self.l_Clip == self.l_MaxClip or self:GetIsReloading() then return end
+    local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
+
+    self:SetIsReloading( true )
+
+    local wep = self:GetWeaponENT()
+    local time = weapondata.reloadtime
+    local anim = weapondata.reloadanim
+    local animspeed = weapondata.reloadanimationspeed
+    local snds = weapondata.reloadsounds
+
+    if snds and #snds > 0 then
+        for k, tbl in ipairs( snds ) do
+            self:SimpleTimer( tbl[ 1 ], function()
+                wep:EmitSound( tbl[ 2 ], 65, 100, 1, CHAN_WEAPON )
+            end )
+        end
+    end
+
+    local id = self:AddGesture( anim )
+    self:SetLayerPlaybackRate( id, animspeed )
+
+    self:NamedTimer( "Reload", time, 1, function()
+        if !self:GetIsReloading() then return end
+        self.l_Clip = self.l_MaxClip
+
+        self:SetIsReloading( false )
+    end )
+
+end
+
+
+
+-- Will need a rewrite
+
+-- 1 = Regular
+-- 5 = Combine
+-- 7 Regular but bigger
+function ENT:HandleMuzzleFlash( type )
+    local wepent = self:GetWeaponENT()
+    local attach = wepent:GetAttachment( 1 )
+    if !attach or !IsValid( wepent ) then return end
+    local effect = EffectData()
+    effect:SetOrigin( attach.Pos )
+    effect:SetStart( attach.Pos )
+    effect:SetAngles( attach.Ang )
+    effect:SetFlags( type )
+    effect:SetEntity( wepent )
+    Effect( "MuzzleFlash", effect, true )
+end
+
+-- Will need a rewrite
+function ENT:HandleShellEject( name )
+    local wepent = self:GetWeaponENT()
+    if !IsValid( wepent ) then return end
+    local effect = EffectData()
+    effect:SetOrigin( wepent:WorldSpaceCenter() )
+    effect:SetStart( wepent:WorldSpaceCenter() )
+    effect:SetAngles( wepent:GetAngles() + Angle( 0, 90, 0 ) )
+    effect:SetEntity( wepent )
+    Effect( name, effect, true )
 end
 
 -- If the lambda's weapon data has nodraw enabled

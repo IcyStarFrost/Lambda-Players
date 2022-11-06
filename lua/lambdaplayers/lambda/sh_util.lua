@@ -14,10 +14,13 @@ local ents_GetAll = ents.GetAll
 local VectorRand = VectorRand
 local SortTable = table.sort
 local timer_simple = timer.Simple
+local timer_create = timer.Create
+local timer_Remove = timer.Remove
 local Trace = util.TraceLine
 local table_add = table.Add
 local EndsWith = string.EndsWith
 local string_Replace = string.Replace
+local table_insert = table.insert
 local eyetracetable = {}
 local GetLambdaPlayers = GetLambdaPlayers
 local debugmode = GetConVar( "lambdaplayers_debug" )
@@ -60,6 +63,41 @@ function ENT:SimpleTimer( delay, func, ignoredead )
         func()
     end )
 end
+
+-- Creates a named timer that can be stopped. ignore dead var will run the time even if we die
+-- Return true in the function to remove the timer
+function ENT:NamedTimer( name, delay, repeattimes, func, ignoredead )
+    local id = self:EntIndex()
+    local intname = "lambdaplayers_" .. name .. id
+    self:DebugPrint( "Created a Timer: " .. name )
+    timer_create( intname, delay, repeattimes, function() 
+        if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) then return end
+        local result = func()
+        if result == true then timer_Remove( intname ) self:DebugPrint( "Removed a Timer: " .. name ) end
+    end )
+
+    table_insert( self.l_Timers, intname )
+end
+
+function ENT:RemoveNamedTimer( name )
+    local id = self:EntIndex()
+    local intname = "lambdaplayers_" .. name .. id
+    for k, v in ipairs( self.l_Timers ) do
+        if v == intname then
+            self:DebugPrint( "Removed a Timer: " .. name )
+            timer_Remove( intname )
+            break
+        end
+    end
+end
+
+-- Removes all timers
+function ENT:RemoveTimers()
+    for k, v in ipairs( self.l_Timers ) do
+        timer_Remove( v )
+    end
+end
+
 
 -- Find in sphere function with a filter
 function ENT:FindInSphere( pos, radius, filter )
