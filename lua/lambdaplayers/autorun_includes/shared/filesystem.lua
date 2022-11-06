@@ -68,7 +68,6 @@ function LAMBDAFS:GetProfilePictures()
     local function MergeDirectory( dir )
         dir = dir .. "/"
         local files, dirs = file.Find( "materials/" .. dir .. "*", "GAME", "nameasc" )
-        print( "checking ", dir)
         for k, v in ipairs( files ) do table_insert( Lambdaprofilepictures, dir .. v ) end
         for k, v in ipairs( dirs ) do MergeDirectory( dir .. v ) end
     end
