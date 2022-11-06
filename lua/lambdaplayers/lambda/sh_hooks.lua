@@ -66,13 +66,12 @@ if SERVER then
     function ENT:OnOtherKilled( victim, info )
         local attacker = info:GetAttacker()
 
+        if victim == self:GetEnemy() then
+            self:SetEnemy( nil )
+        end
 
         -- If we killed the victim
         if attacker == self then
-            
-            if victim == self:GetEnemy() then
-                self:SetEnemy( nil )
-            end
 
         else -- Someone else killed the victim
 
