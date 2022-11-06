@@ -78,6 +78,8 @@ function ENT:Initialize()
         self.l_nextidlesound = CurTime() + 5
         self.l_SpawnedEntities = {}
         self.l_NexthealthUpdate = 0
+        self.l_nextdoorcheck = 0
+        self.l_nextphysicsupdate = 0
         self.l_WeaponUseCooldown = 0
         self.l_currentnavarea = navmesh.GetNavArea( self:WorldSpaceCenter(), 400 )
 
@@ -114,6 +116,13 @@ function ENT:Initialize()
         self.loco:SetAcceleration( 1000 )
         self.loco:SetDeceleration( 1000 )
         self.loco:SetStepHeight( 30 )
+
+
+        self:PhysicsInitShadow()
+        self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
+        self:AddCallback( "PhysicsCollide", function( self, data )
+            self:HandleCollision( data )
+        end)
 
         self:SetLagCompensated( true )
         self:AddFlags( FL_OBJECT + FL_NPC + FL_CLIENT )
@@ -211,6 +220,7 @@ function ENT:Think()
 
     
     if SERVER then
+        if self.l_ispickedupbyphysgun then self.loco:SetVelocity( Vector() ) end
 
         if CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 1, 100 ) <= self:GetVoiceChance() then
             self:PlaySoundFile( self:GetRandomSound(), true )
@@ -220,6 +230,12 @@ function ENT:Think()
         if CurTime() > self.l_NexthealthUpdate then
             self:UpdateHealthDisplay()
             self.l_NexthealthUpdate = CurTime() + 0.1
+        end
+
+        if CurTime() > self.l_nextphysicsupdate then
+            local phys = self:GetPhysicsObject()
+            phys:UpdateShadow( self:GetPos(), self:GetAngles(), 0 )
+            self.l_nextphysicsupdate = CurTime() + 0.5
         end
 
         if developer:GetBool() then

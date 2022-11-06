@@ -6,6 +6,9 @@ local aidisable = GetConVar( "ai_disabled" )
 local IsValid = IsValid
 local math_max = math.max
 local color_white = color_white
+local Trace = util.TraceLine
+local tracetable = {}
+local ents_FindByName = ents.FindByName
 
 -- Start off simple
 function ENT:MoveToPos( pos, options )
@@ -42,6 +45,7 @@ function ENT:MoveToPos( pos, options )
         if !aidisable:GetBool() then
             if callback and isfunction( callback ) then callback( goal ) end 
             path:Update( self )
+            self:DoorCheck()
         end
 
 
@@ -105,6 +109,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
             local approchpos = ( isent and pos:GetPos() or pos )
             self.loco:FaceTowards( approchpos )
             self.loco:Approach( approchpos, 1 )
+            self:DoorCheck()
         end
 
         if dev:GetBool() then
@@ -167,4 +172,33 @@ function ENT:PathGenerator()
 
         return cost
     end
+end
+
+local doorClasses = {
+    ["prop_door_rotating"] = true,
+    ["func_door"] = true,
+    ["func_door_rotating"] = true
+}
+
+function ENT:DoorCheck()
+    if CurTime() < self.l_nextdoorcheck then return end
+
+    tracetable.start = self:WorldSpaceCenter()
+    tracetable.endpos = self:WorldSpaceCenter() + self:GetForward() * 50
+    tracetable.filter = self
+    local trace = Trace( tracetable )
+    local ent = trace.Entity
+    if IsValid( ent ) then
+        local class = ent:GetClass()
+        if doorClasses[ class ] and ent.Fire then
+            ent:Fire( "Open" )
+            if class == "prop_door_rotating" then
+                local keys = ent:GetKeyValues()
+                local slaveDoor = ents_FindByName( keys.slavename )
+                if IsValid( slaveDoor ) then slaveDoor:Fire( "Open" ) end
+            end
+        end
+    end
+
+    self.l_nextdoorcheck = CurTime() + 0.2
 end

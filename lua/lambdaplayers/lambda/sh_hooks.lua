@@ -88,6 +88,46 @@ if SERVER then
     end
     
     
+    function ENT:HandleCollision( data )
+        local collider = data.HitEntity
+        if !IsValid( collider ) then return end
+    
+        local class = collider:GetClass()
+        if class == "prop_combine_ball" then
+            if self:IsFlagSet( FL_DISSOLVING ) then return end
+    
+            local dmginfo = DamageInfo()
+            local owner = collider:GetPhysicsAttacker(1) 
+            dmginfo:SetAttacker( IsValid( owner ) and owner or collider )
+            dmginfo:SetInflictor( collider )
+            dmginfo:SetDamage( 1000 )
+            dmginfo:SetDamageType( DMG_DISSOLVE )
+            dmginfo:SetDamageForce( collider:GetVelocity() )
+            self:TakeDamageInfo( dmginfo )  
+    
+            collider:EmitSound( "NPC_CombineBall.KillImpact" )
+        else
+            local mass = data.HitObject:GetMass() or 500
+            local impactdmg = ( ( data.TheirOldVelocity:Length() * mass ) / 1000 )
+    
+            if impactdmg > 10 then
+                local dmginfo = DamageInfo()
+                dmginfo:SetAttacker( collider )
+                if IsValid( collider:GetPhysicsAttacker() ) then
+                    dmginfo:SetAttacker( collider:GetPhysicsAttacker() )
+                elseif collider:IsVehicle() and IsValid( collider:GetDriver() ) then
+                    dmginfo:SetAttacker( collider:GetDriver() )
+                    dmginfo:SetDamageType(DMG_VEHICLE)     
+                end
+                dmginfo:SetInflictor( collider )
+                dmginfo:SetDamage( impactdmg )
+                dmginfo:SetDamageType( DMG_CRUSH )
+                dmginfo:SetDamageForce( data.TheirOldVelocity )
+                self.loco:SetVelocity( self.loco:GetVelocity() + data.TheirOldVelocity )
+                self:TakeDamageInfo( dmginfo )
+            end
+        end
+    end
 
 end
 
@@ -120,6 +160,14 @@ function ENT:InitializeMiniHooks()
                     self:HandleNPCRelations( ent )
                 end
             end )
+        end, true )
+
+        self:Hook( "PhysgunPickup", "Physgunpickup", function( ply, ent )
+            if ent == self then self.l_ispickedupbyphysgun = true end
+        end, true )
+
+        self:Hook( "PhysgunDrop", "Physgundrop", function( ply, ent )
+            if ent == self then self.l_ispickedupbyphysgun = false end
         end, true )
 
     elseif CLIENT then

@@ -187,13 +187,13 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             local replaced = false
 
             for k, v in ipairs( _LAMBDAPLAYERS_Voicechannels ) do
-                if v[ 5 ] == ent:EntIndex() then
+                if IsValid( ent ) and v[ 5 ] == ent:EntIndex() then
                     _LAMBDAPLAYERS_Voicechannels[ k ] = { snd, ent:GetLambdaName(), Material( ent:GetProfilePicture() ), length, ent:EntIndex() }
                     replaced = true
                     break
                 end
             end
-            if !replaced then table_insert( _LAMBDAPLAYERS_Voicechannels, { snd, ent:GetLambdaName(), Material( ent:GetProfilePicture() ), length, ent:EntIndex() } ) end
+            if !replaced and IsValid( ent ) then table_insert( _LAMBDAPLAYERS_Voicechannels, { snd, ent:GetLambdaName(), Material( ent:GetProfilePicture() ), length, ent:EntIndex() } ) end
 
             local num
             local realtime

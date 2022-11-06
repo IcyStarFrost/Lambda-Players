@@ -272,7 +272,7 @@ if SERVER then
         self:DebugPrint( "Respawned" )
         self:SetIsDead( false )
         self:SetPos( self.l_SpawnPos )
-        self:SetCollisionGroup( COLLISION_GROUP_NONE )
+        self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
 
         self:ClientSideNoDraw( self, false )
         self:ClientSideNoDraw( self.WeaponEnt, false )
