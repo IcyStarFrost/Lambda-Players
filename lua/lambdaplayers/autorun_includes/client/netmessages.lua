@@ -36,7 +36,7 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
 
     if time != 0 then 
         timer.Simple( time , function()
-            if cleanupeffect:GetBool() then
+            if cleanupeffect:GetBool() and IsValid( ragdoll ) then
                 ragdoll:LambdaDisintegrate()
             elseif IsValid( ragdoll ) then 
                 ragdoll:Remove()
@@ -86,7 +86,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
 
     if time != 0 then 
         timer.Simple( time , function()
-            if cleanupeffect:GetBool() then
+            if cleanupeffect:GetBool() and IsValid( cs_prop ) then
                 cs_prop:LambdaDisintegrate()
             elseif IsValid( cs_prop ) then 
                 cs_prop:Remove()
