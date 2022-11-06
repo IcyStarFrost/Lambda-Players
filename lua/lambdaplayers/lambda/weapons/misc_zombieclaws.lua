@@ -1,6 +1,7 @@
 local random = math.random
 local math_min = math.min
 local CurTime = CurTime
+local Rand = math.Rand
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 -- Missing leap attack and HP on kill
 
@@ -61,8 +62,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 target:EmitSound("npc/zombie/claw_strike"..random(3)..".wav", 70)
                 
                 -- HP regen on attacks
-                if self:Health() < self:GetMaxHealth() * 2.25 and target:Alive() then
-                    self:SetHealth(math.min(self:Health() + self:GetMaxHealth() * math.Rand(0.10, 0.25), self:GetMaxHealth() * 2.25))
+                if self:Health() < self:GetMaxHealth() * 2.25 and LambdaIsValid( target ) then
+                    self:SetHealth(math_min(self:Health() + self:GetMaxHealth() * Rand(0.10, 0.25), self:GetMaxHealth() * 2.25))
                 end
                 
                 target:TakeDamageInfo( dmginfo )
