@@ -4,6 +4,7 @@ local Decompress = util.Decompress
 local TableToJSON = util.TableToJSON
 local Compress = util.Compress
 local table_insert = table.insert
+local ipairs = ipairs
 local table_Add = table.Add
 file.CreateDir( "lambdaplayers" )
 file.CreateDir( "lambdaplayers/custom_profilepictures" )
@@ -66,8 +67,9 @@ function LAMBDAFS:GetProfilePictures()
 
     local function MergeDirectory( dir )
         dir = dir .. "/"
-        local files, dirs = file.Find( dir .. "*", "DATA", "nameasc" )
-        for k, v in ipairs( files ) do table_insert( Lambdaprofilepictures, "../data/" .. dir .. v ) end
+        local files, dirs = file.Find( "materials/" .. dir .. "*", "GAME", "nameasc" )
+        print( "checking ", dir)
+        for k, v in ipairs( files ) do table_insert( Lambdaprofilepictures, dir .. v ) end
         for k, v in ipairs( dirs ) do MergeDirectory( dir .. v ) end
     end
 
