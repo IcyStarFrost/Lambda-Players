@@ -315,11 +315,8 @@ if SERVER then
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
 
         self:ClientSideNoDraw( self, false )
-        self:ClientSideNoDraw( self.WeaponEnt, false )
         self:SetNoDraw( false )
         self:DrawShadow( true )
-        self.WeaponEnt:SetNoDraw( false )
-        self.WeaponEnt:DrawShadow( true )
 
         self:SetHealth( self:GetMaxHealth() )
         self:AddFlags( FL_OBJECT )

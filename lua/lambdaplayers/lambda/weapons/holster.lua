@@ -53,6 +53,7 @@
     clip | Number | The amount of times the weapon can be shot before reloading.
     muzzleflash | Number | The muzzle flash type. 1 = Regular 5 = Combine 7 = Regular but bigger
     shelleject | String | Shell type valid types are ShellEject, RifleShellEject, ShotgunShellEject
+    shelloffpos | Vector | 
             
 
     reloadtime | Number | The time it takes to reload
