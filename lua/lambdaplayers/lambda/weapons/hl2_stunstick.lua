@@ -1,6 +1,7 @@
 local util_Effect = util.Effect
 local random = math.random
 local stunstickGlow = Material("effects/blueflare1")
+
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     stunstick = {
@@ -12,6 +13,12 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 10,
         attackrange = 50,
+
+        damage = 10,
+        rateoffire = 0.8,
+        attackanim = ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE,
+        attacksnd = "Weapon_StunStick.Swing",
+        hitsnd = "Weapon_StunStick.Melee_Hit",
         
         -- Custom effect similar to player stunstick
         Draw = function( lambda, wepent )
@@ -28,14 +35,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
         
         OnEquip = function( lambda, wepent )
-            wepent:EmitSound("Weapon_StunStick.Activate")
+            wepent:EmitSound( "weapons/stunstick/spark"..random(2)..".wav", 70, random(98,102), 1, CHAN_WEAPON )
         end,
-
-        damage = 10,
-        rateoffire = 0.8,
-        attackanim = ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE,
-        attacksnd = "Weapon_StunStick.Swing",
-        hitsnd = "weapons/stunstick/stunstick_fleshhit*2*.wav",
         
         -- Emit sparks on hit
         callback = function( self, wepent, target )

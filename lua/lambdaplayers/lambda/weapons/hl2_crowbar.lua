@@ -13,8 +13,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         damage = 10,
         rateoffire = 0.4,
         attackanim = ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE,
-        attacksnd = "weapons/iceaxe/iceaxe_swing1.wav",
-        hitsnd = "physics/flesh/flesh_impact_bullet*5*.wav",
+        attacksnd = "Weapon_Crowbar.Single",
+        hitsnd = "Weapon_Crowbar.Melee_Hit",
 
         islethal = true,
     }
