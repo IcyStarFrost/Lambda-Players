@@ -2,6 +2,7 @@ local random = math.random
 local math_min = math.min
 local CurTime = CurTime
 local Rand = math.Rand
+
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 -- Missing leap attack and HP on kill
 
@@ -20,7 +21,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local NextHPRegenTime = CurTime() + 0.5
             
             -- Damage reduction
-            lambda:Hook( "EntityTakeDamage", "ZombieClawsETD", function( target, dmginfo )
+            lambda:Hook( "EntityTakeDamage", "ZombieClawsScaleDamage", function( target, dmginfo )
                 if target == lambda then
                     dmginfo:ScaleDamage( 0.75 )
                 end
@@ -36,7 +37,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
         
         OnUnequip = function( lambda, wepent )
-            lambda:RemoveHook( "EntityTakeDamage", "ZombieClawsETD" )
+            lambda:RemoveHook( "EntityTakeDamage", "ZombieClawsScaleDamage" )
             lambda:RemoveHook( "Think", "ZombieClawsThink" )
         end,
         
@@ -49,7 +50,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             
             -- To make sure damage syncs with the animation
             self:SimpleTimer(0.75, function()
-                if self:GetRangeSquaredTo(target) > (65* 65) then wepent:EmitSound("npc/zombie/claw_miss"..random(2)..".wav", 70) return end
+                if self:GetRangeSquaredTo(target) > (65 * 65) then wepent:EmitSound("npc/zombie/claw_miss"..random(2)..".wav", 70) return end
                 
                 local dmg = random(35,55)
                 local dmginfo = DamageInfo()
