@@ -310,6 +310,7 @@ if SERVER then
     function ENT:LambdaRespawn()
         self:DebugPrint( "Respawned" )
         self:SetIsDead( false )
+        self:SetIsReloading( false )
         self:SetPos( self.l_SpawnPos )
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
 
