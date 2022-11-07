@@ -13,7 +13,7 @@ end
 
 -- Gets the limit
 function ENT:GetLimit( name )
-    return GetConVar( "lambdaplayers_limits_" .. name .. "limit" ):GetInt()
+    return GetLambdaConVarValue( "lambdaplayers_limits_" .. name .. "limit" )
 end
 
 

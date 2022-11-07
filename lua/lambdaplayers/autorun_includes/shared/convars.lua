@@ -3,6 +3,7 @@ local pairs = pairs
 
 -- Will be used for presets
 _LAMBDAPLAYERSCONVARS = {}
+_LAMBDAPLAYERSCONVARVALUES = {}
 
 if CLIENT then
     _LAMBDAConVarSettings = {}
@@ -39,7 +40,23 @@ function CreateLambdaConvar( name, val, shouldsave, isclient, userinfo, desc, mi
         table_insert( _LAMBDAConVarSettings, settingstbl )
     end
 
+    _LAMBDAPLAYERSCONVARVALUES[ name ] = val
+    
+    cvars.RemoveChangeCallback(name, name .. "_callbackID")
+
+    cvars.AddChangeCallback(name, function(cvarName, oldVal, newVal)
+        local convVal = tonumber( newVal )
+        if !convVal then convVal = newVal end
+        --print( cvarName, convVal )
+        _LAMBDAPLAYERSCONVARVALUES[ cvarName ] = convVal
+    end, name .. "_callbackID")
+
     return convar
+end
+
+-- I don't know if that is better than 'cVar:Get*()', but still let's give it a try
+function GetLambdaConVarValue( name )
+    return _LAMBDAPLAYERSCONVARVALUES[ name ]
 end
 
 local function AddSourceConVarToSettings( cvarname, desc, settingstbl )

@@ -37,16 +37,12 @@ end
     local SortTable = table.sort
     local aidisable = GetConVar( "ai_disabled" )
     local developer = GetConVar( "developer" )
-    local pitchmin = GetConVar( "lambdaplayers_voice_voicepitchmin" )
-    local pitchmax = GetConVar( "lambdaplayers_voice_voicepitchmax" )
-    local idledir = GetConVar( "lambdaplayers_voice_idledir" )
     local isfunction = isfunction
     local Lerp = Lerp
     local isentity = isentity
     local Vector = Vector
     local debugoverlay = debugoverlay
     local CurTime = CurTime
-    local allowlight = GetConVar( "lambdaplayers_drawflashlights" )
     local color_white = color_white
     local FrameTime = FrameTime
     local sub = string.sub
@@ -113,7 +109,7 @@ function ENT:Initialize()
             { "Combat", self:GetCombatChance() },
         }
 
-        self:SetVoicePitch( random( pitchmin:GetInt(), pitchmax:GetInt() ) )
+        self:SetVoicePitch( random( GetLambdaConVarValue( "lambdaplayers_voice_voicepitchmin" ), GetLambdaConVarValue( "lambdaplayers_voice_voicepitchmax" ) ) )
 
         ----
 
@@ -231,7 +227,8 @@ function ENT:Think()
         if self.l_ispickedupbyphysgun then self.loco:SetVelocity( Vector() ) end
 
         if CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 1, 100 ) <= self:GetVoiceChance() then
-            self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or idledir:GetString() .. "/*", true )
+            local idleDir = GetLambdaConVarValue( "lambdaplayers_voice_idledir" )
+            self:PlaySoundFile( idleDir == "randomengine" and self:GetRandomSound() or idleDir .. "/*", true )
             self.l_nextidlesound = CurTime() + 5
         end
         
@@ -254,16 +251,14 @@ function ENT:Think()
         -- Animations --
             local anims = _LAMBDAPLAYERSHoldTypeAnimations[ self.l_HoldType ]
 
-
-            if self:IsOnGround() and !self.loco:GetVelocity():IsZero() and !self:GetCrouch() and self:GetActivity() != anims.run then
-                self:StartActivity( anims.run )
-            elseif self:IsOnGround() and !self.loco:GetVelocity():IsZero() and self:GetCrouch() and self:GetActivity() != anims.crouchWalk then
-                self:StartActivity( anims.crouchWalk )
-            elseif self:IsOnGround() and self.loco:GetVelocity():IsZero() and self:GetCrouch() then
-                self:StartActivity( anims.crouchIdle )
-            elseif self:IsOnGround() and self.loco:GetVelocity():IsZero() and !self:GetCrouch() then
-                self:StartActivity( anims.idle )
-            elseif !self:IsOnGround() and self:GetActivity() != anims.jump then
+            if self:IsOnGround() then
+                if self.loco:GetVelocity():IsZero() then
+                    self:StartActivity( self:GetCrouch() and anims.crouchIdle or anims.idle )
+                else
+                    local moveAnim = ( self:GetCrouch() and anims.crouchWalk or anims.run )
+                    if self:GetActivity() != moveAnim then self:StartActivity( moveAnim ) end
+                end
+            elseif self:GetActivity() != anims.jump then
                 self:StartActivity( anims.jump )
             end
         --
@@ -308,7 +303,8 @@ function ENT:Think()
         if CurTime() > self.l_lightupdate then
             local lightvec = render.GetLightColor( self:WorldSpaceCenter() )
 
-            if lightvec[ 1 ] < 0.02 and lightvec[ 2 ] < 0.02 and lightvec[ 3 ] < 0.02 and !self:GetIsDead() and !IsValid( self.l_flashlight ) and allowlight:GetBool() then
+            if lightvec:Length() < 0.02 and !self:GetIsDead() and GetLambdaConVarValue( "lambdaplayers_drawflashlights" ) == 1 then
+                if !IsValid( self.l_flashlight ) then
                     self.l_flashlight = ProjectedTexture() 
                     self.l_flashlight:SetTexture( "effects/flashlight001" ) 
                     self.l_flashlight:SetFarZ( 600 ) 
@@ -318,7 +314,8 @@ function ENT:Think()
                     self.l_flashlight:Update()
 
                     self:EmitSound( "items/flashlight1.wav", 60 )
-            elseif ( lightvec[ 1 ] > 0.02 or lightvec[ 2 ] > 0.02 or lightvec[ 3 ] > 0.02 or self:GetIsDead() or !allowlight:GetBool() ) and IsValid( self.l_flashlight ) then
+                end
+            elseif IsValid( self.l_flashlight ) then
                 self.l_flashlight:Remove()
                 self:EmitSound( "items/flashlight1.wav", 60 )
             end
