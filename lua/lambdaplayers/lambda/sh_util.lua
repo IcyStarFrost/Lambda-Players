@@ -45,8 +45,9 @@ function ENT:Hook( hookname, uniquename, func, preserve, cooldown )
         if CurTime() < curtime then return end
         if preserve and !IsValid( self ) or !preserve and !LambdaIsValid( self ) then hook.Remove( hookname, "lambdaplayershook" .. id .. "_" .. uniquename ) return end 
         local result = func( ... )
-        if result == false then self:DebugPrint( "Removed a hook: " .. hookname .. " | " .. uniquename ) hook.Remove( hookname, "lambdaplayershook" .. id .. "_" .. uniquename) end
+        if result == "end" then self:DebugPrint( "Removed a hook: " .. hookname .. " | " .. uniquename ) hook.Remove( hookname, "lambdaplayershook" .. id .. "_" .. uniquename) return end
         curtime = CurTime() + ( cooldown or 0 )
+        return result 
     end )
 end
 
@@ -431,14 +432,14 @@ if SERVER then
         net.Broadcast()
     end
 
-    function ENT:Disposition( ent )
+    function ENT:Relations( ent )
         if _LAMBDAPLAYERSEnemyRelations[ ent:GetClass() ] then return D_HT end
         return D_NU
     end
 
     function ENT:HandleNPCRelations( ent )
         self:DebugPrint( "handling relationship with ", ent )
-        ent:AddEntityRelationship( self , self:Disposition( ent ), 1 )
+        ent:AddEntityRelationship( self , self:Relations( ent ), 1 )
     end
 
     function ENT:HandleAllValidNPCRelations()

@@ -10,20 +10,9 @@ if SERVER then
         ErrorNoHaltWithStack( "WARNING! ", self:GetLambdaName(), " was killed on a engine level! This should never happen!" )
     end
 
-
-    function ENT:OnTraceAttack( info, dir, trace )
-        local potentialdeath = ( self:Health() - info:GetDamage() ) <= 0
-        if self:GetRespawn() and potentialdeath then
-            info:SetDamageBonus( 0 )
-            info:SetBaseDamage( 0 )
-            info:SetDamage( 0 )
-            self:LambdaOnKilled( info )
-        end
-    end
-
     function ENT:LambdaOnKilled( info )
         if self:GetIsDead() then return end
-
+        self:DebugPrint( "was killed by ", info:GetAttacker() )
         self:PlaySoundFile( "vo/npc/male01/pain0" .. random( 1, 9 ) .. ".wav" )
 
         self:SetIsDead( true )
@@ -187,6 +176,7 @@ function ENT:InitializeMiniHooks()
                 return true
             end
         
+
         end, true )
 
         self:Hook( "OnEntityCreated", "NPCRelationshipHandle", function( ent )

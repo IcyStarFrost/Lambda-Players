@@ -79,3 +79,7 @@ function LambdaIsValid( object )
 
 	return IsValid( object )
 end
+
+function _tr()
+	return Entity(1):GetEyeTrace().Entity
+end

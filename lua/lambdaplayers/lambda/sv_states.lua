@@ -23,7 +23,7 @@ function ENT:Combat()
     if !LambdaIsValid( self:GetEnemy() ) or !self:HasLethalWeapon() then self:SetState( "Idle" ) return end
 
     self:Hook( "Tick", "CombatTick", function()
-        if !LambdaIsValid( self:GetEnemy() ) or self:GetState() != "Combat" then return false end -- Returns and removes this hook because we returned false. See sh_util.lua for source
+        if !LambdaIsValid( self:GetEnemy() ) or self:GetState() != "Combat" then return "end" end -- Returns and removes this hook because we returned "end". See sh_util.lua for source
 
         self.Face = self:GetEnemy()
         self.l_Faceend = CurTime() + 1
@@ -50,7 +50,7 @@ function ENT:FindTarget()
     self:SwitchToLethalWeapon()
 
     self:Hook( "Tick", "CombatTick", function()
-        if LambdaIsValid( self:GetEnemy() ) or self:GetState() != "FindTarget" then return false end
+        if LambdaIsValid( self:GetEnemy() ) or self:GetState() != "FindTarget" then return "end" end
         local find = self:FindInSphere( nil, 1500, function( ent ) return self:CanTarget( ent ) end )
 
         for k, v in RandomPairs( find ) do
