@@ -46,6 +46,7 @@ end
     local Vector = Vector
     local debugoverlay = debugoverlay
     local CurTime = CurTime
+    local allowlight = GetConVar( "lambdaplayers_drawflashlights" )
     local color_white = color_white
     local FrameTime = FrameTime
     local sub = string.sub
@@ -154,6 +155,7 @@ function ENT:Initialize()
     elseif CLIENT then
 
         self.l_lastdraw = 0
+        self.l_lightupdate = 0
 
         self:InitializeMiniHooks()
 
@@ -298,6 +300,36 @@ function ENT:Think()
             self:SetPoseParameter( 'head_pitch', approachp )
             self:SetPoseParameter( 'aim_yaw', approachaimy )
             self:SetPoseParameter( 'aim_pitch', approachaimp )
+        end
+
+
+    elseif CLIENT then
+        
+        if CurTime() > self.l_lightupdate then
+            local lightvec = render.GetLightColor( self:WorldSpaceCenter() )
+
+            if lightvec[ 1 ] < 0.02 and lightvec[ 2 ] < 0.02 and lightvec[ 3 ] < 0.02 and !self:GetIsDead() and !IsValid( self.l_flashlight ) and allowlight:GetBool() then
+                    self.l_flashlight = ProjectedTexture() 
+                    self.l_flashlight:SetTexture( "effects/flashlight001" ) 
+                    self.l_flashlight:SetFarZ( 600 ) 
+                    self.l_flashlight:SetEnableShadows( false )
+                    self.l_flashlight:SetPos( self:WorldSpaceCenter() )
+                    self.l_flashlight:SetAngles( self:GetAngles() )
+                    self.l_flashlight:Update()
+
+                    self:EmitSound( "items/flashlight1.wav", 60 )
+            elseif ( lightvec[ 1 ] > 0.02 or lightvec[ 2 ] > 0.02 or lightvec[ 3 ] > 0.02 or self:GetIsDead() or !allowlight:GetBool() ) and IsValid( self.l_flashlight ) then
+                self.l_flashlight:Remove()
+                self:EmitSound( "items/flashlight1.wav", 60 )
+            end
+
+            self.l_lightupdate = CurTime() + 1
+        end
+
+        if IsValid( self.l_flashlight ) then
+            self.l_flashlight:SetPos( self:WorldSpaceCenter() )
+            self.l_flashlight:SetAngles( self:GetAngles() )
+            self.l_flashlight:Update()
         end
 
     end

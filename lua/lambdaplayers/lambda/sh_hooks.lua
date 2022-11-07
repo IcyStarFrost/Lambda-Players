@@ -52,11 +52,6 @@ if SERVER then
 
     end
 
-    function ENT:OnRemove()
-        self:RemoveTimers()
-        self:CleanSpawnedEntities()
-    end
-
     function ENT:OnInjured( info )
         local attacker = info:GetAttacker()
 
@@ -155,6 +150,18 @@ end
 
 
 ------ SHARED ------
+
+function ENT:OnRemove()
+    if SERVER then
+        self:RemoveTimers()
+        self:CleanSpawnedEntities()
+    elseif CLIENT then
+        if IsValid( self.l_flashlight ) then
+            self.l_flashlight:Remove()
+        end
+    end
+    
+end
 
 -- A function for holding self:Hook() functions. Called in the ENT:Initialize() in npc_lambdaplayer
 function ENT:InitializeMiniHooks()
