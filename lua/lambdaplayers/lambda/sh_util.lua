@@ -23,13 +23,12 @@ local string_Replace = string.Replace
 local table_insert = table.insert
 local eyetracetable = {}
 local GetLambdaPlayers = GetLambdaPlayers
-local debugmode = GetConVar( "lambdaplayers_debug" )
 
 ---- Anything Shared can go here ----
 
 -- Function for debugging prints
 function ENT:DebugPrint( ... )
-    if debugmode and !debugmode:GetBool() then return end
+    if GetLambdaConVarValue( "lambdaplayers_debug" ) == 0 then return end
     print( self:GetLambdaName() .. " EntIndex = ( " .. self:EntIndex() .. " )" .. ": ", ... )
 end
 
