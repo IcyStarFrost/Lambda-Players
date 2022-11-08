@@ -26,6 +26,7 @@ if SERVER then
         self.WeaponEnt:DrawShadow( false )
 
         self:RemoveTimers()
+        self:TerminateNonIgnoredDeadTimers()
         self:RemoveFlags( FL_OBJECT )
         
         net.Start( "lambdaplayers_becomeragdoll" )

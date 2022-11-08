@@ -83,6 +83,7 @@ function ENT:Initialize()
         self.l_nextidlesound = CurTime() + 5
         self.l_SpawnedEntities = {}
         self.l_Timers = {}
+        self.l_SimpleTimers = {}
         self.l_NexthealthUpdate = 0
         self.l_movepos = nil
         self.l_nextdoorcheck = 0
