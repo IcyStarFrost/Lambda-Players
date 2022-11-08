@@ -56,6 +56,7 @@ function EntMeta:LambdaDisintegrate()
     local pos
     local nextparticle = 0
     local endtime = RealTime() + 5
+    local norm = Angle( 0, random( 360 ), 0 ):Forward()
     self:SetRenderClipPlaneEnabled( true )
     self:EmitSound( "lambdaplayers/misc/disintegrate.mp3", 65, random( 80, 100 ) )
 
@@ -64,11 +65,13 @@ function EntMeta:LambdaDisintegrate()
     hook.Add( "Think", "lambdadisintegrateeffect" .. id, function()
         if !IsValid( self ) then hook.Remove( "Think", "lambdadisintegrateeffect" .. id ) return end
         if RealTime() > endtime then self:Remove() hook.Remove( "Think", "lambdadisintegrateeffect" .. id ) return end
-        local uppos = self:GetPos() + self:GetForward() * ( self:GetModelRadius() - 25 )
-        local downpos = self:GetPos() - self:GetForward() * ( self:GetModelRadius() )
+        
+
+        local uppos = self:GetPos() + norm * ( self:GetModelRadius() - 25 )
+        local downpos = self:GetPos() - norm * ( self:GetModelRadius() )
 
         curpos = curpos and LerpVector( 0.25 * FrameTime(), curpos, downpos ) or uppos
-        pos = -self:GetForward():Dot( curpos )
+        pos = -norm:Dot( curpos )
 
         if RealTime() > nextparticle then
 
@@ -94,7 +97,7 @@ function EntMeta:LambdaDisintegrate()
             nextparticle = RealTime() + 0.01
         end
 
-        self:SetRenderClipPlane( -self:GetForward(), pos )
+        self:SetRenderClipPlane( -norm, pos )
     end )
     
 end
