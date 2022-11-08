@@ -222,7 +222,7 @@ end
 
 -- If we can equip the specified weapon name
 function ENT:CanEquipWeapon( weaponname )
-    return _LAMBDAWEAPONALLOWCONVARS[ k ]:GetBool()
+    return _LAMBDAWEAPONALLOWCONVARS[ weaponname ]:GetBool()
 end
 
 function ENT:SwitchToRandomWeapon()
