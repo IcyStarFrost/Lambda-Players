@@ -23,7 +23,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local rocket = ents.Create( "rpg_missile" )
             if IsValid( rocket ) then
                 rocket:SetPos( wepent:GetAttachment(2).Pos + wepent:GetAttachment(2).Ang:Forward() * 100 + Vector(0,0,15) )
-                rocket:SetAngles( (target:GetPos() + target:OBBCenter() - wepent:GetPos()):Angle() )
+                rocket:SetAngles( ( target:WorldSpaceCenter() - wepent:GetPos() ):Angle() )
                 rocket:SetOwner( self )
                 rocket:SetCollisionGroup( COLLISION_GROUP_DEBRIS )-- SetOwner should prevent collision but it doesn't
                 rocket:Spawn()
