@@ -137,10 +137,14 @@ if SERVER then
         end
     end
 
+    local allowrespawn = GetConVar( "lambdaplayers_lambda_allownonadminrespawn" )
     function ENT:OnSpawnedByPlayer( ply )
         local respawn = tobool( ply:GetInfoNum( "lambdaplayers_lambda_shouldrespawn", 0 ) )
+        local weapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )
 
-        self:SetRespawn( ply:IsAdmin() or GetLambdaConVarValue( "lambdaplayers_lambda_allownonadminrespawn" ) == 1 )
+        self:SetRespawn( ply:IsAdmin() or allowrespawn:GetBool() )
+        self:SwitchWeapon( weapon )
+        
 
         self:DebugPrint( "Applied client settings from ", ply )
     end

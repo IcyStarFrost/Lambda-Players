@@ -1,10 +1,11 @@
 -- Function for the cvar callback
 -- This seems to work alright
-local function UpdateFonts(cvarName, oldVal, newVal)
+local uiscale = GetConVar( "lambdaplayers_uiscale" )
+local function UpdateFonts()
     surface.CreateFont( "lambdaplayers_displayname", {
     font = "TargetID",
     extended = false,
-    size = LambdaScreenScale( 7 + newVal ),
+    size = LambdaScreenScale( 7 + uiscale:GetFloat() ),
     weight = 0,
     blursize = 0,
     scanlines = 0,
@@ -21,18 +22,18 @@ local function UpdateFonts(cvarName, oldVal, newVal)
 
     surface.CreateFont( "lambdaplayers_voicepopuptext", {
         font = "Trebuchet MS",
-        size = LambdaScreenScale( 8 + newVal ),
+        size = LambdaScreenScale( 8 + uiscale:GetFloat() ),
         shadows = true
     })
 
     surface.CreateFont( "lambdaplayers_healthfont", {
         font = "ChatFont",
-        size = LambdaScreenScale( 7 + newVal ),
+        size = LambdaScreenScale( 7 + uiscale:GetFloat() ),
         weight = 0,
         shadow = true
     })
 end
-UpdateFonts("lambdaplayers_uiscale", GetLambdaConVarValue( "lambdaplayers_uiscale" ), GetLambdaConVarValue( "lambdaplayers_uiscale" ))
+UpdateFonts()
 
 
 cvars.AddChangeCallback( "lambdaplayers_uiscale", UpdateFonts )

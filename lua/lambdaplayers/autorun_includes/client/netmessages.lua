@@ -11,8 +11,12 @@ local hook = hook
 local surface = surface
 local LocalPlayer = LocalPlayer
 local origin = Vector()
-
-
+local cleanuptime = GetConVar( "lambdaplayers_corpsecleanuptime" )
+local cleaneffect = GetConVar( "lambdaplayers_corpsecleanupeffect" )
+local speaklimit = GetConVar( "lambdaplayers_voice_talklimit" )
+local globalvoice = GetConVar(  "lambdaplayers_voice_globalvoice" )
+local stereowarn = GetConVar( "lambdaplayers_voice_warnvoicestereo" )
+local voicevolume = GetConVar( "lambdaplayers_voice_voicevolume" )
 
 -- Net sent from ENT:OnKilled()
 net.Receive( "lambdaplayers_becomeragdoll", function() 
@@ -29,12 +33,11 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
 
     ent.ragdoll = ragdoll
 
-    local time = GetLambdaConVarValue( "lambdaplayers_corpsecleanuptime" )
-
+    local time = cleanuptime:GetInt()
 
     if time != 0 then 
         timer.Simple( time , function()
-            if GetLambdaConVarValue( "lambdaplayers_corpsecleanupeffect" ) == 1 and IsValid( ragdoll ) then
+            if cleaneffect:GetBool() and IsValid( ragdoll ) then
                 ragdoll:LambdaDisintegrate()
             elseif IsValid( ragdoll ) then 
                 ragdoll:Remove()
@@ -80,11 +83,11 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
         phys:ApplyForceOffset( force, offset )
     end
 
-    local time = GetLambdaConVarValue( "lambdaplayers_corpsecleanuptime" )
+    local time = cleanuptime:GetInt()
 
     if time != 0 then 
         timer.Simple( time , function()
-            if GetLambdaConVarValue( "lambdaplayers_corpsecleanupeffect" ) == 1 and IsValid( cs_prop ) then
+            if cleaneffect:GetBool() and IsValid( cs_prop ) then
                 cs_prop:LambdaDisintegrate()
             elseif IsValid( cs_prop ) then 
                 cs_prop:Remove()
@@ -102,17 +105,15 @@ local voiceicon = Material( "voice/icntlk_pl" )
 
 -- Voice icons, voice positioning, all that stuff will be handled in here.
 local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
-    local speakLimit = GetLambdaConVarValue( "lambdaplayers_voice_talklimit" )
-    if speakLimit > 0 and #_LAMBDAPLAYERS_Voicechannels >= speakLimit then return end
+    if speaklimit:GetInt() > 0 and #_LAMBDAPLAYERS_Voicechannels >= speaklimit:GetInt() then return end
 
     if IsValid( ent.l_VoiceSnd ) then ent.l_VoiceSnd:Stop() end
 
-    local isGlobal = ( GetLambdaConVarValue( "lambdaplayers_voice_globalvoice" ) == 1 )
-    local flag = ( isGlobal and "" or is3d and "3d mono noplay" or "mono noplay" )
+    local flag = ( globalvoice:GetBool() and "" or is3d and "3d mono noplay" or "mono noplay" )
 
     sound.PlayFile( "sound/" .. soundname, flag, function( snd, ID, errorname )
         if ID == 21 then
-            if GetLambdaConVarValue( "lambdaplayers_voice_warnvoicestereo" ) == 1 then print( "Lambda Players Voice Chat Warning: Sound file " ..soundname .. " has a stereo track and won't be played in 3d. Sound will continue to play. You can disable these warnings in Lambda Player>Utilities" ) end
+            if stereowarn:GetBool() then print( "Lambda Players Voice Chat Warning: Sound file " ..soundname .. " has a stereo track and won't be played in 3d. Sound will continue to play. You can disable these warnings in Lambda Player>Utilities" ) end
             PlaySoundFile( ent, soundname, index, shouldstoponremove, false )
             return
         elseif ID == 2 then
@@ -131,9 +132,8 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
 
             local dist = LocalPlayer():GetPos():DistToSqr( IsValid( ent ) and ent:GetPos() or origin )
-            local volumeCvar = GetLambdaConVarValue( "lambdaplayers_voice_voicevolume" )
             if dist < ( 2000 * 2000 ) then
-                volume = math_Clamp( volumeCvar / ( dist / ( 90 * 90 ) ), 0, volumeCvar )
+                volume = math_Clamp( voicevolume:GetFloat() / ( dist / ( 90 * 90 ) ), 0, voicevolume:GetFloat() )
             else
                 volume = 0
             end
@@ -175,7 +175,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
             snd:SetPlaybackRate( pitch / 100 )
 
-            if !isGlobal and is3d then
+            if !globalvoice:GetBool() and is3d then
                 snd:Set3DFadeDistance( 300, 0 )
                 snd:Set3DEnabled( is3d )
             end
@@ -208,25 +208,22 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                 if RealTime() > RealTime() + length then hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
 
                 tickent = LambdaIsValid( ent ) and ent or IsValid( ent.ragdoll ) and ent.ragdoll or tickent
+                snd:Set3DEnabled( ( !globalvoice:GetBool() and is3d ) )
 
-                local isGlobal = ( GetLambdaConVarValue( "lambdaplayers_voice_globalvoice" ) == 1 )
-                snd:Set3DEnabled( ( !isGlobal and is3d ) )
-
-                local volumeCvar = GetLambdaConVarValue( "lambdaplayers_voice_voicevolume" )
-                if !isGlobal and !is3d then
+                if !globalvoice:GetBool() and !is3d then
                     local ply = LocalPlayer()
                     lastpos = IsValid( tickent ) and tickent:GetPos() or lastpos
 
                     local dist = ply:GetPos():DistToSqr( lastpos )
                     if dist < ( 2000 * 2000 ) then
-                        volume = math_Clamp( volumeCvar / ( dist / ( 90 * 90 ) ), 0, volumeCvar )
+                        volume = math_Clamp( voicevolume:GetFloat() / ( dist / ( 90 * 90 ) ), 0, voicevolume:GetFloat() )
                     else
                         volume = 0
                     end
                 else
                     lastpos = IsValid( tickent ) and tickent:GetPos() or lastpos or origin
                     snd:SetPos( lastpos )
-                    volume = volumeCvar
+                    volume = voicevolume:GetFloat()
                 end
 
                 snd:SetVolume( volume )

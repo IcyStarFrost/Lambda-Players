@@ -33,6 +33,7 @@ elseif CLIENT then
     
     local DrawText = draw.DrawText
     local tostring = tostring
+    local uiscale = GetConVar( "lambdaplayers_uiscale" )
 
     hook.Add( "HUDPaint", "LambdaPlayers_NameDisplay", function()
         local sw, sh = ScrW(), ScrH()
@@ -45,7 +46,7 @@ elseif CLIENT then
             local hp = traceent:GetNW2Float( "lambda_health", "NAN" )
             
             DrawText( name, "lambdaplayers_displayname", ( sw / 2 ), ( sh / 1.95 ) , placeholdercolor, TEXT_ALIGN_CENTER )
-            DrawText( tostring( hp ) .. "%", "lambdaplayers_healthfont", ( sw / 2 ), ( sh / 1.87 ) + LambdaScreenScale( 1 + GetLambdaConVarValue( "lambdaplayers_uiscale" ) ), placeholdercolor, TEXT_ALIGN_CENTER)
+            DrawText( tostring( hp ) .. "%", "lambdaplayers_healthfont", ( sw / 2 ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), placeholdercolor, TEXT_ALIGN_CENTER)
         end
     
     end )
@@ -67,27 +68,29 @@ elseif CLIENT then
     local surface_SetMaterial = surface.SetMaterial
     local surface_DrawTexturedRect = surface.DrawTexturedRect
     local draw_DrawText = draw.DrawText
+    local allowpopups = GetConVar( "lambdaplayers_voice_voicepopups" )
+    local voicepopupx = GetConVar( "lambdaplayers_voice_voicepopupxpos" )
+    local voicepopupy = GetConVar( "lambdaplayers_voice_voicepopupypos" )
 
     -- Lambda's newer and accurate Voice Pop up
     local function LambdaVoicePopUp( x, y, name, icon, volume, alpha )
-        local uiScale = GetLambdaConVarValue( "lambdaplayers_uiscale" )
-        if #name > 20 + uiScale then name = Left( name, 20 + uiScale ) .. "..." end
+        if #name > 20 + uiscale:GetFloat() then name = Left( name, 20 + uiscale:GetFloat() ) .. "..." end
         
         local popupColor = Color(0, 255 * volume, 0, alpha )
-        draw_RoundedBox(4, x - 24, y, LambdaScreenScale( 83.5 + uiScale ), LambdaScreenScale( 13.5 + uiScale ), popupColor)
+        draw_RoundedBox(4, x - 24, y, LambdaScreenScale( 83.5 + uiscale:GetFloat() ), LambdaScreenScale( 13.5 + uiscale:GetFloat() ), popupColor)
         surface_SetDrawColor( Color(255, 255, 255, alpha ) )
         surface_SetMaterial( icon )
-        surface_DrawTexturedRect(x - 19, y + 5, LambdaScreenScale( 11 + uiScale ), LambdaScreenScale( 11 + uiScale ))
-        draw_DrawText( name, "lambdaplayers_voicepopuptext", x + LambdaScreenScale( 9 + uiScale ), y + 10, Color( 255, 255, 255, alpha ), TEXT_ALIGN_LEFT )
+        surface_DrawTexturedRect(x - 19, y + 5, LambdaScreenScale( 11 + uiscale:GetFloat() ), LambdaScreenScale( 11 + uiscale:GetFloat() ))
+        draw_DrawText( name, "lambdaplayers_voicepopuptext", x + LambdaScreenScale( 9 + uiscale:GetFloat() ), y + 10, Color( 255, 255, 255, alpha ), TEXT_ALIGN_LEFT )
     end
 
     hook.Add( "HUDPaint", "lambdaplayervoicepopup", function()
-        if GetLambdaConVarValue( "lambdaplayers_voice_voicepopups" ) == 0 then return end
+        if !allowpopups:GetBool() then return end
 
         for k, v in ipairs( _LAMBDAPLAYERS_Voicechannels ) do
             local w, h = ScrW(), ScrH()
-            local x, y = ( w - GetLambdaConVarValue( "lambdaplayers_voice_voicepopupxpos" ) ), ( h - GetLambdaConVarValue( "lambdaplayers_voice_voicepopupypos" ) )
-            y = y + ( k*-LambdaScreenScale( 17 + GetLambdaConVarValue( "lambdaplayers_uiscale" ) ) )
+            local x, y = ( w - voicepopupx:GetInt() ), ( h - voicepopupy:GetInt() )
+            y = y + ( k*-LambdaScreenScale( 17 + uiscale:GetFloat() ) )
 
             v[ "alpha" ] = v[ "alpha" ] or 245
 

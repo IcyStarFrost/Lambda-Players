@@ -1,4 +1,5 @@
 local table_insert = table.insert
+local pairs = pairs
 
 _LAMBDAPLAYERSWEAPONS = {}
 
@@ -23,7 +24,13 @@ for k, v in pairs( _LAMBDAPLAYERSWEAPONS ) do
 	if CLIENT then _LAMBDAPLAYERSWEAPONORIGINS[ v.origin ] = v.origin end
 end
 
+_LAMBDAWEAPONCLASSANDPRINTS = {}
 
+for k, v in pairs( _LAMBDAPLAYERSWEAPONS ) do
+	_LAMBDAWEAPONCLASSANDPRINTS[ k ] = v.prettyname
+end
+
+CreateLambdaConvar( "lambdaplayers_lambda_spawnweapon", "physgun", true, true, true, "The weapon lambda players will spawn with", 0, 1, { type = "Combo", options = _LAMBDAWEAPONCLASSANDPRINTS, name = "Spawn Weapon", category = "Lambda Player Settings" } )
 
 -- One part of the duplicator support
 -- Register the Lambdas so the duplicator knows how to handle these guys

@@ -6,8 +6,8 @@ local table_insert = table.insert
 local table_remove = table.remove
 local tobool = tobool
 local Angle = Angle
-
-
+local caneditworld = GetConVar( "lambdaplayers_building_caneditworld" )
+local caneditnonworld = GetConVar( "lambdaplayers_building_caneditnonworld" )
 
 -- Building Helper functions --
 
@@ -31,10 +31,10 @@ function ENT:HasPermissionToEdit( ent )
     if !ent:GetPhysicsObject():IsValid() then return false end
     if ent.IsLambdaPlayer then return false end
     if ent.LambdaOwner == self then return true end
-    if GetLambdaConVarValue( "lambdaplayers_building_caneditworld" ) == 1 and ent:CreatedByMap() then return true end
+    if caneditworld:GetBool() and ent:CreatedByMap() then return true end
     local creator = ent:GetCreator()
     if IsValid( creator ) and creator:IsPlayer() then return tobool( creator:GetInfoNum( "lambdaplayers_building_canedityourents", 0 ) ) end 
-    if GetLambdaConVarValue( "lambdaplayers_building_caneditnonworld" ) == 1 and !ent:CreatedByMap() then return true end
+    if caneditnonworld:GetBool() and !ent:CreatedByMap() then return true end
     return false
 end
 

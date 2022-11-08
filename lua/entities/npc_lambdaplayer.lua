@@ -42,6 +42,10 @@ end
     local isentity = isentity
     local Vector = Vector
     local debugoverlay = debugoverlay
+    local voicepitchmin = GetConVar( "lambdaplayers_voice_voicepitchmin" )
+    local voicepitchmax = GetConVar( "lambdaplayers_voice_voicepitchmax" )
+    local idledir = GetConVar( "lambdaplayers_voice_idledir" )
+    local drawflashlight = GetConVar( "lambdaplayers_drawflashlights" )
     local CurTime = CurTime
     local color_white = color_white
     local FrameTime = FrameTime
@@ -108,8 +112,9 @@ function ENT:Initialize()
             { "Build", self:GetBuildChance() },
             { "Combat", self:GetCombatChance() },
         }
-
-        self:SetVoicePitch( random( GetLambdaConVarValue( "lambdaplayers_voice_voicepitchmin" ), GetLambdaConVarValue( "lambdaplayers_voice_voicepitchmax" ) ) )
+        
+        
+        self:SetVoicePitch( random( voicepitchmin:GetInt(), voicepitchmax:GetInt() ) )
 
         ----
 
@@ -227,8 +232,7 @@ function ENT:Think()
         if self.l_ispickedupbyphysgun then self.loco:SetVelocity( Vector() ) end
 
         if CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 1, 100 ) <= self:GetVoiceChance() then
-            local idleDir = GetLambdaConVarValue( "lambdaplayers_voice_idledir" )
-            self:PlaySoundFile( idleDir == "randomengine" and self:GetRandomSound() or idleDir .. "/*", true )
+            self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or idledir:GetString() .. "/*", true )
             self.l_nextidlesound = CurTime() + 5
         end
         
@@ -303,7 +307,7 @@ function ENT:Think()
         if CurTime() > self.l_lightupdate then
             local lightvec = render.GetLightColor( self:WorldSpaceCenter() )
 
-            if lightvec:Length() < 0.02 and !self:GetIsDead() and GetLambdaConVarValue( "lambdaplayers_drawflashlights" ) == 1 then
+            if lightvec:Length() < 0.02 and !self:GetIsDead() and drawflashlight:GetBool() then
                 if !IsValid( self.l_flashlight ) then
                     self.l_flashlight = ProjectedTexture() 
                     self.l_flashlight:SetTexture( "effects/flashlight001" ) 

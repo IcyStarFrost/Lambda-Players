@@ -1,9 +1,9 @@
 local table_insert = table.insert
 local pairs = pairs
+local table_GetKeys = table.GetKeys
 
 -- Will be used for presets
 _LAMBDAPLAYERSCONVARS = {}
-_LAMBDAPLAYERSCONVARVALUES = {}
 
 if CLIENT then
     _LAMBDAConVarSettings = {}
@@ -40,24 +40,9 @@ function CreateLambdaConvar( name, val, shouldsave, isclient, userinfo, desc, mi
         table_insert( _LAMBDAConVarSettings, settingstbl )
     end
 
-    _LAMBDAPLAYERSCONVARVALUES[ name ] = val
-    
-    cvars.RemoveChangeCallback(name, name .. "_callbackID")
-
-    cvars.AddChangeCallback(name, function(cvarName, oldVal, newVal)
-        local convVal = tonumber( newVal )
-        if !convVal then convVal = newVal end
-        --print( cvarName, convVal )
-        _LAMBDAPLAYERSCONVARVALUES[ cvarName ] = convVal
-    end, name .. "_callbackID")
-
     return convar
 end
 
--- I don't know if that is better than 'cVar:Get*()', but still let's give it a try
-function GetLambdaConVarValue( name )
-    return _LAMBDAPLAYERSCONVARVALUES[ name ]
-end
 
 local function AddSourceConVarToSettings( cvarname, desc, settingstbl )
     if CLIENT and settingstbl then
@@ -73,16 +58,18 @@ local function CreateEntLimit( name, default, max )
     if SERVER then _LAMBDAEntLimits[ name ] = name end
 end
 
+
 -- Why not?
 local CreateLambdaConvar = CreateLambdaConvar 
 
 -- These Convar Functions are capable of creating spawnmenu settings automatically.
 
 ---------- Valid Table options ----------
--- type | String | Must be one of the following: Slider, Bool, Text
+-- type | String | Must be one of the following: Slider, Bool, Text, Combo
 -- name | String | Pretty name
 -- decimals | Number | Slider only! How much decimals the slider should have
 -- category | String | The Lambda Settings category to place the convar into. Will create one if one doesn't exist already
+-- options | Table | Combo only! A table with its keys being the data and values being the text
 
 -- Other Convars. Client-side only
 CreateLambdaConvar( "lambdaplayers_corpsecleanuptime", 15, true, true, false, "The amount of time before a corpse is removed. Set to zero to disable this", 0, 190, { type = "Slider", name = "Corpse Cleanup Time", decimals = 0, category = "Utilities" } )
@@ -93,11 +80,12 @@ CreateLambdaConvar( "lambdaplayers_voice_warnvoicestereo", 0, true, true, false,
 --
 
 -- Lambda Player Server Convars
-CreateLambdaConvar( "lambdaplayers_lambda_allownonadminrespawn", 0, true, false, false, "If Non Admins are allowed to spawn respawning Lambda Players. If off, only admins can spawn respawning lambda players", 0, 1, { type = "Bool", name = "Allow Non Admin Respawn", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_allownonadminrespawn", 0, true, false, false, "If Non Admins are allowed to spawn respawning lambda players. If off, only admins can spawn respawning lambda players", 0, 1, { type = "Bool", name = "Allow Non Admin Respawn", category = "Lambda Server Settings" } )
 --
 
 -- Lambda Player Convars
 CreateLambdaConvar( "lambdaplayers_lambda_shouldrespawn", 0, true, true, true, "If lambda players should respawn when they die. Note: Changing this will only apply to newly spawned lambda players AND only if the server allows the respawn option for non admins", 0, 1, { type = "Bool", name = "Respawn", category = "Lambda Player Settings" } )
+---- lambdaplayers_lambda_spawnweapon  Located in shared/globals.lua due to code order
 --
 
 -- Building Convars
