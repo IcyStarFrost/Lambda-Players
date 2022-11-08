@@ -71,7 +71,7 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
     if !disabletbl.sound then wepent:EmitSound( TranslateRandomization( weapondata.attacksnd ), 70, 100, 1, CHAN_WEAPON ) end
     
     if !disabletbl.muzzleflash then self:HandleMuzzleFlash( weapondata.muzzleflash ) end
-    if !disabletbl.shell then self:HandleShellEject( weapondata.shelleject ) end
+    if !disabletbl.shell then self:HandleShellEject( weapondata.shelleject, weapondata.shelloffpos, weapondata.shelloffang ) end
 
     if !disabletbl.anim then
         self:RemoveGesture( weapondata.attackanim )
@@ -84,8 +84,8 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
         bullettbl.Damage = weapondata.damage
         bullettbl.Force = weapondata.damage
         bullettbl.HullSize = 5
-        bullettbl.Num = 1
-        bullettbl.TracerName = "Tracer"
+        bullettbl.Num = weapondata.bulletcount or 1
+        bullettbl.TracerName = weapondata.tracername or "Tracer"
         bullettbl.Dir = ( target:WorldSpaceCenter() - wepent:GetPos() ):GetNormalized()
         bullettbl.Src = wepent:GetPos()
         bullettbl.Spread = Vector( weapondata.spread, weapondata.spread, 0 )
@@ -156,9 +156,9 @@ function ENT:ReloadWeapon()
     self:SetIsReloading( true )
 
     local wep = self:GetWeaponENT()
-    local time = weapondata.reloadtime
+    local time = weapondata.reloadtime or 1
     local anim = weapondata.reloadanim
-    local animspeed = weapondata.reloadanimationspeed
+    local animspeed = weapondata.reloadanimationspeed or 1
     local snds = weapondata.reloadsounds
 
     if snds and #snds > 0 then
@@ -169,8 +169,10 @@ function ENT:ReloadWeapon()
         end
     end
 
-    local id = self:AddGesture( anim )
-    self:SetLayerPlaybackRate( id, animspeed )
+    if anim then
+        local id = self:AddGesture( anim )
+        self:SetLayerPlaybackRate( id, animspeed )
+    end
 
     self:NamedTimer( "Reload", time, 1, function()
         if !self:GetIsReloading() then return end

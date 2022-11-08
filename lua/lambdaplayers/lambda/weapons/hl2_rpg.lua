@@ -1,5 +1,4 @@
 local CurTime = CurTime
-local random = math.random
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 --Missing guided rockets
@@ -13,19 +12,10 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 800,
         attackrange = 5000,
 
-        clip = 1,
-
-        reloadtime = 3,
-        reloadanim = ACT_HL2MP_GESTURE_RELOAD_PISTOL,
-        reloadanimationspeed = 1,
-        reloadsounds = { },
-
-        callback = function( self, wepent, target )
-            if self.l_Clip <= 0 then self:ReloadWeapon() return end-- Just in case
-            
+        callback = function( self, wepent, target )            
             self.l_WeaponUseCooldown = CurTime() + 3
 
-            wepent:EmitSound( "weapons/rpg/rocketfire1.wav", 70, 100, 1, CHAN_WEAPON )
+            wepent:EmitSound( "Weapon_RPG.Single" )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_RPG )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_RPG )
@@ -44,7 +34,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 end)
 
                 rocket:CallOnRemove( "lambdaplayer_rpgrocket_"..rocket:EntIndex(), function()
-                    rocket:StopSound( "weapons/rpg/rocket1.wav" )
+                    rocket:StopSound( "weapons/rpg/rocket1.wav" )--Trying to prevent source being dumb
                     util.BlastDamage( rocket, (self:IsValid()) and self or rocket, rocket:GetPos(), 260, 210)
                 end)
             end

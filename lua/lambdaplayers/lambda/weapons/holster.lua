@@ -54,6 +54,7 @@
     muzzleflash | Number | The muzzle flash type. 1 = Regular 5 = Combine 7 = Regular but bigger
     shelleject | String | Shell type valid types are ShellEject, RifleShellEject, ShotgunShellEject
     shelloffpos | Vector | 
+    shelloffang | Angle | 
             
 
     reloadtime | Number | The time it takes to reload

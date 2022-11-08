@@ -23,10 +23,10 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         reloadanim = ACT_HL2MP_GESTURE_RELOAD_REVOLVER,
         reloadanimationspeed = 1,
         reloadsounds = { 
-            { 0, "weapons/357/357_reload1.wav" }, 
-            { 0.4, "weapons/357/357_reload4.wav" }, 
-            { 1.5, "weapons/357/357_reload3.wav" }, 
-            { 2.2, "weapons/357/357_spin1.wav" } 
+            { 0, "Weapon_357.OpenLoader" }, 
+            { 0.4, "Weapon_357.RemoveLoader" }, 
+            { 1.5, "Weapon_357.ReplaceLoader" }, 
+            { 2.2, "Weapon_357.Spin" } 
         },
 
         islethal = true,
