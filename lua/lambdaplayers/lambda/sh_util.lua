@@ -266,6 +266,8 @@ if SERVER then
 
             self:SetVoicePitch( info.voicepitch or self:GetVoicePitch() )
 
+            -- Non Personal Data --
+
             self:SetRespawn( info.respawn or self:GetRespawn() )
             self:SwitchWeapon( info.spawnwep or self.l_Weapon )
 
