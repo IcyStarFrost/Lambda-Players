@@ -46,6 +46,7 @@ end
     local voicepitchmax = GetConVar( "lambdaplayers_voice_voicepitchmax" )
     local idledir = GetConVar( "lambdaplayers_voice_idledir" )
     local drawflashlight = GetConVar( "lambdaplayers_drawflashlights" )
+    local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
     local CurTime = CurTime
     local color_white = color_white
     local FrameTime = FrameTime
@@ -75,7 +76,7 @@ function ENT:Initialize()
         self:SetSolid( SOLID_BBOX )
         self:SetCollisionBounds( Vector( -17, -17, 0 ), Vector( 17, 17, 72 ) )
 
-        self:SetModel( _LAMBDAPLAYERSDEFAULTMDLS[ random( #_LAMBDAPLAYERSDEFAULTMDLS ) ] )
+        self:SetModel( allowaddonmodels:GetBool() and _LAMBDAPLAYERS_Allplayermodels[ random( #_LAMBDAPLAYERS_Allplayermodels ) ] or _LAMBDAPLAYERSDEFAULTMDLS[ random( #_LAMBDAPLAYERSDEFAULTMDLS ) ] )
 
         self.IsMoving = false
         self.l_State = "Idle" -- See sv_states.lua
