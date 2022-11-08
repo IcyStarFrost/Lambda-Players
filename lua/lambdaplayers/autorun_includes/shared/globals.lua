@@ -87,6 +87,12 @@ function LambdaIsValid( object )
 	return IsValid( object )
 end
 
+-- If the entity in question is a lambda player
+function EntMeta:IsLambdaPlayer()
+	return IsValid( self ) and self.IsLambdaPlayer
+end
+
+-- Used for lua_run testing purposes. It is faster to type this than Entity(1):GetEyeTrace().Entity
 function _tr()
 	return Entity(1):GetEyeTrace().Entity
 end
