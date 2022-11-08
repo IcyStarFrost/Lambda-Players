@@ -18,7 +18,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         reloadtime = 1.83,
         reloadanimationspeed = 1,
         reloadsounds = { 
-            { 0, "Weapon_Crossbow.Reload" },
             { 0.93, "Weapon_Crossbow.BoltElectrify" }
         },
 

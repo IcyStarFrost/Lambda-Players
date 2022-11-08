@@ -69,7 +69,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                         end
                     end
 
-                end, true)
+                end)
 
                 return true
             end
