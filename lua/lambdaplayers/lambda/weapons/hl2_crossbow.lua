@@ -1,5 +1,6 @@
 local CurTime = CurTime
 local random = math.random
+local boltDmg = GetConVar("sk_plr_dmg_crossbow")
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
@@ -14,52 +15,48 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         clip = 1,
 
-        reloadtime = 1.8,
-        reloadanim = ACT_HL2MP_GESTURE_RELOAD_AR2,
+        reloadtime = 1.83,
         reloadanimationspeed = 1,
         reloadsounds = { 
-            { 1, "weapons/crossbow/bolt_load"..random(2)..".wav" } 
+            { 0.93, "Weapon_Crossbow.BoltElectrify" }
         },
 
         callback = function( self, wepent, target )
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
             
-            self.l_WeaponUseCooldown = CurTime() + 1.2
-
-            wepent:EmitSound( "weapons/crossbow/bolt_fly4.wav", 70, random(90,100), 1, CHAN_WEAPON )
-
-            self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
-            self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
-
-            local dir = ( target:GetPos() + target:OBBCenter() - wepent:GetPos() + Vector(random(-40,40),0,random(-50,50))):Angle()
-    
             local bolt = ents.Create( "crossbow_bolt" )
-            if IsValid ( bolt ) then
-                bolt:SetPos( self:GetPos() + self:OBBCenter() + dir:Forward() * 64)
-                bolt:SetAngles( dir )
+            if IsValid( bolt ) then
+                self.l_Clip = self.l_Clip - 1
+                self.l_WeaponUseCooldown = CurTime() + 0.4
+                self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
+                self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
+
+                wepent:EmitSound( "Weapon_Crossbow.Single" )
+
+                local fireDir = ( target:WorldSpaceCenter() - self:EyePos() ):Angle()
+
+                bolt:SetPos( self:EyePos() + fireDir:Forward() * 32 ) 
+                bolt:SetAngles( fireDir )
                 bolt:Spawn()
-                bolt:Activate()
-                bolt:SetVelocity( dir:Forward() * (self:WaterLevel() == 3 and 1500 or 2500) )
+                bolt:SetOwner( self )
+                bolt:SetVelocity( fireDir:Forward() * ( bolt:WaterLevel() == 0 and 2500 or 1500 ) )
 
-                bolt:CallOnRemove( "lambdaplayer_crossbowbolt_"..bolt:EntIndex(), function()                    
+                bolt:EmitSound( "Weapon_Crossbow.BoltFly" )
+                bolt:CallOnRemove( "lambdaplayer_crossbowbolt_" .. bolt:EntIndex(), function()
+                    local tr = bolt:GetTouchTrace()
+                    if !tr or !tr.Entity or !IsValid(tr.Entity) then return end
 
-                    local find = self:FindInSphere(bolt:GetPos(), 5, function( ent )
-                        return (ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer())
-                    end)
-                    if !IsValid(find[1]) then return end
-                    
-                    local dmg = DamageInfo()
-                    dmg:SetDamage( 100 )
-                    dmg:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * 100 )
-                    dmg:SetDamageType( bit.bor(DMG_BULLET, DMG_NEVERGIB) )
-                    dmg:SetAttacker( self or bolt )
-                    dmg:SetInflictor( bolt )
-                    find[1]:TakeDamageInfo( dmg )
+                    local dmgInfo = DamageInfo()
+                    dmgInfo:SetDamage( boltDmg:GetFloat() )
+                    dmgInfo:SetDamageType( bit.bor( DMG_BULLET, DMG_NEVERGIB ) )
+                    dmgInfo:SetDamagePosition( tr.HitPos )
+                    dmgInfo:SetAttacker( IsValid( self ) and self or bolt )
+                    dmgInfo:SetInflictor( bolt )
+                    dmgInfo:SetDamagePosition( tr.HitPos )
+                    tr.Entity:DispatchTraceAttack( dmgInfo, tr )
                 end)
             end
 
-            self.l_Clip = self.l_Clip - 1
-            
             return true
         end,
 
