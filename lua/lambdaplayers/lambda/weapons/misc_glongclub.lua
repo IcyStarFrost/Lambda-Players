@@ -39,7 +39,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     target.loco:Jump()
                     target.loco:SetVelocity( target.loco:GetVelocity() + ( attackForce * 0.01 ) )
                     timer.Simple(0.1, function()
-                        if !IsValid( target ) then return end
+                        if !LambdaIsValid( target ) then return end
                         target:TakeDamageInfo( dmginfo )
                     end)
                 else
