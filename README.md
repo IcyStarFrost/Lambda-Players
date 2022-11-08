@@ -15,3 +15,7 @@ Custom Profile Pictures can be added by putting .png and .jpg images in this fol
 `LambdaOnConvarsCreated`
 
 Called when all default convars have been created. Use this hook if you want use the `CreateLambdaConvar()` function to create custom convars for Lambda Players externally
+
+`LambdaOnConCommandsCreated`
+
+Called when all default console commands have been created. Use this hook if you want use the `CreateLambdaConsoleCommand()` function to create custom console commands for Lambda Players externally
