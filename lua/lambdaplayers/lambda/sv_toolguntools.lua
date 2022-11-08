@@ -1,6 +1,7 @@
-
+local IsValid = IsValid
 
 function ENT:UseColorTool( target )
+    if !IsValid( target ) then return end
 
     self:LookTo( target, 2 )
 

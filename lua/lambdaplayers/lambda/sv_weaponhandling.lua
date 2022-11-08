@@ -220,9 +220,14 @@ function ENT:IsWeaponMarkedNodraw()
     return weapondata.nodraw
 end
 
+-- If we can equip the specified weapon name
+function ENT:CanEquipWeapon( weaponname )
+    return _LAMBDAWEAPONALLOWCONVARS[ k ]:GetBool()
+end
+
 function ENT:SwitchToRandomWeapon()
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if _LAMBDAWEAPONALLOWCONVARS[ k ]:GetBool() and k != self.l_Weapon then
+        if self:CanEquipWeapon( k ) and k != self.l_Weapon then
             self:SwitchWeapon( k )
             return
         end
@@ -233,7 +238,7 @@ end
 function ENT:SwitchToLethalWeapon()
     if self.l_HasLethal then return end
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if v.islethal and _LAMBDAWEAPONALLOWCONVARS[ k ]:GetBool() and k != self.l_Weapon then
+        if v.islethal and self:CanEquipWeapon( k ) and k != self.l_Weapon then
             self:SwitchWeapon( k )
             return
         end
