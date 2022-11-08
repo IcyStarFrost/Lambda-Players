@@ -56,3 +56,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cleanuplambdaents", function( ply
 
     LambdaPlayers_Notify( ply, "Cleaned up all lambda entities!", NOTIFY_CLEANUP, "buttons/button15.wav" )
 end, false, "Removes all entities that were spawned by Lambda Players", { name = "Cleanup Lambda Entities", category = "Utilities" } )
+
+-- Calls this hook when all default console commands have been created.
+-- This hook can be used to ensure the CreateLambdaConsoleCommand() function exists so custom console commands can be made
+hook.Run( "LambdaOnConCommandsCreated" )
