@@ -64,6 +64,7 @@ end
 function ENT:Initialize()
 
     self.l_SpawnPos = self:GetPos() -- Used for Respawning
+    self.l_SpawnAngles = self:GetAngles()
 
     if SERVER then
 
@@ -149,10 +150,13 @@ function ENT:Initialize()
 
         self:InitializeMiniHooks()
         self:SwitchWeapon( "physgun" )
+        self.l_SpawnWeapon = "physgun"
         
         self:SetWeaponENT( self.WeaponEnt )
 
         self:HandleAllValidNPCRelations()
+
+
 
     elseif CLIENT then
 
@@ -353,8 +357,13 @@ end
 
 function ENT:RunBehaviour()
     self:DebugPrint( "Initialized their AI in ", SysTime() - self.debuginitstart, " seconds" )
-
-
+    if IsValid( self:GetCreator() ) then
+        undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+            undo.SetPlayer( self:GetCreator() )
+            undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+            undo.AddEntity( self )
+        undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+    end
 
     while true do
 

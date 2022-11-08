@@ -3,11 +3,34 @@ local SimpleTimer = timer.Simple
 local random = math.random
 local ents_Create = ents.Create
 local tobool = tobool
+local undo = undo
+local debugvar = GetConVar( "lambdaplayers_debug" )
 
 if SERVER then
 
-    function ENT:OnKilled()
-        ErrorNoHaltWithStack( "WARNING! ", self:GetLambdaName(), " was killed on a engine level! This should never happen!" )
+    -- Due to the issues of lambda players not taking damage when they die internally, we have no choice but to recreate them to get around this.
+    -- If there is a fix for the damage handling failing to prevent them from actually getting below 0 please make it known so it can be fixed ASAP.
+    function ENT:OnKilled( info )
+        if debugvar:GetBool() then ErrorNoHaltWithStack( "WARNING! ", self:GetLambdaName(), " was killed on a engine level! The entity will be recreated!" ) end
+
+        local exportinfo = self:ExportLambdaInfo()
+        local newlambda = ents_Create( "npc_lambdaplayer" )
+        newlambda:SetPos( self.l_SpawnPos )
+        newlambda:SetAngles( self.l_SpawnAngles )
+        newlambda:SetCreator( self:GetCreator() )
+        newlambda:Spawn()
+        newlambda:SetRespawn( self:GetRespawn() )
+        newlambda:ApplyLambdaInfo( exportinfo )
+
+        if IsValid( self:GetCreator() ) then
+            undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+                undo.SetPlayer( self:GetCreator() )
+                undo.AddEntity( newlambda )
+                undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+            undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+        end
+
+        self:SimpleTimer( 0.1, function() self:Remove() end, true )
     end
 
     function ENT:LambdaOnKilled( info )
@@ -24,6 +47,8 @@ if SERVER then
         self:DrawShadow( false )
         self.WeaponEnt:SetNoDraw( true )
         self.WeaponEnt:DrawShadow( false )
+
+        self:GetPhysicsObject():EnableCollisions( false )
 
         self:RemoveTimers()
         self:TerminateNonIgnoredDeadTimers()
@@ -44,11 +69,11 @@ if SERVER then
                 net.WriteVector( self:GetPhysColor() )
             net.Broadcast()
         end
-
+        print( self:GetRespawn() )
         if self:GetRespawn() then
             self:SimpleTimer( 2, function() self:LambdaRespawn() end, true )
         else
-            self:SimpleTimer( 0.1, function() self:Remove() end, true )
+            self:SimpleTimer( 0.1, function() print("Remove") self:Remove() end, true )
         end
 
     end
@@ -98,6 +123,7 @@ if SERVER then
     
     -- Called when we collide with something
     function ENT:HandleCollision( data )
+        if self:GetIsDead() then return end
         local collider = data.HitEntity
         if !IsValid( collider ) then return end
     
@@ -145,6 +171,7 @@ if SERVER then
 
         self:SetRespawn( ply:IsAdmin() or allowrespawn:GetBool() )
         self:SwitchWeapon( weapon )
+        self.l_SpawnWeapon = weapon
         
 
         self:DebugPrint( "Applied client settings from ", ply )
@@ -177,18 +204,21 @@ function ENT:InitializeMiniHooks()
         -- To get around that we basically predict if the lambda is gonna die and completely block the damage so we don't actually die. This of course is exclusive to Respawning
         self:Hook( "EntityTakeDamage", "DamageHandling", function( target, info )
             if target != self then return end
-
+            print("Damage", target )
             local potentialdeath = ( self:Health() - info:GetDamage() ) <= 0
+            print( ( self:Health() - info:GetDamage() ) <= 0, self:Health() - info:GetDamage(), self:Health(), info:GetDamage() )
             if self:GetRespawn() and potentialdeath then
                 info:SetDamageBonus( 0 )
                 info:SetBaseDamage( 0 )
                 info:SetDamage( 0 ) -- We need this because apparently the nextbot would think it is dead and do some wacky health issues without it
                 self:LambdaOnKilled( info )
+                print("Blocked damage ", target )
                 return true
             end
         
 
         end, true )
+
 
         self:Hook( "OnEntityCreated", "NPCRelationshipHandle", function( ent )
             self:SimpleTimer( 0, function() 

@@ -158,7 +158,7 @@ function ENT:ReloadWeapon()
     local wep = self:GetWeaponENT()
     local time = weapondata.reloadtime
     local anim = weapondata.reloadanim
-    local animspeed = weapondata.reloadanimationspeed
+    local animspeed = weapondata.reloadanimationspeed or 1
     local snds = weapondata.reloadsounds
 
     if snds and #snds > 0 then

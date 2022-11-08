@@ -222,7 +222,11 @@ function ENT:ExportLambdaInfo()
         voice = self:GetVoiceChance(),
         --
 
-        voicepitch = self:GetVoicePitch()
+        voicepitch = self:GetVoicePitch(),
+
+        -- Non personal data --
+        respawn = self:GetRespawn(),
+        spawnwep = self.l_SpawnWeapon,
     }
 
     return info
@@ -237,29 +241,35 @@ if SERVER then
 
     -- Applies info data from :ExportLambdaInfo() to the Lambda Player
     function ENT:ApplyLambdaInfo( info )
-        self:DebugPrint( "had Lambda Info applied to them" )
+        self:SimpleTimer( 0, function()
 
-        self:SetLambdaName( info.name or self:GetLambdaName() )
-        self:SetModel( info.model or self:GetModel() )
-        self:SetMaxHealth( info.health or self:GetMaxHealth() )
-        self:SetHealth( info.health or self:GetMaxHealth() )
-        self:SetNWMaxHealth( info.health or self:GetMaxHealth() )
+            self:DebugPrint( "had Lambda Info applied to them" )
 
-        self:SetPlyColor( info.plycolor or self:GetPlyColor() )
-        self:SetPhysColor( info.physcolor or self:GetPhysColor() )
-        self.WeaponEnt:SetNW2Vector( "lambda_weaponcolor", ( info.physcolor or self:GetPhysColor() ) )
+            self:SetLambdaName( info.name or self:GetLambdaName() )
+            self:SetModel( info.model or self:GetModel() )
+            self:SetMaxHealth( info.health or self:GetMaxHealth() )
+            self:SetHealth( info.health or self:GetMaxHealth() )
+            self:SetNWMaxHealth( info.health or self:GetMaxHealth() )
 
-        self:SetBuildChance( info.build or self:GetBuildChance() )
-        self:SetCombatChance( info.combat or self:GetCombatChance() )
-        self:SetVoiceChance( info.voice or self:GetVoiceChance() )
-        self.l_Personality = {
-            { "Build", info.build or self:GetBuildChance() },
-            { "Combat", info.combat or self:GetCombatChance() },
-        }
-        SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
+            self:SetPlyColor( info.plycolor or self:GetPlyColor() )
+            self:SetPhysColor( info.physcolor or self:GetPhysColor() )
+            self.WeaponEnt:SetNW2Vector( "lambda_weaponcolor", ( info.physcolor or self:GetPhysColor() ) )
 
-        self:SetVoicePitch( info.voicepitch or self:GetVoicePitch() )
+            self:SetBuildChance( info.build or self:GetBuildChance() )
+            self:SetCombatChance( info.combat or self:GetCombatChance() )
+            self:SetVoiceChance( info.voice or self:GetVoiceChance() )
+            self.l_Personality = {
+                { "Build", info.build or self:GetBuildChance() },
+                { "Combat", info.combat or self:GetCombatChance() },
+            }
+            SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
+            self:SetVoicePitch( info.voicepitch or self:GetVoicePitch() )
+
+            self:SetRespawn( info.respawn or self:GetRespawn() )
+            self:SwitchWeapon( info.spawnwep or self.l_Weapon )
+
+        end, true )
     end
     
     -- If the we can target the ent
@@ -323,14 +333,18 @@ if SERVER then
         self:SetIsReloading( false )
         self:SetPos( self.l_SpawnPos )
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
+        self:GetPhysicsObject():EnableCollisions( true )
 
+        self:ClientSideNoDraw( self.WeaponEnt, self:IsWeaponMarkedNodraw() )
         self:ClientSideNoDraw( self, false )
         self:SetNoDraw( false )
         self:DrawShadow( true )
+        self.WeaponEnt:SetNoDraw( self:IsWeaponMarkedNodraw() )
+        self.WeaponEnt:DrawShadow( !self:IsWeaponMarkedNodraw() )
 
         self:SetHealth( self:GetMaxHealth() )
         self:AddFlags( FL_OBJECT )
-        self:SwitchWeapon( "none" )
+        self:SwitchWeapon( self.l_SpawnWeapon )
         self:UpdateHealthDisplay()
         
         self:SetState( "Idle" )
