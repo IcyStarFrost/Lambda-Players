@@ -81,6 +81,7 @@ CreateLambdaConvar( "lambdaplayers_voice_warnvoicestereo", 0, true, true, false,
 
 -- Lambda Player Server Convars
 CreateLambdaConvar( "lambdaplayers_lambda_allownonadminrespawn", 0, true, false, false, "If Non Admins are allowed to spawn respawning lambda players. If off, only admins can spawn respawning lambda players", 0, 1, { type = "Bool", name = "Allow Non Admin Respawn", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_allowrandomaddonsmodels", 0, true, false, false, "If lambda players can use random addon playermodels", 0, 1, { type = "Bool", name = "Addon Playermodels", category = "Lambda Server Settings" } )
 --
 
 -- Lambda Player Convars
@@ -115,5 +116,8 @@ CreateLambdaConvar( "lambdaplayers_debug", 0, false, false, false, "Enables the 
 AddSourceConVarToSettings( "developer", "Enables Source's Developer mode", { type = "Bool", name = "Developer", category = "Debugging" } )
 --
 
+-- Calls this hook when all default convars have been created.
+-- This hook can be used to ensure the CreateLambdaConvar() function exists so custom convars can be made
+hook.Run( "LambdaOnConvarsCreated" )
 
 -- Note, Weapon allowing convars are located in the shared/globals.lua

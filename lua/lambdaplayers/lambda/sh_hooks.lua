@@ -204,15 +204,12 @@ function ENT:InitializeMiniHooks()
         -- To get around that we basically predict if the lambda is gonna die and completely block the damage so we don't actually die. This of course is exclusive to Respawning
         self:Hook( "EntityTakeDamage", "DamageHandling", function( target, info )
             if target != self then return end
-            print("Damage", target )
             local potentialdeath = ( self:Health() - info:GetDamage() ) <= 0
-            print( ( self:Health() - info:GetDamage() ) <= 0, self:Health() - info:GetDamage(), self:Health(), info:GetDamage() )
             if self:GetRespawn() and potentialdeath then
                 info:SetDamageBonus( 0 )
                 info:SetBaseDamage( 0 )
                 info:SetDamage( 0 ) -- We need this because apparently the nextbot would think it is dead and do some wacky health issues without it
                 self:LambdaOnKilled( info )
-                print("Blocked damage ", target )
                 return true
             end
         
