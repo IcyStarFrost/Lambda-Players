@@ -39,7 +39,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_FIST )
             
             self:SimpleTimer( 0.2, function()
-                if self:GetRangeSquaredTo( target ) > (45 * 45) then return end
+                if self:GetRangeSquaredTo( target ) > ( 45 * 45 ) then return end
                 
                 local dmg = random( 8, 12 )
                 if fistCombo >= 2 then 
@@ -57,8 +57,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 wepent:EmitSound( "Flesh.ImpactHard", 70 )
 
                 fistCombo = fistCombo + 1
-
-                print(dmg)
                 
                 target:TakeDamageInfo( dmginfo )
             end)

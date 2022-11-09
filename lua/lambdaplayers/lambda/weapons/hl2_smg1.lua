@@ -31,7 +31,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         callback = function( self, wepent, target )
             -- Secondary grenade launcher
-            if random( 75 ) == 1 and self:GetRangeSquaredTo(target) <= ( 1000 * 1000 ) then
+            if random( 75 ) == 1 and self:GetRangeSquaredTo( target ) <= ( 1000 * 1000 ) then
                 local grenade = ents.Create( "grenade_ar2" )
                 if IsValid( grenade ) then
                     wepent:EmitSound( "Weapon_SMG1.Double" )

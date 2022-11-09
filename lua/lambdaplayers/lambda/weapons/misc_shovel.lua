@@ -21,19 +21,19 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             
-            self:SimpleTimer(0.3, function()
-                if self:GetRangeSquaredTo(target) > (70 * 70) then return end
+            self:SimpleTimer( 0.3, function()
+                if self:GetRangeSquaredTo( target ) > ( 70 * 70 ) then return end
                 
-                local dmg = random(25,30)
+                local dmg = random( 25,30 )
                 local dmginfo = DamageInfo()
-                dmginfo:SetDamage(dmg)
-                dmginfo:SetAttacker(self)
-                dmginfo:SetInflictor(wepent)
-                dmginfo:SetDamageType(DMG_CLUB)
+                dmginfo:SetDamage( dmg )
+                dmginfo:SetAttacker( self )
+                dmginfo:SetInflictor( wepent )
+                dmginfo:SetDamageType( DMG_CLUB )
                 dmginfo:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg )
                 
-                wepent:EmitSound("physics/metal/metal_sheet_impact_hard"..random(6,7)..".wav", 70)
-                wepent:EmitSound("physics/body/body_medium_impact_hard"..random(6)..".wav", 70)
+                wepent:EmitSound( "physics/metal/metal_sheet_impact_hard"..random(6,7)..".wav", 70 )
+                wepent:EmitSound( "physics/body/body_medium_impact_hard"..random(6)..".wav", 70 )
                 
                 target:TakeDamageInfo( dmginfo )
             end)

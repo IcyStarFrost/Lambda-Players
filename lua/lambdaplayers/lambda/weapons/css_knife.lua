@@ -2,9 +2,9 @@ local random = math.random
 local CurTime = CurTime
 local firstSwing = true
 local firstSwingTime = 0
+local convar = CreateLambdaConvar( "lambdaplayers_weapons_knifebackstab", 1, true, false, true, "If Lambdas should be allowed to use the backstab feature of the Knife.", 0, 1, { type = "Bool", name = "Knife - Enable Backstab", category = "Weapon Utilities" } )
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
--- Missing firstSwing to simulate CSS knife better.
 
     knife = {
         model = "models/weapons/w_knife_t.mdl",
@@ -21,8 +21,9 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         callback = function( self, wepent, target )
-            local backstabCheck = self:WorldToLocalAngles(target:GetAngles() + Angle(0,-90,0))
-            
+            local backstabCheck = self:WorldToLocalAngles( target:GetAngles() + Angle( 0, -90, 0 ) )
+            local backstabConVar = GetConVar( "lambdaplayers_weapons_knifebackstab" ):GetBool()
+
             if CurTime() > firstSwingTime then
                 firstSwing = true
             end
@@ -31,16 +32,16 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             firstSwingTime = self.l_WeaponUseCooldown + 0.4
             
             local isBackstab = false
-            local dmg = (firstSwing and 20 or 15)
+            local dmg = ( firstSwing and 20 or 15 )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_KNIFE )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_KNIFE )
             
             wepent:EmitSound( "Weapon_Knife.Slash" )
-            if backstabCheck.y < -30 and backstabCheck.y > -140 then
+            if backstabCheck.y < -30 and backstabCheck.y > -140 and backstabConVar then
                 isBackstab = true
                 dmg = 195
-                wepent:EmitSound( "Weapon_Knife.Stab", 150 )
+                target:EmitSound( "weapons/knife/knife_stab.wav", 70 )
             end
 
             local dmginfo = DamageInfo() 
@@ -50,7 +51,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             dmginfo:SetDamageType( DMG_SLASH )
             dmginfo:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg )
 
-            self.l_WeaponUseCooldown = CurTime() + (isBackstab and 1.0 or 0.5)
+            self.l_WeaponUseCooldown = CurTime() + ( isBackstab and 1.0 or 0.5 )
             target:EmitSound( "Weapon_Knife.Hit", 70 )
 
             target:TakeDamageInfo( dmginfo )

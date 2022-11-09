@@ -28,7 +28,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 rocket:SetCollisionGroup( COLLISION_GROUP_DEBRIS )-- SetOwner should prevent collision but it doesn't
                 rocket:Spawn()
                 
-                self:SimpleTimer(0.3, function()-- Grace period to avoid collision with the shooter
+                self:SimpleTimer( 0.3, function()-- Grace period to avoid collision with the shooter
                     if !IsValid( rocket ) then return false end
                     rocket:SetCollisionGroup( COLLISION_GROUP_PROJECTILE )
                 end)

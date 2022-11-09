@@ -28,6 +28,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             { 2.233, "Weapon_357.ReplaceLoader" }, 
             { 3.066, "Weapon_357.Spin" } 
         },
+        
         OnReload = function( self, wepent )
             local anim = self:LookupSequence( "reload_revolver_base_layer" )
             if anim != -1 then
