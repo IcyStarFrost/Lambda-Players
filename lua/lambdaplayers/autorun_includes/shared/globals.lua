@@ -87,6 +87,8 @@ function LambdaIsValid( object )
 	return IsValid( object )
 end
 
+
+-- Used for lua_run testing purposes. It is faster to type this than Entity(1):GetEyeTrace().Entity
 function _tr()
 	return Entity(1):GetEyeTrace().Entity
 end

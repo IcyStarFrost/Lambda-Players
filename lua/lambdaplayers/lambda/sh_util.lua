@@ -2,6 +2,7 @@
 local RandomPairs = RandomPairs
 local LambdaIsValid = LambdaIsValid
 local ipairs = ipairs
+local pairs = pairs
 local IsValid = IsValid
 local file_Find = file.Find
 local string_find = string.find
@@ -21,6 +22,7 @@ local table_add = table.Add
 local EndsWith = string.EndsWith
 local string_Replace = string.Replace
 local table_insert = table.insert
+local tostring = tostring
 local eyetracetable = {}
 local GetLambdaPlayers = GetLambdaPlayers
 local debugcvar = GetConVar( "lambdaplayers_debug" )
@@ -59,10 +61,18 @@ end
 
 -- Creates a simple timer that won't run if we are invalid or dead. ignoredead var will run the timer even if self:GetIsDead() is true
 function ENT:SimpleTimer( delay, func, ignoredead )
-    timer_simple( delay, function() 
-        if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) then return end
+    local id = tostring( func ) .. random( 1, 100000 )
+    self.l_SimpleTimers[ id ] = !ignoredead
+    timer_simple( delay, function()
+        if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) or !ignoredead and !self.l_SimpleTimers[ id ] then return end
         func()
+        self.l_SimpleTimers[ id ] = nil
     end )
+end
+
+-- Prevents every simple timer that does not have ignoredead from running
+function ENT:TerminateNonIgnoredDeadTimers()
+    table_Empty( self.l_SimpleTimers )
 end
 
 -- Creates a named timer that can be stopped. ignore dead var will run the time even if we die
@@ -212,7 +222,11 @@ function ENT:ExportLambdaInfo()
         voice = self:GetVoiceChance(),
         --
 
-        voicepitch = self:GetVoicePitch()
+        voicepitch = self:GetVoicePitch(),
+
+        -- Non personal data --
+        respawn = self:GetRespawn(),
+        spawnwep = self.l_SpawnWeapon,
     }
 
     return info
@@ -227,29 +241,37 @@ if SERVER then
 
     -- Applies info data from :ExportLambdaInfo() to the Lambda Player
     function ENT:ApplyLambdaInfo( info )
-        self:DebugPrint( "had Lambda Info applied to them" )
+        self:SimpleTimer( 0, function()
 
-        self:SetLambdaName( info.name or self:GetLambdaName() )
-        self:SetModel( info.model or self:GetModel() )
-        self:SetMaxHealth( info.health or self:GetMaxHealth() )
-        self:SetHealth( info.health or self:GetMaxHealth() )
-        self:SetNWMaxHealth( info.health or self:GetMaxHealth() )
+            self:DebugPrint( "had Lambda Info applied to them" )
 
-        self:SetPlyColor( info.plycolor or self:GetPlyColor() )
-        self:SetPhysColor( info.physcolor or self:GetPhysColor() )
-        self.WeaponEnt:SetNW2Vector( "lambda_weaponcolor", ( info.physcolor or self:GetPhysColor() ) )
+            self:SetLambdaName( info.name or self:GetLambdaName() )
+            self:SetModel( info.model or self:GetModel() )
+            self:SetMaxHealth( info.health or self:GetMaxHealth() )
+            self:SetHealth( info.health or self:GetMaxHealth() )
+            self:SetNWMaxHealth( info.health or self:GetMaxHealth() )
 
-        self:SetBuildChance( info.build or self:GetBuildChance() )
-        self:SetCombatChance( info.combat or self:GetCombatChance() )
-        self:SetVoiceChance( info.voice or self:GetVoiceChance() )
-        self.l_Personality = {
-            { "Build", info.build or self:GetBuildChance() },
-            { "Combat", info.combat or self:GetCombatChance() },
-        }
-        SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
+            self:SetPlyColor( info.plycolor or self:GetPlyColor() )
+            self:SetPhysColor( info.physcolor or self:GetPhysColor() )
+            self.WeaponEnt:SetNW2Vector( "lambda_weaponcolor", ( info.physcolor or self:GetPhysColor() ) )
 
-        self:SetVoicePitch( info.voicepitch or self:GetVoicePitch() )
+            self:SetBuildChance( info.build or self:GetBuildChance() )
+            self:SetCombatChance( info.combat or self:GetCombatChance() )
+            self:SetVoiceChance( info.voice or self:GetVoiceChance() )
+            self.l_Personality = {
+                { "Build", info.build or self:GetBuildChance() },
+                { "Combat", info.combat or self:GetCombatChance() },
+            }
+            SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
+            self:SetVoicePitch( info.voicepitch or self:GetVoicePitch() )
+
+            -- Non Personal Data --
+
+            self:SetRespawn( info.respawn or self:GetRespawn() )
+            self:SwitchWeapon( info.spawnwep or self.l_Weapon )
+
+        end, true )
     end
     
     -- If the we can target the ent
@@ -313,14 +335,18 @@ if SERVER then
         self:SetIsReloading( false )
         self:SetPos( self.l_SpawnPos )
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
+        self:GetPhysicsObject():EnableCollisions( true )
 
+        self:ClientSideNoDraw( self.WeaponEnt, self:IsWeaponMarkedNodraw() )
         self:ClientSideNoDraw( self, false )
         self:SetNoDraw( false )
         self:DrawShadow( true )
+        self.WeaponEnt:SetNoDraw( self:IsWeaponMarkedNodraw() )
+        self.WeaponEnt:DrawShadow( !self:IsWeaponMarkedNodraw() )
 
         self:SetHealth( self:GetMaxHealth() )
         self:AddFlags( FL_OBJECT )
-        self:SwitchWeapon( "none" )
+        self:SwitchWeapon( self.l_SpawnWeapon )
         self:UpdateHealthDisplay()
         
         self:SetState( "Idle" )

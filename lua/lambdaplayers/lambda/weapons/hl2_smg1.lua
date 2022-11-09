@@ -19,6 +19,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         rateoffire = 0.07,
         muzzleflash = 1,
         shelleject = "ShellEject",
+        shelloffpos = Vector(3,5,5),
+        shelloffang = Angle(-180,0,0),
         attackanim = ACT_HL2MP_GESTURE_RANGE_ATTACK_SMG1,
         attacksnd = "Weapon_SMG1.Single",
 
@@ -29,7 +31,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         callback = function( self, wepent, target )
             -- Secondary grenade launcher
-            if random(75) == 1 and self:GetRangeSquaredTo(target) <= ( 1000 * 1000 ) then
+            if random( 75 ) == 1 and self:GetRangeSquaredTo(target) <= ( 1000 * 1000 ) then
                 local grenade = ents.Create( "grenade_ar2" )
                 if IsValid( grenade ) then
                     wepent:EmitSound( "Weapon_SMG1.Double" )

@@ -71,7 +71,7 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
     if !disabletbl.sound then wepent:EmitSound( TranslateRandomization( weapondata.attacksnd ), 70, 100, 1, CHAN_WEAPON ) end
     
     if !disabletbl.muzzleflash then self:HandleMuzzleFlash( weapondata.muzzleflash ) end
-    if !disabletbl.shell then self:HandleShellEject( weapondata.shelleject ) end
+    if !disabletbl.shell then self:HandleShellEject( weapondata.shelleject, weapondata.shelloffpos, weapondata.shelloffang ) end
 
     if !disabletbl.anim then
         self:RemoveGesture( weapondata.attackanim )
@@ -84,8 +84,8 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
         bullettbl.Damage = weapondata.damage
         bullettbl.Force = weapondata.damage
         bullettbl.HullSize = 5
-        bullettbl.Num = 1
-        bullettbl.TracerName = "Tracer"
+        bullettbl.Num = weapondata.bulletcount or 1
+        bullettbl.TracerName = weapondata.tracername or "Tracer"
         bullettbl.Dir = ( target:WorldSpaceCenter() - wepent:GetPos() ):GetNormalized()
         bullettbl.Src = wepent:GetPos()
         bullettbl.Spread = Vector( weapondata.spread, weapondata.spread, 0 )
@@ -156,9 +156,9 @@ function ENT:ReloadWeapon()
     self:SetIsReloading( true )
 
     local wep = self:GetWeaponENT()
-    local time = weapondata.reloadtime
+    local time = weapondata.reloadtime or 1
     local anim = weapondata.reloadanim
-    local animspeed = weapondata.reloadanimationspeed
+    local animspeed = weapondata.reloadanimationspeed or 1
     local snds = weapondata.reloadsounds
 
     if snds and #snds > 0 then
@@ -169,8 +169,10 @@ function ENT:ReloadWeapon()
         end
     end
 
-    local id = self:AddGesture( anim )
-    self:SetLayerPlaybackRate( id, animspeed )
+    if anim then
+        local id = self:AddGesture( anim )
+        self:SetLayerPlaybackRate( id, animspeed )
+    end
 
     self:NamedTimer( "Reload", time, 1, function()
         if !self:GetIsReloading() then return end
@@ -218,9 +220,14 @@ function ENT:IsWeaponMarkedNodraw()
     return weapondata.nodraw
 end
 
+-- If we can equip the specified weapon name
+function ENT:CanEquipWeapon( weaponname )
+    return _LAMBDAWEAPONALLOWCONVARS[ weaponname ]:GetBool()
+end
+
 function ENT:SwitchToRandomWeapon()
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if _LAMBDAWEAPONALLOWCONVARS[ k ]:GetBool() and k != self.l_Weapon then
+        if self:CanEquipWeapon( k ) and k != self.l_Weapon then
             self:SwitchWeapon( k )
             return
         end
@@ -231,7 +238,7 @@ end
 function ENT:SwitchToLethalWeapon()
     if self.l_HasLethal then return end
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if v.islethal and _LAMBDAWEAPONALLOWCONVARS[ k ]:GetBool() and k != self.l_Weapon then
+        if v.islethal and self:CanEquipWeapon( k ) and k != self.l_Weapon then
             self:SwitchWeapon( k )
             return
         end

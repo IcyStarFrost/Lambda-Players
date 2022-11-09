@@ -87,6 +87,12 @@ for k, v in ipairs( _LAMBDAPLAYERSDEFAULTMDLS ) do
     util.PrecacheModel( v )
 end
 
+local table_Copy = table.Copy
+local table_ClearKeys = table.ClearKeys
+local models = table_Copy( player_manager.AllValidModels() )
+_LAMBDAPLAYERS_Allplayermodels = table_ClearKeys( models )
+
+
 _LAMBDAPLAYERSFootstepMaterials = {
     [MAT_ANTLION] = {"physics/flesh/flesh_impact_hard1.wav","physics/flesh/flesh_impact_hard2.wav","physics/flesh/flesh_impact_hard3.wav","physics/flesh/flesh_impact_hard4.wav","physics/flesh/flesh_impact_hard5.wav","physics/flesh/flesh_impact_hard6.wav"},
     [MAT_BLOODYFLESH] = {"physics/flesh/flesh_impact_hard1.wav","physics/flesh/flesh_impact_hard2.wav","physics/flesh/flesh_impact_hard3.wav","physics/flesh/flesh_impact_hard4.wav","physics/flesh/flesh_impact_hard5.wav","physics/flesh/flesh_impact_hard6.wav"},

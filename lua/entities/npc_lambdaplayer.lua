@@ -46,6 +46,7 @@ end
     local voicepitchmax = GetConVar( "lambdaplayers_voice_voicepitchmax" )
     local idledir = GetConVar( "lambdaplayers_voice_idledir" )
     local drawflashlight = GetConVar( "lambdaplayers_drawflashlights" )
+    local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
     local CurTime = CurTime
     local color_white = color_white
     local FrameTime = FrameTime
@@ -64,6 +65,7 @@ end
 function ENT:Initialize()
 
     self.l_SpawnPos = self:GetPos() -- Used for Respawning
+    self.l_SpawnAngles = self:GetAngles()
 
     if SERVER then
 
@@ -74,7 +76,7 @@ function ENT:Initialize()
         self:SetSolid( SOLID_BBOX )
         self:SetCollisionBounds( Vector( -17, -17, 0 ), Vector( 17, 17, 72 ) )
 
-        self:SetModel( _LAMBDAPLAYERSDEFAULTMDLS[ random( #_LAMBDAPLAYERSDEFAULTMDLS ) ] )
+        self:SetModel( allowaddonmodels:GetBool() and _LAMBDAPLAYERS_Allplayermodels[ random( #_LAMBDAPLAYERS_Allplayermodels ) ] or _LAMBDAPLAYERSDEFAULTMDLS[ random( #_LAMBDAPLAYERSDEFAULTMDLS ) ] )
 
         self.IsMoving = false
         self.l_State = "Idle" -- See sv_states.lua
@@ -83,6 +85,7 @@ function ENT:Initialize()
         self.l_nextidlesound = CurTime() + 5
         self.l_SpawnedEntities = {}
         self.l_Timers = {}
+        self.l_SimpleTimers = {}
         self.l_NexthealthUpdate = 0
         self.l_movepos = nil
         self.l_nextdoorcheck = 0
@@ -148,10 +151,13 @@ function ENT:Initialize()
 
         self:InitializeMiniHooks()
         self:SwitchWeapon( "physgun" )
+        self.l_SpawnWeapon = "physgun"
         
         self:SetWeaponENT( self.WeaponEnt )
 
         self:HandleAllValidNPCRelations()
+
+
 
     elseif CLIENT then
 
@@ -352,8 +358,13 @@ end
 
 function ENT:RunBehaviour()
     self:DebugPrint( "Initialized their AI in ", SysTime() - self.debuginitstart, " seconds" )
-
-
+    if IsValid( self:GetCreator() ) then
+        undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+            undo.SetPlayer( self:GetCreator() )
+            undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+            undo.AddEntity( self )
+        undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+    end
 
     while true do
 
