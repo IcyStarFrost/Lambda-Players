@@ -2,6 +2,7 @@ local random = math.random
 local CurTime = CurTime
 local firstSwing = true
 local firstSwingTime = 0
+local convar = CreateLambdaConvar( "lambdaplayers_weapons_knifebackstab", 1, true, false, true, "If Lambdas should be allowed to use the backstab feature of the Knife.", 0, 1, { type = "Bool", name = "Knife Backstab", category = "Weapon Utilities" } )
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
@@ -21,7 +22,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         callback = function( self, wepent, target )
             local backstabCheck = self:WorldToLocalAngles( target:GetAngles() + Angle( 0, -90, 0 ) )
-            
+            local backstabConVar = GetConVar( "lambdaplayers_weapons_knifebackstab" ):GetBool()
+
             if CurTime() > firstSwingTime then
                 firstSwing = true
             end
@@ -36,7 +38,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_KNIFE )
             
             wepent:EmitSound( "Weapon_Knife.Slash" )
-            if backstabCheck.y < -30 and backstabCheck.y > -140 then
+            if backstabCheck.y < -30 and backstabCheck.y > -140 and backstabConVar then
                 isBackstab = true
                 dmg = 195
                 target:EmitSound( "weapons/knife/knife_stab.wav", 70 )
