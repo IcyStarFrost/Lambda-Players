@@ -17,10 +17,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 5,
         attackrange = 50,
         addspeed = 50,
-        
-        OnEquip = function( lambda, wepent )
-            --lambda:FindTarget()
-        end,
 
         callback = function( self, wepent, target )
             self.l_WeaponUseCooldown = CurTime() + 4
