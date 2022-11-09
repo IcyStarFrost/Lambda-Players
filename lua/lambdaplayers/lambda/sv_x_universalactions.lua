@@ -15,4 +15,5 @@ table_insert( ENT.l_UniversalActions, SwitchWeaponIfIdle )
 -- Custom functions should be added by table.insert
 hook.Run( "LambdaOnUAloaded", ENT.l_UniversalActions )
 
+-- Just in case someone for some reason added functions by . or [] with string keys.
 ENT.l_UniversalActions = table_ClearKeys( ENT.l_UniversalActions )
