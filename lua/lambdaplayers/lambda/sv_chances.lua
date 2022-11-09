@@ -50,7 +50,7 @@ local tools = {
 function ENT:Chance_Tool()
     self:SwitchWeapon( "toolgun" )
     if self.l_Weapon != "toolgun" or !self:CanEquipWeapon( "toolgun" ) then return end
-    local find = self:FindInSphere( nil, 400, function( ent ) if !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and IsValid( ent:GetPhysicsObject() ) then return true end end )
+    local find = self:FindInSphere( nil, 400, function( ent ) if !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
     local func = tools[ random( #tools ) ]
 
     func( self, find[ random( #find ) ] )

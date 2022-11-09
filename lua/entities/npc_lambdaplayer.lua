@@ -89,6 +89,7 @@ function ENT:Initialize()
         self.l_NexthealthUpdate = 0
         self.l_movepos = nil
         self.l_nextdoorcheck = 0
+        self.l_nextUA = CurTime() + rand( 1, 15 ) -- Universal Action
         self.l_nextphysicsupdate = 0
         self.l_WeaponUseCooldown = 0
         self.l_currentnavarea = navmesh.GetNavArea( self:WorldSpaceCenter(), 400 )
@@ -254,6 +255,12 @@ function ENT:Think()
             local phys = self:GetPhysicsObject()
             phys:UpdateShadow( self:GetPos(), self:GetAngles(), 0 )
             self.l_nextphysicsupdate = CurTime() + 0.5
+        end
+
+        if CurTime() > self.l_nextUA then
+            local UAfunc = self.l_UniversalActions[ random( #self.l_UniversalActions ) ]
+            UAfunc( self )
+            self.l_nextUA = CurTime() + rand( 1, 15 )
         end
 
         if developer:GetBool() then
