@@ -22,7 +22,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         callback = function( self, wepent, target )
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
 
-            -- Special double shot
+            -- Secondary double barrel attack
             if random( 8 ) == 1 and self.l_Clip >= 2 and self:GetRangeSquaredTo(target) <= (400 * 400) then
                 self.l_WeaponUseCooldown = CurTime() + random(1.2, 1.5)
 

@@ -21,7 +21,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             
-            -- To make sure damage syncs with the animation
             self:SimpleTimer(0.3, function()
                 if self:GetRangeSquaredTo(target) > (65 * 65) then return end
                 

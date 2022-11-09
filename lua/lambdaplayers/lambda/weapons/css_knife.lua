@@ -1,5 +1,7 @@
 local random = math.random
 local CurTime = CurTime
+local firstSwing = true
+local firstSwingTime = 0
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 -- Missing firstSwing to simulate CSS knife better.
@@ -15,25 +17,30 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 50,
         
         OnEquip = function( lambda, wepent )
-            wepent:EmitSound( "weapons/knife/knife_deploy1.wav", 70, random(95,105), 1, CHAN_WEAPON  )
+            wepent:EmitSound( "Weapon_Knife.Deploy" )
         end,
 
         callback = function( self, wepent, target )
             local backstabCheck = self:WorldToLocalAngles(target:GetAngles() + Angle(0,-90,0))
             
+            if CurTime() > firstSwingTime then
+                firstSwing = true
+            end
+            
             self.l_WeaponUseCooldown = CurTime() + 0.5
+            firstSwingTime = self.l_WeaponUseCooldown + 0.4
             
             local isBackstab = false
-            local dmg = 15
+            local dmg = (firstSwing and 20 or 15)
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_KNIFE )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_KNIFE )
             
-            wepent:EmitSound( "weapons/knife/knife_slash"..random(2)..".wav", 70, 100, 1, CHAN_WEAPON )
+            wepent:EmitSound( "Weapon_Knife.Slash" )
             if backstabCheck.y < -30 and backstabCheck.y > -140 then
                 isBackstab = true
                 dmg = 195
-                target:EmitSound( "weapons/knife/knife_stab.wav", 80, random(95,105), 1, CHAN_WEAPON )
+                wepent:EmitSound( "Weapon_Knife.Stab", 150 )
             end
 
             local dmginfo = DamageInfo() 
@@ -44,10 +51,11 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             dmginfo:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg )
 
             self.l_WeaponUseCooldown = CurTime() + (isBackstab and 1.0 or 0.5)
-            target:EmitSound( "weapons/knife/knife_hit"..random(4)..".wav", 70 )
+            target:EmitSound( "Weapon_Knife.Hit", 70 )
 
             target:TakeDamageInfo( dmginfo )
-
+            firstSwing = false
+            
             return true
         end,
 

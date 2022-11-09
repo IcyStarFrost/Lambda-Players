@@ -21,7 +21,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local throwforce = 1200
             local normal = self:GetForward()
 
-            wepent:EmitSound( "Weapon_SLAM.SatchelThrow" )
+            wepent:EmitSound( "WeaponFrag.Throw" )
 
             if IsValid( target ) and self:GetRangeSquaredTo( target ) < (350 * 350) then
                 throwforce = 400
