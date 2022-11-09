@@ -19,15 +19,30 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackanim = ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER,
         attacksnd = "Weapon_357.Single",
 
-        reloadtime = 3,
-        reloadanim = ACT_HL2MP_GESTURE_RELOAD_REVOLVER,
+        reloadtime = 3.66,
+        --reloadanim = ACT_HL2MP_GESTURE_RELOAD_REVOLVER,
         reloadanimationspeed = 1,
         reloadsounds = { 
-            { 0, "Weapon_357.OpenLoader" }, 
-            { 0.4, "Weapon_357.RemoveLoader" }, 
-            { 1.5, "Weapon_357.ReplaceLoader" }, 
-            { 2.2, "Weapon_357.Spin" } 
+            { 0.933, "Weapon_357.OpenLoader" }, 
+            { 1.3, "Weapon_357.RemoveLoader" }, 
+            { 2.233, "Weapon_357.ReplaceLoader" }, 
+            { 3.066, "Weapon_357.Spin" } 
         },
+        OnReload = function( self, wepent )
+            local anim = self:LookupSequence( "reload_revolver_base_layer" )
+            if anim != -1 then
+                -- Stops animation's event sounds from running
+                self:AddGestureSequence( anim )
+            else
+                self:AddGesture( ACT_HL2MP_GESTURE_RELOAD_REVOLVER )
+            end
+
+            -- Cool shell ejects
+            self:SimpleTimer( 1.3, function() 
+                if self.l_Weapon != "revolver" or !IsValid( wepent ) then return end
+                for i = 1, 6 do self:HandleShellEject( "ShellEject" ) end
+            end )
+        end,
 
         islethal = true,
     }

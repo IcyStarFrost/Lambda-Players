@@ -61,6 +61,7 @@
     reloadanim | Number | Reload Gesture animation
     reloadanimationspeed | Number | The speed of the reload animation
     reloadsounds | Table | A table of tables that each have their 1 index as the time the sound will play and the 2 index being the sound path. Example reloadsounds = { { 0.5, "somesound1" }, { 1, "somesound2" } }
+    OnReload | Function | A function that will be called when the weapon's reload is started
 
     ---------------------------------
 ]]

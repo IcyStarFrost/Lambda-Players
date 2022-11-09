@@ -174,6 +174,9 @@ function ENT:ReloadWeapon()
         self:SetLayerPlaybackRate( id, animspeed )
     end
 
+    local onReloadFunc = weapondata.OnReload
+    if isfunction( onReloadFunc ) then onReloadFunc( self, wep ) end
+
     self:NamedTimer( "Reload", time, 1, function()
         if !self:GetIsReloading() then return end
         self.l_Clip = self.l_MaxClip
