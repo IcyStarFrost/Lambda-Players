@@ -24,6 +24,7 @@ local string_Replace = string.Replace
 local table_insert = table.insert
 local tostring = tostring
 local eyetracetable = {}
+local visibilitytrace = {}
 local GetLambdaPlayers = GetLambdaPlayers
 local debugcvar = GetConVar( "lambdaplayers_debug" )
 
@@ -329,6 +330,16 @@ if SERVER then
     -- Returns the run speed
     function ENT:GetRunSpeed()
         return 400
+    end
+
+    -- Returns if we can see the ent in question.
+    -- Simple trace 
+    function ENT:CanSee( ent )
+        visibilitytrace.start = self:GetAttachmentPoint( "eyes" ).Pos
+        visibilitytrace.endpos = ent:WorldSpaceCenter()
+        visibilitytrace.filter = self
+        local result = Trace( visibilitytrace )
+        return result.Entity == ent
     end
 
     -- Respawns the lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time

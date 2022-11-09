@@ -9,6 +9,7 @@ local CurTime = CurTime
 -- Switch to a weapon with the provided name.
 -- See the lambda/weapons folder for weapons. Check out the holster.lua file to see the current valid weapon settings
 function ENT:SwitchWeapon( weaponname )
+    if !self:CanEquipWeapon( weaponname ) then return end
     local weapondata = _LAMBDAPLAYERSWEAPONS[ weaponname ]
     if !weapondata or weaponname == self.l_Weapon then return end
 

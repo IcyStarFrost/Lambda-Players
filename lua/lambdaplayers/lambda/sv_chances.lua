@@ -46,11 +46,16 @@ end
 
 function ENT:Chance_Tool()
     self:SwitchWeapon( "toolgun" )
-    if self.l_Weapon != "toolgun" or !self:CanEquipWeapon( "toolgun" ) then return end
-    local find = self:FindInSphere( nil, 400, function( ent ) if !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
-    local func = self.l_ToolgunTools[ random( #self.l_ToolgunTools ) ]
+    if self.l_Weapon != "toolgun" then return end
+    local find = self:FindInSphere( nil, 400, function( ent ) if !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
+    local target = find[ random( #find ) ]
 
-    func( self, find[ random( #find ) ] )
+    -- Loops through random tools and only stops if a tool tells us it actually got used by returning true 
+    for index, tooltable in RandomPairs( self.l_ToolgunTools ) do
+        if !tooltable[ 2 ]:GetBool() then continue end -- If the tool is allowed
+        local result = tooltable[ 3 ]( self, target )
+        if result then self:DebugPrint( "Used" .. tooltable[ 1 ] .. "Tool" ) break end
+    end
 end
 
 
