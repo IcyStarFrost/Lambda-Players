@@ -18,7 +18,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         addspeed = 100,
         
         OnEquip = function( lambda, wepent )
-            local NextHPRegenTime = CurTime() + 0.5
             
             -- Damage reduction
             lambda:Hook( "EntityTakeDamage", "ZombieClawsScaleDamage", function( target, dmginfo )
@@ -29,11 +28,9 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             
             -- HP Auto Regen
             lambda:Hook( "Think", "ZombieClawsThink", function( )
-                if NextHPRegenTime and CurTime() > NextHPRegenTime and lambda:Health() < lambda:GetMaxHealth() then
                     lambda:SetHealth(math_min(lambda:Health() + 1, lambda:GetMaxHealth()))
-                    NextHPRegenTime = CurTime() + 0.5
-                end
-            end)
+            end, nil, 0.5)
+            
         end,
         
         OnUnequip = function( lambda, wepent )
@@ -45,6 +42,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self.l_WeaponUseCooldown = CurTime() + 1.25
 
             wepent:EmitSound( "npc/zombie/zo_attack"..random(2)..".wav", 70, 100, 1, CHAN_WEAPON )
+            
             self:RemoveGesture( ACT_GMOD_GESTURE_RANGE_ZOMBIE )
             self:AddGesture( ACT_GMOD_GESTURE_RANGE_ZOMBIE )
             
