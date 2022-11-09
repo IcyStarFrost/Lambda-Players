@@ -15,11 +15,15 @@
     islethal | Bool | If the weapon is capable of hurting anything
     holdtype | String | The animation set lambda should use. See globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
     ismelee | Bool | If the weapon is considered a melee weapon. False for ranged
+
+    
     keepdistance | Number | The distance the lambda will keep from the target
     attackrange | Number | The range the lambda can attack from
     damage  | Number | The amount of damage the weapon can deal
     rateoffire | Number | How fast the weapon is fired/used
     attackanim | Number | The ACT Gesture to play when used
+
+
     Draw | Function | A Client side function that allows you to make render effects in 3d space
     callback | function | A function that will be called when the weapon is used. Return true if you are making a custom shooting/swinging code
     OnEquip | function | A function that will be called when the weapon is equipped
@@ -39,22 +43,31 @@
     islethal | Bool | If the weapon is capable of hurting anything
     holdtype | String | The animation set lambda should use. See globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
     ismelee | Bool | If the weapon is considered a melee weapon. False for ranged
+
+
     keepdistance | Number | The distance the lambda will keep from the target
     attackrange | Number | The range the lambda can attack from
     damage  | Number | The amount of damage the weapon can deal
     rateoffire | Number | How fast the weapon is fired/used
     attackanim | Number | The ACT Gesture to play when used
+    bulletcount | Number | The amount of bullets to fire when used
+    tracername | String | Tracer name. Valid entries are Tracer, AR2Tracer, LaserTracer, AirboatGunHeavyTracer, and ToolTracer
+    clip | Number | The amount of times the weapon can be shot before reloading.
+
+
     Draw | Function | A Client side function that allows you to make render effects in 3d space
     callback | function | A function that will be called when the weapon is used. Return true if you are making a custom shooting/swinging code
     OnEquip | function | A function that will be called when the weapon is equipped
     OnUnequip | function | a function that will be called when the weapon is unequipped
-    bulletcount | Number | The amount of bullets to fire when used
-    tracername | String | Tracer name. Valid entries are Tracer, AR2Tracer, LaserTracer, AirboatGunHeavyTracer, and ToolTracer
-    clip | Number | The amount of times the weapon can be shot before reloading.
+
+
     muzzleflash | Number | The muzzle flash type. 1 = Regular 5 = Combine 7 = Regular but bigger
+    muzzleflashpos | Vector | The offset postion of the muzzleflash local to the weapon
+    muzzleflashang | Angle | The offset angle of the muzzleflash local to the weapon
+
     shelleject | String | Shell type valid types are ShellEject, RifleShellEject, ShotgunShellEject
-    shelloffpos | Vector | 
-    shelloffang | Angle | 
+    shelloffpos | Vector | The offset postion of the shell eject local to the weapon
+    shelloffang | Angle | The offset angles of the shell eject local to the weapon
             
 
     reloadtime | Number | The time it takes to reload
