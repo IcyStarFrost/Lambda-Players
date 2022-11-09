@@ -4,8 +4,9 @@ ENT.l_UniversalActions = {}
 
 
 local function SwitchWeaponIfIdle( self )
-    if self:GetState() != "idle" then return end
+    if self:GetState() != "Idle" then return end
     self:SwitchToRandomWeapon()
+
 end
 table_insert( ENT.l_UniversalActions, SwitchWeaponIfIdle )
 

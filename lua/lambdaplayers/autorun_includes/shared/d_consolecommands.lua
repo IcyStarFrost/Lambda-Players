@@ -26,7 +26,7 @@ end
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedata", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
-    print( "Lambda Players: Updated data via console command" )
+    print( "Lambda Players: Updated data via console command. Ran by ", ( IsValid( ply ) and ply:Name() .. " | " .. ply:SteamID() or "Console" )  )
 
     LambdaPlayerNames = LAMBDAFS:GetNameTable()
     LambdaPlayerProps = LAMBDAFS:GetPropTable()
