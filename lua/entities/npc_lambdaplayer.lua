@@ -313,7 +313,7 @@ function ENT:Think()
         if CurTime() > self.l_lightupdate then
             local lightvec = render.GetLightColor( self:WorldSpaceCenter() )
 
-            if lightvec:Length() < 0.02 and !self:GetIsDead() and drawflashlight:GetBool() then
+            if lightvec:Length() < 0.02 and !self:GetIsDead() and drawflashlight:GetBool() and RealTime() < self.l_lastdraw then
                 if !IsValid( self.l_flashlight ) then
                     self.l_flashlight = ProjectedTexture() 
                     self.l_flashlight:SetTexture( "effects/flashlight001" ) 
