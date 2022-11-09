@@ -65,10 +65,3 @@ function ENT:FindTarget()
 
     self:MoveToPos( self:GetRandomPosition() )
 end
-
-function ENT:ToolgunState()
-    local find = self:FindInSphere( nil, 200, function( ent ) if !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and IsValid( ent:GetPhysicsObject() ) then return true end end )
-    self:UseColorTool( find[ random( #find ) ] )
-
-    self:SetState( "Idle" )
-end

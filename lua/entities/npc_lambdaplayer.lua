@@ -111,8 +111,10 @@ function ENT:Initialize()
         self:SetBuildChance( random( 1, 100 ) )
         self:SetCombatChance( random( 1, 100 ) )
         self:SetVoiceChance( random( 1, 100 ) )
+        self:SetToolChance( random( 1, 100 ) )
         self.l_Personality = { -- See sv_chances.lua
             { "Build", self:GetBuildChance() },
+            { "Tool", self:GetToolChance() },
             { "Combat", self:GetCombatChance() },
         }
         
@@ -219,6 +221,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 2, "BuildChance" )
     self:NetworkVar( "Int", 3, "CombatChance" )
     self:NetworkVar( "Int", 4, "VoiceChance" )
+    self:NetworkVar( "Int", 5, "ToolChance" )
     
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
 end

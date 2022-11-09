@@ -218,6 +218,7 @@ function ENT:ExportLambdaInfo()
 
         -- Chances
         build = self:GetBuildChance(),
+        tool = self:GetToolChance(),
         combat = self:GetCombatChance(),
         voice = self:GetVoiceChance(),
         --
@@ -258,8 +259,10 @@ if SERVER then
             self:SetBuildChance( info.build or self:GetBuildChance() )
             self:SetCombatChance( info.combat or self:GetCombatChance() )
             self:SetVoiceChance( info.voice or self:GetVoiceChance() )
+            self:SetToolChance( info.tool or self:GetToolChance() )
             self.l_Personality = {
                 { "Build", info.build or self:GetBuildChance() },
+                { "Tool", info.tool or self:GetToolChance() },
                 { "Combat", info.combat or self:GetCombatChance() },
             }
             SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
