@@ -2,8 +2,8 @@ local CurTime = CurTime
 local Rand = math.Rand
 local Effect = util.Effect
 local BlastDamage = util.BlastDamage
---local convar = CreateLambdaConvar( "lambdaplayers_weapons_paigsentrybuster", 0, true, true, true, "If Lambda that spawn with the PAIG have the ability to act like the Sentry Buster from TF2.", 0, 1, { type = "Bool", name = "PAIG Sentry Buster", category = "Lambda Player Settings" } )
---local PAIGSentryBuster = GetConVar( "lambdaplayers_weapons_paigsentrybuster" ) or false
+--local convar = CreateLambdaConvar( "lambdaplayers_weapons_paigsentrybuster", 0, true, false, true, "If Lambda that spawn with the PAIG have the ability to act like the Sentry Buster from TF2.", 0, 1, { type = "Bool", name = "PAIG - Enable Sentry Buster Mode", category = "Weapon Utilities" } )
+--local sentrybusterConVar = GetConVar( "lambdaplayers_weapons_paigsentrybuster" ):GetBool()
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 

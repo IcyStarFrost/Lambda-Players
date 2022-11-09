@@ -42,7 +42,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                             lambda.loco:Jump()
 
                             local jumpDir = ( target:GetPos() - lambda:GetPos() ):GetNormalized()
-                            lambda.loco:SetVelocity( Vector( 0, 0, 384 ) + jumpDir * math_min( math_sqrt( distTarget ) * 0.4, 512))
+                            lambda.loco:SetVelocity( Vector( 0, 0, 400 ) + jumpDir * math_min( math_sqrt( distTarget ) * 0.4, 512))
 
                             lambda:EmitSound( "npc/fast_zombie/fz_scream1.wav", 80, lambda.VoicePitch)
                             NextLeapAttack = CurTime() + 5
