@@ -23,8 +23,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
 
             -- Secondary double barrel attack
-            if random( 8 ) == 1 and self.l_Clip >= 2 and self:GetRangeSquaredTo(target) <= (400 * 400) then
-                self.l_WeaponUseCooldown = CurTime() + random(1.2, 1.5)
+            if random( 8 ) == 1 and self.l_Clip >= 2 and self:GetRangeSquaredTo( target ) <= ( 400 * 400 ) then
+                self.l_WeaponUseCooldown = CurTime() + random( 1.2, 1.5 )
 
                 wepent:EmitSound( "Weapon_Shotgun.Double" )
 
@@ -32,7 +32,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                 self.l_Clip = self.l_Clip - 2
             else
-                self.l_WeaponUseCooldown = CurTime() + random(1, 1.25)
+                self.l_WeaponUseCooldown = CurTime() + random( 1, 1.25 )
 
                 wepent:EmitSound( "Weapon_Shotgun.Single" )
 
@@ -59,9 +59,9 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent:FireBullets( bullettbl )
 
             -- To simulate pump action after the shot
-            self:SimpleTimer(0.6, function()
+            self:SimpleTimer( 0.6, function()
                 wepent:EmitSound( "Weapon_Shotgun.Special1", 70, 100, 1, CHAN_WEAPON )
-                self:HandleShellEject( "ShotgunShellEject", Vector(0,12,0), Angle(-180,0,0) )
+                self:HandleShellEject( "ShotgunShellEject", Vector( 0, 12, 0 ), Angle( -180 , 0, 0 ) )
             end)
             
             return true

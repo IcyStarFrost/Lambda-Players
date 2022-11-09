@@ -23,7 +23,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             wepent:EmitSound( "WeaponFrag.Throw" )
 
-            if IsValid( target ) and self:GetRangeSquaredTo( target ) < (350 * 350) then
+            if IsValid( target ) and self:GetRangeSquaredTo( target ) < ( 350 * 350 ) then
                 throwforce = 400
             end
             if IsValid( target ) then
@@ -31,7 +31,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             end
 
             local grenade = ents.Create( "npc_grenade_frag" )
-            grenade:SetPos( self:GetPos() + Vector(0,0,60) + self:GetForward() * 20 + self:GetRight() * -10 )
+            grenade:SetPos( self:GetPos() + Vector( 0, 0, 60 ) + self:GetForward() * 20 + self:GetRight() * -10 )
             grenade:Fire( "SetTimer", 3, 0 )
             grenade:SetSaveValue( "m_hThrower", self )
             grenade:SetOwner( self )
@@ -40,7 +40,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local frag = grenade:GetPhysicsObject()
             if IsValid( frag ) then
                 frag:ApplyForceCenter( normal * throwforce )
-                frag:AddAngleVelocity( Vector(600,random(-1200,1200),0) )
+                frag:AddAngleVelocity( Vector( 600, random(-1200,1200), 0 ) )
             end
             
             return true

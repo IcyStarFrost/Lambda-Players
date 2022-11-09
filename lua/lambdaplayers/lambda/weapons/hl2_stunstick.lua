@@ -24,9 +24,9 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         Draw = function( lambda, wepent )
             if IsValid( wepent ) then
 
-                local size = random(4, 6)
+                local size = random( 4, 6 )
                 local drawPos = ( wepent:GetPos() - wepent:GetForward() * 12 - wepent:GetRight() + wepent:GetUp() )
-                local color = Color(255, 255, 255)
+                local color = Color( 255, 255, 255 )
 
                 render.SetMaterial( stunstickGlow )
                 render.DrawSprite( drawPos, size*2, size*2, color)
@@ -41,11 +41,11 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         -- Emit sparks on hit
         callback = function( self, wepent, target )
             
-            local effect = EffectData()
+            local effect = EffectData( )
                 effect:SetOrigin( target:WorldSpaceCenter() ) -- World space center is the same as GetPos + ObbCenter
-                effect:SetMagnitude(1)
-                effect:SetScale(2)
-                effect:SetRadius(4)
+                effect:SetMagnitude( 1 )
+                effect:SetScale( 2 )
+                effect:SetRadius( 4 )
             util_Effect( "StunstickImpact", effect, true, true)
 
             return false

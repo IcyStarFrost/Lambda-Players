@@ -21,18 +21,18 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             
-            self:SimpleTimer(0.3, function()
-                if self:GetRangeSquaredTo(target) > (65 * 65) then return end
+            self:SimpleTimer( 0.3, function()
+                if self:GetRangeSquaredTo( target ) > ( 65 * 65 ) then return end
                 
-                local dmg = random(40,50)
+                local dmg = random( 40,50 )
                 local dmginfo = DamageInfo()
-                dmginfo:SetDamage(dmg)
-                dmginfo:SetAttacker(self)
-                dmginfo:SetInflictor(wepent)
-                dmginfo:SetDamageType(DMG_SLASH)
+                dmginfo:SetDamage( dmg )
+                dmginfo:SetAttacker( self )
+                dmginfo:SetInflictor( wepent )
+                dmginfo:SetDamageType( DMG_SLASH )
                 dmginfo:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg )
                 
-                target:EmitSound("lambdaplayers/meathook/hook-"..random(3)..".wav", 70)
+                target:EmitSound( "lambdaplayers/meathook/hook-"..random(3)..".wav", 70 )
                 
                 target:TakeDamageInfo( dmginfo )
             end)

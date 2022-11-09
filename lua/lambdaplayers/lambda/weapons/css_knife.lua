@@ -4,7 +4,6 @@ local firstSwing = true
 local firstSwingTime = 0
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
--- Missing firstSwing to simulate CSS knife better.
 
     knife = {
         model = "models/weapons/w_knife_t.mdl",
@@ -21,7 +20,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         callback = function( self, wepent, target )
-            local backstabCheck = self:WorldToLocalAngles(target:GetAngles() + Angle(0,-90,0))
+            local backstabCheck = self:WorldToLocalAngles( target:GetAngles() + Angle( 0, -90, 0 ) )
             
             if CurTime() > firstSwingTime then
                 firstSwing = true
@@ -31,7 +30,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             firstSwingTime = self.l_WeaponUseCooldown + 0.4
             
             local isBackstab = false
-            local dmg = (firstSwing and 20 or 15)
+            local dmg = ( firstSwing and 20 or 15 )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_KNIFE )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_KNIFE )
@@ -40,7 +39,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if backstabCheck.y < -30 and backstabCheck.y > -140 then
                 isBackstab = true
                 dmg = 195
-                wepent:EmitSound( "Weapon_Knife.Stab", 150 )
+                target:EmitSound( "weapons/knife/knife_stab.wav", 70 )
             end
 
             local dmginfo = DamageInfo() 
@@ -50,7 +49,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             dmginfo:SetDamageType( DMG_SLASH )
             dmginfo:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg )
 
-            self.l_WeaponUseCooldown = CurTime() + (isBackstab and 1.0 or 0.5)
+            self.l_WeaponUseCooldown = CurTime() + ( isBackstab and 1.0 or 0.5 )
             target:EmitSound( "Weapon_Knife.Hit", 70 )
 
             target:TakeDamageInfo( dmginfo )

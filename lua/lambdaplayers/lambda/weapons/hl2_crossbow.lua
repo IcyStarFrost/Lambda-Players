@@ -43,7 +43,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 bolt:EmitSound( "Weapon_Crossbow.BoltFly" )
                 bolt:CallOnRemove( "lambdaplayer_crossbowbolt_" .. bolt:EntIndex(), function()
                     local tr = bolt:GetTouchTrace()
-                    if !tr or !tr.Entity or !IsValid(tr.Entity) then return end
+                    if !tr or !tr.Entity or !IsValid( tr.Entity ) then return end
 
                     local dmgInfo = DamageInfo()
                     dmgInfo:SetDamage( boltDmg:GetFloat() )
