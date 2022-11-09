@@ -25,3 +25,7 @@ Called when all default console commands have been created. Use this hook if you
 `LambdaOnUAloaded( UActionTable )`
 
 Called when all default UActions (Universal Actions, functions that randomly get called. Example being weapon switching) have been made. Use this hook if you want add a function to the UActions. Use table.insert to add functions to the UActionTable.
+
+`LambdaOnToolsLoaded`
+
+Called when all default tools are loaded. Use this hook if you want to add custom tools with `AddToolFunctionToLambdaTools()` See lambda/sv_b_toolguntools.lua for tool examples
