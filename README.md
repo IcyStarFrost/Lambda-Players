@@ -19,3 +19,7 @@ Called when all default convars have been created. Use this hook if you want use
 `LambdaOnConCommandsCreated`
 
 Called when all default console commands have been created. Use this hook if you want use the `CreateLambdaConsoleCommand()` function to create custom console commands for Lambda Players externally
+
+`LambdaOnUAloaded( UActionTable )`
+
+Called when all default UActions (Universal Actions, functions that randomly get called. Example being weapon switching) have been made. Use this hook if you want add a function to the UActions. Use table.insert to add functions to the UActionTable.
