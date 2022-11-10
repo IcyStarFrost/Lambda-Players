@@ -17,6 +17,11 @@ local constraint = constraint
 local Clamp = math.Clamp
 local zeroangle = Angle()
 
+local function IsNil( any )
+    return any == nil or any == NULL
+end
+
+
 LambdaToolGunTools = {}
 
 -- Adds a tool function to the list of tools
@@ -249,19 +254,23 @@ local function UseBalloonTool( self, target )
     self:ContributeEntToLimit( ent, "Balloon" )
     table_insert( self.l_SpawnedEntities, 1, ent )
 
+    local traceent = trace.Entity
+
     local LPos1 = Vector( 0, 0, 6.5 )
-    local LPos2 = trace.Entity:WorldToLocal( trace.HitPos )
+    local LPos2 = !IsNil( traceent ) and traceent:WorldToLocal( trace.HitPos ) or trace.HitPos
+
+    traceent = !IsNil( traceent ) and traceent or Entity( 0 ) -- world
 
     if IsValid( trace.Entity ) then
 
-        local phys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
+        local phys = traceent:GetPhysicsObjectNum( trace.PhysicsBone )
         if IsValid( phys ) then
             LPos2 = phys:WorldToLocal( trace.HitPos )
         end
 
     end
 
-    local constr, rope = constraint.Rope( ent, trace.Entity, 0, trace.PhysicsBone, LPos1, LPos2, 0, random( 5, 1000 ), 0, 0.5, "cable/rope" )
+    local constr, rope = constraint.Rope( ent, traceent, 0, trace.PhysicsBone, LPos1, LPos2, 0, random( 5, 1000 ), 0, 0.5, "cable/rope" )
     table_insert( self.l_SpawnedEntities, 1, rope )
 
     -- Configure it
@@ -335,6 +344,7 @@ local function UseLampTool( self, target )
     ent:SetLightFOV( random( 10, 170 ) )
     ent:SetDistance( random( 64, 2048 ) )
     ent:SetBrightness( rand( 0.5, 8 ) )
+    ent.flashlight:SetKeyValue( "enableshadows", 0 )
 
     return true
 end
@@ -371,9 +381,6 @@ end
 AddToolFunctionToLambdaTools( "Emitter", UseEmitterTool )
 
 
-local function IsNil( any )
-    return any == nil or any == NULL
-end
 
 
 local ropematerials = { "cable/redlaser", "cable/cable2", "cable/rope", "cable/blue_elec", "cable/xbeam", "cable/physbeam", "cable/hydra" }
