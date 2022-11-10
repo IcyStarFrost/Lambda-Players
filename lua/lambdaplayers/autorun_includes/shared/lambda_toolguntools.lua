@@ -82,6 +82,8 @@ local function UseLightTool( self, target )
 
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_light", nil, pos, nil, self ) -- Create the light
+    ent.LambdaOwner = self
+    ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Light" )
     table_insert( self.l_SpawnedEntities, 1, ent )
 
@@ -127,6 +129,8 @@ local function UseDynamiteTool( self, target )
 
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_dynamite", dynamitemodels[ random( #dynamitemodels ) ], pos, nil, self )
+    ent.LambdaOwner = self
+    ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Dynamite" )
     table_insert( self.l_SpawnedEntities, 1, ent )
     ent:SetPlayer( self )
