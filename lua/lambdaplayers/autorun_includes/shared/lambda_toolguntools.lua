@@ -33,6 +33,7 @@ local function CreateGmodEntity( classname, model, pos, ang, lambda )
     LambdaHijackGmodEntity( ent, lambda ) -- Make it support the lambda
     ent:Spawn()
     ent:Activate()
+    DoPropSpawnedEffect( ent )
 
     return ent
 end
@@ -130,7 +131,6 @@ local function UseDynamiteTool( self, target )
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Dynamite" )
     table_insert( self.l_SpawnedEntities, 1, ent )
-    DoPropSpawnedEffect( ent ) -- Make it do the pretty prop spawn effect
 
     ent:SetPlayer( self )
     ent:SetDamage( random( 1, 500 ) )
@@ -218,7 +218,6 @@ local function UseBalloonTool( self, target )
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Balloon" )
     table_insert( self.l_SpawnedEntities, 1, ent )
-    DoPropSpawnedEffect( ent ) -- Make it do the pretty prop spawn effect
 
     local LPos1 = Vector( 0, 0, 6.5 )
     local LPos2 = trace.Entity:WorldToLocal( trace.HitPos )
@@ -245,6 +244,31 @@ local function UseBalloonTool( self, target )
     return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this
 end
 AddToolFunctionToLambdaTools( "Balloon", UseBalloonTool )
+
+local trailMats = { "trails/plasma", "trails/tube", "trails/electric", "trails/smoke", "trails/laser", "trails/love", "trails/physbeam", "trails/lol" }
+
+local function UseTrailTool( self, target )
+    if !IsValid( target ) then return end
+
+    self:LookTo( target, 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) then return end
+
+    self:UseWeapon( target:WorldSpaceCenter() )
+    if ( IsValid( target.SToolTrail ) ) then -- If target already has trail, remove old one
+		target.SToolTrail:Remove()
+		target.SToolTrail = nil
+	end
+
+    local trailStartSize, trailEndSize = random(128), random(128)
+
+    local trail_entity = util.SpriteTrail( target, 0, ColorRand(), false, trailStartSize, trailEndSize, random(10), 1 / ( ( trailStartSize + trailEndSize ) * 0.5 ), trailMats[ random( #trailMats ) ] .. ".vmt" )
+    target.SToolTrail = trail_entity
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Trail", UseTrailTool )
 
 -- Called when all default tools are loaded
 -- This hook can be used to add custom tool functions by using AddToolFunctionToLambdaTools()
