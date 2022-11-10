@@ -350,8 +350,33 @@ local function UseLampTool( self, target )
 end
 AddToolFunctionToLambdaTools( "Lamp", UseLampTool )
 
-local list_Get = list.Get
-local effectlist = table_GetKeys( list_Get( "EffectType" ) )
+
+local effectlist = {
+    "manhacksparks",
+    "glassimpact",
+    "striderblood",
+    "shells",
+    "cball_explode",
+    "ar2impact",
+    "bloodimpact",
+    "sparks",
+    "dirtywatersplash",
+    "watersplash",
+    "stunstickimpact",
+    "thumperdust",
+    "muzzleeffect",
+    "bloodspray",
+    "helicoptermegabomb",
+    "rifleshells",
+    "ar2explosion",
+    "explosion",
+    "cball_bounce",
+    "shotgunshells",
+    "underwaterexplosion",
+    "smoke",
+}
+
+
 local function UseEmitterTool( self, target )
     if !self:IsUnderLimit( "Emitter" ) then return end
 
