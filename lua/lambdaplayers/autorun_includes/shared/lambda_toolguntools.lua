@@ -116,7 +116,7 @@ AddToolFunctionToLambdaTools( "Light", UseLightTool )
 local dynamitemodels = { "models/dav0r/tnt/tnt.mdl", "models/dav0r/tnt/tnttimed.mdl", "models/dynamite/dynamite.mdl" }
 
 local function UseDynamiteTool( self, target )
-    if !self:IsUnderLimit( "Light" ) then return end
+    if !self:IsUnderLimit( "Dynamite" ) then return end
 
     local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
     local pos = trace.HitPos + trace.HitNormal * 10
