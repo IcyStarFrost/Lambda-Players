@@ -24,7 +24,6 @@ local EndsWith = string.EndsWith
 local string_Replace = string.Replace
 local table_insert = table.insert
 local tostring = tostring
-local eyetracetable = {}
 local visibilitytrace = {}
 local tracetable = {}
 local GetLambdaPlayers = GetLambdaPlayers

@@ -1,5 +1,8 @@
 -- Functions below are recreations of whatever gmod meta functions
 
+local Trace = util.TraceLine
+local eyetracetable = {}
+
 function ENT:Nick()
     return self:GetLambdaName()
 end
