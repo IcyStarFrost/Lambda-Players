@@ -8,12 +8,12 @@ function AddUActionToLambdaUA( func )
     table_insert( ENT.l_UniversalActions, func )
 end
 
-local function SwitchWeaponIfIdle( self )
+
+-- Random weapon switching
+AddUActionToLambdaUA( function( self )
     if self:GetState() != "Idle" then return end
     self:SwitchToRandomWeapon()
-
-end
-AddUActionToLambdaUA( SwitchWeaponIfIdle )
+end )
 
 
 -- Called when all default UA actions have been made
