@@ -1,5 +1,7 @@
 local table_insert = table.insert
 local pairs = pairs
+local string_find = string.find
+local tostring = tostring
 
 _LAMBDAPLAYERSWEAPONS = {}
 
@@ -73,6 +75,23 @@ function EntMeta:LambdaMoveMouth( weight )
     if flexID then self:SetFlexWeight(flexID, weight) end
 end
 
+function EntMeta:SetNWVar( key, value )
+    
+    if IsEntity( value ) then
+        self:SetNWEntity( key, value )
+    elseif isvector( value ) then
+        self:SetNWVector( key, value )
+    elseif isangle( value ) then
+        self:SetNWAngle( key, value )
+    elseif isbool( value ) then
+        self:SetNWBool( key, value )
+    elseif isnumber( value ) and string_find( tostring( value ), "." ) then
+        self:SetNWFloat( key, value )
+    elseif isnumber( value ) then
+        self:SetNWInt( key, value )
+    end
+    
+end
 
 
 local IsValid = IsValid

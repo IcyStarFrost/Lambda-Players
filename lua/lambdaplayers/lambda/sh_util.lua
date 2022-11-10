@@ -16,6 +16,7 @@ local VectorRand = VectorRand
 local SortTable = table.sort
 local timer_simple = timer.Simple
 local timer_create = timer.Create
+local istable = istable
 local timer_Remove = timer.Remove
 local Trace = util.TraceLine
 local table_add = table.Add
@@ -230,6 +231,10 @@ function ENT:ExportLambdaInfo()
         -- Non personal data --
         respawn = self:GetRespawn(),
         spawnwep = self.l_SpawnWeapon,
+
+        -- NW Vars --
+        nwvars = self:GetNWVarTable(),
+        nw2vars = self:GetNW2VarTable(),
     }
 
     return info
@@ -276,6 +281,20 @@ if SERVER then
             self:SetRespawn( info.respawn or self:GetRespawn() )
             self:SwitchWeapon( info.spawnwep or self.l_Weapon )
 
+            -- NW Vars --
+            local nw = info.nwvars
+            local nw2 = info.nw2vars
+            if istable( nw ) then
+                for k, v pairs( nw ) do
+                    self:SetNWVar( k, v )
+                end
+            end
+            if istable( nw2 ) then
+                for k, v pairs( nw2 ) do
+                    self:SetNW2Var( k, v )
+                end
+            end
+            
         end, true )
     end
     
