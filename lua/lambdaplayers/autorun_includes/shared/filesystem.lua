@@ -62,6 +62,13 @@ function LAMBDAFS:GetPropTable()
     return mergedtable
 end
 
+function LAMBDAFS:GetMaterialTable()
+    local customcontent = LAMBDAFS:ReadFile( "lambdaplayers/custommaterials.json", "json" ) or {}
+    local defaultcontent = LAMBDAFS:ReadFile( "materials/lambdaplayers/data/materials.vmt", "json", "GAME" )
+    local mergedtable = table_Add( defaultcontent, customcontent )
+    return mergedtable
+end
+
 function LAMBDAFS:GetProfilePictures()
     Lambdaprofilepictures = {}
 

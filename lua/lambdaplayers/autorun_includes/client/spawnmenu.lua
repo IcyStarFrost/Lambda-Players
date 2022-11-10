@@ -12,41 +12,41 @@ end
 
 local function AddLambdaPlayersoptions()
 
-    for categoryname, _ in pairs( categories ) do
+    spawnmenu.AddToolMenuOption( "Lambda Player", "Lambda Player", "lambdaplayer_weaponpermissions" , "Weapon Permissions", "", "", function( panel ) 
+        panel:Help( "All weapon convars start with lambdaplayers_weapons" )
+        for k, v in pairs( _LAMBDAPLAYERSWEAPONORIGINS ) do
 
-        spawnmenu.AddToolMenuOption( "Lambda Player", "Lambda Player", "lambdaplayer_weaponpermissions" , "Weapon Permissions", "", "", function( panel ) 
-            panel:Help( "All weapon convars start with lambdaplayers_weapons" )
-            for k, v in pairs( _LAMBDAPLAYERSWEAPONORIGINS ) do
+            local weaponcheckboxes = {}
+            local check = false
 
-                local weaponcheckboxes = {}
-                local check = false
+            panel:Help("------ " .. k .. " ------")
 
-                panel:Help("------ " .. k .. " ------")
+            local togglebutton = vgui.Create( "DButton", panel )
+            togglebutton:SetText( "Toggle " .. k .. " Category" )
+            panel:AddItem( togglebutton )
 
-                local togglebutton = vgui.Create( "DButton", panel )
-                togglebutton:SetText( "Toggle " .. k .. " Category" )
-                panel:AddItem( togglebutton )
-
-                function togglebutton:DoClick()
-                    if !LocalPlayer():IsSuperAdmin() then return end
-                    for id, box in ipairs( weaponcheckboxes ) do
-                        box:SetChecked( check )
-                    end
-                    check = !check
+            function togglebutton:DoClick()
+                if !LocalPlayer():IsSuperAdmin() then return end
+                for id, box in ipairs( weaponcheckboxes ) do
+                    box:SetChecked( check )
                 end
-
-                for weaponclass, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
-                    if data.origin == k then
-                        local box = panel:CheckBox( "Allow " .. data.prettyname, "lambdaplayers_weapons_allow" .. weaponclass )
-                        local lbl = panel:ControlHelp( "Server-Side | Allows the Lambda Players to equip " .. data.prettyname .. "\nConVar: lambdaplayers_weapons_allow" .. weaponclass )
-                        lbl:SetColor( servercolor )
-                        table_insert( weaponcheckboxes, box )
-                    end
-                end
-
+                check = !check
             end
 
-        end)
+            for weaponclass, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
+                if data.origin == k then
+                    local box = panel:CheckBox( "Allow " .. data.prettyname, "lambdaplayers_weapons_allow" .. weaponclass )
+                    local lbl = panel:ControlHelp( "Server-Side | Allows the Lambda Players to equip " .. data.prettyname .. "\nConVar: lambdaplayers_weapons_allow" .. weaponclass )
+                    lbl:SetColor( servercolor )
+                    table_insert( weaponcheckboxes, box )
+                end
+            end
+
+        end
+
+    end)
+
+    for categoryname, _ in pairs( categories ) do
 
         spawnmenu.AddToolMenuOption( "Lambda Player", "Lambda Player", "lambdaplayer_" .. categoryname , categoryname, "", "", function( panel ) 
 

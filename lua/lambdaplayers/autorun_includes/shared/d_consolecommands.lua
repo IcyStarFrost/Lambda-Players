@@ -30,6 +30,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedata", function( ply )
 
     LambdaPlayerNames = LAMBDAFS:GetNameTable()
     LambdaPlayerProps = LAMBDAFS:GetPropTable()
+    LambdaPlayerMaterials = LAMBDAFS:GetMaterialTable()
     Lambdaprofilepictures = LAMBDAFS:GetProfilePictures()
 
     LambdaPlayers_Notify( ply, "Updated Lambda Data", NOTIFY_HINT, "buttons/button15.wav" )

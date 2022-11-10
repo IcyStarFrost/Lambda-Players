@@ -71,6 +71,7 @@ function ENT:Initialize()
 
         LambdaPlayerNames = LambdaPlayerNames or LAMBDAFS:GetNameTable()
         LambdaPlayerProps = LambdaPlayerProps or LAMBDAFS:GetPropTable()
+        LambdaPlayerMaterials = LambdaPlayerMaterials or LAMBDAFS:GetMaterialTable()
         Lambdaprofilepictures = Lambdaprofilepictures or LAMBDAFS:GetProfilePictures()
 
         self:SetSolid( SOLID_BBOX )

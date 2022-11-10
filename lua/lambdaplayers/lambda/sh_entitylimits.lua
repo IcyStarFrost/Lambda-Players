@@ -6,14 +6,9 @@ local pairs = pairs
 
 -- This is a nice and easy way of setting up a limit like Prop Limits, NPC limits, and ect
 
-function CreateLambdaEntLimit( name, default, max )
-    CreateLambdaConvar( "lambdaplayers_limits_" .. name .. "limit", default, true, false, false, "The max amount of " .. name .. "s a lambda player is allowed to have", 0, max, { type = "Slider", name = name .. " Limit", decimals = 0, category = "Limits and Tool Permissions" } )
-    if SERVER then ENT[ "l_Spawned" .. name ] = {} end
+for k, name in ipairs( LambdaEntityLimits ) do
+    ENT[ "l_Spawned" .. name ] = {}
 end
-
--- Limits
-CreateLambdaEntLimit( "Prop", 300, 50000 )
---
 
 -- Gets the limit
 function ENT:GetLimit( name )
@@ -38,7 +33,3 @@ end
 function ENT:IsUnderLimit( name )
     return self:GetSpawnedEntCount( name ) < self:GetLimit( name )
 end
-
--- Called when all default entity limits are created.
--- This hook can be used to create entity limits with CreateLambdaEntLimit()
-hook.Run( "LambdaOnEntLimitsCreated" )
