@@ -534,6 +534,33 @@ AddToolFunctionToLambdaTools( "Hoverball", UseHoverballTool )
 
 
 
+local physproperties = { "metal_bouncy", "metal", "dirt", "slipperyslime", "wood", "glass", "concrete_block", "ice", "rubber", "paper", "zombieflesh", "gmod_ice", "gmod_bouncy" }
+local function UsePhysPropTool( self, target )
+    if !IsValid( target ) then return end
+    
+    self:LookTo( target, 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) then return end
+
+    local trace = self:Trace( target:WorldSpaceCenter() )
+    local pos = trace.HitPos
+
+    local ent = trace.Entity
+    if !IsValid( ent ) or ent!=target then return end
+
+    self:UseWeapon( target:WorldSpaceCenter() )
+
+    construct.SetPhysProp( target:GetOwner(), ent, trace.PhysicsBone, nil, { GravityToggle = random( 0, 1 ) == 1, Material = physproperties[ random( #physproperties ) ] } ) -- Set the properties
+
+    return true
+end
+AddToolFunctionToLambdaTools( "PhysicalProperties", UsePhysPropTool )
+
+
+
+
+
 -- Called when all default tools are loaded
 -- This hook can be used to add custom tool functions by using AddToolFunctionToLambdaTools()
 hook.Run( "LambdaOnToolsLoaded" )
