@@ -28,4 +28,4 @@ Called when all default UActions (Universal Actions, functions that randomly get
 
 ### `LambdaOnToolsLoaded`
 
-Called when all default tools are loaded. Use this hook if you want to add custom tools with `AddToolFunctionToLambdaTools()` See lambda/sv_b_toolguntools.lua for tool examples
+Called when all default tools are loaded. Use this hook if you want to add custom tools with `AddToolFunctionToLambdaTools()` See lambda/sh_b_toolguntools.lua for tool examples
