@@ -108,6 +108,8 @@ local function UseLightTool( self, target )
     table_insert( self.l_SpawnedEntities, 1, ent )
 
     if random( 1, 2 ) == 1 then
+        local traceent = trace.Entity
+        
         local LPos1 = Vector( 0, 0, 6.5 )
         local LPos2 = !IsNil( traceent ) and traceent:WorldToLocal( trace.HitPos ) or trace.HitPos
 
