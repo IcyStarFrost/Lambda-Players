@@ -236,7 +236,7 @@ function ENT:SwitchToRandomWeapon()
             return
         end
     end
-    self:SwitchWeapon( "NONE" )
+    self:SwitchWeapon( self.l_Weapon )
 end
 
 function ENT:SwitchToLethalWeapon()
@@ -247,5 +247,6 @@ function ENT:SwitchToLethalWeapon()
             return
         end
     end
-    self:SwitchWeapon( "NONE" )
+    -- Probably should make them panic if they can't equip a lethal weapon.
+    self:SwitchWeapon( self.l_Weapon )
 end
