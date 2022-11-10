@@ -32,6 +32,10 @@ Called when all default UActions (Universal Actions, functions that randomly get
 
 Called when all default tools are loaded. Use this hook if you want to add custom tools with `AddToolFunctionToLambdaTools()` See lambdaplayers/autorun_includes/shared/lambda_toolguntools.lua
 
-### LambdaOnEntLimitsCreated
+### `LambdaOnEntLimitsCreated`
 
 Called when all default Entity Limits have been created. Use this hook if you want to make custom entity limits with `CreateLambdaEntLimit()` See lambdaplayers/autorun_includes/shared/lambda_entitylimits
+
+### `LambdaOnBuildFunctionsLoaded`
+
+Called when all default Building Functions have been loaded. Use this hook if you want to add custom building functions with `AddBuildFunctionToLambdaBuildingFunctions()` See lambdaplayers/autorun_includes/shared/lambda_x_buildingfunctions.lua
