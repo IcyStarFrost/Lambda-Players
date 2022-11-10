@@ -39,7 +39,7 @@ function ENT:Chance_Build()
     self:PreventWeaponSwitch( true )
 
     for index, buildtable in RandomPairs( self.l_BuildingFunctions ) do
-        if !buildtable[ 2 ]:GetBool() then continue end -- If the tool is allowed
+        if !buildtable[ 2 ]:GetBool() then continue end
 
         local result = buildtable[ 3 ]( self )
 
