@@ -247,6 +247,5 @@ function ENT:SwitchToLethalWeapon()
             return
         end
     end
-    -- Probably should make them panic if they can't equip a lethal weapon.
     self:SwitchWeapon( self.l_Weapon )
 end
