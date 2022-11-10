@@ -5,6 +5,10 @@ local ColorRand = ColorRand
 local VectorRand = VectorRand
 local IsValid = IsValid
 local ents_Create = ents.Create
+local tobool = tobool
+local timer = timer 
+local util = util
+local Clamp = math.Clamp
 local zeroangle = Angle()
 
 LambdaToolGunTools = {}
@@ -19,11 +23,12 @@ end
 
 -- Helper function for gmod entities 
 
-local function CreateGmodEntity( classname, pos, ang, lambda )
+local function CreateGmodEntity( classname, model, pos, ang, lambda )
 
     local ent = ents_Create( classname )
     ent:SetPos( pos )
     ent:SetAngles( ang or zeroangle )
+    ent:SetModel( model or "" )
     LambdaHijackGmodEntity( ent, lambda ) -- Make it support the lambda
     ent:Spawn()
     ent:Activate()
@@ -68,7 +73,7 @@ AddToolFunctionToLambdaTools( "Material", UsematerialTool )
 local function UseLightTool( self, target )
     if !self:IsUnderLimit( "Light" ) then return end -- Can't create any more lights
 
-    local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -600, 600 ) )
+    local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
     local pos = trace.HitPos
     
     self:LookTo( pos, 2 )
@@ -76,7 +81,7 @@ local function UseLightTool( self, target )
     coroutine.wait( 1 )
 
     self:UseWeapon( pos )
-    local ent = CreateGmodEntity( "gmod_light", pos, nil, self ) -- Create the light
+    local ent = CreateGmodEntity( "gmod_light", nil, pos, nil, self ) -- Create the light
     self:ContributeEntToLimit( ent, "Light" )
     table_insert( self.l_SpawnedEntities, 1, ent )
 
@@ -107,6 +112,61 @@ local function UseLightTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Light", UseLightTool )
+
+local dynamitemodels = { "models/dav0r/tnt/tnt.mdl", "models/dav0r/tnt/tnttimed.mdl", "models/dynamite/dynamite.mdl" }
+
+local function UseDynamiteTool( self, target )
+    if !self:IsUnderLimit( "Light" ) then return end
+
+    local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
+    local pos = trace.HitPos + trace.HitNormal * 10
+    
+    self:LookTo( pos, 2 )
+
+    coroutine.wait( 1 )
+
+    self:UseWeapon( pos )
+    local ent = CreateGmodEntity( "gmod_dynamite", dynamitemodels[ random( #dynamitemodels ) ], pos, nil, self )
+    self:ContributeEntToLimit( ent, "Dynamite" )
+    table_insert( self.l_SpawnedEntities, 1, ent )
+    ent:SetPlayer( self )
+    ent:SetDamage( random( 1, 500 ) )
+    ent:SetShouldRemove( tobool( random( 0, 1 ) ) )
+    ent:SetDelay( random( 0, 60 ) )
+    
+    function ent:Explode( delay, ply ) -- Override the old Explode function with our own. Although we don't change much we just make the explosion repeat it self if it isn't set for removal
+
+        if ( !IsValid( self ) ) then return end
+
+        if ( !IsValid( ply ) ) then ply = self end
+    
+        local _delay = delay or self:GetDelay()
+    
+        if ( _delay == 0 ) then
+    
+            local radius = 300
+    
+            util.BlastDamage( self, ply, self:GetPos(), radius, Clamp( self:GetDamage(), 0, 1500 ) )
+    
+            local effectdata = EffectData()
+            effectdata:SetOrigin( self:GetPos() )
+            util.Effect( "Explosion", effectdata, true, true )
+    
+            if ( self:GetShouldRemove() ) then self:Remove() return end
+            if ( self:GetMaxHealth() > 0 && self:Health() <= 0 ) then self:SetHealth( self:GetMaxHealth() ) end
+            self:Explode( self:GetDelay(), ply )
+        else
+    
+            timer.Simple( _delay, function() if ( !IsValid( self ) ) then return end self:Explode( 0, ply ) end )
+    
+        end
+    end
+
+    ent:Explode( ent:GetDelay(), self )
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Dynamite", UseDynamiteTool )
 
 -- Called when all default tools are loaded
 -- This hook can be used to add custom tool functions by using AddToolFunctionToLambdaTools()

@@ -113,6 +113,20 @@ function LambdaHijackGmodEntity( ent, lambda )
     
     end
 
+	function ent:GetOverlayText()
+
+		local txt = self:GetNWString( "GModOverlayText" )
+	
+		if ( txt == "" ) then
+			return ""
+		end
+	
+		local PlayerName = self:GetPlayerName()
+	
+		return txt .. "\n(" .. PlayerName .. ")"
+	
+	end
+
     function ent:GetPlayer()
 
         if ( self.Founder == nil ) then
