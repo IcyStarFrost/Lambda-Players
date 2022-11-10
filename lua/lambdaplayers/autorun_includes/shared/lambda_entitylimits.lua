@@ -1,6 +1,8 @@
 
 LambdaEntityLimits = {}
 
+-- Creates a entity limit for keeping track of whatever entities
+-- See lambda/sv_entitylimits.lua for functions to add to the limit and check
 function CreateLambdaEntLimit( name, default, max )
     CreateLambdaConvar( "lambdaplayers_limits_" .. name .. "limit", default, true, false, false, "The max amount of " .. name .. "s a lambda player is allowed to have", 0, max, { type = "Slider", name = name .. " Limit", decimals = 0, category = "Limits and Tool Permissions" } )
     if SERVER then LambdaEntityLimits[ #LambdaEntityLimits + 1 ] = name end

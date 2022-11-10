@@ -3,7 +3,6 @@ local random = math.random
 
 LambdaToolGunTools = {}
 
-
 -- Adds a tool function to the list of tools
 -- See the functions below for examples on making tools
 function AddToolFunctionToLambdaTools( toolname, func )
