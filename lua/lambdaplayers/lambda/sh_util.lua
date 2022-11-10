@@ -332,9 +332,11 @@ if SERVER then
         return 400
     end
 
+
     -- Returns if we can see the ent in question.
     -- Simple trace 
     function ENT:CanSee( ent )
+        if !IsValid( ent ) then return end
         visibilitytrace.start = self:GetAttachmentPoint( "eyes" ).Pos
         visibilitytrace.endpos = ent:WorldSpaceCenter()
         visibilitytrace.filter = self
