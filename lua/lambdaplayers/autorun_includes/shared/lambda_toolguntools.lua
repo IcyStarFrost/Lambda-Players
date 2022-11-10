@@ -153,7 +153,7 @@ local function UseDynamiteTool( self, target )
     ent:SetPlayer( self )
     ent:SetDamage( random( 1, 500 ) )
     ent:SetShouldRemove( tobool( random( 0, 1 ) ) )
-    ent:SetDelay( random( 0, 60 ) )
+    ent:SetDelay( random( 1, 60 ) )
     
     function ent:Explode( delay, ply ) -- Override the old Explode function with our own. Although we don't change much we just make the explosion repeat it self if it isn't set for removal
 
