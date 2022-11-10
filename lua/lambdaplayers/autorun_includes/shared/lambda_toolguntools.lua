@@ -488,11 +488,6 @@ local function UseHoverballTool( self, target )
             local newtime = rand( 1, 10 )
             hoverball:SetZVelocity( random( -1, 1 ) )
 
-            timer.Simple( newtime / 3, function()
-                hoverball:SetZVelocity( 0 )
-            end )
-
-
             rndtime = CurTime() + newtime
         end
     end )
