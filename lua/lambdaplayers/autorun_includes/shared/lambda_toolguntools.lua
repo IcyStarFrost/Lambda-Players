@@ -303,6 +303,40 @@ AddToolFunctionToLambdaTools( "Trail", UseTrailTool )
 
 
 
+local lampmodels = { "models/lamps/torch.mdl", "models/maxofs2d/lamp_flashlight.mdl", "models/maxofs2d/lamp_projector.mdl" }
+local lamptextures = { "effects/flashlight/caustics", "effects/flashlight/logo", "effects/flashlight001", "effects/flashlight/tech", "effects/flashlight/soft", "effects/flashlight/slit", "effects/flashlight/square", "effects/flashlight/circles", "effects/flashlight/window" }
+local function UseLampTool( self, target )
+    if !self:IsUnderLimit( "Lamp" ) then return end
+
+    local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
+    local ang = self:GetAngles()
+    ang[ 1 ] = 0
+    ang[ 3 ] = 0
+    local pos = trace.HitPos
+
+    self:LookTo( pos, 2 )
+
+    coroutine.wait( 1 )
+
+    self:UseWeapon( pos )
+    local ent = CreateGmodEntity( "gmod_lamp", lampmodels[ random( 1, 3 ) ], pos, ang, self )
+    ent.LambdaOwner = self
+    ent.IsLambdaSpawned = true
+    self:ContributeEntToLimit( ent, "Lamp" )
+    table_insert( self.l_SpawnedEntities, 1, ent )
+
+    ent:SetColor( ColorRand( false ) )
+    ent:SetFlashlightTexture( lamptextures[ random( #lamptextures) ] )
+    ent:SetPlayer( self )
+    ent:SetOn( true )
+    ent:SetLightFOV( random( 10, 170 ) )
+    ent:SetDistance( random( 64, 2048 ) )
+    ent:SetBrightness( rand( 0.5, 8 ) )
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Lamp", UseLampTool )
+
 
 
 -- Called when all default tools are loaded
