@@ -200,6 +200,52 @@ AddToolFunctionToLambdaTools( "Remover", UseRemoverTool )
 
 local balloonnames = { "normal", "normal_skin1", "normal_skin2", "normal_skin3", "gman", "mossman", "dog", "heart", "star" }
 
+local function UseBalloonTool( self, target )
+    if !self:IsUnderLimit( "Balloon" ) then return end -- Can't create any more balloons
+
+    local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
+    local pos = trace.HitPos
+    local randBalloon = balloonnames[ random( #balloonnames ) ]
+    local balloonModel = list.Get( "BalloonModels" )[randBalloon] -- Directly get model from Sandbox. Needed since some have skins.
+
+    self:LookTo( pos, 2 )
+
+    coroutine.wait( 1 )
+
+    self:UseWeapon( pos )
+    local ent = CreateGmodEntity( "gmod_balloon", balloonModel.model, pos, nil, self ) -- Create the balloon
+    ent.LambdaOwner = self
+    ent.IsLambdaSpawned = true
+    self:ContributeEntToLimit( ent, "Balloon" )
+    table_insert( self.l_SpawnedEntities, 1, ent )
+    DoPropSpawnedEffect( ent ) -- Make it do the pretty prop spawn effect
+
+    local LPos1 = Vector( 0, 0, 6.5 )
+    local LPos2 = trace.Entity:WorldToLocal( trace.HitPos )
+
+    if IsValid( trace.Entity ) then
+
+        local phys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
+        if IsValid( phys ) then
+            LPos2 = phys:WorldToLocal( trace.HitPos )
+        end
+
+    end
+
+    local constr, rope = constraint.Rope( ent, trace.Entity, 0, trace.PhysicsBone, LPos1, LPos2, 0, random( 5, 1000 ), 0, 0.5, "cable/rope" )
+    table_insert( self.l_SpawnedEntities, 1, rope )
+
+    -- Configure it
+    ent:SetPlayer( self ) -- We can safely set this to ourselves since it was "hijacked"
+    ent:SetColor( ColorRand( true ) )
+    if ( balloonModel.skin ) then ent:SetSkin( balloonModel.skin ) end
+    if ( balloonModel.nocolor ) then ent:SetColor( Color(255, 255, 255, 255) ) else ent:SetColor( ColorRand( ) ) end
+    ent:SetForce( random( 50, 2000 ) ) -- While players can use negative force for balloons it kinda looks less fun
+
+    return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this
+end
+AddToolFunctionToLambdaTools( "Balloon", UseBalloonTool )
+
 -- Called when all default tools are loaded
 -- This hook can be used to add custom tool functions by using AddToolFunctionToLambdaTools()
 hook.Run( "LambdaOnToolsLoaded" )
