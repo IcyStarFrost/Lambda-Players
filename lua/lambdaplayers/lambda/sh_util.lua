@@ -332,6 +332,10 @@ if SERVER then
         return 400
     end
 
+    -- Prevents the lambda player from switching weapons when this is true
+    function ENT:PreventWeaponSwitch( bool )
+        self.l_NoWeaponSwitch = bool
+    end
 
     -- Returns if we can see the ent in question.
     -- Simple trace 

@@ -47,6 +47,9 @@ end
 function ENT:Chance_Tool()
     self:SwitchWeapon( "toolgun" )
     if self.l_Weapon != "toolgun" then return end
+
+    self:PreventWeaponSwitch( true )
+
     local find = self:FindInSphere( nil, 400, function( ent ) if !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
     local target = find[ random( #find ) ]
 
@@ -59,6 +62,8 @@ function ENT:Chance_Tool()
 
         if result then self:DebugPrint( "Used" .. tooltable[ 1 ] .. "Tool" ) break end
     end
+
+    self:PreventWeaponSwitch( false )
 end
 
 
