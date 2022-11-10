@@ -1,6 +1,7 @@
 local table_insert = table.insert
 local random = math.random
 local rand = math.Rand
+local RandomPairs = RandomPairs
 local ColorRand = ColorRand
 local VectorRand = VectorRand
 local IsValid = IsValid
@@ -367,6 +368,75 @@ local function UseEmitterTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Emitter", UseEmitterTool )
+
+
+local function IsNil( any )
+    return any == nil or any == NULL
+end
+
+
+local ropematerials = { "cable/redlaser", "cable/cable2", "cable/rope", "cable/blue_elec", "cable/xbeam", "cable/physbeam", "cable/hydra" }
+local function UseRopeTool( self, target )
+    if !self:IsUnderLimit( "Rope" ) then return end
+
+    local firstent
+    local secondent
+    local world = Entity( 0 )
+    local firstuseworld = tobool( random( 0, 1 ) ) -- Choose if we want to rope the world or not
+    local seconduseworld = tobool( random( 0, 1 ) )
+    local find = self:FindInSphere( nil, 800, function( ent ) if !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
+
+    for k, v in RandomPairs( find ) do
+        if !IsValid( firstent ) and IsValid( v ) and !firstuseworld then firstent = v continue end
+        if !IsValid( secondent ) and IsValid( v ) and !seconduseworld then secondent = v continue end
+        break
+    end
+
+    -- If the entities are valid then use them. If not use the world
+    firstent = IsValid( firstent ) and firstent or world
+    secondent = IsValid( secondent ) and secondent or world
+
+    -- Local Positions
+    -- For entities, this would be a position local to them
+    -- For the world, it's just the regular map coords
+    local lpos1 = firstent != world and firstent:WorldToLocal( self:Trace( firstent:WorldSpaceCenter() ).HitPos ) or self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) ).HitPos
+    local lpos2 = secondent != world and secondent:WorldToLocal( self:Trace( secondent:WorldSpaceCenter() ).HitPos ) or self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) ).HitPos
+
+    self:LookTo( ( firstent != world and firstent or lpos1 ), 2 )
+
+    coroutine.wait( 1 )
+    if IsNil( firstent ) then return end 
+
+    self:UseWeapon( ( firstent != world and firstent:WorldSpaceCenter() or lpos1 ) )
+
+    coroutine.wait( 0.3 )
+
+    self:LookTo( ( secondent != world and secondent or lpos2 ), 2 )
+
+    coroutine.wait( 1 )
+    if IsNil( secondent ) then return end
+
+    self:UseWeapon( ( secondent != world and secondent:WorldSpaceCenter() or lpos2 ) )
+
+    local cons, rope = constraint.Rope( firstent, secondent, 0, 0, lpos1, lpos2, 0, random( 0, 500 ), 0, rand( 0.5, 10 ), ropematerials[ random( #ropematerials ) ], false, ColorRand( false ) )
+    
+    -- Weird situation here but we'll do this just to make sure something gets in the tables
+    if IsValid( cons ) then
+        cons.LambdaOwner = self
+        cons.IsLambdaSpawned = true
+        self:ContributeEntToLimit( cons, "Rope" )
+        table_insert( self.l_SpawnedEntities, 1, cons )
+    elseif IsValid( rope ) then
+        rope.LambdaOwner = self
+        rope.IsLambdaSpawned = true
+        self:ContributeEntToLimit( rope, "Rope" )
+        table_insert( self.l_SpawnedEntities, 1, rope )
+    end
+
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Rope", UseRopeTool )
 
 
 
