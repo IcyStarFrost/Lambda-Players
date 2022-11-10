@@ -7,6 +7,7 @@ local IsValid = IsValid
 local ents_Create = ents.Create
 local util_Effect = util.Effect
 local tobool = tobool
+local table_GetKeys = table.GetKeys
 local timer = timer 
 local util = util
 local coroutine = coroutine
@@ -336,6 +337,36 @@ local function UseLampTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Lamp", UseLampTool )
+
+local list_Get = list.Get
+local effectlist = table_GetKeys( list_Get( "EffectType" ) )
+local function UseEmitterTool( self, target )
+    if !self:IsUnderLimit( "Emitter" ) then return end
+
+    local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
+
+    local pos = trace.HitPos
+
+    self:LookTo( pos, 2 )
+
+    coroutine.wait( 1 )
+
+    self:UseWeapon( pos )
+    local ent = CreateGmodEntity( "gmod_emitter", "models/props_lab/tpplug.mdl", pos, nil, self )
+    ent.LambdaOwner = self
+    ent.IsLambdaSpawned = true
+    self:ContributeEntToLimit( ent, "Emitter" )
+    table_insert( self.l_SpawnedEntities, 1, ent )
+
+    ent:SetPlayer( self )
+    ent:SetOn( true )
+    ent:SetDelay( rand( 0.1, 2 ) )
+    ent:SetScale( rand( 0, 6 ) )
+    ent:SetEffect( effectlist[ random( #effectlist ) ] )
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Emitter", UseEmitterTool )
 
 
 

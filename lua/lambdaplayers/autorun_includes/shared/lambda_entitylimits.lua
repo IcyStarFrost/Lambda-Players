@@ -14,6 +14,7 @@ CreateLambdaEntLimit( "Light", 5, 200 )
 CreateLambdaEntLimit( "Lamp", 5, 200 )
 CreateLambdaEntLimit( "Balloon", 10, 200 )
 CreateLambdaEntLimit( "Dynamite", 5, 200 )
+CreateLambdaEntLimit( "Emitter", 5, 200 )
 
 -- Called when all default entity limits are created.
 -- This hook can be used to create entity limits with CreateLambdaEntLimit()
