@@ -23,6 +23,7 @@ end
 
 -- Returns the number of valid entities in the specified name
 function ENT:GetSpawnedEntCount( name )
+    if !self[ "l_Spawned" .. name ] then ErrorNoHaltWithStack( self, " Entity Limit Error: " .. name .. " Does not exist! Did you miss spell the name?") return 0 end
     for k, v in ipairs( self[ "l_Spawned" .. name ] ) do
         if !IsValid( v ) then table_remove( self[ "l_Spawned" .. name ], k ) end
     end

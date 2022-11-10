@@ -10,7 +10,7 @@ end
 
 
 CreateLambdaEntLimit( "Prop", 300, 50000 )
-
+CreateLambdaEntLimit( "Light", 300, 200 )
 
 -- Called when all default entity limits are created.
 -- This hook can be used to create entity limits with CreateLambdaEntLimit()

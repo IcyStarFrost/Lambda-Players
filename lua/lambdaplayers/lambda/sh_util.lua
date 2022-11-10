@@ -25,6 +25,7 @@ local table_insert = table.insert
 local tostring = tostring
 local eyetracetable = {}
 local visibilitytrace = {}
+local tracetable = {}
 local GetLambdaPlayers = GetLambdaPlayers
 local debugcvar = GetConVar( "lambdaplayers_debug" )
 
@@ -330,6 +331,14 @@ if SERVER then
     -- Returns the run speed
     function ENT:GetRunSpeed()
         return 400
+    end
+
+    -- Performs a Trace from ourselves to the postion
+    function ENT:Trace( pos )
+        tracetable.start = self:WorldSpaceCenter()
+        tracetable.endpos = pos
+        tracetable.filter = self 
+        return Trace( tracetable )
     end
 
     -- Prevents the lambda player from switching weapons when this is true

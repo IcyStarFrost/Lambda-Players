@@ -55,7 +55,6 @@ function ENT:Chance_Tool()
 
     -- Loops through random tools and only stops if a tool tells us it actually got used by returning true 
     for index, tooltable in RandomPairs( self.l_ToolgunTools ) do
-        if !IsValid( target ) then break end  -- Stop the loop if the target is invalid
         if !tooltable[ 2 ]:GetBool() then continue end -- If the tool is allowed
 
         local result = tooltable[ 3 ]( self, target )

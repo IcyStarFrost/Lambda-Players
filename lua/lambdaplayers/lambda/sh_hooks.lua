@@ -185,15 +185,17 @@ if SERVER then
 
     local snds = { "player/pl_fallpain1.wav", "player/pl_fallpain3.wav" }
     local realisticfalldamage = GetConVar( "lambdaplayers_lambda_realisticfalldamage" )
+    
     function ENT:OnLandOnGround( ent )
         local damage = 0
+
         if realisticfalldamage:GetBool() then
             damage = max( 0, ceil( 0.3218 * abs( self.l_FallVelocity ) - 153.75 ) )
         elseif abs( self.l_FallVelocity ) > 500 then
             damage = 10
         end
 
-        if damage > 0 then
+        if damage > 0 and self:WaterLevel() > 0 then
             local info = DamageInfo()
             info:SetDamage( damage )
             info:SetAttacker( Entity( 0 ) )
