@@ -41,6 +41,7 @@ end
     local Lerp = Lerp
     local isentity = isentity
     local Vector = Vector
+    local coroutine = coroutine
     local debugoverlay = debugoverlay
     local voicepitchmin = GetConVar( "lambdaplayers_voice_voicepitchmin" )
     local voicepitchmax = GetConVar( "lambdaplayers_voice_voicepitchmax" )

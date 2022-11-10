@@ -34,6 +34,7 @@ end
 
 -- In the self.l_Personality table, The first args in the internal tables will correspond to these functions
 
+-- TODO: Potentially make the same system as toolgun tools
 function ENT:Chance_Build()
     self.Face = self:GetPos() + VectorRand( -100, 100 )
     coroutine.wait( rand( 0.2, 1 ) )

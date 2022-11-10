@@ -9,6 +9,8 @@ local util_Effect = util.Effect
 local tobool = tobool
 local timer = timer 
 local util = util
+local coroutine = coroutine
+local constraint = constraint
 local Clamp = math.Clamp
 local zeroangle = Angle()
 
@@ -38,6 +40,9 @@ local function CreateGmodEntity( classname, model, pos, ang, lambda )
     return ent
 end
 
+
+
+
 local function UseColorTool( self, target )
     if !IsValid( target ) then return end -- Returning nothing is basically the same as returning false
 
@@ -53,6 +58,10 @@ local function UseColorTool( self, target )
 end
 AddToolFunctionToLambdaTools( "Color", UseColorTool )
 
+
+
+
+
 local function UseMaterialTool( self, target )
     if !IsValid( target ) then return end
 
@@ -67,6 +76,10 @@ local function UseMaterialTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Material", UseMaterialTool )
+
+
+
+
 
 local function UseLightTool( self, target )
     if !self:IsUnderLimit( "Light" ) then return end -- Can't create any more lights
@@ -112,6 +125,10 @@ local function UseLightTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Light", UseLightTool )
+
+
+
+
 
 local dynamitemodels = { "models/dav0r/tnt/tnt.mdl", "models/dav0r/tnt/tnttimed.mdl", "models/dynamite/dynamite.mdl" }
 
@@ -171,6 +188,10 @@ local function UseDynamiteTool( self, target )
 end
 AddToolFunctionToLambdaTools( "Dynamite", UseDynamiteTool )
 
+
+
+
+
 local function UseRemoverTool( self, target )
     if !IsValid( target ) then return end -- Returning nothing is basically the same as returning false
 
@@ -197,6 +218,10 @@ local function UseRemoverTool( self, target )
     return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this
 end
 AddToolFunctionToLambdaTools( "Remover", UseRemoverTool )
+
+
+
+
 
 local balloonnames = { "normal", "normal_skin1", "normal_skin2", "normal_skin3", "gman", "mossman", "dog", "heart", "star" }
 
@@ -245,6 +270,10 @@ local function UseBalloonTool( self, target )
 end
 AddToolFunctionToLambdaTools( "Balloon", UseBalloonTool )
 
+
+
+
+
 local trailMats = { "trails/plasma", "trails/tube", "trails/electric", "trails/smoke", "trails/laser", "trails/love", "trails/physbeam", "trails/lol" }
 
 local function UseTrailTool( self, target )
@@ -269,6 +298,10 @@ local function UseTrailTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Trail", UseTrailTool )
+
+
+
+
 
 -- Called when all default tools are loaded
 -- This hook can be used to add custom tool functions by using AddToolFunctionToLambdaTools()
