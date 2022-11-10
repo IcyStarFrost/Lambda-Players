@@ -3,6 +3,7 @@ local random = math.random
 local rand = math.Rand
 local ColorRand = ColorRand
 local VectorRand = VectorRand
+local IsValid = IsValid
 local ents_Create = ents.Create
 local zeroangle = Angle()
 
@@ -67,7 +68,8 @@ AddToolFunctionToLambdaTools( "Material", UsematerialTool )
 local function UseLightTool( self, target )
     if !self:IsUnderLimit( "Light" ) then return end -- Can't create any more lights
 
-    local pos = self:Trace( self:WorldSpaceCenter() + VectorRand( -600, 600 ) ).HitPos
+    local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -600, 600 ) )
+    local pos = trace.HitPos
     
     self:LookTo( pos, 2 )
 
@@ -77,6 +79,23 @@ local function UseLightTool( self, target )
     local ent = CreateGmodEntity( "gmod_light", pos, nil, self ) -- Create the light
     self:ContributeEntToLimit( ent, "Light" )
     table_insert( self.l_SpawnedEntities, 1, ent )
+
+    if random( 1, 2 ) == 1 then
+        local LPos1 = Vector( 0, 0, 6.5 )
+        local LPos2 = trace.Entity:WorldToLocal( trace.HitPos )
+
+        if IsValid( trace.Entity ) then
+
+            local phys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
+            if IsValid( phys ) then
+                LPos2 = phys:WorldToLocal( trace.HitPos )
+            end
+
+        end
+
+        local constr, rope = constraint.Rope( ent, trace.Entity, 0, trace.PhysicsBone, LPos1, LPos2, 0, random( 256 ), 0, 1, "cable/rope" )
+        table_insert( self.l_SpawnedEntities, 1, rope )
+    end
 
     -- Aaannd configure it
     ent:SetPlayer( self ) -- We can safely set this to ourselves since it was "hijacked"
