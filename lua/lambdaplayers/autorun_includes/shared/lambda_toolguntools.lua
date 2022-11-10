@@ -109,7 +109,7 @@ local function UseLightTool( self, target )
 
     if random( 1, 2 ) == 1 then
         local traceent = trace.Entity
-        
+
         local LPos1 = Vector( 0, 0, 6.5 )
         local LPos2 = !IsNil( traceent ) and traceent:WorldToLocal( trace.HitPos ) or trace.HitPos
 
@@ -455,7 +455,9 @@ local function UseRopeTool( self, target )
 
     self:UseWeapon( ( secondent != world and secondent:WorldSpaceCenter() or lpos2 ) )
 
-    local cons, rope = constraint.Rope( firstent, secondent, 0, 0, lpos1, lpos2, 0, random( 0, 500 ), firstent:GetPos():Distance( secondent:GetPos() ), rand( 0.5, 10 ), ropematerials[ random( #ropematerials ) ], false, ColorRand( false ) )
+    local dist = ( firstent == world and lpos1 or firstent:GetPos() ):Distance( ( secondent == world and lpos2 or secondent:GetPos() ) )
+
+    local cons, rope = constraint.Rope( firstent, secondent, 0, 0, lpos1, lpos2, 0, random( 0, 500 ), dist, rand( 0.5, 10 ), ropematerials[ random( #ropematerials ) ], false, ColorRand( false ) )
     
     -- Weird situation here but we'll do this just to make sure something gets in the tables
     if IsValid( cons ) then
@@ -521,6 +523,7 @@ local function UseHoverballTool( self, target )
     local rndtime = CurTime() + rand( 1, 10 )
     ent:LambdaHookTick( "Hoverballrandommovement", function( hoverball )
         if CurTime() > rndtime then
+            if !IsValid( hoverball ) then return true end
             hoverball:SetZVelocity( random( -1, 1 ) )
 
             rndtime = CurTime() + rand( 1, 10 )
