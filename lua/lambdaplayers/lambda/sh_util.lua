@@ -290,8 +290,8 @@ if SERVER then
                 end
             end
             if istable( nw2 ) then
-                for k, v in pairs( nw2 ) do
-                    self:SetNW2Var( k, v )
+                for k, vartable in pairs( nw2 ) do
+                    self:SetNW2Var( k, vartable.value )
                 end
             end
             
