@@ -7,6 +7,7 @@ local undo = undo
 local ents_GetAll = ents.GetAll
 local abs = math.abs
 local table_Merge = table.Merge
+local ipairs = ipairs
 local max = math.max
 local ceil = math.ceil
 local debugvar = GetConVar( "lambdaplayers_debug" )
