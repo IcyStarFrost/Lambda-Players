@@ -271,6 +271,10 @@ function ENT:Think()
             debugoverlay.Line( attach.Pos, self:GetEyeTrace().HitPos, 0.1, color_white, true  )
         end
 
+        if !self:IsOnGround() then
+            self.l_FallVelocity = self.loco:GetVelocity()[ 3 ]
+        end
+
         -- Animations --
             local anims = _LAMBDAPLAYERSHoldTypeAnimations[ self.l_HoldType ]
 

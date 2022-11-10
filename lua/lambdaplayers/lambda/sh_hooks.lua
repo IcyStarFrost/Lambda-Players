@@ -4,6 +4,9 @@ local random = math.random
 local ents_Create = ents.Create
 local tobool = tobool
 local undo = undo
+local abs = math.abs
+local max = math.max
+local ceil = math.ceil
 local debugvar = GetConVar( "lambdaplayers_debug" )
 
 if SERVER then
@@ -175,6 +178,31 @@ if SERVER then
         
 
         self:DebugPrint( "Applied client settings from ", ply )
+    end
+
+    -- Fall damage handling
+    -- Note that this doesn't always work due to nextbot quirks but that's alright.
+
+    local snds = { "player/pl_fallpain1.wav", "player/pl_fallpain3.wav" }
+    local realisticfalldamage = GetConVar( "lambdaplayers_lambda_realisticfalldamage" )
+    function ENT:OnLandOnGround( ent )
+        local damage = 0
+        if realisticfalldamage:GetBool() then
+            damage = max( 0, ceil( 0.3218 * abs( self.l_FallVelocity ) - 153.75 ) )
+        elseif abs( self.l_FallVelocity ) > 500 then
+            damage = 10
+        end
+
+        if damage > 0 then
+            local info = DamageInfo()
+            info:SetDamage( damage )
+            info:SetAttacker( Entity( 0 ) )
+            info:SetDamageType( DMG_FALL)
+
+            self:EmitSound( snds[ random( 1, 2 ) ], 65 )
+
+            self:TakeDamageInfo( info )
+        end
     end
 
 end
