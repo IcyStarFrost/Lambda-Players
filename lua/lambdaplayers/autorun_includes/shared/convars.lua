@@ -53,10 +53,6 @@ local function AddSourceConVarToSettings( cvarname, desc, settingstbl )
     end
 end
 
-local function CreateEntLimit( name, default, max )
-    CreateLambdaConvar( "lambdaplayers_limits_" .. name .. "limit", default, true, false, false, "The max amount of " .. name .. "s a lambda player is allowed to have", 0, max, { type = "Slider", name = name .. " Limit", decimals = 0, category = "Limits and Tool Permissions" } )
-    if SERVER then _LAMBDAEntLimits[ name ] = name end
-end
 
 
 -- Why not?
@@ -107,9 +103,6 @@ CreateLambdaConvar( "lambdaplayers_voice_voicepitchmin", 100, true, false, false
 CreateLambdaConvar( "lambdaplayers_voice_idledir", "randomengine", true, false, false, "The directory to get idle voice lines from", nil, nil, { type = "Text", name = "Idle Directory", category = "Voice Options" } )
 --
 
--- Limits
-CreateEntLimit( "Prop", 300, 50000 )
---
 
 -- DEBUGGING CONVARS. Server-side only
 CreateLambdaConvar( "lambdaplayers_debug", 0, false, false, false, "Enables the debugging features", 0, 1, { type = "Bool", name = "Enable Debug", category = "Debugging" } )
