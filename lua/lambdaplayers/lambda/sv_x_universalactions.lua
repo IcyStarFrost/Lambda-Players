@@ -1,20 +1,21 @@
 local table_insert = table.insert
 local table_ClearKeys = table.ClearKeys
+
 ENT.l_UniversalActions = {}
 
+-- Adds a function the Universal Actions
+function AddUActionToLambdaUA( func )
+    table_insert( ENT.l_UniversalActions, func )
+end
 
 local function SwitchWeaponIfIdle( self )
     if self:GetState() != "Idle" then return end
     self:SwitchToRandomWeapon()
 
 end
-table_insert( ENT.l_UniversalActions, SwitchWeaponIfIdle )
+AddUActionToLambdaUA( SwitchWeaponIfIdle )
 
 
 -- Called when all default UA actions have been made
--- This hook can be used to insert custom UA functions into the l_UniversalActions table
--- Custom functions should be added by table.insert
+-- This hook can be used to add UActions with AddUActionToLambdaUA()
 hook.Run( "LambdaOnUAloaded", ENT.l_UniversalActions )
-
--- Just in case someone for some reason added functions by . or [] with string keys.
-ENT.l_UniversalActions = table_ClearKeys( ENT.l_UniversalActions )
