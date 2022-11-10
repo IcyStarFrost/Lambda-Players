@@ -93,6 +93,20 @@ function EntMeta:SetNWVar( key, value )
     
 end
 
+function EntMeta:LambdaHookTick( name, func )
+    local id = self:EntIndex()
+    hook.Add( "Tick", "lambdaplayers_hooktick" .. name .. id, function()
+        if !IsValid( self ) then hook.Remove( "Tick", "lambdaplayers_hooktick" .. name .. id ) return end
+        local result = func( self )
+        if result == true then hook.Remove( "Tick", "lambdaplayers_hooktick" .. name .. id ) return end
+    end )
+end
+
+function EntMeta:RemoveLambdaHookTick( name )
+    local id = self:EntIndex()
+    hook.Remove( "Tick", "lambdaplayers_hooktick" .. name .. id )
+end
+
 
 local IsValid = IsValid
 function LambdaIsValid( object )

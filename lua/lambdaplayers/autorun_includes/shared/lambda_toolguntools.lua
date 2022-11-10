@@ -5,6 +5,7 @@ local RandomPairs = RandomPairs
 local ColorRand = ColorRand
 local VectorRand = VectorRand
 local IsValid = IsValid
+local Round = math.Round
 local ents_Create = ents.Create
 local util_Effect = util.Effect
 local tobool = tobool
@@ -437,6 +438,69 @@ local function UseRopeTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Rope", UseRopeTool )
+
+
+
+
+local hoverballmodels = { "models/dav0r/hoverball.mdl", "models/maxofs2d/hover_basic.mdl", "models/maxofs2d/hover_classic.mdl", "models/maxofs2d/hover_plate.mdl", "models/maxofs2d/hover_propeller.mdl", "models/maxofs2d/hover_rings.mdl" }
+local function UseHoverballTool( self, target )
+    if !self:IsUnderLimit( "Hoverball" ) or !IsValid( target ) then return end
+
+    self:LookTo( target, 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) then return end
+
+    local trace = self:Trace( target:WorldSpaceCenter() )
+
+    local pos = trace.HitPos
+
+    self:UseWeapon( target:WorldSpaceCenter() )
+    local ent = CreateGmodEntity( "gmod_hoverball", hoverballmodels[ random( #hoverballmodels ) ], pos, nil, self )
+    ent.LambdaOwner = self
+    ent.IsLambdaSpawned = true
+    self:ContributeEntToLimit( ent, "Hoverball" )
+    table_insert( self.l_SpawnedEntities, 1, ent )
+
+    local const = constraint.Weld( ent, target, 0, trace.PhysicsBone, 0, 0, true )
+
+    if IsValid( ent:GetPhysicsObject() )  then ent:GetPhysicsObject():EnableCollisions( false ) end
+    ent:SetCollisionGroup( COLLISION_GROUP_WORLD )
+
+    local ang = trace.HitNormal:Angle()
+	ang.pitch = ang.pitch + 90
+	ent:SetAngles( ang )
+
+	local CurPos = ent:GetPos()
+	local NearestPoint = ent:NearestPoint( CurPos - ( trace.HitNormal * 512 ) )
+	local Offset = CurPos - NearestPoint
+	ent:SetPos( trace.HitPos + Offset )
+
+    ent:SetPlayer( self )
+    ent:SetEnabled( true )
+    ent:SetSpeed( random( 1, 10 ) )
+    ent:SetAirResistance( Round( rand( 0, 10 ), 2 ) )
+    ent:SetStrength( random( 1, 10 ) )
+
+    local rndtime = CurTime() + rand( 1, 10 )
+    ent:LambdaHookTick( "Hoverballrandommovement", function( hoverball )
+        if CurTime() > rndtime then
+            local newtime = rand( 1, 10 )
+            hoverball:SetZVelocity( random( -1, 1 ) )
+
+            timer.Simple( newtime / 3, function()
+                hoverball:SetZVelocity( 0 )
+            end )
+
+
+            rndtime = CurTime() + newtime
+        end
+    end )
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Hoverball", UseHoverballTool )
+
 
 
 
