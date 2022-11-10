@@ -71,7 +71,7 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
     
     if !disabletbl.sound then wepent:EmitSound( TranslateRandomization( weapondata.attacksnd ), 70, 100, 1, CHAN_WEAPON ) end
     
-    if !disabletbl.muzzleflash then self:HandleMuzzleFlash( weapondata.muzzleflash ) end
+    if !disabletbl.muzzleflash then self:HandleMuzzleFlash( weapondata.muzzleflash, weapondata.muzzleflashpos, weapondata.muzzleflashang ) end
     if !disabletbl.shell then self:HandleShellEject( weapondata.shelleject, weapondata.shelloffpos, weapondata.shelloffang ) end
 
     if !disabletbl.anim then

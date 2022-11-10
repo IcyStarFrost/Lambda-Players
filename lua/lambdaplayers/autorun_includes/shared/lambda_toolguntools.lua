@@ -144,7 +144,6 @@ AddToolFunctionToLambdaTools( "Light", UseLightTool )
 
 
 local dynamitemodels = { "models/dav0r/tnt/tnt.mdl", "models/dav0r/tnt/tnttimed.mdl", "models/dynamite/dynamite.mdl" }
-
 local function UseDynamiteTool( self, target )
     if !self:IsUnderLimit( "Dynamite" ) then return end
 
@@ -237,7 +236,6 @@ AddToolFunctionToLambdaTools( "Remover", UseRemoverTool )
 
 
 local balloonnames = { "normal", "normal_skin1", "normal_skin2", "normal_skin3", "gman", "mossman", "dog", "heart", "star" }
-
 local function UseBalloonTool( self, target )
     if !self:IsUnderLimit( "Balloon" ) then return end -- Can't create any more balloons
 
@@ -293,7 +291,6 @@ AddToolFunctionToLambdaTools( "Balloon", UseBalloonTool )
 
 
 local trailMats = { "trails/plasma", "trails/tube", "trails/electric", "trails/smoke", "trails/laser", "trails/love", "trails/physbeam", "trails/lol" }
-
 local function UseTrailTool( self, target )
     if !IsValid( target ) then return end
 
@@ -316,6 +313,8 @@ local function UseTrailTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Trail", UseTrailTool )
+
+
 
 
 
@@ -355,6 +354,9 @@ end
 AddToolFunctionToLambdaTools( "Lamp", UseLampTool )
 
 
+
+
+
 local effectlist = {
     "manhacksparks",
     "glassimpact",
@@ -380,7 +382,6 @@ local effectlist = {
     "smoke",
 }
 
-
 local function UseEmitterTool( self, target )
     if !self:IsUnderLimit( "Emitter" ) then return end
 
@@ -393,7 +394,7 @@ local function UseEmitterTool( self, target )
     coroutine.wait( 1 )
 
     self:UseWeapon( pos )
-    local ent = CreateGmodEntity( "gmod_emitter", "models/props_lab/tpplug.mdl", pos, nil, self )
+    local ent = CreateGmodEntity( "gmod_emitter", "models/props_lab/tpplug.mdl", pos + trace.HitNormal, trace.HitNormal:Angle() - Angle( 0, 90, 90 ), self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Emitter" )
@@ -408,6 +409,7 @@ local function UseEmitterTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Emitter", UseEmitterTool )
+
 
 
 
@@ -480,6 +482,7 @@ AddToolFunctionToLambdaTools( "Rope", UseRopeTool )
 
 
 
+
 local hoverballmodels = { "models/dav0r/hoverball.mdl", "models/maxofs2d/hover_basic.mdl", "models/maxofs2d/hover_classic.mdl", "models/maxofs2d/hover_plate.mdl", "models/maxofs2d/hover_propeller.mdl", "models/maxofs2d/hover_rings.mdl" }
 local function UseHoverballTool( self, target )
     if !self:IsUnderLimit( "Hoverball" ) or !IsValid( target ) then return end
@@ -533,6 +536,34 @@ local function UseHoverballTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Hoverball", UseHoverballTool )
+
+
+
+
+
+local physproperties = { "metal_bouncy", "metal", "dirt", "slipperyslime", "wood", "glass", "concrete_block", "ice", "rubber", "paper", "zombieflesh", "gmod_ice", "gmod_bouncy" }
+local function UsePhysPropTool( self, target )
+    if !IsValid( target ) then return end
+    
+    self:LookTo( target, 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) then return end
+
+    local trace = self:Trace( target:WorldSpaceCenter() )
+    local pos = trace.HitPos
+
+    local ent = trace.Entity
+    if !IsValid( ent ) or ent!=target then return end
+
+    self:UseWeapon( target:WorldSpaceCenter() )
+
+    construct.SetPhysProp( target:GetOwner(), ent, trace.PhysicsBone, nil, { GravityToggle = random( 0, 1 ) == 1, Material = physproperties[ random( #physproperties ) ] } ) -- Set the properties
+
+    return true
+end
+AddToolFunctionToLambdaTools( "PhysicalProperties", UsePhysPropTool )
+
 
 
 
