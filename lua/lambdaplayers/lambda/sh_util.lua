@@ -285,12 +285,12 @@ if SERVER then
             local nw = info.nwvars
             local nw2 = info.nw2vars
             if istable( nw ) then
-                for k, v pairs( nw ) do
+                for k, v in pairs( nw ) do
                     self:SetNWVar( k, v )
                 end
             end
             if istable( nw2 ) then
-                for k, v pairs( nw2 ) do
+                for k, v in pairs( nw2 ) do
                     self:SetNW2Var( k, v )
                 end
             end
