@@ -1,9 +1,11 @@
--- Adds a tool function to the list of tools
--- See the functions below for examples on making tools
 local table_insert = table.insert
 local random = math.random
 
 LambdaToolGunTools = {}
+
+
+-- Adds a tool function to the list of tools
+-- See the functions below for examples on making tools
 function AddToolFunctionToLambdaTools( toolname, func )
     local convar = CreateLambdaConvar( "lambdaplayers_tool_allow" .. toolname, 1, true, false, false, "If lambda players can use the " .. toolname .. " tool", 0, 1, { type = "Bool", name = "Allow " .. toolname .. " Tool", category = "Limits and Tool Permissions" } )
     table_insert( LambdaToolGunTools, { toolname, convar, func } )
