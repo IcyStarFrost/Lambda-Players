@@ -74,5 +74,5 @@ end
 
 
 function ENT:Chance_Combat() 
-
+    self:SetState( "FindTarget" )
 end

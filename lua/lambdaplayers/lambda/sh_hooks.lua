@@ -4,6 +4,7 @@ local random = math.random
 local ents_Create = ents.Create
 local tobool = tobool
 local undo = undo
+local ents_GetAll = ents.GetAll
 local abs = math.abs
 local table_Merge = table.Merge
 local max = math.max
@@ -74,11 +75,17 @@ if SERVER then
                 net.WriteVector( self:GetPhysColor() )
             net.Broadcast()
         end
-        print( self:GetRespawn() )
+
         if self:GetRespawn() then
             self:SimpleTimer( 2, function() self:LambdaRespawn() end, true )
         else
             self:SimpleTimer( 0.1, function() print("Remove") self:Remove() end, true )
+        end
+
+        for k ,v in ipairs( ents_GetAll() ) do
+            if IsValid( v ) and v != self and v:IsNextBot() then
+                v:OnOtherKilled( self, info )
+            end
         end
 
     end
