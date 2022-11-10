@@ -5,7 +5,7 @@ ENT.l_ToolgunTools = {}
 
 -- Adds a tool function to the list of tools
 function AddToolFunctionToLambdaTools( toolname, func )
-    local convar = CreateLambdaConvar( "lambdaplayers_tool_allow" .. toolname, 1, true, false, false, "If lambda players can use the " .. toolname .. " tool", 0, 1, { type = "Bool", name = "Allow " .. toolname, category = "Limits and Tool Permissions" } )
+    local convar = CreateLambdaConvar( "lambdaplayers_tool_allow" .. toolname, 1, true, false, false, "If lambda players can use the " .. toolname .. " tool", 0, 1, { type = "Bool", name = "Allow " .. toolname .. " Tool", category = "Limits and Tool Permissions" } )
     table_insert( ENT.l_ToolgunTools, { toolname, convar, func } )
 end
 
