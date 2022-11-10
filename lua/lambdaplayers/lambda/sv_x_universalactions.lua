@@ -18,4 +18,4 @@ AddUActionToLambdaUA( SwitchWeaponIfIdle )
 
 -- Called when all default UA actions have been made
 -- This hook can be used to add UActions with AddUActionToLambdaUA()
-hook.Run( "LambdaOnUAloaded", ENT.l_UniversalActions )
+hook.Run( "LambdaOnUAloaded" )
