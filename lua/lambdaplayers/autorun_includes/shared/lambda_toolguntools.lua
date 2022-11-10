@@ -5,6 +5,7 @@ local ColorRand = ColorRand
 local VectorRand = VectorRand
 local IsValid = IsValid
 local ents_Create = ents.Create
+local util_Effect = util.Effect
 local tobool = tobool
 local timer = timer 
 local util = util
@@ -36,9 +37,6 @@ local function CreateGmodEntity( classname, model, pos, ang, lambda )
     return ent
 end
 
-
-
-
 local function UseColorTool( self, target )
     if !IsValid( target ) then return end -- Returning nothing is basically the same as returning false
 
@@ -54,7 +52,7 @@ local function UseColorTool( self, target )
 end
 AddToolFunctionToLambdaTools( "Color", UseColorTool )
 
-local function UsematerialTool( self, target )
+local function UseMaterialTool( self, target )
     if !IsValid( target ) then return end
 
     self:LookTo( target, 2 )
@@ -67,8 +65,7 @@ local function UsematerialTool( self, target )
 
     return true
 end
-AddToolFunctionToLambdaTools( "Material", UsematerialTool )
-
+AddToolFunctionToLambdaTools( "Material", UseMaterialTool )
 
 local function UseLightTool( self, target )
     if !self:IsUnderLimit( "Light" ) then return end -- Can't create any more lights
@@ -133,6 +130,8 @@ local function UseDynamiteTool( self, target )
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Dynamite" )
     table_insert( self.l_SpawnedEntities, 1, ent )
+    DoPropSpawnedEffect( ent ) -- Make it do the pretty prop spawn effect
+
     ent:SetPlayer( self )
     ent:SetDamage( random( 1, 500 ) )
     ent:SetShouldRemove( tobool( random( 0, 1 ) ) )
@@ -171,6 +170,35 @@ local function UseDynamiteTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Dynamite", UseDynamiteTool )
+
+local function UseRemoverTool( self, target )
+    if !IsValid( target ) then return end -- Returning nothing is basically the same as returning false
+
+    self:LookTo( target, 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) then return end -- Because we wait 1 second we must make sure the target is valid
+
+    self:UseWeapon( target:WorldSpaceCenter() ) -- Use the toolgun on the target to fake using a tool
+    
+    constraint.RemoveAll( target ) -- Removes all constraints
+
+    timer.Simple( 1, function() if ( IsValid( target ) ) then target:Remove() end end ) -- Actually remove the entity after a second
+
+    target:SetNotSolid( true ) -- Make it not solid and invisible to pretend it's deleted for those 1 seconds
+	target:SetMoveType( MOVETYPE_NONE )
+	target:SetNoDraw( true )
+
+    local effect = EffectData()
+		effect:SetOrigin( target:GetPos() )
+		effect:SetEntity( target )
+	util_Effect( "entity_remove", effect, true, true ) -- Play the remove effect
+
+    return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this
+end
+AddToolFunctionToLambdaTools( "Remover", UseRemoverTool )
+
+local balloonnames = { "normal", "normal_skin1", "normal_skin2", "normal_skin3", "gman", "mossman", "dog", "heart", "star" }
 
 -- Called when all default tools are loaded
 -- This hook can be used to add custom tool functions by using AddToolFunctionToLambdaTools()
