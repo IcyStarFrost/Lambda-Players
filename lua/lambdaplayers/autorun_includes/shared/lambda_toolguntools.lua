@@ -485,10 +485,9 @@ local function UseHoverballTool( self, target )
     local rndtime = CurTime() + rand( 1, 10 )
     ent:LambdaHookTick( "Hoverballrandommovement", function( hoverball )
         if CurTime() > rndtime then
-            local newtime = rand( 1, 10 )
             hoverball:SetZVelocity( random( -1, 1 ) )
 
-            rndtime = CurTime() + newtime
+            rndtime = CurTime() + rand( 1, 10 )
         end
     end )
 
