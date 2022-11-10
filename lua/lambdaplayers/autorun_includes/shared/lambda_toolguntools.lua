@@ -5,6 +5,7 @@ local ColorRand = ColorRand
 local VectorRand = VectorRand
 local IsValid = IsValid
 local ents_Create = ents.Create
+local util_Effect = util.Effect
 local tobool = tobool
 local timer = timer 
 local util = util
@@ -32,12 +33,10 @@ local function CreateGmodEntity( classname, model, pos, ang, lambda )
     LambdaHijackGmodEntity( ent, lambda ) -- Make it support the lambda
     ent:Spawn()
     ent:Activate()
+    DoPropSpawnedEffect( ent )
 
     return ent
 end
-
-
-
 
 local function UseColorTool( self, target )
     if !IsValid( target ) then return end -- Returning nothing is basically the same as returning false
@@ -54,7 +53,7 @@ local function UseColorTool( self, target )
 end
 AddToolFunctionToLambdaTools( "Color", UseColorTool )
 
-local function UsematerialTool( self, target )
+local function UseMaterialTool( self, target )
     if !IsValid( target ) then return end
 
     self:LookTo( target, 2 )
@@ -67,8 +66,7 @@ local function UsematerialTool( self, target )
 
     return true
 end
-AddToolFunctionToLambdaTools( "Material", UsematerialTool )
-
+AddToolFunctionToLambdaTools( "Material", UseMaterialTool )
 
 local function UseLightTool( self, target )
     if !self:IsUnderLimit( "Light" ) then return end -- Can't create any more lights
@@ -133,6 +131,7 @@ local function UseDynamiteTool( self, target )
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Dynamite" )
     table_insert( self.l_SpawnedEntities, 1, ent )
+
     ent:SetPlayer( self )
     ent:SetDamage( random( 1, 500 ) )
     ent:SetShouldRemove( tobool( random( 0, 1 ) ) )
@@ -171,6 +170,105 @@ local function UseDynamiteTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Dynamite", UseDynamiteTool )
+
+local function UseRemoverTool( self, target )
+    if !IsValid( target ) then return end -- Returning nothing is basically the same as returning false
+
+    self:LookTo( target, 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) then return end -- Because we wait 1 second we must make sure the target is valid
+
+    self:UseWeapon( target:WorldSpaceCenter() ) -- Use the toolgun on the target to fake using a tool
+    
+    constraint.RemoveAll( target ) -- Removes all constraints
+
+    timer.Simple( 1, function() if ( IsValid( target ) ) then target:Remove() end end ) -- Actually remove the entity after a second
+
+    target:SetNotSolid( true ) -- Make it not solid and invisible to pretend it's deleted for those 1 seconds
+    target:SetMoveType( MOVETYPE_NONE )
+    target:SetNoDraw( true )
+
+    local effect = EffectData()
+        effect:SetOrigin( target:GetPos() )
+        effect:SetEntity( target )
+    util_Effect( "entity_remove", effect, true, true ) -- Play the remove effect
+
+    return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this
+end
+AddToolFunctionToLambdaTools( "Remover", UseRemoverTool )
+
+local balloonnames = { "normal", "normal_skin1", "normal_skin2", "normal_skin3", "gman", "mossman", "dog", "heart", "star" }
+
+local function UseBalloonTool( self, target )
+    if !self:IsUnderLimit( "Balloon" ) then return end -- Can't create any more balloons
+
+    local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
+    local pos = trace.HitPos
+    local randBalloon = balloonnames[ random( #balloonnames ) ]
+    local balloonModel = list.Get( "BalloonModels" )[randBalloon] -- Directly get model from Sandbox. Needed since some have skins.
+
+    self:LookTo( pos, 2 )
+
+    coroutine.wait( 1 )
+
+    self:UseWeapon( pos )
+    local ent = CreateGmodEntity( "gmod_balloon", balloonModel.model, pos, nil, self ) -- Create the balloon
+    ent.LambdaOwner = self
+    ent.IsLambdaSpawned = true
+    self:ContributeEntToLimit( ent, "Balloon" )
+    table_insert( self.l_SpawnedEntities, 1, ent )
+
+    local LPos1 = Vector( 0, 0, 6.5 )
+    local LPos2 = trace.Entity:WorldToLocal( trace.HitPos )
+
+    if IsValid( trace.Entity ) then
+
+        local phys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
+        if IsValid( phys ) then
+            LPos2 = phys:WorldToLocal( trace.HitPos )
+        end
+
+    end
+
+    local constr, rope = constraint.Rope( ent, trace.Entity, 0, trace.PhysicsBone, LPos1, LPos2, 0, random( 5, 1000 ), 0, 0.5, "cable/rope" )
+    table_insert( self.l_SpawnedEntities, 1, rope )
+
+    -- Configure it
+    ent:SetPlayer( self ) -- We can safely set this to ourselves since it was "hijacked"
+    ent:SetColor( ColorRand( true ) )
+    if ( balloonModel.skin ) then ent:SetSkin( balloonModel.skin ) end
+    if ( balloonModel.nocolor ) then ent:SetColor( Color(255, 255, 255, 255) ) else ent:SetColor( ColorRand( ) ) end
+    ent:SetForce( random( 50, 2000 ) ) -- While players can use negative force for balloons it kinda looks less fun
+
+    return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this
+end
+AddToolFunctionToLambdaTools( "Balloon", UseBalloonTool )
+
+local trailMats = { "trails/plasma", "trails/tube", "trails/electric", "trails/smoke", "trails/laser", "trails/love", "trails/physbeam", "trails/lol" }
+
+local function UseTrailTool( self, target )
+    if !IsValid( target ) then return end
+
+    self:LookTo( target, 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) then return end
+
+    self:UseWeapon( target:WorldSpaceCenter() )
+    if ( IsValid( target.SToolTrail ) ) then -- If target already has trail, remove old one
+		target.SToolTrail:Remove()
+		target.SToolTrail = nil
+	end
+
+    local trailStartSize, trailEndSize = random(128), random(128)
+
+    local trail_entity = util.SpriteTrail( target, 0, ColorRand(), false, trailStartSize, trailEndSize, random(10), 1 / ( ( trailStartSize + trailEndSize ) * 0.5 ), trailMats[ random( #trailMats ) ] .. ".vmt" )
+    target.SToolTrail = trail_entity
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Trail", UseTrailTool )
 
 -- Called when all default tools are loaded
 -- This hook can be used to add custom tool functions by using AddToolFunctionToLambdaTools()

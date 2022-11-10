@@ -11,6 +11,7 @@ end
 
 CreateLambdaEntLimit( "Prop", 300, 50000 )
 CreateLambdaEntLimit( "Light", 5, 200 )
+CreateLambdaEntLimit( "Balloon", 10, 200 )
 CreateLambdaEntLimit( "Dynamite", 5, 200 )
 
 -- Called when all default entity limits are created.

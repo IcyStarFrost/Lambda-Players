@@ -56,6 +56,7 @@ function ENT:SpawnProp()
     prop.LambdaOwner = self
     prop.IsLambdaSpawned = true
     prop:Spawn()
+    DoPropSpawnedEffect( prop ) -- Make the prop do the spawn effect
 
     local mins, maxs = prop:GetModelBounds()
     local proppos = prop:GetPos()
