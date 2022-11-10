@@ -16,7 +16,8 @@ end
 
 
 local function SpawnAProp( self )
-
+    if !self:IsUnderLimit( "Prop" ) then return end
+    
     self.Face = self:GetPos() + VectorRand( -100, 100 )
     coroutine.wait( rand( 0.2, 1 ) )
     self:SpawnProp()
