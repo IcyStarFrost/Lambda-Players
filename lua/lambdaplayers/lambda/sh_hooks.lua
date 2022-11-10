@@ -5,6 +5,7 @@ local ents_Create = ents.Create
 local tobool = tobool
 local undo = undo
 local abs = math.abs
+local table_Merge = table.Merge
 local max = math.max
 local ceil = math.ceil
 local debugvar = GetConVar( "lambdaplayers_debug" )
@@ -22,8 +23,9 @@ if SERVER then
         newlambda:SetAngles( self.l_SpawnAngles )
         newlambda:SetCreator( self:GetCreator() )
         newlambda:Spawn()
-        newlambda:SetRespawn( self:GetRespawn() )
         newlambda:ApplyLambdaInfo( exportinfo )
+
+        table_Merge( newlambda.l_SpawnedEntities, self.l_SpawnedEntities )
 
         if IsValid( self:GetCreator() ) then
             undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
