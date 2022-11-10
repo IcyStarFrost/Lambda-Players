@@ -188,14 +188,14 @@ if SERVER then
     
     function ENT:OnLandOnGround( ent )
         local damage = 0
-
+        
         if realisticfalldamage:GetBool() then
             damage = max( 0, ceil( 0.3218 * abs( self.l_FallVelocity ) - 153.75 ) )
         elseif abs( self.l_FallVelocity ) > 500 then
             damage = 10
         end
 
-        if damage > 0 and self:WaterLevel() > 0 then
+        if damage > 0 and self:WaterLevel() < 1 then
             local info = DamageInfo()
             info:SetDamage( damage )
             info:SetAttacker( Entity( 0 ) )

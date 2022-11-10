@@ -236,7 +236,7 @@ function ENT:SwitchToRandomWeapon()
             return
         end
     end
-    self:SwitchWeapon( "NONE" )
+    self:SwitchWeapon( self.l_Weapon )
 end
 
 function ENT:SwitchToLethalWeapon()
@@ -247,5 +247,5 @@ function ENT:SwitchToLethalWeapon()
             return
         end
     end
-    self:SwitchWeapon( "NONE" )
+    self:SwitchWeapon( self.l_Weapon )
 end
