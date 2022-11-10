@@ -6,8 +6,15 @@ local table_insert = table.insert
 local table_remove = table.remove
 local tobool = tobool
 local Angle = Angle
+local table_Merge = table.Merge
 local caneditworld = GetConVar( "lambdaplayers_building_caneditworld" )
 local caneditnonworld = GetConVar( "lambdaplayers_building_caneditnonworld" )
+
+
+ENT.l_BuildingFunctions = {}
+
+table_Merge( ENT.l_BuildingFunctions, LambdaBuildingFunctions )
+
 
 -- Building Helper functions --
 

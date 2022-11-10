@@ -34,13 +34,19 @@ end
 
 -- In the self.l_Personality table, The first args in the internal tables will correspond to these functions
 
--- TODO: Potentially make the same system as toolgun tools
+
 function ENT:Chance_Build()
-    self.Face = self:GetPos() + VectorRand( -100, 100 )
-    coroutine.wait( rand( 0.2, 1 ) )
-    self:SpawnProp()
-    coroutine.wait( rand( 0.2, 1 ) )
-    self.Face = nil
+    self:PreventWeaponSwitch( true )
+
+    for index, buildtable in RandomPairs( self.l_BuildingFunctions ) do
+        if !buildtable[ 2 ]:GetBool() then continue end -- If the tool is allowed
+
+        local result = buildtable[ 3 ]( self )
+
+        if result then self:DebugPrint( "Used a building function: " .. buildtable[ 1 ] ) break end
+    end
+
+    self:PreventWeaponSwitch( false )
 end
 
 
