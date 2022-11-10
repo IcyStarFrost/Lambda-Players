@@ -94,7 +94,7 @@ function ENT:Initialize()
         self.l_nextphysicsupdate = 0
         self.l_WeaponUseCooldown = 0
         self.l_currentnavarea = navmesh.GetNavArea( self:WorldSpaceCenter(), 400 )
-
+        self.l_FallVelocity = 0
 
         -- Personal Stats --
         
