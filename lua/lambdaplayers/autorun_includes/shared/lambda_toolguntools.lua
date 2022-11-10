@@ -1,6 +1,7 @@
 -- Adds a tool function to the list of tools
 -- See the functions below for examples on making tools
 local table_insert = table.insert
+local random = math.random
 
 LambdaToolGunTools = {}
 function AddToolFunctionToLambdaTools( toolname, func )
