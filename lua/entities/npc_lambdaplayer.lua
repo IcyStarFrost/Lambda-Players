@@ -257,6 +257,8 @@ function ENT:Think()
             self.l_nextphysicsupdate = CurTime() + 0.5
         end
 
+        -- UA, Universal Actions
+        -- See sv_x_universalactions.lua
         if CurTime() > self.l_nextUA then
             local UAfunc = self.l_UniversalActions[ random( #self.l_UniversalActions ) ]
             UAfunc( self )
