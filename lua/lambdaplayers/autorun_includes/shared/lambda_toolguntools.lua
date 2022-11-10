@@ -93,7 +93,7 @@ AddToolFunctionToLambdaTools( "Material", UseMaterialTool )
 local function UseLightTool( self, target )
     if !self:IsUnderLimit( "Light" ) then return end -- Can't create any more lights
 
-    local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
+    local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) )
     local pos = trace.HitPos
     
     self:LookTo( pos, 2 )
@@ -109,18 +109,20 @@ local function UseLightTool( self, target )
 
     if random( 1, 2 ) == 1 then
         local LPos1 = Vector( 0, 0, 6.5 )
-        local LPos2 = trace.Entity:WorldToLocal( trace.HitPos )
+        local LPos2 = !IsNil( traceent ) and traceent:WorldToLocal( trace.HitPos ) or trace.HitPos
 
-        if IsValid( trace.Entity ) then
+        traceent = !IsNil( traceent ) and traceent or Entity( 0 ) -- world
 
-            local phys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
+        if IsValid( traceent ) then
+
+            local phys = traceent:GetPhysicsObjectNum( trace.PhysicsBone )
             if IsValid( phys ) then
                 LPos2 = phys:WorldToLocal( trace.HitPos )
             end
 
         end
 
-        local constr, rope = constraint.Rope( ent, trace.Entity, 0, trace.PhysicsBone, LPos1, LPos2, 0, random( 256 ), 0, 1, "cable/rope" )
+        local constr, rope = constraint.Rope( ent, traceent, 0, trace.PhysicsBone, LPos1, LPos2, 0, random( 256 ), 0, 1, "cable/rope" )
         table_insert( self.l_SpawnedEntities, 1, rope )
     end
 
@@ -451,7 +453,7 @@ local function UseRopeTool( self, target )
 
     self:UseWeapon( ( secondent != world and secondent:WorldSpaceCenter() or lpos2 ) )
 
-    local cons, rope = constraint.Rope( firstent, secondent, 0, 0, lpos1, lpos2, 0, random( 0, 500 ), 0, rand( 0.5, 10 ), ropematerials[ random( #ropematerials ) ], false, ColorRand( false ) )
+    local cons, rope = constraint.Rope( firstent, secondent, 0, 0, lpos1, lpos2, 0, random( 0, 500 ), firstent:GetPos():Distance( secondent:GetPos() ), rand( 0.5, 10 ), ropematerials[ random( #ropematerials ) ], false, ColorRand( false ) )
     
     -- Weird situation here but we'll do this just to make sure something gets in the tables
     if IsValid( cons ) then
