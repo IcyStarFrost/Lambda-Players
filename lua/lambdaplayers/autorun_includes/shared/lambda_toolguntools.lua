@@ -92,7 +92,7 @@ local function UseLightTool( self, target )
     coroutine.wait( 1 )
 
     self:UseWeapon( pos )
-    local ent = CreateGmodEntity( "gmod_light", nil, pos, nil, self ) -- Create the light
+    local ent = CreateGmodEntity( "gmod_light", nil, pos + trace.HitNormal * 8, trace.HitNormal:Angle() - Angle( 90, 0, 0 ), self ) -- Create the light
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Light" )
@@ -230,6 +230,7 @@ local function UseBalloonTool( self, target )
 
     local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
     local pos = trace.HitPos
+
     local randBalloon = balloonnames[ random( #balloonnames ) ]
     local balloonModel = list.Get( "BalloonModels" )[randBalloon] -- Directly get model from Sandbox. Needed since some have skins.
 
