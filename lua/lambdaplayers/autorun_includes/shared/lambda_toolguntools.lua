@@ -186,13 +186,13 @@ local function UseRemoverTool( self, target )
     timer.Simple( 1, function() if ( IsValid( target ) ) then target:Remove() end end ) -- Actually remove the entity after a second
 
     target:SetNotSolid( true ) -- Make it not solid and invisible to pretend it's deleted for those 1 seconds
-	target:SetMoveType( MOVETYPE_NONE )
-	target:SetNoDraw( true )
+    target:SetMoveType( MOVETYPE_NONE )
+    target:SetNoDraw( true )
 
     local effect = EffectData()
-		effect:SetOrigin( target:GetPos() )
-		effect:SetEntity( target )
-	util_Effect( "entity_remove", effect, true, true ) -- Play the remove effect
+        effect:SetOrigin( target:GetPos() )
+        effect:SetEntity( target )
+    util_Effect( "entity_remove", effect, true, true ) -- Play the remove effect
 
     return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this
 end
