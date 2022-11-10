@@ -14,18 +14,18 @@ Custom Profile Pictures can be added by putting .png and .jpg images in this fol
 
 ### `LambdaOnConvarsCreated`
 
-Called when all default convars have been created. Use this hook if you want use the `CreateLambdaConvar()` function to create custom convars for Lambda Players externally
+Called when all default convars have been created. Use this hook if you want use the `CreateLambdaConvar()` function to create custom convars for Lambda Players externally. See lambdaplayers/autorun_includes/shared/convars.lua
 
 
 ### `LambdaOnConCommandsCreated`
 
-Called when all default console commands have been created. Use this hook if you want use the `CreateLambdaConsoleCommand()` function to create custom console commands for Lambda Players externally
+Called when all default console commands have been created. Use this hook if you want use the `CreateLambdaConsoleCommand()` function to create custom console commands for Lambda Players externally See lambdaplayers/autorun_includes/shared/d_consolecommands.lua
 
 
-### `LambdaOnUAloaded( UActionTable )`
+### `LambdaOnUAloaded`
 
-Called when all default UActions (Universal Actions, functions that randomly get called. Example being weapon switching) have been made. Use this hook if you want add a function to the UActions. Use table.insert to add functions to the UActionTable.
+Called when all default UActions (Universal Actions, functions that randomly get called. Example being weapon switching) have been made. Use this hook if you want add a function to the UActions with `AddUActionToLambdaUA()` See lambdaplayers/lambda/sv_x_universalactions.lua
 
 ### `LambdaOnToolsLoaded`
 
-Called when all default tools are loaded. Use this hook if you want to add custom tools with `AddToolFunctionToLambdaTools()` See lambda/sh_b_toolguntools.lua for tool examples
+Called when all default tools are loaded. Use this hook if you want to add custom tools with `AddToolFunctionToLambdaTools()` See lambda/sh_b_toolguntools.lua
