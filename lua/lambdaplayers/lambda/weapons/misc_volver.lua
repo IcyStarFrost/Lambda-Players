@@ -1,5 +1,6 @@
 local random = math.random
 local CurTime = CurTime
+local IsValid = IsValid
 local util_Effect = util.Effect
 local bullettbl = {}
 

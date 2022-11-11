@@ -2,11 +2,11 @@ local random = math.random
 local math_min = math.min
 local CurTime = CurTime
 local Rand = math.Rand
+local IsValid = IsValid
 local math_sqrt = math.sqrt
 local NextLeapAttack = 0.5
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
--- Missing HP on kill
 
     zombieclaws = {
         model = "models/hunter/plates/plate.mdl",
@@ -19,16 +19,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 75,
         addspeed = 100,
         
+        -- HP Auto Regen + Leap Attack
         OnEquip = function( lambda, wepent )
-            
-            -- Damage reduction
-            lambda:Hook( "EntityTakeDamage", "ZombieClawsScaleDamage", function( target, dmginfo )
-                if target == lambda then
-                    dmginfo:ScaleDamage( 0.75 )
-                end
-            end)
-            
-            -- HP Auto Regen + Leap Attack
             lambda:Hook( "Think", "ZombieClawsThink", function( )
                 if lambda:Health() < lambda:GetMaxHealth() then
                     lambda:SetHealth( math_min( lambda:Health() + 1, lambda:GetMaxHealth() ) )
@@ -50,11 +42,16 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     end
                 end
             end, nil, 0.5)
-            
+        end,
+
+        -- Damage reduction
+        OnDamage = function( lambda, wepent, dmginfo )
+            if IsValid( lambda ) then
+                dmginfo:ScaleDamage( 0.75 )
+            end
         end,
         
         OnUnequip = function( lambda, wepent )
-            lambda:RemoveHook( "EntityTakeDamage", "ZombieClawsScaleDamage" )
             lambda:RemoveHook( "Think", "ZombieClawsThink" )
         end,
         

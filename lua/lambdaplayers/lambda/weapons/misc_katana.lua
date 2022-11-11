@@ -7,7 +7,7 @@ local IsValid = IsValid
 local rad = math.rad
 local blockCooldown = 0
 -- local convar = CreateLambdaConvar( "lambdaplayers_weapons_katanamotivated", 0, true, false, true, "If Lambdas should bury the light deep within.", 0, 1, { type = "Bool", name = "Katana - Motivated Users", category = "Weapon Utilities" } )
-local convar = CreateLambdaConvar( "lambdaplayers_weapons_katanablocking", 1, true, false, true, "If Lambdas should be able to slice bullets.", 0, 1, { type = "Bool", name = "Katana - Blocking", category = "Weapon Utilities" } )
+local convar = CreateLambdaConvar( "lambdaplayers_weapons_katanablocking", 1, true, false, true, "If Lambdas should be able to block bullets.", 0, 1, { type = "Bool", name = "Katana - Blocking", category = "Weapon Utilities" } )
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
@@ -33,7 +33,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         -- Blocking
         OnDamage = function( lambda, wepent, dmginfo )
-            if IsValid( lambda ) then
+            if IsValid( lambda ) and GetConVar("lambdaplayers_weapons_katanablocking"):GetBool() then
                 blockCooldown = blockCooldown or CurTime()
                 local attacker = dmginfo:GetAttacker()
 
