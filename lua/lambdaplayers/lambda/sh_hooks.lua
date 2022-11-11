@@ -252,7 +252,7 @@ function ENT:InitializeMiniHooks()
         self:Hook( "EntityTakeDamage", "DamageHandling", function( target, info )
             if target != self then return end
 
-            if isfunction( self.l_OnDamagefunction ) then self.l_OnDamagefunction( self, info )  end
+            if isfunction( self.l_OnDamagefunction ) then self.l_OnDamagefunction( self, self:GetWeaponENT(), info )  end
 
             local potentialdeath = ( self:Health() - info:GetDamage() ) <= 0
             if self:GetRespawn() and potentialdeath then

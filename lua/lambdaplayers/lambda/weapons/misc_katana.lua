@@ -32,8 +32,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         -- Blocking
-        OnDamage = function( lambda, dmginfo )
-            if target == lambda and IsValid( lambda ) then
+        OnDamage = function( lambda, wepent, dmginfo )
+            if IsValid( lambda ) then
                 blockCooldown = blockCooldown or CurTime()
                 local attacker = dmginfo:GetAttacker()
 
