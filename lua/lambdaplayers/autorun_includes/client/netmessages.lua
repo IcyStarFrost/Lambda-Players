@@ -176,14 +176,14 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
             ent.l_VoiceSnd = snd
 
+            snd:SetPlaybackRate( pitch / 100 )
+
             -- Tell the server the duration of this sound file
             -- See server/netmessages.lua
             net.Start( "lambdaplayers_server_sendsoundduration" )
             net.WriteEntity( ent )
-            net.WriteFloat( length )
+            net.WriteFloat( ( length / ( pitch / 100 ) ) )
             net.SendToServer()
-
-            snd:SetPlaybackRate( pitch / 100 )
 
             if !globalvoice:GetBool() and is3d then
                 snd:Set3DFadeDistance( 300, 0 )
