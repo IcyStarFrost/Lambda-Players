@@ -226,7 +226,6 @@ end
 
 -- If we can equip the specified weapon name
 function ENT:CanEquipWeapon( weaponname )
-    print( weaponname, _LAMBDAWEAPONALLOWCONVARS[ weaponname ]:GetBool() )
     return _LAMBDAWEAPONALLOWCONVARS[ weaponname ]:GetBool()
 end
 
