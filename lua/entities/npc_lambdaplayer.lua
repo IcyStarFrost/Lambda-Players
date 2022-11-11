@@ -262,6 +262,11 @@ function ENT:Think()
             self.l_nextphysicsupdate = CurTime() + 0.5
         end
 
+        if self.l_Clip < self.l_MaxClip and random( 100 ) == 1 and CurTime() > self.l_WeaponUseCooldown + 1 then
+            self:ReloadWeapon()
+        end
+        
+
         -- UA, Universal Actions
         -- See sv_x_universalactions.lua
         if CurTime() > self.l_nextUA then
