@@ -32,7 +32,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 dmginfo:SetDamageType( DMG_SLASH )
                 dmginfo:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg )
                 
-                target:EmitSound( "lambdaplayers/meathook/hook-"..random(3)..".wav", 70 )
+                target:EmitSound( "lambdaplayers/weapons/meathook/hook-"..random(3)..".mp3", 70 )
                 
                 target:TakeDamageInfo( dmginfo )
             end)

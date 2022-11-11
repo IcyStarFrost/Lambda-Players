@@ -16,7 +16,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         callback = function( self, wepent, target )
             self.l_WeaponUseCooldown = CurTime() + 0.5
 
-            wepent:EmitSound( "lambdaplayers/pan/melee_pan_miss1.wav", 70, random(98,102), 1, CHAN_WEAPON )
+            wepent:EmitSound( "lambdaplayers/weapons/pan/melee_pan_miss1.mp3", 70, random(98,102), 1, CHAN_WEAPON )
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE )
             
@@ -31,7 +31,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 dmg:SetDamageType( DMG_CLUB )
                 dmg:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * 15 )
                 
-                target:EmitSound("lambdaplayers/pan/melee_pan_hit"..random(4)..".wav", 70)
+                target:EmitSound("lambdaplayers/weapons/pan/melee_pan_hit"..random(4)..".mp3", 70)
                 
                 target:TakeDamageInfo( dmg )
             end)
