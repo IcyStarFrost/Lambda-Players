@@ -453,7 +453,7 @@ local function UseRopeTool( self, target )
     self:LookTo( ( secondent != world and secondent or lpos2 ), 2 )
 
     coroutine.wait( 1 )
-    if IsNil( secondent ) then return end
+    if IsNil( secondent ) or IsNil( firstent ) then return end
 
     self:UseWeapon( ( secondent != world and secondent:WorldSpaceCenter() or lpos2 ) )
 
