@@ -1,5 +1,6 @@
 local random = math.random
 local CurTime = CurTime
+local IsValid = IsValid
 local Rand = math.Rand
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
