@@ -25,7 +25,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 wep:EmitSound( "lambdaplayers/weapons/katana/motivated/motivated"..random(1,20)..".mp3", 110 )
             end]]
 
-            wepent:EmitSound( "lambdaplayers/weapons/katana/katana_deploy.wav", 110 )
+            wepent:EmitSound( "lambdaplayers/weapons/katana/katana_deploy.mp3", 80 )
 
             -- Blocking
             if GetConVar("lambdaplayers_weapons_katanablocking"):GetBool() then
@@ -37,10 +37,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                         if ( lambda:GetForward():Dot( (attacker:GetPos() - lambda:GetPos()):GetNormalized()) <= math.cos( math.rad( 80 ) ) ) then return end
                         
-                        local dmgType = (dmginfo:IsBulletDamage() and 1 or 
-                        (dmginfo:GetDamageType() == DMG_GENERIC or 
-                        dmginfo:GetDamageType() == DMG_CLUB or 
-                        dmginfo:GetDamageType() == DMG_SLASH) and 2 or 0)
+                        local dmgType = (dmginfo:IsBulletDamage() and 1 or (dmginfo:GetDamageType() == DMG_GENERIC or dmginfo:GetDamageType() == DMG_CLUB or dmginfo:GetDamageType() == DMG_SLASH) and 2 or 0)
 
                         if dmgType == 0 then return end -- We only block bullet/melee
                         if CurTime() < blockCooldown then return end -- Can't block too fast
@@ -76,10 +73,10 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                         util_Effect( "Tracer", effect, true, true)
 
                         if dmgType == 1 then
-                            wepent:EmitSound( "lambdaplayers/weapons/katana/katana_deflect_bullet"..math.random(4)..".wav", 70, math.random( 95, 110 ) )
+                            wepent:EmitSound( "lambdaplayers/weapons/katana/katana_deflect_bullet"..math.random(4)..".mp3", 70, math.random( 95, 110 ) )
                             blockCooldown = CurTime() + math.Rand(0, 0.3)
                         else
-                            wepent:EmitSound( "lambdaplayers/weapons/katana/katana_deflect_melee"..math.random(2)..".wav", 70, math.random( 95, 110 ) )
+                            wepent:EmitSound( "lambdaplayers/weapons/katana/katana_deflect_melee"..math.random(2)..".mp3", 70, math.random( 95, 110 ) )
                             blockCooldown = CurTime() + math.Rand(0.1, 0.6)
                         end
                     end
@@ -95,7 +92,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local cooldown = Rand(0.4, 1)
             self.l_WeaponUseCooldown = CurTime() + cooldown
 
-            wepent:EmitSound( "lambdaplayers/weapons/katana/katana_swing_miss"..random(4)..".wav", 65)
+            wepent:EmitSound( "lambdaplayers/weapons/katana/katana_swing_miss"..random(4)..".mp3", 65)
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
@@ -111,7 +108,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 dmginfo:SetDamageType( DMG_SLASH )
                 dmginfo:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg )
                 
-                target:EmitSound( "lambdaplayers/weapons/katana/melee_katana_0"..random(3)..".wav", 70 )
+                target:EmitSound( "lambdaplayers/weapons/katana/katana_swing_hit"..random(3)..".mp3", 70 )
                 
                 target:TakeDamageInfo( dmginfo )
             end)
