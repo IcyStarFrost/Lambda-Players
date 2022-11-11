@@ -96,6 +96,8 @@ function ENT:Initialize()
         self.l_Timers = {}
         self.l_SimpleTimers = {}
         self.l_NexthealthUpdate = 0
+        self.l_stucktimes = 0
+        self.l_stucktimereset = 0
         self.l_movepos = nil
         self.l_nextdoorcheck = 0
         self.l_nextUA = CurTime() + rand( 1, 15 ) -- Universal Action
@@ -139,7 +141,6 @@ function ENT:Initialize()
         self.loco:SetAcceleration( 1000 )
         self.loco:SetDeceleration( 1000 )
         self.loco:SetStepHeight( 30 )
-
 
         self:PhysicsInitShadow()
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
@@ -341,6 +342,11 @@ function ENT:Think()
 
 
         -- UNSTUCK --
+
+        if self.l_stucktimes > 0 and CurTime() > self.l_stucktimereset then
+            self.l_stucktimes = 0
+        end
+
 
         if self.l_unstuck then
             local mins, maxs = self:GetModelBounds()

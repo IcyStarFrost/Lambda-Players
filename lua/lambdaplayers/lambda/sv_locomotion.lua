@@ -152,6 +152,11 @@ function ENT:HandleStuck()
     if self:GetIsDead() then self.loco:ClearStuck() return false end -- Who knows just in case
     local mins, maxs = self:GetModelBounds()
 
+    self.l_stucktimes = self.l_stucktimes + 1
+    self.l_stucktimereset = CurTime() + 10
+
+    if self.l_stucktimes > 2 then self.l_stucktimes = 0 self.loco:ClearStuck() return false end
+
     unstucktable.start = self:GetPos() + upvector 
     unstucktable.endpos = self:GetPos() + upvector * 4
     unstucktable.mins = mins
