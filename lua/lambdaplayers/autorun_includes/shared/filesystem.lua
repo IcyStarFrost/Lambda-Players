@@ -72,7 +72,7 @@ function LAMBDAFS:GetMaterialTable()
 end
 
 function LAMBDAFS:GetVoiceLinesTable()
-    LambdaVoiceLinesTable = { taunt = {}, idle = {}, death = {} }
+    LambdaVoiceLinesTable = { taunt = {}, idle = {}, death = {}, kill = {} }
 
     local function MergeDirectory( dir, tbl )
         dir = dir .. "/"
@@ -84,12 +84,14 @@ function LAMBDAFS:GetVoiceLinesTable()
     MergeDirectory( GetConVar( "lambdaplayers_voice_deathdir" ):GetString(), LambdaVoiceLinesTable.death )
     MergeDirectory( GetConVar( "lambdaplayers_voice_tauntdir" ):GetString(), LambdaVoiceLinesTable.taunt )
     MergeDirectory( GetConVar( "lambdaplayers_voice_idledir" ):GetString(), LambdaVoiceLinesTable.idle )
-
+    MergeDirectory( GetConVar( "lambdaplayers_voice_killdir" ):GetString(), LambdaVoiceLinesTable.kill )
+    
     -- This allows the ability to make addons that add voice lines
     if mergevoicelines:GetBool() then
         MergeDirectory( "lambdaplayers/vo/custom/death", LambdaVoiceLinesTable.death )
         MergeDirectory( "lambdaplayers/vo/custom/taunt", LambdaVoiceLinesTable.taunt )
         MergeDirectory( "lambdaplayers/vo/custom/idle", LambdaVoiceLinesTable.idle )
+        MergeDirectory( "lambdaplayers/vo/custom/kill", LambdaVoiceLinesTable.kill )
     end
     
     return LambdaVoiceLinesTable

@@ -105,6 +105,7 @@ CreateLambdaConvar( "lambdaplayers_voice_mergeaddonvoicelines", 1, true, false, 
 CreateLambdaConvar( "lambdaplayers_voice_idledir", "randomengine", true, false, false, "The directory to get idle voice lines from. These are voice lines that play randomly. Make sure you update Lambda Data after you change this!", nil, nil, { type = "Text", name = "Idle Directory", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_tauntdir", "lambdaplayers/vo/taunt", true, false, false, "The directory to get taunt voice lines from. These are voice lines that play when a lambda player is about to attack something. Make sure you update Lambda Data after you change this!", nil, nil, { type = "Text", name = "Taunt Directory", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_deathdir", "lambdaplayers/vo/death", true, false, false, "The directory to get death voice lines from. These are voice lines that play when a lambda player dies. Make sure you update Lambda Data after you change this!", nil, nil, { type = "Text", name = "Death Directory", category = "Voice Options" } )
+CreateLambdaConvar( "lambdaplayers_voice_killdir", "lambdaplayers/vo/kill", true, false, false, "The directory to get kill voice lines from. These are voice lines that play when a lambda player kills their enemy. Make sure you update Lambda Data after you change this!", nil, nil, { type = "Text", name = "Kill Directory", category = "Voice Options" } )
 --
 
 

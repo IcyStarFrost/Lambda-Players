@@ -11,6 +11,7 @@ local ipairs = ipairs
 local max = math.max
 local ceil = math.ceil
 local deathdir = GetConVar( "lambdaplayers_voice_deathdir" )
+local killdir = GetConVar( "lambdaplayers_voice_killdir" )
 local debugvar = GetConVar( "lambdaplayers_debug" )
 
 if SERVER then
@@ -116,7 +117,10 @@ if SERVER then
 
         -- If we killed the victim
         if attacker == self then
+            local killlines = LambdaVoiceLinesTable.kill
             self:DebugPrint( "killed ", victim )
+
+            if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or killlines[ random( #killlines ) ] ) end 
 
         else -- Someone else killed the victim
 
