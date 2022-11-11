@@ -29,6 +29,7 @@ local tracetable = {}
 local GetLambdaPlayers = GetLambdaPlayers
 local tauntdir = GetConVar( "lambdaplayers_voice_tauntdir" )
 local debugcvar = GetConVar( "lambdaplayers_debug" )
+local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
 
 ---- Anything Shared can go here ----
 
@@ -365,7 +366,7 @@ if SERVER then
         self:DebugPrint( "Respawned" )
         self:SetIsDead( false )
         self:SetIsReloading( false )
-        self:SetPos( self.l_SpawnPos )
+        self:SetPos( rasp:GetBool() and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos ) -- Rasp aka Respawn at Spawn Points
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
         self:GetPhysicsObject():EnableCollisions( true )
 

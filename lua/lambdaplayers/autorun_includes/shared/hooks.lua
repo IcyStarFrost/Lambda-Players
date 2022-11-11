@@ -29,6 +29,10 @@ if SERVER then
         dmginfo:ScaleDamage( ( hitScales[ hit ] and hitScales[ hit ]:GetFloat() or 1.0 ) )
     end)
 
+    hook.Add( "PostCleanupMap", "LambdaResetSpawnPoints", function()
+        LambdaSpawnPoints = LambdaGetPossibleSpawns()
+    end )
+
 elseif CLIENT then
     
     local DrawText = draw.DrawText

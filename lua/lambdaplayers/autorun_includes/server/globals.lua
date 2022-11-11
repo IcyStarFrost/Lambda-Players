@@ -325,3 +325,30 @@ function GetLambdaPlayers()
     end
     return lambdas
 end
+
+local FindByClass = ents.FindByClass
+local table_Add = table.Add
+function LambdaGetPossibleSpawns()
+    local info_player_starts = FindByClass( "info_player_start" )
+    local info_player_teamspawns = FindByClass( "info_player_teamspawn" )
+    local info_player_terrorist = FindByClass( "info_player_terrorist" )
+    local info_player_counterterrorist = FindByClass( "info_player_counterterrorist" )
+    local info_player_combine = FindByClass( "info_player_combine" )
+    local info_player_rebel = FindByClass( "info_player_rebel" )
+    local info_player_allies = FindByClass( "info_player_allies" )
+    local info_player_axis = FindByClass( "info_player_axis" )
+    local info_coop_spawn = FindByClass( "info_coop_spawn" )
+    local info_survivor_position = FindByClass( "info_survivor_position" )
+    table_Add(info_player_starts,info_player_teamspawns)
+    table_Add(info_player_starts,info_player_terrorist)
+    table_Add(info_player_starts,info_player_counterterrorist)
+    table_Add(info_player_starts,info_player_combine)
+    table_Add(info_player_starts,info_player_rebel)
+    table_Add(info_player_starts,info_player_allies)
+    table_Add(info_player_starts,info_player_axis)
+    table_Add(info_player_starts,info_coop_spawn)
+    table_Add(info_player_starts,info_survivor_position)
+    return info_player_starts
+end
+
+LambdaSpawnPoints = LambdaGetPossibleSpawns()
