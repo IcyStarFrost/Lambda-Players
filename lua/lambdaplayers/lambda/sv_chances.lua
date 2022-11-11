@@ -66,7 +66,7 @@ function ENT:Chance_Tool()
 
         local result = tooltable[ 3 ]( self, target )
 
-        if result then self:DebugPrint( "Used" .. tooltable[ 1 ] .. "Tool" ) break end
+        if result then self:DebugPrint( "Used " .. tooltable[ 1 ] .. " Tool" ) break end
     end
 
     self:PreventWeaponSwitch( false )
