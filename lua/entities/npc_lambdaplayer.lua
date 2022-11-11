@@ -62,6 +62,13 @@ if CLIENT then
 
 end
 
+-- Since Entities are loaded near the end of the Lua Loading Order, we can safely know that the File system exists.
+-- We move this here knowing that so this doesn't have to be updated everytime a lambda is initialized
+LambdaPlayerNames = LambdaPlayerNames or LAMBDAFS:GetNameTable()
+LambdaPlayerProps = LambdaPlayerProps or LAMBDAFS:GetPropTable()
+LambdaPlayerMaterials = LambdaPlayerMaterials or LAMBDAFS:GetMaterialTable()
+Lambdaprofilepictures = Lambdaprofilepictures or LAMBDAFS:GetProfilePictures()
+LambdaVoiceLinesTable = LambdaVoiceLinesTable or LAMBDAFS:GetVoiceLinesTable()
 
 function ENT:Initialize()
 
@@ -69,12 +76,6 @@ function ENT:Initialize()
     self.l_SpawnAngles = self:GetAngles()
 
     if SERVER then
-
-        LambdaPlayerNames = LambdaPlayerNames or LAMBDAFS:GetNameTable()
-        LambdaPlayerProps = LambdaPlayerProps or LAMBDAFS:GetPropTable()
-        LambdaPlayerMaterials = LambdaPlayerMaterials or LAMBDAFS:GetMaterialTable()
-        Lambdaprofilepictures = Lambdaprofilepictures or LAMBDAFS:GetProfilePictures()
-        LambdaVoiceLinesTable = LambdaVoiceLinesTable or LAMBDAFS:GetVoiceLinesTable()
         
         self:SetSolid( SOLID_BBOX )
         self:SetCollisionBounds( Vector( -17, -17, 0 ), Vector( 17, 17, 72 ) )
