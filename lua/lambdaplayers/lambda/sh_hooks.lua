@@ -7,6 +7,7 @@ local undo = undo
 local ents_GetAll = ents.GetAll
 local abs = math.abs
 local table_Merge = table.Merge
+local isfunction = isfunction
 local ipairs = ipairs
 local max = math.max
 local ceil = math.ceil
@@ -250,6 +251,9 @@ function ENT:InitializeMiniHooks()
         -- To get around that we basically predict if the lambda is gonna die and completely block the damage so we don't actually die. This of course is exclusive to Respawning
         self:Hook( "EntityTakeDamage", "DamageHandling", function( target, info )
             if target != self then return end
+
+            if isfunction( self.l_OnDamagefunction ) then self.l_OnDamagefunction( self, info )  end
+
             local potentialdeath = ( self:Health() - info:GetDamage() ) <= 0
             if self:GetRespawn() and potentialdeath then
                 info:SetDamageBonus( 0 )

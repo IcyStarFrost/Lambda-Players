@@ -23,7 +23,7 @@
     rateoffire | Number | How fast the weapon is fired/used
     attackanim | Number | The ACT Gesture to play when used
 
-
+    OnDamage | Function | A function that will be called when the Lambda Player is hurt while holding this weapon
     Draw | Function | A Client side function that allows you to make render effects in 3d space
     callback | function | A function that will be called when the weapon is used. Return true if you are making a custom shooting/swinging code
     OnEquip | function | A function that will be called when the weapon is equipped
@@ -54,7 +54,7 @@
     tracername | String | Tracer name. Valid entries are Tracer, AR2Tracer, LaserTracer, AirboatGunHeavyTracer, and ToolTracer
     clip | Number | The amount of times the weapon can be shot before reloading.
 
-
+    OnDamage | Function | A function that will be called when the Lambda Player is hurt while holding this weapon
     Draw | Function | A Client side function that allows you to make render effects in 3d space
     callback | function | A function that will be called when the weapon is used. Return true if you are making a custom shooting/swinging code
     OnEquip | function | A function that will be called when the weapon is equipped
