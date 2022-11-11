@@ -78,7 +78,7 @@ function LAMBDAFS:GetVoiceLinesTable()
         dir = dir .. "/"
         local files, dirs = file.Find( "sound/" .. dir .. "*", "GAME", "nameasc" )
         for k, v in ipairs( files ) do table_insert( tbl, dir .. v ) end
-        for k, v in ipairs( dirs ) do MergeDirectory( dir .. v ) end
+        for k, v in ipairs( dirs ) do MergeDirectory( dir .. v, tbl ) end
     end
     
     MergeDirectory( GetConVar( "lambdaplayers_voice_deathdir" ):GetString(), LambdaVoiceLinesTable.death )
