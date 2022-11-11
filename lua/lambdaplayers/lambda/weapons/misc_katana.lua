@@ -54,14 +54,14 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                         local sparkPos = dmginfo:GetDamagePosition()
                         if lambda:GetRangeSquaredTo( sparkPos ) > ( 150 * 150 ) then sparkPos = wepent:GetPos() end
 
-                        -- Deflection effect
+                        -- Blocking effect
                         local sparkForward = ( ( attacker:WorldSpaceCenter() ) - sparkPos ):Angle():Forward()
                         local effect = EffectData()
                             effect:SetOrigin( sparkPos + sparkForward * 20 )
                             effect:SetNormal( sparkForward )
                         util_Effect( "StunstickImpact", effect, true, true )
                         
-                        -- Fake bullet going somewhere
+                        -- Fake bullet going somewhere to pretend we are deflecting the bullet
                         local trace = lambda:Trace( lambda:WorldSpaceCenter() + ( lambda:GetForward() + VectorRand( -100, 100 ) ) * 12000 )
                         local pos = trace.HitPos
 
