@@ -154,7 +154,7 @@ function ENT:GetAttachmentPoint( pointtype )
                 return { Pos = self:WorldSpaceCenter(), Ang = self:GetForward():Angle() }
             else
                 if isnumber( bone ) then
-                    return self:GetBonePosAngs( bone )
+                    return self:GetBoneTransformation( bone )
                 else
                     return { Pos = self:WorldSpaceCenter(), Ang = self:GetForward():Angle() }
                 end
