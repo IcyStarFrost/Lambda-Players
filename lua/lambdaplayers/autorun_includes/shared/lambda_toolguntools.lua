@@ -357,31 +357,7 @@ AddToolFunctionToLambdaTools( "Lamp", UseLampTool )
 
 
 
-local effectlist = {
-    "manhacksparks",
-    "glassimpact",
-    "striderblood",
-    "shells",
-    "cball_explode",
-    "ar2impact",
-    "bloodimpact",
-    "sparks",
-    "dirtywatersplash",
-    "watersplash",
-    "stunstickimpact",
-    "thumperdust",
-    "muzzleeffect",
-    "bloodspray",
-    "helicoptermegabomb",
-    "rifleshells",
-    "ar2explosion",
-    "explosion",
-    "cball_bounce",
-    "shotgunshells",
-    "underwaterexplosion",
-    "smoke",
-}
-
+local effectlist = { "manhacksparks", "glassimpact", "striderblood", "shells", "cball_explode", "ar2impact", "bloodimpact", "sparks", "dirtywatersplash", "watersplash", "stunstickimpact", "thumperdust", "muzzleeffect", "bloodspray", "helicoptermegabomb", "rifleshells", "ar2explosion", "explosion", "cball_bounce", "shotgunshells", "underwaterexplosion", "smoke" }
 local function UseEmitterTool( self, target )
     if !self:IsUnderLimit( "Emitter" ) then return end
 
@@ -536,6 +512,71 @@ local function UseHoverballTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Hoverball", UseHoverballTool )
+
+
+
+
+
+local thrustermodels = { "models/dav0r/thruster.mdl", "models/MaxOfS2D/thruster_projector.mdl", "models/MaxOfS2D/thruster_propeller.mdl", "models/thrusters/jetpack.mdl", "models/props_junk/plasticbucket001a.mdl", "models/props_junk/PropaneCanister001a.mdl", "models/props_junk/propane_tank001a.mdl", "models/props_junk/PopCan01a.mdl", "models/props_junk/MetalBucket01a.mdl", "models/props_lab/jar01a.mdl", "models/props_c17/lampShade001a.mdl", "models/props_c17/canister_propane01a.mdl", "models/props_c17/canister01a.mdl", "models/props_c17/canister02a.mdl", "models/props_trainstation/trainstation_ornament002.mdl", "models/props_junk/TrafficCone001a.mdl", "models/props_c17/clock01.mdl", "models/props_junk/terracotta01.mdl", "models/props_c17/TrapPropeller_Engine.mdl", "models/props_c17/FurnitureSink001a.mdl", "models/props_trainstation/trainstation_ornament001.mdl", "models/props_trainstation/trashcan_indoor001b.mdl", "models/props_phx2/garbage_metalcan001a.mdl", "models/hunter/plates/plate.mdl", "models/hunter/blocks/cube025x025x025.mdl", "models/XQM/AfterBurner1.mdl", "models/XQM/AfterBurner1Medium.mdl", "models/XQM/AfterBurner1Big.mdl", "models/XQM/AfterBurner1Huge.mdl", "models/XQM/AfterBurner1Large.mdl" }
+local thrustersounds = { "", "PhysicsCannister.ThrusterLoop", "WeaponDissolve.Charge", "WeaponDissolve.Beam", "eli_lab.elevator_move", "combine.sheild_loop", "k_lab.ringsrotating", "k_lab.teleport_rings_high", "k_lab2.DropshipRotorLoop", "Town.d1_town_01_spin_loop" }
+local thrustereffects = { "none", "fire", "plasma", "magic", "rings", "smoke" }
+local function UseThrusterTool( self, target )
+    if !self:IsUnderLimit( "Thruster" ) or !IsValid( target ) or target:GetClass()=="gmod_thruster" then return end
+
+    self:LookTo( target, 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) then return end
+    
+    local trace = self:Trace( target:WorldSpaceCenter() )
+
+    local pos = trace.HitPos
+
+    self:UseWeapon( target:WorldSpaceCenter() )
+    local ent = CreateGmodEntity( "gmod_thruster", thrustermodels[ random( #thrustermodels ) ], pos + trace.HitNormal, trace.HitNormal:Angle() - Angle( 0, 90, 90 ), self )
+    ent.LambdaOwner = self
+    ent.IsLambdaSpawned = true
+    self:ContributeEntToLimit( ent, "Thruster" )
+    table_insert( self.l_SpawnedEntities, 1, ent )
+
+    local const = constraint.Weld( ent, target, 0, trace.PhysicsBone, 0, 0, true )
+
+    if IsValid( ent:GetPhysicsObject() )  then ent:GetPhysicsObject():EnableCollisions( false ) end
+    ent:SetCollisionGroup( COLLISION_GROUP_WORLD )
+
+    local ang = trace.HitNormal:Angle()
+	ang.pitch = ang.pitch + 90
+	ent:SetAngles( ang )
+
+	local CurPos = ent:GetPos()
+	local NearestPoint = ent:NearestPoint( CurPos - ( trace.HitNormal * 512 ) )
+	local Offset = CurPos - NearestPoint
+	ent:SetPos( trace.HitPos + Offset )
+
+    ent:SetPlayer( self )
+    ent:SetEffect( thrustereffects[ random( #thrustereffects ) ] )
+    ent:SetForce( random( 10000 ) )
+    ent:SetToggle( true )
+    ent:SetSound( thrustersounds[ random( #thrustersounds ) ] )
+
+    if random( 0, 1 ) == 1 then
+        if ( IsValid( ent:GetPhysicsObject() ) ) then ent:GetPhysicsObject():EnableCollisions( false ) end
+        ent:SetCollisionGroup( COLLISION_GROUP_WORLD )
+    end
+
+    local rndtime = CurTime() + rand( 1, 10 )
+    ent:LambdaHookTick( "ThrusterRandomOnOff", function( thruster )
+        if CurTime() > rndtime then
+            if !IsValid( thruster ) then return true end
+            thruster:Switch( random( 0, 1 ) == 1 )-- Randomly switch it on or off
+
+            rndtime = CurTime() + rand( 1, 10 )
+        end
+    end )
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Thruster", UseThrusterTool )
 
 
 
