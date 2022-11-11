@@ -8,10 +8,13 @@ local math_max = math.max
 local color_white = color_white
 local isvector = isvector
 local Trace = util.TraceLine
+local TraceHull = util.TraceHull
 local isfunction = isfunction
 local debugoverlay = debugoverlay
 local CurTime = CurTime
 local tracetable = {}
+local upvector = Vector( 0, 0, 1 )
+local unstucktable = {}
 local ents_FindByName = ents.FindByName
 
 -- Start off simple
@@ -59,10 +62,8 @@ function ENT:MoveToPos( pos, options )
         end
 
 		if ( self.loco:IsStuck() ) then
-
-			self:HandleStuck()
-            self.IsMoving = false
-			return "stuck"
+			local result = self:HandleStuck()
+            if !result then self.IsMoving = false return "stuck" end
 		end
 
 		if timeout then
@@ -122,9 +123,8 @@ function ENT:MoveToPosOFFNAV( pos, options )
         end
 
         if ( self.loco:IsStuck() ) then
-			self:HandleStuck()
-            self.IsMoving = false
-			return "stuck"
+			local result = self:HandleStuck()
+            if !result then self.IsMoving = false return "stuck" end
 		end
 
         if timeout then
@@ -142,6 +142,33 @@ end
 -- Stops movement from :MoveToPos() and :MoveToPosOFFNAV()
 function ENT:CancelMovement()
     self.AbortMovement = self.IsMoving
+end
+
+-- This function will either return true or false
+
+-- If this returns true, continue on our current path
+-- Unless false, don't continue and stop
+function ENT:HandleStuck()
+    if self:GetIsDead() then self.loco:ClearStuck() return false end -- Who knows just in case
+    local mins, maxs = self:GetModelBounds()
+
+    unstucktable.start = self:GetPos() + upvector 
+    unstucktable.endpos = self:GetPos() + upvector * 4
+    unstucktable.mins = mins
+    unstucktable.maxs = maxs
+    --unstucktable.ignoreworld = true
+    unstucktable.filter = self
+    local istuckinsomething = TraceHull( unstucktable )
+
+    if !istuckinsomething.Hit then -- If we didn't get stuck in any entity then try to jump
+        self.loco:Jump()
+        self.loco:ClearStuck()
+        return true
+    else -- We got stuck in something. Force our way out
+        self.l_unstuck = true
+        return true
+    end
+
 end
 
 -- Returns a pathfinding function for the :Compute() function

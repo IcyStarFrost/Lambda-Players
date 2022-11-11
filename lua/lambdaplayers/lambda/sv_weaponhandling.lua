@@ -195,7 +195,7 @@ end
 function ENT:HandleMuzzleFlash( type, offpos, offang )
     local wepent = self:GetWeaponENT()
     local attach = wepent:GetAttachment( 1 )
-    if !attach and offpos and offang then attach = { Pos = offpos, Ang = offang } elseif !attach and ( offpos or offang ) then return end
+    if !attach and offpos and offang then attach = { Pos = offpos, Ang = offang } elseif !attach and ( !offpos or !offang ) then return end
     if !IsValid( wepent ) then return end
     local effect = EffectData()
     effect:SetOrigin( attach.Pos )

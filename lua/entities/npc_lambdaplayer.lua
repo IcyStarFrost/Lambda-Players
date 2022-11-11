@@ -40,6 +40,7 @@ end
     local isfunction = isfunction
     local Lerp = Lerp
     local isentity = isentity
+    local VectorRand = VectorRand
     local Vector = Vector
     local coroutine = coroutine
     local debugoverlay = debugoverlay
@@ -50,7 +51,9 @@ end
     local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
     local CurTime = CurTime
     local color_white = color_white
+    local TraceHull = util.TraceHull
     local FrameTime = FrameTime
+    local unstucktable = {}
     local sub = string.sub
     local RealTime = RealTime
     
@@ -83,6 +86,8 @@ function ENT:Initialize()
         self:SetModel( allowaddonmodels:GetBool() and _LAMBDAPLAYERS_Allplayermodels[ random( #_LAMBDAPLAYERS_Allplayermodels ) ] or _LAMBDAPLAYERSDEFAULTMDLS[ random( #_LAMBDAPLAYERSDEFAULTMDLS ) ] )
 
         self.IsMoving = false
+        self.l_unstuck = false
+        self.l_UnstuckBounds = 50
         self.l_State = "Idle" -- See sv_states.lua
         self.l_Weapon = ""
         self.debuginitstart = SysTime()
@@ -130,7 +135,7 @@ function ENT:Initialize()
 
         SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
-        self.loco:SetJumpHeight( 60 )
+        self.loco:SetJumpHeight( 80 )
         self.loco:SetAcceleration( 1000 )
         self.loco:SetDeceleration( 1000 )
         self.loco:SetStepHeight( 30 )
@@ -333,6 +338,31 @@ function ENT:Think()
             self:SetPoseParameter( 'aim_yaw', approachaimy )
             self:SetPoseParameter( 'aim_pitch', approachaimp )
         end
+
+
+        -- UNSTUCK --
+
+        if self.l_unstuck then
+            local mins, maxs = self:GetModelBounds()
+            local randompoint = self:GetPos() + VectorRand( -self.l_UnstuckBounds, self.l_UnstuckBounds )
+
+            unstucktable.start = randompoint
+            unstucktable.endpos = randompoint
+            unstucktable.mins = mins
+            unstucktable.maxs = maxs
+            local result = TraceHull( unstucktable )
+
+            if result.Hit then
+                self.l_UnstuckBounds = self.l_UnstuckBounds + 5
+            else
+                self:SetPos( randompoint )
+                self.loco:ClearStuck()
+                self.l_unstuck = false
+                self.l_UnstuckBounds = 50
+            end
+
+        end
+        -- -- -- -- --
 
 
     elseif CLIENT then
