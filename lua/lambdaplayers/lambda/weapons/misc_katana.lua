@@ -62,15 +62,17 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                         util_Effect( "StunstickImpact", effect, true, true )
                         
                         -- Fake bullet going somewhere to pretend we are deflecting the bullet
-                        local trace = lambda:Trace( lambda:WorldSpaceCenter() + ( lambda:GetForward() + VectorRand( -100, 100 ) ) * 12000 )
-                        local pos = trace.HitPos
+                        if dmgType == 1 then
+                            local trace = lambda:Trace( lambda:WorldSpaceCenter() + ( lambda:GetForward() + VectorRand( -100, 100 ) ) * 12000 )
+                            local pos = trace.HitPos
 
-                        local effect = EffectData()
-                            effect:SetStart( effect:GetOrigin() )
-                            effect:SetOrigin( pos )
-                            effect:SetEntity( wepent )
-                            effect:SetScale( 4000 )
-                        util_Effect( "Tracer", effect, true, true)
+                            local effect = EffectData()
+                                effect:SetStart( effect:GetOrigin() )
+                                effect:SetOrigin( pos )
+                                effect:SetEntity( wepent )
+                                effect:SetScale( 4000 )
+                            util_Effect( "Tracer", effect, true, true)
+                        end
 
                         if dmgType == 1 then
                             wepent:EmitSound( "lambdaplayers/weapons/katana/katana_deflect_bullet"..math.random(4)..".mp3", 70, math.random( 95, 110 ) )
