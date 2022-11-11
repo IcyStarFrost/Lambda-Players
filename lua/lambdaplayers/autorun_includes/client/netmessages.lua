@@ -119,7 +119,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
     if IsValid( ent.l_VoiceSnd ) then ent.l_VoiceSnd:Stop() end
 
-    local flag = ( globalvoice:GetBool() and "" or is3d and "3d mono noplay" or "mono noplay" )
+    local flag = ( is3d and "3d mono noplay" or "mono noplay" )
 
     sound.PlayFile( "sound/" .. soundname, flag, function( snd, ID, errorname )
         if ID == 21 then
