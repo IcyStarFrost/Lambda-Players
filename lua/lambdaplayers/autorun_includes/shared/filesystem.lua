@@ -6,6 +6,8 @@ local Compress = util.Compress
 local table_insert = table.insert
 local ipairs = ipairs
 local table_Add = table.Add
+local mergevoicelines = GetConVar( "lambdaplayers_voice_mergeaddonvoicelines" )
+
 file.CreateDir( "lambdaplayers" )
 file.CreateDir( "lambdaplayers/custom_profilepictures" )
 -- Lambda File System
@@ -67,6 +69,30 @@ function LAMBDAFS:GetMaterialTable()
     local defaultcontent = LAMBDAFS:ReadFile( "materials/lambdaplayers/data/materials.vmt", "json", "GAME" )
     local mergedtable = table_Add( defaultcontent, customcontent )
     return mergedtable
+end
+
+function LAMBDAFS:GetVoiceLinesTable()
+    LambdaVoiceLinesTable = { taunt = {}, idle = {}, death = {} }
+
+    local function MergeDirectory( dir, tbl )
+        dir = dir .. "/"
+        local files, dirs = file.Find( "sound/" .. dir .. "*", "GAME", "nameasc" )
+        for k, v in ipairs( files ) do table_insert( tbl, dir .. v ) end
+        for k, v in ipairs( dirs ) do MergeDirectory( dir .. v ) end
+    end
+    
+    MergeDirectory( GetConVar( "lambdaplayers_voice_deathdir" ):GetString(), LambdaVoiceLinesTable.death )
+    MergeDirectory( GetConVar( "lambdaplayers_voice_tauntdir" ):GetString(), LambdaVoiceLinesTable.taunt )
+    MergeDirectory( GetConVar( "lambdaplayers_voice_idledir" ):GetString(), LambdaVoiceLinesTable.idle )
+
+    -- This allows the ability to make addons that add voice lines
+    if mergevoicelines:GetBool() then
+        MergeDirectory( "lambdaplayers/vo/custom/death", LambdaVoiceLinesTable.death )
+        MergeDirectory( "lambdaplayers/vo/custom/taunt", LambdaVoiceLinesTable.taunt )
+        MergeDirectory( "lambdaplayers/vo/custom/idle", LambdaVoiceLinesTable.idle )
+    end
+    
+    return LambdaVoiceLinesTable
 end
 
 function LAMBDAFS:GetProfilePictures()

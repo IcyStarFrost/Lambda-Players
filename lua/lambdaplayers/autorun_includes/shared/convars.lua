@@ -101,7 +101,10 @@ CreateLambdaConvar( "lambdaplayers_voice_voicepopupxpos", 278, true, true, false
 CreateLambdaConvar( "lambdaplayers_voice_voicepopupypos", 150, true, true, false, "The position of the voice popups on the y axis of your screen", 0, ( CLIENT and ScrH() or 1 ), { type = "Slider", decimals = 0, name = "Voice Popup Y", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_voicepitchmax", 100, true, false, false, "The highest pitch a Lambda Voice can get", 100, 255, { type = "Slider", decimals = 0, name = "Voice Pitch Max", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_voicepitchmin", 100, true, false, false, "The lowest pitch a Lambda Voice can get", 10, 100, { type = "Slider", decimals = 0, name = "Voice Pitch Min", category = "Voice Options" } )
-CreateLambdaConvar( "lambdaplayers_voice_idledir", "randomengine", true, false, false, "The directory to get idle voice lines from", nil, nil, { type = "Text", name = "Idle Directory", category = "Voice Options" } )
+CreateLambdaConvar( "lambdaplayers_voice_mergeaddonvoicelines", 1, true, false, false, "If custom voice lines added by addons should be included. Make sure you update Lambda Data after you change this!", 0, 1, { type = "Bool", name = "Include Addon Voicelines", category = "Voice Options" } )
+CreateLambdaConvar( "lambdaplayers_voice_idledir", "randomengine", true, false, false, "The directory to get idle voice lines from. These are voice lines that play randomly. Make sure you update Lambda Data after you change this!", nil, nil, { type = "Text", name = "Idle Directory", category = "Voice Options" } )
+CreateLambdaConvar( "lambdaplayers_voice_tauntdir", "lambdaplayers/vo/taunt", true, false, false, "The directory to get taunt voice lines from. These are voice lines that play when a lambda player is about to attack something. Make sure you update Lambda Data after you change this!", nil, nil, { type = "Text", name = "Taunt Directory", category = "Voice Options" } )
+CreateLambdaConvar( "lambdaplayers_voice_deathdir", "lambdaplayers/vo/death", true, false, false, "The directory to get death voice lines from. These are voice lines that play when a lambda player dies. Make sure you update Lambda Data after you change this!", nil, nil, { type = "Text", name = "Death Directory", category = "Voice Options" } )
 --
 
 

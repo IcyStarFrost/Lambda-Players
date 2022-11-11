@@ -10,6 +10,7 @@ local table_Merge = table.Merge
 local ipairs = ipairs
 local max = math.max
 local ceil = math.ceil
+local deathdir = GetConVar( "lambdaplayers_voice_deathdir" )
 local debugvar = GetConVar( "lambdaplayers_debug" )
 
 if SERVER then
@@ -43,7 +44,10 @@ if SERVER then
     function ENT:LambdaOnKilled( info )
         if self:GetIsDead() then return end
         self:DebugPrint( "was killed by ", info:GetAttacker() )
-        self:PlaySoundFile( "vo/npc/male01/pain0" .. random( 1, 9 ) .. ".wav" )
+
+        local deathsounds = LambdaVoiceLinesTable.death
+        
+        self:PlaySoundFile( deathdir:GetString() == "randomengine" and self:GetRandomSound() or deathsounds[ random( #deathsounds ) ] )
 
         self:SetIsDead( true )
         self:SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE )
@@ -96,9 +100,7 @@ if SERVER then
 
         if ( self:ShouldTreatAsLPlayer( attacker ) and random( 1, 3 ) == 1 or !self:ShouldTreatAsLPlayer( attacker ) and true ) and self:CanTarget( attacker ) and self:GetEnemy() != attacker and attacker != self  then
             if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
-            self:CancelMovement()
-            self:SetEnemy( attacker )
-            self:SetState( "Combat" )
+            self:AttackTarget( attacker )
         end
 
     end
@@ -107,7 +109,7 @@ if SERVER then
         local attacker = info:GetAttacker()
 
         if victim == self:GetEnemy() then
-            self:DebugPrint( "Enemy was killed ", victim )
+            self:DebugPrint( "Enemy was killed by", attacker )
             self:SetEnemy( nil )
             self:CancelMovement()
         end

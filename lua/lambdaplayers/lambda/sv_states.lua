@@ -54,9 +54,7 @@ function ENT:FindTarget()
         local find = self:FindInSphere( nil, 1500, function( ent ) return self:CanTarget( ent ) end )
 
         for k, v in RandomPairs( find ) do
-            self:SetEnemy( v )
-            self:SetState( "Combat" )
-            self:CancelMovement()
+            self:AttackTarget( v )
             break
         end
 

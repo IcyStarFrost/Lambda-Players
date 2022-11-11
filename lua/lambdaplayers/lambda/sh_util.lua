@@ -27,6 +27,7 @@ local tostring = tostring
 local visibilitytrace = {}
 local tracetable = {}
 local GetLambdaPlayers = GetLambdaPlayers
+local tauntdir = GetConVar( "lambdaplayers_voice_tauntdir" )
 local debugcvar = GetConVar( "lambdaplayers_debug" )
 
 ---- Anything Shared can go here ----
@@ -277,6 +278,15 @@ if SERVER then
         return self:Visible( ent ) and ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() )
     end
 
+    -- Attacks the specified entity
+    function ENT:AttackTarget( ent )
+        local tauntsounds = LambdaVoiceLinesTable.taunt
+        if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( tauntdir:GetString() == "randomengine" and self:GetRandomSound() or tauntsounds[ random( #tauntsounds ) ], true ) end
+        self:SetEnemy( ent )
+        self:SetState( "Combat" )
+        self:CancelMovement()
+    end
+
     -- Updates our networked health
     function ENT:UpdateHealthDisplay()
         self:SetNW2Float( "lambda_health", self:Health() )
@@ -444,9 +454,9 @@ if SERVER then
     -- Makes the Lambda say the specified file or file path.
     -- Random sound files for example, something/idle/*
     function ENT:PlaySoundFile( filepath, stoponremove )
-        local isdir = string_find( filepath, "/*" )
+        local isdir = string_find( filepath or "", "/*" )
 
-        self:SetLastSpeakingTime( CurTime() + 2 )
+        self:SetLastSpeakingTime( CurTime() + 4 )
 
         if isdir then
             local soundfiles = file_Find( "sound/" .. filepath, "GAME", "nameasc" )

@@ -74,7 +74,8 @@ function ENT:Initialize()
         LambdaPlayerProps = LambdaPlayerProps or LAMBDAFS:GetPropTable()
         LambdaPlayerMaterials = LambdaPlayerMaterials or LAMBDAFS:GetMaterialTable()
         Lambdaprofilepictures = Lambdaprofilepictures or LAMBDAFS:GetProfilePictures()
-
+        LambdaVoiceLinesTable = LambdaVoiceLinesTable or LAMBDAFS:GetVoiceLinesTable()
+        
         self:SetSolid( SOLID_BBOX )
         self:SetCollisionBounds( Vector( -17, -17, 0 ), Vector( 17, 17, 72 ) )
 
@@ -244,7 +245,9 @@ function ENT:Think()
         if self.l_ispickedupbyphysgun then self.loco:SetVelocity( Vector() ) end
 
         if CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 1, 100 ) <= self:GetVoiceChance() then
-            self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or idledir:GetString() .. "/*", true )
+            local idlesounds = LambdaVoiceLinesTable.idle
+            
+            self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or idlesounds[ random( #idlesounds ) ], true )
             self.l_nextidlesound = CurTime() + 5
         end
         
