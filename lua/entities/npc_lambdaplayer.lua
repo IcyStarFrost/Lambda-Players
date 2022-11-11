@@ -155,7 +155,7 @@ function ENT:Initialize()
         self.WeaponEnt:SetNoDraw( true )
 
         self:InitializeMiniHooks()
-        self:SwitchWeapon( "physgun" )
+        self:SwitchWeapon( "physgun", true )
         self.l_SpawnWeapon = "physgun"
         
         self:SetWeaponENT( self.WeaponEnt )

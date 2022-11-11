@@ -10,3 +10,10 @@ net.Receive( "lambdaplayers_server_sendsoundduration", function( len, ply )
     if !IsValid( ent ) then return end
     ent:SetLastSpeakingTime( CurTime() + dur )
 end )
+
+net.Receive( "lambdaplayers_updateconvar", function( len, ply )
+    if !ply:IsSuperAdmin() then return end
+    local convar = net.ReadString()
+    local val = net.ReadString()
+    GetConVar( convar ):SetString( val )
+end )
