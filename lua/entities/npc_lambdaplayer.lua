@@ -301,6 +301,12 @@ function ENT:Think()
 
         if !self:IsOnGround() then
             self.l_FallVelocity = self.loco:GetVelocity()[ 3 ]
+            
+            -- Sometimes when they fall in water and touch a flat ground surface, they don't register it as being water
+            -- This is here just so if they enter water during the fall, it negates the damage
+            if self:WaterLevel() >= 1 then
+                self.l_FallVelocity = 0
+            end
         end
 
         -- Animations --
