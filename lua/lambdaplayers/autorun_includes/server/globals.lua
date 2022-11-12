@@ -358,4 +358,4 @@ function LambdaGetPossibleSpawns()
     return info_player_starts
 end
 
-LambdaSpawnPoints = LambdaGetPossibleSpawns()
+hook.Add( "InitPostEntity", "lambdaplayersgetspawns", function() LambdaSpawnPoints = LambdaGetPossibleSpawns() end )
