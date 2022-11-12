@@ -100,7 +100,7 @@ local function UseLightTool( self, target )
 
     coroutine.wait( 1 )
 
-    if trace.Entity and trace.Entity:GetClass()=="gmod_light" then return end -- Check to avoid placing light on light using trace
+    if IsValid( trace.Entity ) and trace.Entity:GetClass()=="gmod_light" then return end -- Check to avoid placing light on light using trace
 
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_light", nil, pos + trace.HitNormal * 8, trace.HitNormal:Angle() - Angle( 90, 0, 0 ), self ) -- Create the light
@@ -251,7 +251,7 @@ local function UseBalloonTool( self, target )
 
     coroutine.wait( 1 )
 
-    if trace.Entity and trace.Entity:GetClass()=="gmod_balloon" then return end -- Check to avoid placing balloon on balloon using trace
+    if IsValid( trace.Entity ) and trace.Entity:GetClass()=="gmod_balloon" then return end -- Check to avoid placing balloon on balloon using trace
 
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_balloon", balloonModel.model, pos, nil, self ) -- Create the balloon
@@ -373,7 +373,7 @@ local function UseEmitterTool( self, target )
 
     coroutine.wait( 1 )
 
-    if trace.Entity and trace.Entity:GetClass()=="gmod_emitter" then return end -- Check to avoid placing emitter on emitter using trace
+    if IsValid( trace.Entity ) and trace.Entity:GetClass()=="gmod_emitter" then return end -- Check to avoid placing emitter on emitter using trace
     
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_emitter", "models/props_lab/tpplug.mdl", pos + trace.HitNormal, trace.HitNormal:Angle() - Angle( 0, 90, 90 ), self )
@@ -476,7 +476,7 @@ local function UseHoverballTool( self, target )
 
     local trace = self:Trace( target:WorldSpaceCenter() )
 
-    if trace.Entity and trace.Entity:GetClass()=="gmod_hoverball" then return end -- Check to avoid placing hoverball on hoverball using trace
+    if IsValid( trace.Entity ) and trace.Entity:GetClass()=="gmod_hoverball" then return end -- Check to avoid placing hoverball on hoverball using trace
 
     local pos = trace.HitPos
 
@@ -538,7 +538,7 @@ local function UseThrusterTool( self, target )
 
     local trace = self:Trace( target:WorldSpaceCenter() )
 
-    if trace.Entity and trace.Entity:GetClass()=="gmod_thruster" then return end -- Check to avoid placing thruster on thruster using trace
+    if IsValid( trace.Entity ) and trace.Entity:GetClass()=="gmod_thruster" then return end -- Check to avoid placing thruster on thruster using trace
 
     local pos = trace.HitPos
     local ang = trace.HitNormal:Angle()
