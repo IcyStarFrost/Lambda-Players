@@ -7,12 +7,12 @@ Currently the project will only be located here on Github and will be seen on th
 
 # Custom Content 
 
-### Profile Pictures
+## Profile Pictures
 Custom Profile Pictures can be added by putting .png and .jpg images in this folder, `DRIVE:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\materials\lambdaplayers\custom_profilepictures` or `DRIVE:\Program Files (x86)\Steam\steamapps\common\GarrysMod\sourceengine\materials\lambdaplayers\custom_profilepictures` Note that you can create sub folders in custom_profilepictures containing images to be able to organize your image files.
 
 Addons that add profile pictures should have this file path: `ADDONNAME/materials/lambdaplayers/custom_profilepictures/( Any .png/.jpg image files)`
 
-### Names
+## Names
 
 Custom names can be added in the in game Name Panel found in the Spawnmenu at Lambda Players>Panels. The panel allows you to export your names to share with others. The panel is also capable of importing nameexport.json files full of names or txt files full of names formatted like
 - Garry
@@ -26,7 +26,7 @@ Files you want to import should go in, `C:\Program Files (x86)\Steam\steamapps\c
 
 Addons that add custom names should have this file path: `ADDONNAME/materials/lambdaplayers/data/customnames/( Any exported nameexport.json or .txt files here)`
 
-### Custom Voice lines
+## Custom Voice lines
 
 Custom Voice lines can be used by simply defining a directory relative to `GarrysMod/sourceengine/sound` folder in Directories in Voice Options as shown below.
 
@@ -35,6 +35,32 @@ For example, if I wanted to use voicelines from `C:/Program Files (x86)/Steam/st
 ![alt text](https://cdn.discordapp.com/attachments/696733081763315803/1040465456131231754/image.png)
 
 Addons that add voice lines should have this file path: `ADDONNAME/sound/lambdaplayers/vo/custom/(possible folders are, death, taunt, idle, kill)/( Any sound files here. Preferably MP3 for storage reasons)`
+
+See Voice Profiles to see a explanation of each voice line type
+
+## Voice Profiles
+Similar to Voice Packs for Zeta Players, Voice Profiles is a pack of voice lines that a individual Lambda can use. Think of it as a way of making specific voices instead of a massive mix of random voicelines. Unlike Custom Voice Lines, Voice Profiles will not be added to the list of Voice Lines. 
+
+Voice Profiles can be added by creating folders here `C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\sourceengine\sound\lambdaplayers\voiceprofiles\( Names of the Voice Profiles )`
+
+Inside your Custom Voice Profile, you can add the following folders relating to a Voice Type
+
+- idle | Voice lines that are used randomly
+- death | Voice lines that are used when the Lambda Player is killed
+- kill | Voice lines that are used when the Lambda Player kills someone
+- taunt | Voice lines that are used when a Lambda Player is about to attack someone
+
+Example of a Voice Profile:
+![image](https://user-images.githubusercontent.com/109770359/201493628-63bc45f0-492a-442c-b9f1-8217d45885c4.png)
+
+
+To use Voice Profiles in-game, either turn up the VP Use Chance or manually select a Voice Profile. 
+
+![image](https://user-images.githubusercontent.com/109770359/201493491-ee075918-1639-4308-a742-ca11a90011b8.png)
+![image](https://user-images.githubusercontent.com/109770359/201493494-82f78fee-f0c7-41df-a7a7-91b2642fbf3e.png)
+
+Addons that add Voice Profiles follow the same general process but will have this file path: `ADDONNAME/sound/lambdaplayers/voiceprofiles/( Voice Profiles )`
+
 # Hooks
 
 ### `LambdaOnConvarsCreated`
