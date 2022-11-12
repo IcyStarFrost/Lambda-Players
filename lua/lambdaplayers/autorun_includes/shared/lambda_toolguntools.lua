@@ -541,24 +541,20 @@ local function UseThrusterTool( self, target )
     if trace.Entity:GetClass()=="gmod_thruster" then return end -- Check to avoid placing thruster on thruster using trace
 
     local pos = trace.HitPos
+    local ang = trace.HitNormal:Angle()
+	ang.pitch = ang.pitch + 90
 
     self:UseWeapon( target:WorldSpaceCenter() )
-    local ent = CreateGmodEntity( "gmod_thruster", thrustermodels[ random( #thrustermodels ) ], pos + trace.HitNormal, trace.HitNormal:Angle() - Angle( 0, 90, 90 ), self )
+    local ent = CreateGmodEntity( "gmod_thruster", thrustermodels[ random( #thrustermodels ) ], pos, ang, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Thruster" )
     table_insert( self.l_SpawnedEntities, 1, ent )
 
+    local min = ent:OBBMins()
+	ent:SetPos( trace.HitPos - trace.HitNormal * min.z )
+
     local const = constraint.Weld( ent, target, 0, trace.PhysicsBone, 0, 0, true )
-
-    local ang = trace.HitNormal:Angle()
-	ang.pitch = ang.pitch + 90
-	ent:SetAngles( ang )
-
-	local CurPos = ent:GetPos()
-	local NearestPoint = ent:NearestPoint( CurPos - ( trace.HitNormal * 512 ) )
-	local Offset = CurPos - NearestPoint
-	ent:SetPos( trace.HitPos + Offset )
 
     ent:SetPlayer( self )
     ent:SetEffect( thrustereffects[ random( #thrustereffects ) ] )
@@ -566,10 +562,10 @@ local function UseThrusterTool( self, target )
     ent:SetToggle( true )
     ent:SetSound( thrustersounds[ random( #thrustersounds ) ] )
 
-    if random( 0, 1 ) == 1 then
+    if random( 1, 5 ) == 1 then
         if ( IsValid( ent:GetPhysicsObject() ) ) then ent:GetPhysicsObject():EnableCollisions( false ) end
         ent:SetCollisionGroup( COLLISION_GROUP_WORLD ) -- Only nocollide to world if attached to something
-        ent:GetPhysicsObject():SetMass( 1 ) -- If they are nocollided to the world, let's avoid them being too heavy
+        ent:GetPhysicsObject():SetMass( Clamp( ent:GetPhysicsObject():GetMass(), 1, 10 ) ) -- If they are nocollided to the world, let's avoid them being too heavy
     end
 
     local rndtime = CurTime() + rand( 1, 10 )
