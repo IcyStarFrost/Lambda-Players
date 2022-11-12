@@ -393,7 +393,7 @@ if SERVER then
         net.Broadcast()
     end
 
-    -- Returns a sequential table full of nav areas new the position
+    -- Returns a sequential table full of nav areas near the position
     function ENT:GetNavAreas( pos, dist )
         pos = pos or self:GetPos()
         dist = dist or 1500
