@@ -315,6 +315,13 @@ function LambdaPlayers_Notify( ply, text, notifynum, snd )
     net.Send( ply )
 end
 
+local TableToJSON = util.TableToJSON
+function LambdaPlayers_ChatAdd( ply, ... )
+    net.Start( "lambdaplayers_chatadd" )
+    net.WriteString( TableToJSON( { ... } ) )
+    if ply == nil then net.Broadcast() else net.Send( ply ) end
+end
+
 local ents_GetAll = ents.GetAll
 local ipairs = ipairs
 local IsValid = IsValid
