@@ -4,7 +4,9 @@ local Decompress = util.Decompress
 local TableToJSON = util.TableToJSON
 local Compress = util.Compress
 local table_insert = table.insert
+local table_RemoveByValue = table.RemoveByValue
 local ipairs = ipairs
+local table_HasValue = table.HasValue
 local table_Add = table.Add
 local mergevoicelines = GetConVar( "lambdaplayers_voice_mergeaddonvoicelines" )
 
@@ -18,15 +20,52 @@ function LAMBDAFS:WriteFile( filename, content, type )
 	if !f then return end
 
     if type == "json" then 
-        contents = TableToJSON( contents )
+        content = TableToJSON( content, true )
     elseif type == "compressed" then
-        contents = TableToJSON( contents )
-        contents = Compress( contents, #contents )
+        content = TableToJSON( content )
+        content = Compress( content, #content )
     end
 
-	f:Write( contents )
+	f:Write( content )
 	f:Close()
 end
+
+-- Updates a file or creates a new file if it doesn't exist
+-- type should be json or compressed
+function LAMBDAFS:UpdateFile( filename, addcontent, type ) 
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
+
+    if contents then
+        if addcontent[ 1 ] == "!!INSERT" then table_insert( contents, addcontent[ 2 ] ) else contents[ addcontent[ 1 ] ] = addcontent[ 2 ] end
+        LAMBDAFS:WriteFile( filename, contents, type ) 
+    else
+        local newtbl = {}
+        if addcontent[ 1 ] == "!!INSERT" then table_insert( newtbl, addcontent[ 2 ] ) else newtbl[ addcontent[ 1 ] ] = addcontent[ 2 ] end
+        LAMBDAFS:WriteFile( filename, newtbl, type ) 
+    end
+
+end
+
+-- If a file has the provided value
+-- Only works if the file is sequential
+function LAMBDAFS:FileHasValue( filename, value, type ) 
+    if !file.Exists( filename, "DATA" ) then return false end
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
+    return table_HasValue( contents, value )
+end
+
+-- Removes the specified value or key from a file.
+function LAMBDAFS:RemoveDataFromFile( filename, removevar, iskey, type ) 
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
+
+    for k, v in pairs( contents ) do
+        if iskey and k == removevar or !iskey and v == removevar then if isnumber( k ) then table.remove( contents, k ) else contents[ k ] = nil end end
+    end
+
+    LAMBDAFS:WriteFile( filename, contents, type ) 
+end
+
+
 
 function LAMBDAFS:ReadFile( filename, type, path )
 	if !path then path = "DATA" end

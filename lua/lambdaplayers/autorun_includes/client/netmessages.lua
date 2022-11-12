@@ -306,5 +306,14 @@ net.Receive( "lambdaplayers_notification", function()
     notification.AddLegacy( text, notify, 3 )
 
     if snd then surface.PlaySound( snd ) end
-    
+end )
+
+local unpack = unpack
+local JSONToTable = util.JSONToTable
+local chat_AddText = chat.AddText
+net.Receive( "lambdaplayers_chatadd", function()
+    local args = net.ReadString()
+    args = JSONToTable( args )
+
+    chat_AddText( unpack( args ) )
 end )
