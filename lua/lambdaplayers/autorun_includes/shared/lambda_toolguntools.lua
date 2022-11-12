@@ -562,10 +562,10 @@ local function UseThrusterTool( self, target )
     ent:SetToggle( true )
     ent:SetSound( thrustersounds[ random( #thrustersounds ) ] )
 
-    if random( 1, 5 ) == 1 then
+    if random( 0, 1 ) == 1 then
         if ( IsValid( ent:GetPhysicsObject() ) ) then ent:GetPhysicsObject():EnableCollisions( false ) end
         ent:SetCollisionGroup( COLLISION_GROUP_WORLD ) -- Only nocollide to world if attached to something
-        ent:GetPhysicsObject():SetMass( Clamp( ent:GetPhysicsObject():GetMass(), 1, 10 ) ) -- If they are nocollided to the world, let's avoid them being too heavy
+        ent:GetPhysicsObject():SetMass( Clamp( ent:GetPhysicsObject():GetMass(), 1, 20 ) ) -- If they are nocollided to the world, let's avoid them being too heavy
     end
 
     local rndtime = CurTime() + rand( 1, 10 )
@@ -640,6 +640,34 @@ local function UseIgniteTool( self, target ) -- Technically only a context menu 
     return true
 end
 AddToolFunctionToLambdaTools( "Ignite", UseIgniteTool )
+
+
+
+
+
+local function UseKeepUprightTool( self, target ) -- Technically only a context menu right click tool
+    if !IsValid( target ) or target:GetClass() != "prop_physics" then return end -- Only target props
+
+    self:LookTo( target, 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) then return end
+    
+    local phys = target:GetPhysicsObjectNum( 0 )
+    if ( !IsValid( phys ) ) then return end
+
+    if target:GetNWBool( "IsUpright" ) then-- If we target a prop already keptupright, remove the constraint
+        constraint.RemoveConstraints( target, "Keepupright" )
+    else -- Otherwise apply the keepupright constraint
+        local const = constraint.Keepupright( target, phys:GetAngles(), 0, 999999 )
+        if const then target:SetNWBool( "IsUpright", true ) end
+    end
+
+    self:UseWeapon( target:WorldSpaceCenter() ) -- Not a 'real' tool but still want to see it happen
+
+    return true
+end
+AddToolFunctionToLambdaTools( "KeepUpright", UseKeepUprightTool )
 
 
 
