@@ -568,7 +568,7 @@ local function UseThrusterTool( self, target )
 
     if random( 0, 1 ) == 1 then
         if ( IsValid( ent:GetPhysicsObject() ) ) then ent:GetPhysicsObject():EnableCollisions( false ) end
-        ent:SetCollisionGroup( COLLISION_GROUP_WORLD )
+        ent:SetCollisionGroup( COLLISION_GROUP_WORLD ) -- Only nocollide to world if attached to something
         ent:GetPhysicsObject():SetMass( 1 ) -- If they are nocollided to the world, let's avoid them being too heavy
     end
 
@@ -612,6 +612,38 @@ local function UsePhysPropTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "PhysicalProperties", UsePhysPropTool )
+
+
+
+
+
+local function CanEntityBeSetOnFire( ent ) -- Taken from the ignite properties
+
+	-- func_pushable, func_breakable & func_physbox cannot be ignited
+	if ( ent:GetClass() == "item_item_crate" ) then return true end
+	if ( ent:GetClass() == "simple_physics_prop" ) then return true end
+	if ( ent:GetClass():match( "prop_physics*") ) then return true end
+	if ( ent:GetClass():match( "prop_ragdoll*") ) then return true end
+	if ( ent:IsNPC() ) then return true end
+
+	return false
+
+end
+local function UseIgniteTool( self, target ) -- Technically only a context menu right click tool
+    if !IsValid( target ) then return end
+
+    self:LookTo( target, 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) or !CanEntityBeSetOnFire( target ) then return end
+    if target:IsOnFire() then target:Extinguish() else target:Ignite( 360 ) end
+
+
+    self:UseWeapon( target:WorldSpaceCenter() ) -- Not a 'real' tool but still want to see it happen
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Ignite", UseIgniteTool )
 
 
 
