@@ -11,6 +11,7 @@ Currently the project will only be located here on Github and will be seen on th
 Custom Profile Pictures can be added by putting .png and .jpg images in this folder, `DRIVE:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\materials\lambdaplayers\custom_profilepictures` or `DRIVE:\Program Files (x86)\Steam\steamapps\common\GarrysMod\sourceengine\materials\lambdaplayers\custom_profilepictures` Note that you can create sub folders in custom_profilepictures containing images to be able to organize your image files.
 
 Addons that add profile pictures should have this file path: `ADDONNAME/materials/lambdaplayers/custom_profilepictures/( Any .png/.jpg image files)`
+### Remember to Update Lambda Data after any changes!
 
 ## Names
 
@@ -25,6 +26,8 @@ Files you want to import should go in, `C:\Program Files (x86)\Steam\steamapps\c
 ![alt text](https://cdn.discordapp.com/attachments/696733081763315803/1041036572562296954/image.png)
 
 Addons that add custom names should have this file path: `ADDONNAME/materials/lambdaplayers/data/customnames/( Any exported nameexport.json or .txt files here)`
+
+### Remember to Update Lambda Data after any changes!
 
 ## Custom Voice lines
 
@@ -60,6 +63,8 @@ To use Voice Profiles in-game, either turn up the VP Use Chance or manually sele
 ![image](https://user-images.githubusercontent.com/109770359/201493494-82f78fee-f0c7-41df-a7a7-91b2642fbf3e.png)
 
 Addons that add Voice Profiles follow the same general process but will have this file path: `ADDONNAME/sound/lambdaplayers/voiceprofiles/( Voice Profiles )`
+
+### Remember to Update Lambda Data after any changes!
 
 # Hooks
 
