@@ -49,9 +49,12 @@ end
     local idledir = GetConVar( "lambdaplayers_voice_idledir" )
     local drawflashlight = GetConVar( "lambdaplayers_drawflashlights" )
     local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
+    local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
     local CurTime = CurTime
+    local min = math.min
     local color_white = color_white
     local TraceHull = util.TraceHull
+    local QuickTrace = util.QuickTrace
     local FrameTime = FrameTime
     local unstucktable = {}
     local sub = string.sub
@@ -97,6 +100,7 @@ function ENT:Initialize()
         self.l_SimpleTimers = {}
         self.l_NexthealthUpdate = 0
         self.l_stucktimes = 0
+        self.NextFootstepTime = 0
         self.l_stucktimereset = 0
         self.l_movepos = nil
         self.l_nextdoorcheck = 0
@@ -250,6 +254,14 @@ function ENT:Think()
     
     if SERVER then
         if self.l_ispickedupbyphysgun then self.loco:SetVelocity( Vector() ) end
+
+        if CurTime() > self.NextFootstepTime and self:IsOnGround() and !self.loco:GetVelocity():IsZero() then
+            local desSpeed = self.loco:GetDesiredSpeed()
+            local result = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32600, self )
+            local stepsounds = _LAMBDAPLAYERSFootstepMaterials[ result.MatType ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ]
+            self:EmitSound( stepsounds[ random( #stepsounds ) ], 75, 100, 0.5 )
+            self.NextFootstepTime = CurTime() + min(0.25 * (400 / desSpeed), 0.35)
+        end
 
         if CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 1, 100 ) <= self:GetVoiceChance() then
             local idlesounds = LambdaVoiceLinesTable.idle
