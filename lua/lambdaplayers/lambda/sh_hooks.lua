@@ -212,7 +212,7 @@ if SERVER then
             damage = 10
         end
 
-        if damage > 0 and self:WaterLevel() < 1 then
+        if damage > 0 then
             local info = DamageInfo()
             info:SetDamage( damage )
             info:SetAttacker( Entity( 0 ) )
