@@ -100,6 +100,8 @@ local function UseLightTool( self, target )
 
     coroutine.wait( 1 )
 
+    if trace.Entity:GetClass()=="gmod_light" then return end -- Check to avoid placing light on light using trace
+
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_light", nil, pos + trace.HitNormal * 8, trace.HitNormal:Angle() - Angle( 90, 0, 0 ), self ) -- Create the light
     ent.LambdaOwner = self
@@ -249,6 +251,8 @@ local function UseBalloonTool( self, target )
 
     coroutine.wait( 1 )
 
+    if trace.Entity:GetClass()=="gmod_balloon" then return end -- Check to avoid placing balloon on balloon using trace
+
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_balloon", balloonModel.model, pos, nil, self ) -- Create the balloon
     ent.LambdaOwner = self
@@ -369,6 +373,8 @@ local function UseEmitterTool( self, target )
 
     coroutine.wait( 1 )
 
+    if trace.Entity:GetClass()=="gmod_emitter" then return end -- Check to avoid placing emitter on emitter using trace
+    
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_emitter", "models/props_lab/tpplug.mdl", pos + trace.HitNormal, trace.HitNormal:Angle() - Angle( 0, 90, 90 ), self )
     ent.LambdaOwner = self
@@ -461,7 +467,7 @@ AddToolFunctionToLambdaTools( "Rope", UseRopeTool )
 
 local hoverballmodels = { "models/dav0r/hoverball.mdl", "models/maxofs2d/hover_basic.mdl", "models/maxofs2d/hover_classic.mdl", "models/maxofs2d/hover_plate.mdl", "models/maxofs2d/hover_propeller.mdl", "models/maxofs2d/hover_rings.mdl" }
 local function UseHoverballTool( self, target )
-    if !self:IsUnderLimit( "Hoverball" ) or !IsValid( target ) then return end
+    if !self:IsUnderLimit( "Hoverball" ) or !IsValid( target ) or target:GetClass()=="gmod_hoverball" then return end
 
     self:LookTo( target, 2 )
 
@@ -469,6 +475,8 @@ local function UseHoverballTool( self, target )
     if !IsValid( target ) then return end
 
     local trace = self:Trace( target:WorldSpaceCenter() )
+
+    if trace.Entity:GetClass()=="gmod_hoverball" then return end -- Check to avoid placing hoverball on hoverball using trace
 
     local pos = trace.HitPos
 
@@ -527,8 +535,10 @@ local function UseThrusterTool( self, target )
 
     coroutine.wait( 1 )
     if !IsValid( target ) then return end
-    
+
     local trace = self:Trace( target:WorldSpaceCenter() )
+
+    if trace.Entity:GetClass()=="gmod_thruster" then return end -- Check to avoid placing thruster on thruster using trace
 
     local pos = trace.HitPos
 
@@ -540,9 +550,6 @@ local function UseThrusterTool( self, target )
     table_insert( self.l_SpawnedEntities, 1, ent )
 
     local const = constraint.Weld( ent, target, 0, trace.PhysicsBone, 0, 0, true )
-
-    if IsValid( ent:GetPhysicsObject() )  then ent:GetPhysicsObject():EnableCollisions( false ) end
-    ent:SetCollisionGroup( COLLISION_GROUP_WORLD )
 
     local ang = trace.HitNormal:Angle()
 	ang.pitch = ang.pitch + 90
@@ -562,6 +569,7 @@ local function UseThrusterTool( self, target )
     if random( 0, 1 ) == 1 then
         if ( IsValid( ent:GetPhysicsObject() ) ) then ent:GetPhysicsObject():EnableCollisions( false ) end
         ent:SetCollisionGroup( COLLISION_GROUP_WORLD )
+        ent:GetPhysicsObject():SetMass( 1 ) -- If they are nocollided to the world, let's avoid them being too heavy
     end
 
     local rndtime = CurTime() + rand( 1, 10 )
