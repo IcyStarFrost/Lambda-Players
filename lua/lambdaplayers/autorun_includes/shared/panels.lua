@@ -3,6 +3,9 @@ local pairs = pairs
 local table_insert = table.insert
 local TableToJSON = util.TableToJSON
 local JSONToTable = util.JSONToTable
+local table_ClearKeys = table.ClearKeys
+local table_Empty = table.Empty
+local SortedPairs = SortedPairs
 
 -- Base panel stuff
 if CLIENT then
@@ -137,6 +140,15 @@ if CLIENT then
         return panel
     end
     
+
+    function LAMBDAPANELS:SortValues( tbl )
+        local sorttable = {}
+
+        for k, v in pairs( tbl ) do sorttable[ v ] = v end
+
+        table_Empty( tbl )
+        for k, v in SortedPairs( sorttable ) do tbl[ #tbl + 1 ] = v end
+    end
 
     function LAMBDAPANELS:WriteServerFile( filename, content, type )
         net.Start( "lambdaplayers_writefile" )

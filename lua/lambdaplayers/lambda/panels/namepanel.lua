@@ -7,6 +7,7 @@ local function OpenNamePanel( ply )
     if !IsValid( ply ) then return elseif !ply:IsSuperAdmin() then notification.AddLegacy( "You must be a Super Admin in order to use this!", NOTIFY_ERROR, 4) surface.PlaySound( "buttons/button10.wav" ) return end
 
     local names = {}
+    local sortednames = {}
     local hasdata = false
     local panel = LAMBDAPANELS:CreateFrame( "Custom Name Editor", 300, 300 ) -- Start with the panel
 
@@ -104,7 +105,9 @@ local function OpenNamePanel( ply )
 
     LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/customnames.json", function( data, bytes )
 
+        LAMBDAPANELS:SortValues( data )
         table.Merge( names, data ) 
+        
         hasdata = true
 
         for k, v in ipairs( data ) do
