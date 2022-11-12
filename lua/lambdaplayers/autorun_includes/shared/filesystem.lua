@@ -147,6 +147,13 @@ function LAMBDAFS:GetMaterialTable()
     local customcontent = LAMBDAFS:ReadFile( "lambdaplayers/custommaterials.json", "json" ) or {}
     local defaultcontent = LAMBDAFS:ReadFile( "materials/lambdaplayers/data/materials.vmt", "json", "GAME" )
     local mergedtable = table_Add( defaultcontent, customcontent )
+
+    local overridemats = list.Get( "OverrideMaterials" )
+
+    for k, v in ipairs( overridemats ) do
+        if !table_HasValue( defaultcontent, v ) then table_insert( defaultcontent, v ) end
+    end
+
     return mergedtable
 end
 
