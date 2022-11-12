@@ -48,11 +48,14 @@ end
     local Vector = Vector
     local coroutine = coroutine
     local debugoverlay = debugoverlay
+    local table_Random = table.Random
+    local table_GetKeys = table.GetKeys
     local voicepitchmin = GetConVar( "lambdaplayers_voice_voicepitchmin" )
     local voicepitchmax = GetConVar( "lambdaplayers_voice_voicepitchmax" )
     local idledir = GetConVar( "lambdaplayers_voice_idledir" )
     local drawflashlight = GetConVar( "lambdaplayers_drawflashlights" )
     local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
+    local voiceprofilechance = GetConVar( "lambdaplayers_lambda_voiceprofileusechance" )
     local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
     local CurTime = CurTime
     local min = math.min
@@ -79,6 +82,7 @@ LambdaPlayerProps = LambdaPlayerProps or LAMBDAFS:GetPropTable()
 LambdaPlayerMaterials = LambdaPlayerMaterials or LAMBDAFS:GetMaterialTable()
 Lambdaprofilepictures = Lambdaprofilepictures or LAMBDAFS:GetProfilePictures()
 LambdaVoiceLinesTable = LambdaVoiceLinesTable or LAMBDAFS:GetVoiceLinesTable()
+LambdaVoiceProfiles = LambdaVoiceProfiles or LAMBDAFS:GetVoiceProfiles()
 
 function ENT:Initialize()
 
@@ -140,6 +144,9 @@ function ENT:Initialize()
         
         
         self:SetVoicePitch( random( voicepitchmin:GetInt(), voicepitchmax:GetInt() ) )
+
+        local vpchance = voiceprofilechance:GetInt()
+        if vpchance > 0 and random( 1, 100 ) < vpchance then local vps = table_GetKeys( LambdaVoiceProfiles ) self.l_VoiceProfile = vps[ random( #vps ) ] end
 
         ----
 
@@ -266,11 +273,10 @@ function ENT:Think()
             self:EmitSound( stepsounds[ random( #stepsounds ) ], 75, 100, 0.5 )
             self.NextFootstepTime = CurTime() + min(0.25 * (400 / desSpeed), 0.35)
         end
-
+        
         if CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 1, 100 ) <= self:GetVoiceChance() then
-            local idlesounds = LambdaVoiceLinesTable.idle
             
-            self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or idlesounds[ random( #idlesounds ) ], true )
+            self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
             self.l_nextidlesound = CurTime() + 5
         end
         

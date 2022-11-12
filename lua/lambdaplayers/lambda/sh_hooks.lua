@@ -49,7 +49,7 @@ if SERVER then
 
         local deathsounds = LambdaVoiceLinesTable.death
         
-        self:PlaySoundFile( deathdir:GetString() == "randomengine" and self:GetRandomSound() or deathsounds[ random( #deathsounds ) ] )
+        self:PlaySoundFile( deathdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "death" ) )
 
         self:SetIsDead( true )
         self:SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE )
@@ -121,7 +121,7 @@ if SERVER then
             local killlines = LambdaVoiceLinesTable.kill
             self:DebugPrint( "killed ", victim )
 
-            if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or killlines[ random( #killlines ) ] ) end 
+            if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "kill" ) ) end 
 
         else -- Someone else killed the victim
 
@@ -188,10 +188,12 @@ if SERVER then
     function ENT:OnSpawnedByPlayer( ply )
         local respawn = tobool( ply:GetInfoNum( "lambdaplayers_lambda_shouldrespawn", 0 ) )
         local weapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )
+        local voiceprofile = ply:GetInfo( "lambdaplayers_lambda_voiceprofile" )
 
         self:SetRespawn( ply:IsAdmin() or allowrespawn:GetBool() )
         self:SwitchWeapon( weapon )
         self.l_SpawnWeapon = weapon
+        self.l_VoiceProfile = voiceprofile != "" and voiceprofile or self.l_VoiceProfile
         
 
         self:DebugPrint( "Applied client settings from ", ply )

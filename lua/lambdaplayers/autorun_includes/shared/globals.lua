@@ -29,7 +29,7 @@ end
 _LAMBDAWEAPONCLASSANDPRINTS = {}
 
 for k, v in pairs( _LAMBDAPLAYERSWEAPONS ) do
-	_LAMBDAWEAPONCLASSANDPRINTS[ k ] = v.prettyname
+	_LAMBDAWEAPONCLASSANDPRINTS[ v.prettyname ] = k
 end
 
 CreateLambdaConvar( "lambdaplayers_lambda_spawnweapon", "physgun", true, true, true, "The weapon lambda players will spawn with", 0, 1, { type = "Combo", options = _LAMBDAWEAPONCLASSANDPRINTS, name = "Spawn Weapon", category = "Lambda Player Settings" } )

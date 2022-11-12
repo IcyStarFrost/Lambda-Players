@@ -203,6 +203,7 @@ function ENT:ExportLambdaInfo()
         --
 
         voicepitch = self:GetVoicePitch(),
+        voiceprofile = self.l_VoiceProfile,
 
         -- Non personal data --
         respawn = self:GetRespawn(),
@@ -251,6 +252,7 @@ if SERVER then
             SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
             self:SetVoicePitch( info.voicepitch or self:GetVoicePitch() )
+            self.l_VoiceProfile = info.voiceprofile or self.l_VoiceProfile
 
             -- Non Personal Data --
 
@@ -282,7 +284,7 @@ if SERVER then
     -- Attacks the specified entity
     function ENT:AttackTarget( ent )
         local tauntsounds = LambdaVoiceLinesTable.taunt
-        if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( tauntdir:GetString() == "randomengine" and self:GetRandomSound() or tauntsounds[ random( #tauntsounds ) ], true ) end
+        if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( tauntdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "taunt" ), true ) end
         self:SetEnemy( ent )
         self:SetState( "Combat" )
         self:CancelMovement()
@@ -450,6 +452,19 @@ if SERVER then
         end
 
         return ""
+    end
+
+    -- Retrieves a voice line from our Voice Profile or the Voicelines table
+    function ENT:GetVoiceLine( voicetype )
+        if self.l_VoiceProfile then
+            local vptable = LambdaVoiceProfiles[ self.l_VoiceProfile ][ voicetype ]
+            if vptable and #vptable > 0 then
+                return vptable[ random( #vptable ) ]
+            end
+        end
+        local tbl = LambdaVoiceLinesTable[ voicetype ]
+
+        return tbl[ random( #tbl ) ] 
     end
 
     -- Makes the Lambda say the specified file or file path.

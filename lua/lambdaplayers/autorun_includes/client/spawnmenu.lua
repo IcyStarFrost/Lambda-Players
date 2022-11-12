@@ -80,10 +80,10 @@ local function AddLambdaPlayersoptions()
                     local combo = panel:ComboBox( v.name, v.convar )
 
                     for k, v in pairs( v.options ) do
-                        combo:AddChoice( v, k )
+                        combo:AddChoice( k, v )
                     end
 
-                    local lbl = panel:ControlHelp( v.desc .. "\nDefault Value: " .. ( v.default == 1 and "True" or "False") )
+                    local lbl = panel:ControlHelp( v.desc .. "\nDefault Value: " .. v.default )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
                 end
             end
