@@ -5,6 +5,10 @@ ENT.PrintName = "Lambda Player"
 ENT.Author = "StarFrost"
 ENT.IsLambdaPlayer = true
 
+local include = include
+local print = print
+local AddCSLuaFile = AddCSLuaFile
+
 --- Include files based on sv_ sh_ or cl_
 local ENTFiles = file.Find( "lambdaplayers/lambda/*", "LUA", "nameasc" )
 
