@@ -227,3 +227,11 @@ function LAMBDAFS:GetVoiceProfiles()
     
     return LambdaVoiceProfiles
 end
+
+
+LambdaPlayerNames = LambdaPlayerNames or LAMBDAFS:GetNameTable()
+LambdaPlayerProps = LambdaPlayerProps or LAMBDAFS:GetPropTable()
+LambdaPlayerMaterials = LambdaPlayerMaterials or LAMBDAFS:GetMaterialTable()
+Lambdaprofilepictures = Lambdaprofilepictures or LAMBDAFS:GetProfilePictures()
+LambdaVoiceLinesTable = LambdaVoiceLinesTable or LAMBDAFS:GetVoiceLinesTable()
+LambdaVoiceProfiles = LambdaVoiceProfiles or LAMBDAFS:GetVoiceProfiles()
