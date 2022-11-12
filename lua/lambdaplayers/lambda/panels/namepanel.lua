@@ -19,6 +19,7 @@ local function OpenNamePanel( ply )
     addtextentry:Dock( BOTTOM )
 
     LAMBDAPANELS:CreateLabel( "Remove a name by Right Clicking it", panel, TOP )
+    LAMBDAPANELS:CreateLabel( "Remember to Update Lambda Data after any changes!", panel, TOP )
 
     local searchbar = LAMBDAPANELS:CreateSearchBar( listview, names, panel )
     searchbar:Dock( TOP )
