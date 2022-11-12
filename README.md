@@ -12,6 +12,20 @@ Custom Profile Pictures can be added by putting .png and .jpg images in this fol
 
 Addons that add profile pictures should have this file path: `ADDONNAME/materials/lambdaplayers/custom_profilepictures/( Any .png/.jpg image files)`
 
+### Names
+
+Custom names can be added in the in game Name Panel found in the Spawnmenu at Lambda Players>Panels. The panel allows you to export your names to share with others. The panel is also capable of importing nameexport.json files full of names or txt files full of names formatted like
+- Garry
+- Sora
+- Breen
+
+Files you want to import should go in, `C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\data\lambdaplayers\nameimport`
+
+
+![alt text](https://cdn.discordapp.com/attachments/696733081763315803/1041036572562296954/image.png)
+
+Addons that add custom names should have this file path: `ADDONNAME/materials/lambdaplayers/data/customnames/( Any exported nameexport.json or .txt files here)`
+
 ### Custom Voice lines
 
 Custom Voice lines can be used by simply defining a directory relative to `GarrysMod/sourceengine/sound` folder in Directories in Voice Options as shown below.
