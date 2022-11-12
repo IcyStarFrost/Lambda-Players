@@ -39,8 +39,7 @@ function LAMBDAFS:UpdateFile( filename, addcontent, type )
         if addcontent[ 1 ] == "!!INSERT" then table_insert( contents, addcontent[ 2 ] ) else contents[ addcontent[ 1 ] ] = addcontent[ 2 ] end
         LAMBDAFS:WriteFile( filename, contents, type ) 
     else
-        local newtbl = {}
-        if addcontent[ 1 ] == "!!INSERT" then table_insert( newtbl, addcontent[ 2 ] ) else newtbl[ addcontent[ 1 ] ] = addcontent[ 2 ] end
+        local newtbl = istable( addcontent ) and addcontent or { addcontent }
         LAMBDAFS:WriteFile( filename, newtbl, type ) 
     end
 
@@ -89,10 +88,51 @@ function LAMBDAFS:ReadFile( filename, type, path )
 	return str
 end
 
+
+
+local function HandleCustomNameFile( path, default )
+    local isjson = string.EndsWith( path, ".json" )
+    local tbl = {}
+    if isjson then
+        local jsoncontents = LAMBDAFS:ReadFile( path, "json", "GAME" )
+        
+        for k, v in ipairs( jsoncontents ) do
+            if !table.HasValue( default, v ) then 
+                table_insert( tbl, v )
+            end
+        end
+
+    else
+        local txtcontents = LAMBDAFS:ReadFile( path, nil, "GAME" ) 
+        txtcontents = string.Explode( "\n", txtcontents )
+
+        for k, v in ipairs( txtcontents ) do
+            if !table.HasValue( default, v ) then 
+                table_insert( tbl, v )
+            end
+        end
+
+    end
+
+    return tbl
+end
+
+
+
 function LAMBDAFS:GetNameTable()
     local customcontent = LAMBDAFS:ReadFile( "lambdaplayers/customnames.json", "json" ) or {}
     local defaultcontent = LAMBDAFS:ReadFile( "materials/lambdaplayers/data/names.vmt", "json", "GAME" )
     local mergedtable = table_Add( defaultcontent, customcontent )
+
+    local function MergeDirectory( dir )
+        dir = dir .. "/"
+        local files, dirs = file.Find( "materials/" .. dir .. "*", "GAME", "nameasc" )
+        for k, v in ipairs( files ) do table_Add( defaultcontent, HandleCustomNameFile( "materials/" .. dir .. v, defaultcontent ) ) end
+        for k, v in ipairs( dirs ) do MergeDirectory( dir .. v ) end
+    end
+    MergeDirectory( "lambdaplayers/data/customnames" )
+
+
     return mergedtable
 end
 

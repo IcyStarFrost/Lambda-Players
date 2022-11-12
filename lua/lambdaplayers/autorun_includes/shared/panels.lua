@@ -36,6 +36,19 @@ if CLIENT then
         return panel
     end
 
+    function LAMBDAPANELS:CreateExportPanel( name, parent, dock, buttontext, targettable, exporttype, exportpath )
+
+        local button = vgui.Create( "DButton", parent )
+        button:SetText( buttontext )
+        button:Dock( dock )
+
+        function button:DoClick() 
+            LAMBDAPANELS:WriteServerFile( exportpath, targettable, exporttype )
+            Derma_Message( "Exported file to " .. "garrysmod/data/" .. exportpath, "Export", "Ok" )
+        end
+
+    end
+
     function LAMBDAPANELS:CreateImportPanel( name, parent, dock, buttontext, labels, searchpath, importfunction )
 
 
@@ -123,6 +136,15 @@ if CLIENT then
 
         return panel
     end
+    
+
+    function LAMBDAPANELS:WriteServerFile( filename, content, type )
+        net.Start( "lambdaplayers_writefile" )
+        net.WriteString( filename )
+        net.WriteString( TableToJSON( { content } ) )
+        net.WriteString( type )
+        net.SendToServer()
+    end
 
     function LAMBDAPANELS:AddToServerFile( filename, content, type )
         net.Start( "lambdaplayers_addtoserverfile" )
@@ -176,10 +198,21 @@ elseif SERVER then
     util.AddNetworkString( "lambdaplayers_requestdata" )
     util.AddNetworkString( "lambdaplayers_returndata" )
     util.AddNetworkString( "lambdaplayers_addtoserverfile" )
+    util.AddNetworkString( "lambdaplayers_writefile" )
     util.AddNetworkString( "lambdaplayers_removedatafromfile" )
 
     local table_Count = table.Count
     local NiceSize = string.NiceSize
+
+
+    net.Receive( "lambdaplayers_writefile", function( len, ply )
+        local filename = net.ReadString()
+        local content = net.ReadString()
+        local type = net.ReadString()
+        content = JSONToTable( content )[ 1 ]
+    
+        LAMBDAFS:WriteFile( filename, content, type ) 
+    end )
 
     net.Receive( "lambdaplayers_addtoserverfile", function( len, ply )
         local filename = net.ReadString()

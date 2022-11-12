@@ -1,5 +1,5 @@
 file.CreateDir( "lambdaplayers/nameimport" )
-
+file.CreateDir( "lambdaplayers/exportednames" )
 
 
 -- This took way to long to make. It wasn't this panel's fault it was more so I was having so much trouble with file writing and that stuff
@@ -31,6 +31,8 @@ local function OpenNamePanel( ply )
         "Oliver",
         "In the garrysmod/data/lambdaplayers/nameimport folder to be able to import them"
     }
+
+    LAMBDAPANELS:CreateExportPanel( "Name", panel, BOTTOM, "Export Names to file", names, "json", "lambdaplayers/exportednames/nameexport.json" )
 
     LAMBDAPANELS:CreateImportPanel( "Name", panel, BOTTOM, "Import .TXT/.JSON files", labels, "lambdaplayers/nameimport", function( path )
         local isjson = string.EndsWith( path, ".json" )
