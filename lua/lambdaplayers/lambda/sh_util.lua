@@ -457,9 +457,11 @@ if SERVER then
     -- Retrieves a voice line from our Voice Profile or the Voicelines table
     function ENT:GetVoiceLine( voicetype )
         if self.l_VoiceProfile then
-            local vptable = LambdaVoiceProfiles[ self.l_VoiceProfile ][ voicetype ]
-            if vptable and #vptable > 0 then
-                return vptable[ random( #vptable ) ]
+            if LambdaVoiceProfiles[ self.l_VoiceProfile ] then
+                local vptable = LambdaVoiceProfiles[ self.l_VoiceProfile ][ voicetype ]
+                if vptable and #vptable > 0 then
+                    return vptable[ random( #vptable ) ]
+                end
             end
         end
         local tbl = LambdaVoiceLinesTable[ voicetype ]
