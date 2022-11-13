@@ -47,6 +47,7 @@ function ENT:Combat()
     self:MoveToPos( self:GetEnemy(), combattbl )
 end
 
+-- Wander around until we find someone to jump
 function ENT:FindTarget()
 
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end

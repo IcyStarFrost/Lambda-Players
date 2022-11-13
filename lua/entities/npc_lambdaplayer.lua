@@ -458,7 +458,7 @@ function ENT:RunBehaviour()
 
     while true do
 
-        -- TODO: Fix weird performance drop when ai_disabled is enabled
+
         if !self:GetIsDead() and !aidisable:GetBool() then
 
             local statefunc = self[ self:GetState() ] -- I forgot this was possible. See sv_states.lua
