@@ -2,6 +2,7 @@
 
 local physgunGlowMat = Material("sprites/physg_glow1")
 local physgunGlowMat2 = Material("sprites/physg_glow2")
+local random = math.random
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
@@ -22,7 +23,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             if IsValid( wepent ) then
                 
-                local size = math.random( 30, 50 )
+                local size = random( 30, 50 )
                 local drawPos = ( wepent:GetPos() + wepent:GetUp() * 2 )
                 local color = lambda:GetPhysColor()
 

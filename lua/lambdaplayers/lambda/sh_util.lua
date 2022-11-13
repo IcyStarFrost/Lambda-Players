@@ -18,6 +18,7 @@ local timer_simple = timer.Simple
 local timer_create = timer.Create
 local istable = istable
 local timer_Remove = timer.Remove
+local coroutine = coroutine
 local Trace = util.TraceLine
 local table_add = table.Add
 local EndsWith = string.EndsWith
@@ -61,6 +62,19 @@ end
 function ENT:RemoveHook( hookname, uniquename )
     self:DebugPrint( "Removed a hook: " .. hookname .. " | " .. uniquename )
     hook.Remove( hookname, "lambdaplayershook" .. self:EntIndex() .. "_" .. uniquename )
+end
+
+-- Creates a coroutine thread
+function ENT:Thread( func, name, preserve )
+	local thread = coroutine.create( func )
+    self:DebugPrint( "Created a Thread | " .. name  )
+	self:Hook( "Tick", "CoroutineThread_" .. name, function()
+		if coroutine.status( thread ) != "dead" then
+			coroutine.resume( thread )
+		else
+			self:RemoveHook( "Tick", "CoroutineThread_" .. name )
+		end
+	end, preserve, 0 )
 end
 
 -- Creates a simple timer that won't run if we are invalid or dead. ignoredead var will run the timer even if self:GetIsDead() is true
