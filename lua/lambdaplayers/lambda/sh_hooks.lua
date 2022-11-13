@@ -85,6 +85,8 @@ if SERVER then
             net.Broadcast()
         end
 
+        hook.Run( "LambdaOnKilled", self, info )
+
         if self:GetRespawn() then
             self:SimpleTimer( 2, function() self:LambdaRespawn() end, true )
         else
@@ -101,6 +103,8 @@ if SERVER then
 
     function ENT:OnInjured( info )
         local attacker = info:GetAttacker()
+
+        hook.Run( "LambdaOnInjured", self, info )
 
         if ( self:ShouldTreatAsLPlayer( attacker ) and random( 1, 3 ) == 1 or !self:ShouldTreatAsLPlayer( attacker ) and true ) and self:CanTarget( attacker ) and self:GetEnemy() != attacker and attacker != self  then
             if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
@@ -119,6 +123,8 @@ if SERVER then
         end
 
         if random( 1, 10 ) == 1 and self:GetRangeSquaredTo( victim ) <= ( 2000 * 2000 ) and !self:Trace( victim ).Hit then self:LaughAt( victim ) end
+
+        hook.Run( "LambdaOnOtherKilled", self, victim, info )
 
         -- If we killed the victim
         if attacker == self then

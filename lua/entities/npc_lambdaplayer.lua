@@ -256,6 +256,8 @@ end
 function ENT:Think()
     if self:GetIsDead() then return end
 
+    -- Allow addons to add stuff to Lambda's Think
+    hook.Run( "LambdaOnThink", self, self:GetWeaponENT() )
     
     if SERVER then
         if self.l_ispickedupbyphysgun then self.loco:SetVelocity( Vector() ) end
