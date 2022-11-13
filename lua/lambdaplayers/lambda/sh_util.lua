@@ -362,7 +362,7 @@ if SERVER then
     -- Performs a Trace from ourselves to the postion
     function ENT:Trace( pos )
         tracetable.start = self:WorldSpaceCenter()
-        tracetable.endpos = ( isentity( pos ) and pos:GetPos() or pos )
+        tracetable.endpos = ( isentity( pos ) and IsValid( pos ) and pos:GetPos() or pos )
         tracetable.filter = self 
         return Trace( tracetable )
     end
