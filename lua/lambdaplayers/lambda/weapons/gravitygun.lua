@@ -57,7 +57,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 lambda:LookTo( prop, 3 )
 
                 lambda:SimpleTimer( 1, function() -- To let the lambda aim properly
-                    if !IsValid( prop ) then return end
+                    if !IsValid( prop ) or !IsValid( wepent ) then return end
                     lambda:UseWeapon( prop )
                 end)
             
