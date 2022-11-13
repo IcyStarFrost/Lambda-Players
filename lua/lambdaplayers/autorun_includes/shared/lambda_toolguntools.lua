@@ -100,7 +100,7 @@ local function UseLightTool( self, target )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and trace.Entity:GetClass()=="gmod_light" then return end -- Check to avoid placing light on light using trace
+    if IsValid( trace.Entity ) and ( trace.Entity:GetClass()=="gmod_light" or trace.Entity:IsNextBot() or trace.Entity:IsNPC() or trace.Entity:IsPlayer() )  then return end -- Check to avoid placing light on things they shouldn't be on
 
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_light", nil, pos + trace.HitNormal * 8, trace.HitNormal:Angle() - Angle( 90, 0, 0 ), self ) -- Create the light
@@ -207,14 +207,14 @@ AddToolFunctionToLambdaTools( "Dynamite", UseDynamiteTool )
 
 
 local function UseRemoverTool( self, target )
-    if !IsValid( target ) then return end -- Returning nothing is basically the same as returning false
+    if !IsValid( target ) then return end
 
     self:LookTo( target, 2 )
 
     coroutine.wait( 1 )
-    if !IsValid( target ) then return end -- Because we wait 1 second we must make sure the target is valid
+    if !IsValid( target ) then return end
 
-    self:UseWeapon( target:WorldSpaceCenter() ) -- Use the toolgun on the target to fake using a tool
+    self:UseWeapon( target:WorldSpaceCenter() )
     
     constraint.RemoveAll( target ) -- Removes all constraints
 
@@ -229,7 +229,7 @@ local function UseRemoverTool( self, target )
         effect:SetEntity( target )
     util_Effect( "entity_remove", effect, true, true ) -- Play the remove effect
 
-    return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this
+    return true
 end
 AddToolFunctionToLambdaTools( "Remover", UseRemoverTool )
 
@@ -251,7 +251,7 @@ local function UseBalloonTool( self, target )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and trace.Entity:GetClass()=="gmod_balloon" then return end -- Check to avoid placing balloon on balloon using trace
+    if IsValid( trace.Entity ) and ( trace.Entity:GetClass()=="gmod_balloon" or trace.Entity:IsNextBot() or trace.Entity:IsNPC() or trace.Entity:IsPlayer() ) then return end -- Check to avoid placing balloon on things they shouldn't be on
 
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_balloon", balloonModel.model, pos, nil, self ) -- Create the balloon
@@ -279,14 +279,13 @@ local function UseBalloonTool( self, target )
     local constr, rope = constraint.Rope( ent, traceent, 0, trace.PhysicsBone, LPos1, LPos2, 0, random( 5, 1000 ), 0, 0.5, "cable/rope" )
     table_insert( self.l_SpawnedEntities, 1, rope )
 
-    -- Configure it
-    ent:SetPlayer( self ) -- We can safely set this to ourselves since it was "hijacked"
+    ent:SetPlayer( self )
     ent:SetColor( ColorRand( true ) )
     if ( balloonModel.skin ) then ent:SetSkin( balloonModel.skin ) end
     if ( balloonModel.nocolor ) then ent:SetColor( Color(255, 255, 255, 255) ) else ent:SetColor( ColorRand( ) ) end
     ent:SetForce( random( 50, 2000 ) ) -- While players can use negative force for balloons it kinda looks less fun
 
-    return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this
+    return true
 end
 AddToolFunctionToLambdaTools( "Balloon", UseBalloonTool )
 
@@ -373,7 +372,7 @@ local function UseEmitterTool( self, target )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and trace.Entity:GetClass()=="gmod_emitter" then return end -- Check to avoid placing emitter on emitter using trace
+    if IsValid( trace.Entity ) and ( trace.Entity:GetClass()=="gmod_emitter" or trace.Entity:IsNextBot() or trace.Entity:IsNPC() or trace.Entity:IsPlayer()  ) then return end -- Check to avoid placing emitter on things they shouldn't be on
     
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_emitter", "models/props_lab/tpplug.mdl", pos + trace.HitNormal, trace.HitNormal:Angle() - Angle( 0, 90, 90 ), self )
