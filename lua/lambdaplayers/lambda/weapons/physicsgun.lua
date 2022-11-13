@@ -30,6 +30,15 @@ local allowphysgunuse = GetConVar( "lambdaplayers_lambda_allowphysgunpickup" )
     return beam
 end ]]
 
+local ignoreentclasses = {
+    [ "func_door" ] = true,
+    [ "func_door_rotating" ] = true,
+    [ "prop_door_rotating" ] = true,
+    [ "prop_dynamic" ] = true,
+    [ "prop_dynamic_override" ] = true,
+    [ "func_button" ] = true,
+}
+
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     physgun = {
@@ -95,7 +104,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                     while true do 
                         if lambda:GetState() == "Idle" and !physgunactive then
-                            local possibleents = lambda:FindInSphere( nil, 1500, function( ent ) return lambda:HasVPhysics( ent ) and lambda:HasPermissionToEdit( ent ) and lambda:CanSee( ent ) end )
+                            local possibleents = lambda:FindInSphere( nil, 1500, function( ent ) return !ignoreentclasses[ ent:GetClass() ] and lambda:HasVPhysics( ent ) and lambda:HasPermissionToEdit( ent ) and lambda:CanSee( ent ) end )
                             local ent = possibleents[ random( #possibleents ) ]
 
                             if IsValid( ent ) then
