@@ -29,7 +29,7 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
 
     local ragdoll = ent:BecomeRagdollOnClient()
     ragdoll:DrawShadow( true )
-    ragdoll.GetPlayerColor = function() return col end
+    ragdoll.GetPlayerColor = function() return colvec end
 
     ent.ragdoll = ragdoll
 
