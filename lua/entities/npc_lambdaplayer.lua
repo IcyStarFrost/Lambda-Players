@@ -97,6 +97,7 @@ function ENT:Initialize()
         self.l_SpawnedEntities = {}
         self.l_Timers = {}
         self.l_SimpleTimers = {}
+        self.l_UpdateAnimations = true
         self.l_NexthealthUpdate = 0
         self.l_stucktimes = 0
         self.NextFootstepTime = 0
@@ -169,7 +170,7 @@ function ENT:Initialize()
         self.WeaponEnt:SetNoDraw( true )
         self:SetWeaponENT( self.WeaponEnt )
         self.l_SpawnWeapon = "physgun"
-        
+
         self:InitializeMiniHooks()
         self:SwitchWeapon( "physgun", true )
         
@@ -313,6 +314,7 @@ function ENT:Think()
         end
 
         -- Animations --
+        if self.l_UpdateAnimations then
             local anims = _LAMBDAPLAYERSHoldTypeAnimations[ self.l_HoldType ]
 
             if self:IsOnGround() then
@@ -325,6 +327,7 @@ function ENT:Think()
             elseif self:GetActivity() != anims.jump then
                 self:StartActivity( anims.jump )
             end
+        end
         --
 
 

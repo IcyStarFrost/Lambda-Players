@@ -310,6 +310,30 @@ if SERVER then
         self:CancelMovement()
     end
 
+    function ENT:LaughAt( pos )
+        pos = ( isentity( pos ) and IsValid( pos ) and pos:GetPos() or pos)
+        self:LookTo( pos, 2 )
+        self:CancelMovement()
+        self:SetState( "Laughing" )
+    end
+
+    function ENT:PlaySequenceAndWait( name, speed )
+
+        self.l_UpdateAnimations = false
+        local len = self:SetSequence( name )
+        speed = speed or 1
+    
+        self:ResetSequenceInfo()
+        self:SetCycle( 0 )
+        self:SetPlaybackRate( speed )
+    
+        -- wait for it to finish
+        coroutine.wait( len / speed )
+        
+        self.l_UpdateAnimations = true
+    
+    end
+
     -- Updates our networked health
     function ENT:UpdateHealthDisplay()
         self:SetNW2Float( "lambda_health", self:Health() )

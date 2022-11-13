@@ -41,7 +41,7 @@
     origin | String | The game or whatever the weapon originates from
     nodraw | Bool | If the weapon should not draw
     islethal | Bool | If the weapon is capable of hurting anything
-    holdtype | String | The animation set lambda should use. See globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
+    holdtype | String | The animation set lambda should use. See autorun_includes/server/globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
     ismelee | Bool | If the weapon is considered a melee weapon. False for ranged
 
 

@@ -65,3 +65,14 @@ function ENT:FindTarget()
 
     self:MoveToPos( self:GetRandomPosition() )
 end
+
+
+local laughdir = GetConVar( "lambdaplayers_voice_laughdir" )
+function ENT:Laughing()
+
+    self:PlaySoundFile( laughdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "laugh" ), true )
+
+    self:PlaySequenceAndWait( "taunt_laugh" )
+
+    self:SetState( "Idle" )
+end

@@ -118,6 +118,8 @@ if SERVER then
             self:CancelMovement()
         end
 
+        if random( 1, 10 ) == 1 and !self:Trace( victim ).Hit then self:LaughAt( victim ) end
+
         -- If we killed the victim
         if attacker == self then
             local killlines = LambdaVoiceLinesTable.kill

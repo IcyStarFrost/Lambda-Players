@@ -112,18 +112,21 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                                 lambda:LookTo( ent, 2 )
 
                                 coroutine.wait( 1 )
+                                if IsValid( ent ) then
 
-                                local result = lambda:Trace( ent )
-                                endpos = ent:WorldToLocal( result.HitPos )
-                                
-                                wepent:SetNW2Entity( "lambda_physgunent", ent )
-                                wepent:SetNW2Vector( "lambda_physgunendpos", endpos )
-                                wepent:SetNW2Bool( "lambda_physgundraw", true )
-                                physgunactive = true
+                                    local result = lambda:Trace( ent )
+                                    endpos = ent:WorldToLocal( result.HitPos )
+                                    
+                                    wepent:SetNW2Entity( "lambda_physgunent", ent )
+                                    wepent:SetNW2Vector( "lambda_physgunendpos", endpos )
+                                    wepent:SetNW2Bool( "lambda_physgundraw", true )
+                                    physgunactive = true
 
-                                local range = lambda:GetRangeTo( ent )
-                                physdistance = range < 100 and 200 or range
-                                lambda.l_physgungrabbedent = ent
+                                    local range = lambda:GetRangeTo( ent )
+                                    physdistance = range < 100 and 200 or range
+                                    lambda.l_physgungrabbedent = ent
+
+                                end
 
                             end
 
