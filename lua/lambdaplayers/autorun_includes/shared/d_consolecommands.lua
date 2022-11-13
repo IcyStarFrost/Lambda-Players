@@ -1,5 +1,6 @@
 local table_insert = table.insert
 local ents_GetAll = ents.GetAll
+local ents_FindInSphere = ents.FindInSphere
 local ipairs = ipairs
 
 -- The reason this lua file has a d_ in its filename is because of the order on how lua files are loaded.
@@ -59,6 +60,17 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cleanuplambdaents", function( ply
 
     LambdaPlayers_Notify( ply, "Cleaned up all lambda entities!", NOTIFY_CLEANUP, "buttons/button15.wav" )
 end, false, "Removes all entities that were spawned by Lambda Players", { name = "Cleanup Lambda Entities", category = "Utilities" } )
+
+
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_debugforcecombat", function( ply ) 
+    if IsValid( ply ) and !ply:IsSuperAdmin() then return end
+
+    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), 1000 ) ) do
+        if IsValid( v ) and v.IsLambdaPlayer then v:AttackTarget( ply ) end
+    end
+
+end, false, "Forces all Lambda Players within 1000 units to attack you", { name = "Force Attack You", category = "Debugging" } )
+
 
 -- Calls this hook when all default console commands have been created.
 -- This hook can be used to ensure the CreateLambdaConsoleCommand() function exists so custom console commands can be made
