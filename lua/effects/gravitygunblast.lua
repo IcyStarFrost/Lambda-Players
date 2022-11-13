@@ -10,8 +10,6 @@ function EFFECT:Init( data )
 	self:SetRenderBounds( Vector( -8, -8, -8 ), Vector( 8, 8, 8 ) )
 	self:SetPos( pos )
 
-	-- This 0.01 is a hack.. to prevent the angle being weird and messing up when we change it back to a normal
-
 	if ( IsValid( ent ) ) then
 		self:SetParentPhysNum( att )
 		self:SetParent( ent )
