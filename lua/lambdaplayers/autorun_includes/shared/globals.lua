@@ -32,7 +32,7 @@ for k, v in pairs( _LAMBDAPLAYERSWEAPONS ) do
 	_LAMBDAWEAPONCLASSANDPRINTS[ v.prettyname ] = k
 end
 
-CreateLambdaConvar( "lambdaplayers_lambda_spawnweapon", "physgun", true, true, true, "The weapon lambda players will spawn with", 0, 1, { type = "Combo", options = _LAMBDAWEAPONCLASSANDPRINTS, name = "Spawn Weapon", category = "Lambda Player Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_spawnweapon", "physgun", true, true, true, "The weapon lambda players will spawn with only if the specified weapon is allowed", 0, 1, { type = "Combo", options = _LAMBDAWEAPONCLASSANDPRINTS, name = "Spawn Weapon", category = "Lambda Player Settings" } )
 
 -- One part of the duplicator support
 -- Register the Lambdas so the duplicator knows how to handle these guys
