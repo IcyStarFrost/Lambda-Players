@@ -112,7 +112,7 @@ function ENT:Initialize()
 
         -- Personal Stats --
         
-        self:SetLambdaName( LambdaPlayerNames[ random( #LambdaPlayerNames ) ] )
+        self:SetLambdaName( self:GetOpenName() )
         self:SetProfilePicture( #Lambdaprofilepictures > 0 and Lambdaprofilepictures[ random( #Lambdaprofilepictures ) ] or "spawnicons/".. sub( self:GetModel(), 1, #self:GetModel() - 4 ).. ".png" )
 
         self:SetMaxHealth( 100 )

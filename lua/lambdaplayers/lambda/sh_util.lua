@@ -11,6 +11,8 @@ local FindInSphere = ents.FindInSphere
 local table_empty = table.Empty
 local file_Find = file.Find
 local table_Empty = table.Empty
+local table_RemoveByValue = table.RemoveByValue
+local table_Copy = table.Copy
 local ents_GetAll = ents.GetAll
 local VectorRand = VectorRand
 local SortTable = table.sort
@@ -337,6 +339,20 @@ if SERVER then
     -- Updates our networked health
     function ENT:UpdateHealthDisplay()
         self:SetNW2Float( "lambda_health", self:Health() )
+    end
+
+    -- Gets a name that is currently not being used.
+    -- If all names are being used, a random name will be picked anyways even if it is used
+    function ENT:GetOpenName()
+        local nametablecopy = table_Copy( LambdaPlayerNames )
+
+        for k, v in ipairs( GetLambdaPlayers() ) do
+            if v == self then continue end
+            table_RemoveByValue( nametablecopy, v )
+        end
+        local name = nametablecopy[ random( #nametablecopy ) ]
+        if !name then name = LambdaPlayerNames[ random( #LambdaPlayerNames ) ] end
+        return name
     end
 
     -- Makes the lambda face the position or a entity if provided
