@@ -1,0 +1,11 @@
+"Sprite"
+{
+	"$basetexture" "sprites/orangecore2"
+	
+	"$spriteorientation" "vp_parallel"
+	"$vertexalpha" 1
+	"$vertexcolor" 1
+	"$spriterendermode" 5
+	"$alpha" "0.7"
+	"$nocull" "1"
+}

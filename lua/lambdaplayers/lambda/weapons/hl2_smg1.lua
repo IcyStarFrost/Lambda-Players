@@ -16,7 +16,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         tracername = "Tracer",
         damage = 4,
         spread = 0.15,
-        rateoffire = 0.07,
+        rateoffire = 0.075,
         muzzleflash = 1,
         shelleject = "ShellEject",
         shelloffpos = Vector(3,5,5),
@@ -37,7 +37,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     wepent:EmitSound( "Weapon_SMG1.Double" )
                     
                     self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_RPG )
-                    self.l_WeaponUseCooldown = CurTime() + random( 0.55, 0.75 )
+                    self.l_WeaponUseCooldown = CurTime() + 0.5
 
                     local vecThrow = ( target:WorldSpaceCenter() - self:EyePos() ):Angle()
                     grenade:SetPos( self:EyePos() + vecThrow:Forward() * 32 + vecThrow:Up() * 32 )
