@@ -214,6 +214,7 @@ function ENT:Initialize()
 
     self:LambdaMoveMouth( 0 )
 
+    hook.Run( "LambdaOnInitialize", self, self:GetWeaponENT() )
 end
 
 
