@@ -78,19 +78,54 @@ Called when all default convars have been created. Use this hook if you want use
 
 Called when all default console commands have been created. Use this hook if you want use the `CreateLambdaConsoleCommand()` function to create custom console commands for Lambda Players externally See lambdaplayers/autorun_includes/shared/d_consolecommands.lua
 
+# Lambda Player Addon Hooks
+
+*The hooks below can be used to add onto certain features of the lambdas*
+
+
 
 ### `LambdaOnUAloaded`
 
-Called when all default UActions (Universal Actions, functions that randomly get called. Example being weapon switching) have been made. Use this hook if you want add a function to the UActions with `AddUActionToLambdaUA()` See lambdaplayers/lambda/sv_x_universalactions.lua
+*Universal Actions or UActions are functions that randomly get called during a lambda's life. Example of a UAction being weapon switching.*
+
+Called when all default UActions have been made. Use this hook if you want add a function to the UActions with `AddUActionToLambdaUA()` See lambdaplayers/lambda/sv_x_universalactions.lua
+
+
 
 ### `LambdaOnToolsLoaded`
 
 Called when all default tools are loaded. Use this hook if you want to add custom tools with `AddToolFunctionToLambdaTools()` See lambdaplayers/autorun_includes/shared/lambda_toolguntools.lua
 
+
+
 ### `LambdaOnEntLimitsCreated`
 
-Called when all default Entity Limits have been created. Use this hook if you want to make custom entity limits with `CreateLambdaEntLimit()` See lambdaplayers/autorun_includes/shared/lambda_entitylimits
+*Entity limits can help limit a certain type of entity or range of entities. This should be used in conjunction with Tool gun tools that spawn entities or Build functions that spawn untracked entities*
+
+Called when all default Entity Limits have been created. Use this hook if you want to make custom entity limits with `CreateLambdaEntLimit()` See lambdaplayers/autorun_includes/shared/lambda_entitylimits AND lambdaplayers/lambda/sv_entitylimits.lua
+
+
 
 ### `LambdaOnBuildFunctionsLoaded`
 
+*Build functions are functions that are called when a lambda player wants to build/spawn something. For example, prop spawning is used by this*
+
 Called when all default Building Functions have been loaded. Use this hook if you want to add custom building functions with `AddBuildFunctionToLambdaBuildingFunctions()` See lambdaplayers/autorun_includes/shared/lambda_x_buildingfunctions.lua
+
+
+
+### `LambdaOnInjured( Entity lambda, CTakeDamageInfo info )`
+
+Called when a Lambda Player takes damage. This hook can be used to add onto the ENT:OnInjured() hook each Lambda Player has
+
+
+
+### `LambdaOnOtherKilled( Entity lambda, Entity victim, CTakeDamageInfo info )`
+
+Called when a someone that is not the lambda player dies. This hook can be used to add onto the ENT:OnOtherKilled() hook each Lambda Player has
+
+
+
+### `LambdaOnThink( Entity lambda, Entity lambdaWeaponEntity )`
+
+Called when the lambda's ENT:Think() hook runs. This hook can be used to add onto the ENT:Think() hook each Lambda Player has
