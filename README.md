@@ -37,7 +37,7 @@ For example, if I wanted to use voicelines from `C:/Program Files (x86)/Steam/st
 
 ![alt text](https://cdn.discordapp.com/attachments/696733081763315803/1040465456131231754/image.png)
 
-Addons that add voice lines should have this file path: `ADDONNAME/sound/lambdaplayers/vo/custom/(possible folders are, death, taunt, idle, kill)/( Any sound files here. Preferably MP3 for storage reasons)`
+Addons that add voice lines should have this file path: `ADDONNAME/sound/lambdaplayers/vo/custom/(possible folders are, death, taunt, idle, kill, laugh)/( Any sound files here. Preferably MP3 for storage reasons)`
 
 See Voice Profiles to see a explanation of each voice line type
 
@@ -52,6 +52,7 @@ Inside your Custom Voice Profile, you can add the following folders relating to 
 - death | Voice lines that are used when the Lambda Player is killed
 - kill | Voice lines that are used when the Lambda Player kills someone
 - taunt | Voice lines that are used when a Lambda Player is about to attack someone
+- laugh | Voice lines that are used when a Lambda Player laughs at someone
 
 Example of a Voice Profile:
 ![image](https://user-images.githubusercontent.com/109770359/201493628-63bc45f0-492a-442c-b9f1-8217d45885c4.png)
