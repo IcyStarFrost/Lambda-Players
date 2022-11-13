@@ -12,7 +12,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         ismelee = true,
         bonemerge = true,
         keepdistance = 10,
-        attackrange = 50,
+        attackrange = 55,
 
         damage = 10,
         rateoffire = 0.8,
