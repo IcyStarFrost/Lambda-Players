@@ -21,18 +21,18 @@ function ENT:Initialize()
         local LerpVector = LerpVector
 
 
-        self:SetRenderBounds( Vector( -100000, -100000, -100000 ), Vector( 100000, 100000, 100000 ) )
+        --self:SetRenderBounds( Vector( -100000, -100000, -100000 ), Vector( 100000, 100000, 100000 ) )
 
 
         hook.Add( "PreDrawEffects", self, function()
 
             if self:GetDrawBeam() then
 
-                local s = self:GetStartPos()
+                local s = self:GetPos()
                 local e = self:GetEndPos()
                 local forward = self:GetForward()
                 local target = self:GetTargetEnt()
-                local segments = 15
+                local segments = 10
                 local color = self:GetPhysColor():ToColor()
                 local size = random( 10, 15 )
         
@@ -74,21 +74,15 @@ function ENT:Initialize()
 
 end
 
-function ENT:UpdateTransmitState()
-    return TRANSMIT_ALWAYS
-end
 
 function ENT:SetupDataTables()
 
     self:NetworkVar( "Bool", 0, "DrawBeam" )
 
-    self:NetworkVar( "Vector", 0, "StartPos" )
-    self:NetworkVar( "Vector", 1, "EndPos" )
-    self:NetworkVar( "Vector", 2, "PhysColor" )
+    self:NetworkVar( "Vector", 0, "EndPos" )
+    self:NetworkVar( "Vector", 1, "PhysColor" )
 
     self:NetworkVar( "Entity", 0, "TargetEnt" )
-
-    self:SetPhysColor( Vector( 1, 1, 1 ) )
 
 end
 

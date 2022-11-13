@@ -167,12 +167,14 @@ function ENT:Initialize()
         self.WeaponEnt:Spawn()
         self.WeaponEnt:SetNW2Vector( "lambda_weaponcolor", self:GetPhysColor() )
         self.WeaponEnt:SetNoDraw( true )
-
-        self:InitializeMiniHooks()
-        self:SwitchWeapon( "physgun", true )
+        self:SetWeaponENT( self.WeaponEnt )
         self.l_SpawnWeapon = "physgun"
         
-        self:SetWeaponENT( self.WeaponEnt )
+        self:InitializeMiniHooks()
+        self:SwitchWeapon( "physgun", true )
+        
+        
+        
 
         self:HandleAllValidNPCRelations()
 

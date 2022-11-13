@@ -10,6 +10,7 @@ function AddUActionToLambdaUA( func )
     table_insert( ENT.l_UniversalActions, func )
 end
 
+local random = math.random
 
 -- Random weapon switching
 AddUActionToLambdaUA( function( self )

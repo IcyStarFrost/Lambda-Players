@@ -61,6 +61,8 @@ if SERVER then
         self.WeaponEnt:SetNoDraw( true )
         self.WeaponEnt:DrawShadow( false )
 
+        self:SwitchWeapon( "none", true )
+
         self:GetPhysicsObject():EnableCollisions( false )
 
         self:RemoveTimers()

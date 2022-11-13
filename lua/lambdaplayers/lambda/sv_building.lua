@@ -45,6 +45,11 @@ function ENT:HasPermissionToEdit( ent )
     return false
 end
 
+-- Returns if the entity is a physics object
+function ENT:HasVPhysics( ent )
+    return !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and IsValid( ent:GetPhysicsObject() )
+end
+
 -- Building Functions --
 
 -- Spawns a prop to where we are looking

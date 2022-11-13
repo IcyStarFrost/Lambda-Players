@@ -57,7 +57,7 @@ function ENT:Chance_Tool()
 
     self:PreventWeaponSwitch( true )
 
-    local find = self:FindInSphere( nil, 400, function( ent ) if !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
+    local find = self:FindInSphere( nil, 400, function( ent ) if self:HasVPhysics( ent ) and self:CanSee( ent ) and self:HasPermissionToEdit( ent ) then return true end end )
     local target = find[ random( #find ) ]
 
     -- Loops through random tools and only stops if a tool tells us it actually got used by returning true 

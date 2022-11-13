@@ -93,6 +93,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_shouldrespawn", 0, true, true, true, "
 CreateLambdaConvar( "lambdaplayers_building_caneditworld", 1, true, false, false, "If the lambda players are allowed to use the Physgun and Toolgun on world entities", 0, 1, { type = "Bool", name = "Allow Edit World", category = "Building" } )
 CreateLambdaConvar( "lambdaplayers_building_caneditnonworld", 1, true, false, false, "If the lambda players are allowed to use the Physgun and Toolgun on non world entities. Typically player spawned entities and addon spawned entities", 0, 1, { type = "Bool", name = "Allow Edit Non World", category = "Building" } )
 CreateLambdaConvar( "lambdaplayers_building_canedityourents", 1, true, true, true, "If the lambda players are allowed to use the Physgun and Toolgun on your props and entities", 0, 1, { type = "Bool", name = "Allow Edit Your Entities", category = "Building" } )
+CreateLambdaConvar( "lambdaplayers_lambda_allowphysgunpickup", 1, true, false, false, "If lambda players are able to pickup things with their physgun", 0, 1, { type = "Bool", name = "Allow Physgun Pickup", category = "Building" } )
 --
 
 -- Voice Related Convars

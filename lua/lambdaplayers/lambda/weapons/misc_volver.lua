@@ -26,7 +26,20 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 self:EmitSound( "ambient/explosions/explode_4.wav", 70, 100, 1, CHAN_WEAPON )
                 self:EmitSound( "physics/body/body_medium_break"..math.random( 2, 4 )..".wav", 90)
 
+                local attach = wepent:GetAttachment( 1 )
+
                 self:HandleMuzzleFlash( 7 )
+
+                util.ScreenShake( self:GetPos(), 10, 170, 3, 1500 )
+
+                local effect = EffectData()
+                    effect:SetOrigin( attach.Pos )
+                    effect:SetStart( attach.Pos )
+                    effect:SetAngles( attach.Ang )
+                    effect:SetMagnitude( 5 )
+                    effect:SetScale( 10 )
+                    effect:SetRadius( 10 )
+                util_Effect( "cball_bounce", effect, true, true )
 
                 bullettbl.Attacker = self
                 bullettbl.Damage = 1000
@@ -41,8 +54,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 
                 wepent:FireBullets( bullettbl )
 
-                util.ScreenShake( self:GetPos(), 10, 170, 3, 1500 )
-                
                 local dmg = DamageInfo()
                 dmg:SetDamage( self:Health() * 100000 )
                 dmg:SetDamageType( DMG_BLAST ) 
@@ -50,15 +61,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 dmg:SetInflictor( self )
                 dmg:SetDamageForce( self:GetForward() * -80000000 )
                 self:TakeDamageInfo( dmg )
-
-                local effect = EffectData()
-                    effect:SetOrigin( wepent:GetAttachment( 1 ).Pos )
-                    effect:SetStart( wepent:GetAttachment( 1 ).Pos )
-                    effect:SetAngles( wepent:GetAttachment( 1 ).Ang )
-                    effect:SetMagnitude( 5 )
-                    effect:SetScale( 10 )
-                    effect:SetRadius( 10 )
-                util_Effect( "cball_bounce", effect, true, true )
             end)
             
             return true

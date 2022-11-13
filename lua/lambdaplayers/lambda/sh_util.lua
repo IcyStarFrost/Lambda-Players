@@ -70,11 +70,17 @@ function ENT:Thread( func, name, preserve )
     self:DebugPrint( "Created a Thread | " .. name  )
 	self:Hook( "Tick", "CoroutineThread_" .. name, function()
 		if coroutine.status( thread ) != "dead" then
-			coroutine.resume( thread )
+			local ok, msg = coroutine.resume( thread )
+            if !ok then ErrorNoHaltWithStack( self, " ", msg ) end
 		else
 			self:RemoveHook( "Tick", "CoroutineThread_" .. name )
 		end
 	end, preserve, 0 )
+end
+
+-- Kills the specified thread, making it stop running
+function ENT:KillThread( name )
+    self:RemoveHook( "Tick", "CoroutineThread_" .. name )
 end
 
 -- Creates a simple timer that won't run if we are invalid or dead. ignoredead var will run the timer even if self:GetIsDead() is true
@@ -356,7 +362,7 @@ if SERVER then
     -- Performs a Trace from ourselves to the postion
     function ENT:Trace( pos )
         tracetable.start = self:WorldSpaceCenter()
-        tracetable.endpos = pos
+        tracetable.endpos = ( isentity( pos ) and pos:GetPos() or pos )
         tracetable.filter = self 
         return Trace( tracetable )
     end
