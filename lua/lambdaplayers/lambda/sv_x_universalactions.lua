@@ -11,12 +11,27 @@ function AddUActionToLambdaUA( func )
 end
 
 local random = math.random
+local rand = math.Rand
 
 -- Random weapon switching
 AddUActionToLambdaUA( function( self )
     if self:GetState() != "Idle" then return end
     self:SwitchToRandomWeapon()
 end )
+
+-- Use a random act
+AddUActionToLambdaUA( function( self )
+    if self:GetState() != "Idle" or random( 1, 2 ) != 1 then return end
+    self:CancelMovement()
+    self:SetState( "UsingAct" )
+end )
+
+-- Undo entities
+AddUActionToLambdaUA( function( self )
+    if self:GetState() != "Idle" then return end
+    self:NamedTimer( "Undoentities", rand( 0.3, 0.6 ), random( 1, 6 ), function() self:UndoLastSpawnedEnt() end )
+end )
+
 
 
 -- Called when all default UA actions have been made

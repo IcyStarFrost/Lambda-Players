@@ -76,3 +76,10 @@ function ENT:Laughing()
 
     self:SetState( "Idle" )
 end
+
+
+local acts = { "taunt_dance", "taunt_robot", "taunt_muscle", "taunt_cheer" }
+function ENT:UsingAct()
+    self:PlaySequenceAndWait( acts[ random( #acts ) ] )
+    self:SetState( "Idle" )
+end
