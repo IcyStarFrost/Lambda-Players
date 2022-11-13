@@ -49,7 +49,7 @@ end
 
 function ENT:FindTarget()
 
-    self:SwitchToLethalWeapon()
+    if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
 
     self:Hook( "Tick", "CombatTick", function()
         if LambdaIsValid( self:GetEnemy() ) or self:GetState() != "FindTarget" then return "end" end

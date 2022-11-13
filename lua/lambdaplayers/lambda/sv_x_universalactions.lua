@@ -15,8 +15,11 @@ local rand = math.Rand
 
 -- Random weapon switching
 AddUActionToLambdaUA( function( self )
-    if self:GetState() != "Idle" then return end
-    self:SwitchToRandomWeapon()
+    if self:GetState() == "Idle" then
+        self:SwitchToRandomWeapon()
+    elseif self:GetState() == "Combat" then
+        self:SwitchToLethalWeapon()
+    end
 end )
 
 -- Use a random act
