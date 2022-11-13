@@ -279,14 +279,13 @@ local function UseBalloonTool( self, target )
     local constr, rope = constraint.Rope( ent, traceent, 0, trace.PhysicsBone, LPos1, LPos2, 0, random( 5, 1000 ), 0, 0.5, "cable/rope" )
     table_insert( self.l_SpawnedEntities, 1, rope )
 
-    -- Configure it
-    ent:SetPlayer( self ) -- We can safely set this to ourselves since it was "hijacked"
+    ent:SetPlayer( self )
     ent:SetColor( ColorRand( true ) )
     if ( balloonModel.skin ) then ent:SetSkin( balloonModel.skin ) end
     if ( balloonModel.nocolor ) then ent:SetColor( Color(255, 255, 255, 255) ) else ent:SetColor( ColorRand( ) ) end
     ent:SetForce( random( 50, 2000 ) ) -- While players can use negative force for balloons it kinda looks less fun
 
-    return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this
+    return true
 end
 AddToolFunctionToLambdaTools( "Balloon", UseBalloonTool )
 
@@ -427,7 +426,6 @@ local function UseRopeTool( self, target )
 
     coroutine.wait( 1 )
     if IsNil( firstent ) then return end 
-    if firstent == world and ( trace.Entity:IsNextBot() or trace.Entity:IsNPC() or trace.Entity:IsPlayer() ) then return end
 
     self:UseWeapon( ( firstent != world and firstent:WorldSpaceCenter() or lpos1 ) )
 
@@ -437,7 +435,6 @@ local function UseRopeTool( self, target )
 
     coroutine.wait( 1 )
     if IsNil( secondent ) or IsNil( firstent ) then return end
-    if secondent == world and ( trace.Entity:IsNextBot() or trace.Entity:IsNPC() or trace.Entity:IsPlayer() ) then return end
 
     self:UseWeapon( ( secondent != world and secondent:WorldSpaceCenter() or lpos2 ) )
 
