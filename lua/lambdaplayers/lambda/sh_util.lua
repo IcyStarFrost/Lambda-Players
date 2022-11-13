@@ -298,7 +298,7 @@ if SERVER then
     
     -- If the we can target the ent
     function ENT:CanTarget( ent )
-        return self:Visible( ent ) and ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() )
+        return self:Visible( ent ) and ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() and ent:Alive() )
     end
 
     -- Attacks the specified entity
