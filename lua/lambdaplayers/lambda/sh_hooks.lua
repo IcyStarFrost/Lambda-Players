@@ -118,7 +118,7 @@ if SERVER then
             self:CancelMovement()
         end
 
-        if random( 1, 10 ) == 1 and !self:Trace( victim ).Hit then self:LaughAt( victim ) end
+        if random( 1, 10 ) == 1 and self:GetRangeSquaredTo( victim ) <= ( 2000 * 2000 ) and !self:Trace( victim ).Hit then self:LaughAt( victim ) end
 
         -- If we killed the victim
         if attacker == self then
