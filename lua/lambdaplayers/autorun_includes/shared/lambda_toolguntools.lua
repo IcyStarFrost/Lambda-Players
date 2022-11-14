@@ -329,7 +329,7 @@ AddToolFunctionToLambdaTools( "KeepUpright", UseKeepUprightTool )
 
 
 
-local function CanEntityBeSetOnFire( ent ) -- Taken from the ignite properties
+local function CanEntityBeSetOnFire( ent ) -- Taken from the ignite properties in sandbox
 
 	-- func_pushable, func_breakable & func_physbox cannot be ignited
 	if ( ent:GetClass() == "item_item_crate" ) then return true end
@@ -473,6 +473,61 @@ AddToolFunctionToLambdaTools( "Material", UseMaterialTool )
 
 
 
+local function PlaceDecal( ply, ent, data ) -- Directly from the paint tool
+
+	if ( !IsValid( ent ) && !ent:IsWorld() ) then return end
+
+	local bone
+	if ( data.bone && data.bone < ent:GetPhysicsObjectCount() ) then bone = ent:GetPhysicsObjectNum( data.bone ) end
+	if ( !IsValid( bone ) ) then bone = ent:GetPhysicsObject() end
+	if ( !IsValid( bone ) ) then bone = ent end
+
+	util.Decal( data.decal, bone:LocalToWorld( data.Pos1 ), bone:LocalToWorld( data.Pos2 ), ply )
+
+	local i = ent.DecalCount or 0
+	i = i + 1
+	ent.DecalCount = i
+
+end
+local decallist = { "Eye", "Dark", "Smile", "Cross", "Nought", "Noughtsncrosses" } -- Keeping it simple for now
+local function UsePaintTool( self, target )
+    local world = random( 0, 1 )
+    if world then print("world") else print("target") end
+    
+    local trace = world and self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) ) or self:Trace( target:WorldSpaceCenter() )
+    if !world and !IsValid( target ) then return end
+    
+    self:LookTo( trace.HitPos, 2 )
+
+    coroutine.wait( 1 )
+
+    if IsValid( trace.Entity ) and !util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return end
+
+    local Pos1 = trace.HitPos + trace.HitNormal
+	local Pos2 = trace.HitPos - trace.HitNormal
+
+	local Bone
+	if ( trace.PhysicsBone and trace.PhysicsBone < trace.Entity:GetPhysicsObjectCount() ) then Bone = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone ) end
+	if ( !IsValid( Bone ) ) then Bone = trace.Entity:GetPhysicsObject() end
+	if ( !IsValid( Bone ) ) then Bone = trace.Entity end
+
+	Pos1 = Bone:WorldToLocal( Pos1 )
+	Pos2 = Bone:WorldToLocal( Pos2 )
+
+    self:UseWeapon( trace.HitPos )
+
+	PlaceDecal( self:GetOwner(), trace.Entity, { Pos1 = Pos1, Pos2 = Pos2, bone = trace.PhysicsBone, decal = decallist[ random( #decallist ) ] } )
+
+    --self:EmitSound( "SprayCan.Paint" )
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Paint", UsePaintTool )
+
+
+
+
+
 local physproperties = { "metal_bouncy", "metal", "dirt", "slipperyslime", "wood", "glass", "concrete_block", "ice", "rubber", "paper", "zombieflesh", "gmod_ice", "gmod_bouncy" }
 local function UsePhysPropTool( self, target )
     if !IsValid( target ) then return end
@@ -560,26 +615,20 @@ local function UseRopeTool( self, target )
     local lpos2 = secondent != world and secondent:WorldToLocal( self:Trace( secondent:WorldSpaceCenter() ).HitPos ) or self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) ).HitPos
 
     self:LookTo( ( firstent != world and firstent or lpos1 ), 2 )
-    print("RT - look 1")
 
     coroutine.wait( 1 )
     if IsNil( firstent ) then return end 
-    print("RT - 1 not nil")
     if !util.IsValidPhysicsObject( firstent, firstent:GetPhysicsObjectCount() ) then return end
-    print("RT - 1 phys obj")
 
     self:UseWeapon( ( firstent != world and firstent:WorldSpaceCenter() or lpos1 ) )
 
     coroutine.wait( 0.3 )
 
     self:LookTo( ( secondent != world and secondent or lpos2 ), 2 )
-    print("RT - look 2")
 
     coroutine.wait( 1 )
     if IsNil( secondent ) or IsNil( firstent ) then return end
-    print("RT - 1 and 2 not nil")
     if !util.IsValidPhysicsObject( secondent, secondent:GetPhysicsObjectCount() ) then return end
-    print("RT - 2 phys obj")
 
     self:UseWeapon( ( secondent != world and secondent:WorldSpaceCenter() or lpos2 ) )
 
