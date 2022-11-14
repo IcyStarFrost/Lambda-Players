@@ -2,6 +2,8 @@ local table_insert = table.insert
 local ents_GetAll = ents.GetAll
 local ents_FindInSphere = ents.FindInSphere
 local ipairs = ipairs
+local distance = GetConVar('lambdaplayers_force_radius'):GetInt() or 750
+local spawnatplayerpoints = GetConVar( "lambdaplayers_lambda_spawnatplayerspawns" )
 
 -- The reason this lua file has a d_ in its filename is because of the order on how lua files are loaded.
 -- If we didn't do this, we wouldn't have _LAMBDAConVarSettings 
@@ -62,14 +64,88 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cleanuplambdaents", function( ply
 end, false, "Removes all entities that were spawned by Lambda Players", { name = "Cleanup Lambda Entities", category = "Utilities" } )
 
 
-CreateLambdaConsoleCommand( "lambdaplayers_cmd_debugforcecombat", function( ply ) 
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
-    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), 1000 ) ) do
+    local areas = navmesh.GetAllNavAreas()
+    local area
+    local point
+
+    local spawns = LambdaGetPossibleSpawns()
+
+    if !spawnatplayerpoints:GetBool() then
+
+        //need a cleaner way for this navmesh stuff
+
+        area = areas[math.random(#areas)]
+        if !area or !area:IsValid() then
+            areas = navmesh.GetAllNavAreas()
+            area = areas[math.random(#areas)]
+        end
+
+        if !area or !area:IsValid() then
+            return
+        end
+        
+        if area:IsUnderwater() then return end
+        point = area:GetRandomPoint()
+    else
+        spawns = LambdaGetPossibleSpawns()
+
+        local spawn = spawns[math.random(#spawns)]
+        if IsValid(spawn) then
+            point = spawn:GetPos()
+        else
+            print('RANDOM LAMBDA SPAWN: Player Spawn Is not Valid!')
+            ply:EmitSound("buttons/button8.wav",50)
+            PrintMessage(HUD_PRINTTALK, "Spawn Failed! Check Console")
+            print("Player Spawns not vaild. Couldn't find any info_player_start on map. Using random navmesh area.")
+            return
+        end
+    end
+
+    local lambda = ents.Create('npc_lambdaplayer')
+    lambda:SetPos(point)
+    lambda:SetAngles(Angle(0,math.random(0,360,0),0))
+    lambda:Spawn()
+    
+    local dynLight = ents.Create("light_dynamic")
+	dynLight:SetKeyValue("brightness", "2")
+	dynLight:SetKeyValue("distance", "90")
+	dynLight:SetPos(lambda:GetPos())
+	dynLight:SetLocalAngles(lambda:GetAngles())
+	dynLight:Fire("Color","255 145 0")
+	dynLight:Spawn()
+	dynLight:Activate()
+	dynLight:Fire("TurnOn","",0)
+	dynLight:Fire("Kill", "", 0.75)
+
+end, false, "Spawns a random Lambda Player at a random Navmesh area", { name = "Spawn Random Lambda Player", category = "Force Menu" } )
+
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombat", function( ply ) 
+    if IsValid( ply ) and !ply:IsSuperAdmin() then return end
+
+    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance ) ) do
         if IsValid( v ) and v.IsLambdaPlayer then v:AttackTarget( ply ) end
     end
 
-end, false, "Forces all Lambda Players within 1000 units to attack you", { name = "Force Attack You", category = "Debugging" } )
+end, false, "Forces all Lambda Players to attack you", { name = "Lambda Players Attack You", category = "Force Menu" } )
+
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcekill", function( ply ) 
+    if IsValid( ply ) and !ply:IsSuperAdmin() then return end
+
+    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance ) ) do
+        if v.IsLambdaPlayer then
+            local dmginfo = DamageInfo()
+            dmginfo:SetDamage( 1000 )
+            dmginfo:SetDamageForce( v:GetForward()*2000 or v:GetForward()*500 )
+            dmginfo:SetAttacker( v )
+            dmginfo:SetInflictor( v )
+            v:TakeDamageInfo( dmginfo )
+        end
+    end
+
+end, false, "Kill any Lambda Players in the radius set", { name = "Kill Nearby Lambda Players", category = "Force Menu" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_debugtogglegod", function( ply ) 
     if IsValid( ply ) and !ply:IsAdmin() then return end
