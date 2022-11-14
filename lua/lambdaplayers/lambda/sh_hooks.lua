@@ -200,7 +200,7 @@ if SERVER then
         local weapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )
         local voiceprofile = ply:GetInfo( "lambdaplayers_lambda_voiceprofile" )
 
-        self:SetRespawn( ply:IsAdmin() or allowrespawn:GetBool() )
+        self:SetRespawn( !ply:IsAdmin() and allowrespawn:GetBool() and respawn or ply:IsAdmin() and respawn )
         self:SwitchWeapon( weapon )
         self.l_SpawnWeapon = weapon
         self.l_VoiceProfile = voiceprofile != "" and voiceprofile or self.l_VoiceProfile
@@ -267,7 +267,7 @@ function ENT:InitializeMiniHooks()
             if isfunction( self.l_OnDamagefunction ) then self.l_OnDamagefunction( self, self:GetWeaponENT(), info )  end
 
             local potentialdeath = ( self:Health() - info:GetDamage() ) <= 0
-            if self:GetRespawn() and potentialdeath then
+            if potentialdeath then
                 info:SetDamageBonus( 0 )
                 info:SetBaseDamage( 0 )
                 info:SetDamage( 0 ) -- We need this because apparently the nextbot would think it is dead and do some wacky health issues without it

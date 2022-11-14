@@ -327,7 +327,7 @@ local ipairs = ipairs
 local IsValid = IsValid
 function GetLambdaPlayers()
     local lambdas = {}
-    for k, v in ipairs( ents_GetAll ) do
+    for k, v in ipairs( ents_GetAll() ) do
         if IsValid( v ) and v.IsLambdaPlayer then lambdas[ #lambdas + 1 ] = v end
     end
     return lambdas

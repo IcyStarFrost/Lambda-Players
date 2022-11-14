@@ -241,7 +241,6 @@ function ENT:SwitchToRandomWeapon()
 end
 
 function ENT:SwitchToLethalWeapon()
-    if self.l_HasLethal then return end
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
         if v.islethal and self:CanEquipWeapon( k ) and k != self.l_Weapon then
             self:SwitchWeapon( k )

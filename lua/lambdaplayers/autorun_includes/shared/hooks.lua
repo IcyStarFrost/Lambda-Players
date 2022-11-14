@@ -29,6 +29,10 @@ if SERVER then
         dmginfo:ScaleDamage( ( hitScales[ hit ] and hitScales[ hit ]:GetFloat() or 1.0 ) )
     end)
 
+    hook.Add( "EntityTakeDamage", "LambdaMainDamageHook", function( ent, info )
+        if ent.l_debuggodmode then return true end
+    end )
+
     hook.Add( "PostCleanupMap", "LambdaResetSpawnPoints", function()
         LambdaSpawnPoints = LambdaGetPossibleSpawns()
     end )

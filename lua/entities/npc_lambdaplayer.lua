@@ -112,7 +112,7 @@ function ENT:Initialize()
 
         -- Personal Stats --
         
-        self:SetLambdaName( LambdaPlayerNames[ random( #LambdaPlayerNames ) ] )
+        self:SetLambdaName( self:GetOpenName() )
         self:SetProfilePicture( #Lambdaprofilepictures > 0 and Lambdaprofilepictures[ random( #Lambdaprofilepictures ) ] or "spawnicons/".. sub( self:GetModel(), 1, #self:GetModel() - 4 ).. ".png" )
 
         self:SetMaxHealth( 100 )
@@ -214,6 +214,7 @@ function ENT:Initialize()
 
     self:LambdaMoveMouth( 0 )
 
+    hook.Run( "LambdaOnInitialize", self, self:GetWeaponENT() )
 end
 
 
@@ -457,7 +458,7 @@ function ENT:RunBehaviour()
 
     while true do
 
-        -- TODO: Fix weird performance drop when ai_disabled is enabled
+
         if !self:GetIsDead() and !aidisable:GetBool() then
 
             local statefunc = self[ self:GetState() ] -- I forgot this was possible. See sv_states.lua

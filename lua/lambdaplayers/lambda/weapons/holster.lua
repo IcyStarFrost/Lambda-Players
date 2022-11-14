@@ -15,8 +15,9 @@
     islethal | Bool | If the weapon is capable of hurting anything
     holdtype | String | The animation set lambda should use. See globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
     ismelee | Bool | If the weapon is considered a melee weapon. False for ranged
-
     
+
+    addspeed | Number | The amount to add to speed while in combat
     keepdistance | Number | The distance the lambda will keep from the target
     attackrange | Number | The range the lambda can attack from
     damage  | Number | The amount of damage the weapon can deal
@@ -44,7 +45,7 @@
     holdtype | String | The animation set lambda should use. See autorun_includes/server/globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
     ismelee | Bool | If the weapon is considered a melee weapon. False for ranged
 
-
+    addspeed | Number | The amount to add to speed while in combat
     keepdistance | Number | The distance the lambda will keep from the target
     attackrange | Number | The range the lambda can attack from
     damage  | Number | The amount of damage the weapon can deal
