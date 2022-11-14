@@ -36,7 +36,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 dmginfo:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg )
                 
                 target:EmitSound('lambdaplayers/weapons/left4dead2/golf_club/wpn_golf_club_melee_0'..math.random(2)..'.wav', 80)
-                target:EmitSound('lambdaplayers/weapons/left4dead2/golf_club/wpn_golf_club_swing_miss'..math.random(2)..'.wav', 65)
                 
                 target:TakeDamageInfo( dmginfo )
             end)
