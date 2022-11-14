@@ -2,6 +2,7 @@ local table_insert = table.insert
 local ents_GetAll = ents.GetAll
 local ents_FindInSphere = ents.FindInSphere
 local ipairs = ipairs
+local distance = GetConVar('lambdaplayers_force_radius'):GetInt() or 750
 
 -- The reason this lua file has a d_ in its filename is because of the order on how lua files are loaded.
 -- If we didn't do this, we wouldn't have _LAMBDAConVarSettings 
@@ -62,14 +63,14 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cleanuplambdaents", function( ply
 end, false, "Removes all entities that were spawned by Lambda Players", { name = "Cleanup Lambda Entities", category = "Utilities" } )
 
 
-CreateLambdaConsoleCommand( "lambdaplayers_cmd_debugforcecombat", function( ply ) 
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombat", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
-    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), 1000 ) ) do
+    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance ) ) do
         if IsValid( v ) and v.IsLambdaPlayer then v:AttackTarget( ply ) end
     end
 
-end, false, "Forces all Lambda Players within 1000 units to attack you", { name = "Force Attack You", category = "Debugging" } )
+end, false, "Forces all Lambda Players to attack you.", { name = "Lambda Players Attack You", category = "Force Menu" } )
 
 
 -- Calls this hook when all default console commands have been created.

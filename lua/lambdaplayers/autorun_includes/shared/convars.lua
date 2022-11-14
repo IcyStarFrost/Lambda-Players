@@ -113,6 +113,9 @@ CreateLambdaConvar( "lambdaplayers_voice_killdir", "lambdaplayers/vo/kill", true
 CreateLambdaConvar( "lambdaplayers_voice_laughdir", "lambdaplayers/vo/laugh", true, false, false, "The directory to get laughing voice lines from. These are voice lines that play when a lambda player laughs at someone. Make sure you update Lambda Data after you change this!", nil, nil, { type = "Text", name = "Laugh Directory", category = "Voice Options" } )
 --
 
+-- Force Related Convars
+CreateLambdaConvar( "lambdaplayers_force_radius", 750, true, false, false, "Radius for forcing certain actions on Lambda Players", 250, 10000, { type = "Slider", name = "Force Radius", decimals = 0, category = "Force Menu" } )
+--
 
 -- DEBUGGING CONVARS. Server-side only
 CreateLambdaConvar( "lambdaplayers_debug", 0, false, false, false, "Enables the debugging features", 0, 1, { type = "Bool", name = "Enable Debug", category = "Debugging" } )
