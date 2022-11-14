@@ -473,7 +473,7 @@ AddToolFunctionToLambdaTools( "Material", UseMaterialTool )
 
 
 
-local function PlaceDecal( ply, ent, data ) -- Directly from the paint tool
+local function PlaceDecal( ply, ent, data ) -- Directly taken from the paint tool
 
 	if ( !IsValid( ent ) && !ent:IsWorld() ) then return end
 
@@ -492,7 +492,6 @@ end
 local decallist = { "Eye", "Dark", "Smile", "Cross", "Nought", "Noughtsncrosses" } -- Keeping it simple for now
 local function UsePaintTool( self, target )
     local world = random( 0, 1 )
-    if world then print("world") else print("target") end
     
     local trace = world and self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) ) or self:Trace( target:WorldSpaceCenter() )
     if !world and !IsValid( target ) then return end
