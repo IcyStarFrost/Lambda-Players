@@ -99,6 +99,9 @@ if SERVER then
             end
         end
 
+        local attacker = info:GetAttacker()
+        if IsValid( attacker ) and attacker:IsPlayer() then attacker:AddFrags( 1 ) end
+
     end
 
     function ENT:OnInjured( info )
