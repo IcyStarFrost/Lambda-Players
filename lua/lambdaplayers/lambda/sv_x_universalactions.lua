@@ -39,7 +39,7 @@ end )
 -- Crouch
 AddUActionToLambdaUA( function( self )
     self:SetCrouch( true )
-    self:NamedTimer( "UnCrouch", rand( 1, 15 ), 1, function() self:SetCrouch( false ) end )
+    self:NamedTimer( "UnCrouch", rand( 1, 30 ), 1, function() self:SetCrouch( false ) end )
 end )
 
 
