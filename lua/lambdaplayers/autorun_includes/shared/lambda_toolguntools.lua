@@ -374,6 +374,8 @@ local function UseEmitterTool( self, target )
     local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
 
     local pos = trace.HitPos
+    local ang = trace.HitNormal:Angle()
+	ang:RotateAroundAxis( trace.HitNormal, 0 )
 
     self:LookTo( pos, 2 )
 
@@ -381,12 +383,21 @@ local function UseEmitterTool( self, target )
 
     if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_emitter" or !util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end -- Check to avoid placing emitter on things they can't be attached to
     
+    -- We want to only weld to props
+
     self:UseWeapon( pos )
-    local ent = CreateGmodEntity( "gmod_emitter", "models/props_lab/tpplug.mdl", pos + trace.HitNormal, trace.HitNormal:Angle() - Angle( 0, 90, 90 ), self )
+    local ent = CreateGmodEntity( "gmod_emitter", "models/props_lab/tpplug.mdl", pos + trace.HitNormal, ang, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Emitter" )
     table_insert( self.l_SpawnedEntities, 1, ent )
+
+    if trace.Entity != NULL && !trace.Entity:IsWorld() then
+        local weld = constraint.Weld( ent, trace.Entity, 0, trace.PhysicsBone, 0, true, true )
+
+        if ( IsValid( ent:GetPhysicsObject() ) ) then ent:GetPhysicsObject():EnableCollisions( false ) end
+        ent.nocollide = true
+    end
 
     ent:SetPlayer( self )
     ent:SetOn( true )
@@ -683,6 +694,80 @@ local function UseKeepUprightTool( self, target ) -- Technically only a context 
     return true
 end
 AddToolFunctionToLambdaTools( "KeepUpright", UseKeepUprightTool )
+
+
+
+
+
+local wheelmodels0 = { "models/props_vehicles/apc_tire001.mdl", "models/props_vehicles/tire001a_tractor.mdl", "models/props_vehicles/tire001b_truck.mdl", "models/props_vehicles/tire001c_car.mdl", "models/props_trainstation/trainstation_clock001.mdl", "models/props_c17/pulleywheels_large01.mdl" }
+local wheelmodels1 = { "models/props_junk/sawblade001a.mdl", "models/props_wasteland/controlroom_filecabinet002a.mdl", "models/props_borealis/bluebarrel001.mdl", "models/props_c17/oildrum001.mdl", "models/props_c17/playground_carousel01.mdl", "models/props_c17/chair_office01a.mdl", "models/props_c17/TrapPropeller_Blade.mdl", "models/props_junk/metal_paintcan001a.mdl" }
+local wheelmodels2 = { "models/props_vehicles/carparts_wheel01a.mdl", "models/props_wasteland/wheel01.mdl" }
+local function UseWheelTool( self, target )
+    if !self:IsUnderLimit( "Wheel" ) or !IsValid( target ) then return end
+
+    self:LookTo( target, 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) then return end
+
+    local trace = self:Trace( target:WorldSpaceCenter() )
+
+    if IsValid( trace.Entity ) and !util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return end -- Check to avoid placing wheel on things they can't be attached to
+
+    local pos = trace.HitPos
+
+    local wheelrand = random( 0, 1 ) -- To deal with an angle issue...
+    local wheelAngle = Angle( math.NormalizeAngle( 90 ), math.NormalizeAngle( 0 ), math.NormalizeAngle( 90 ) )
+    local mdl = wheelmodels2[ random( #wheelmodels2 ) ]
+
+    if wheelrand==0 then
+        wheelAngle = Angle( math.NormalizeAngle( 0 ), math.NormalizeAngle( 0 ), math.NormalizeAngle( 0 ) )
+        mdl = wheelmodels0[ random( #wheelmodels0 ) ]
+    elseif wheelrand==1 then
+        wheelAngle = Angle( math.NormalizeAngle( 90 ), math.NormalizeAngle( 0 ), math.NormalizeAngle( 0 ) )
+        mdl = wheelmodels1[ random( #wheelmodels1 ) ]
+    end
+    local torque = random( 10, 10000 )
+
+    self:UseWeapon( target:WorldSpaceCenter() )
+    local ent = CreateGmodEntity( "gmod_wheel", mdl, pos, trace.HitNormal:Angle() + wheelAngle, self )
+    ent.LambdaOwner = self
+    ent.IsLambdaSpawned = true
+    self:ContributeEntToLimit( ent, "Wheel" )
+    table_insert( self.l_SpawnedEntities, 1, ent )
+
+    local CurPos = ent:GetPos()
+	local NearestPoint = ent:NearestPoint( CurPos - ( trace.HitNormal * 512 ) )
+	local wheelOffset = CurPos - NearestPoint
+
+    -- Set the hinge Axis perpendicular to the trace hit surface
+	local targetPhys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
+	local LPos1 = ent:GetPhysicsObject():WorldToLocal( ent:GetPos() + trace.HitNormal )
+	local LPos2 = targetPhys:WorldToLocal( trace.HitPos )
+
+    local const = constraint.Motor( ent, trace.Entity, 0, trace.PhysicsBone, LPos1, LPos2, random( 0, 100 ), torque, 0, random( 0, 1 ), 1 )
+    -- -- -- -- -- --
+    ent:SetPos( trace.HitPos + wheelOffset )
+    ent:SetPlayer( self )
+    ent:SetMotor( const )
+	ent:SetDirection( const.direction )
+	ent:SetAxis( trace.HitNormal )
+    ent:SetBaseTorque(torque)
+	ent:DoDirectionEffect()
+
+    local rndtime = CurTime() + rand( 1, 10 )
+    ent:LambdaHookTick( "WheelRandomOnOff", function( wheel )
+        if CurTime() > rndtime then
+            if !IsValid( wheel ) then return true end
+            wheel:Forward( random( 0, 1 ) == 1 )-- Randomly switch it on or off
+
+            rndtime = CurTime() + rand( 1, 10 )
+        end
+    end )
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Wheel", UseWheelTool )
 
 
 
