@@ -17,7 +17,7 @@ function ENT:Idle()
     end
 end
 
-local combattbl = { update = 0.2 }
+local combattbl = { update = 0.2, run = true }
 
 function ENT:Combat()
     if !LambdaIsValid( self:GetEnemy() ) then self:SetState( "Idle" ) return end
@@ -41,8 +41,6 @@ function ENT:Combat()
         end
     
     end )
-
-    combattbl.speed = self:GetRunSpeed() + self.l_CombatSpeedAdd
 
     self:MoveToPos( self:GetEnemy(), combattbl )
 end

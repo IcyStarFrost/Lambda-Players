@@ -36,7 +36,7 @@ function ENT:MoveToPos( pos, options )
 	path:SetGoalTolerance( options.tol or 20 )
 	path:Compute( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos), self:PathGenerator() )
 
-    self.loco:SetDesiredSpeed( options.speed or 200 )
+    self:SetRun( options.run or false )
 
 	if ( !path:IsValid() ) then return "failed" end
 
@@ -100,8 +100,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
     local timeout = options.timeout
     local callback = options.callback
     local tolerance = options.tol or 20
-    self.loco:SetDesiredSpeed( options.speed or 200 )
-
+    self:SetRun( options.run or false )
     self.IsMoving = true
 
     while IsValid( self ) do 

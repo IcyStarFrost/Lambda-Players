@@ -36,6 +36,13 @@ AddUActionToLambdaUA( function( self )
 end )
 
 
+-- Crouch
+AddUActionToLambdaUA( function( self )
+    self:SetCrouch( true )
+    self:NamedTimer( "UnCrouch", rand( 1, 15 ), 1, function() self:SetCrouch( false ) end )
+end )
+
+
 
 -- Called when all default UA actions have been made
 -- This hook can be used to add UActions with AddUActionToLambdaUA()
