@@ -7,7 +7,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
     l4d2_golfclub = {
         model = "models/lambdaplayers/left4dead2_laststand/w_golfclub.mdl",
         origin = "Left 4 Dead 2",
-        prettyname = "[Left 4 Dead 2] Golf Club",
+        prettyname = "[L4D2] Golf Club",
         holdtype = "melee2",
         ismelee = true,
         bonemerge = false,
@@ -25,7 +25,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             //make them fly later
             
             self:SimpleTimer( 0.3, function()
-                if self:GetRangeSquaredTo( target ) > ( 65 * 65 ) then return end
+                if self:GetRangeSquaredTo( target ) > ( 70 * 70 ) then return end
                 
                 local dmg = random( 25,75 )
                 local dmginfo = DamageInfo()

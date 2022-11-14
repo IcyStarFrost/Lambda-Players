@@ -115,6 +115,7 @@ CreateLambdaConvar( "lambdaplayers_voice_laughdir", "lambdaplayers/vo/laugh", tr
 
 -- Force Related Convars
 CreateLambdaConvar( "lambdaplayers_force_radius", 750, true, false, false, "Radius for forcing certain actions on Lambda Players", 250, 10000, { type = "Slider", name = "Force Radius", decimals = 0, category = "Force Menu" } )
+CreateLambdaConvar( "lambdaplayers_lambda_spawnatplayerspawns", 0, true, false, false, "If lambda player should spawn at player spawn points", 0, 1, { type = "Bool", name = "Spawn at Player Spawns", category = "Lambda Server Settings" } )
 --
 
 -- DEBUGGING CONVARS. Server-side only
