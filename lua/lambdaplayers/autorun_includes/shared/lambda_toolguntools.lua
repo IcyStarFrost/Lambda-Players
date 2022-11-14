@@ -28,7 +28,7 @@ LambdaToolGunTools = {}
 -- These functions will be under the Tool Chance
 -- See the functions below for examples on making tools
 function AddToolFunctionToLambdaTools( toolname, func )
-    local convar = CreateLambdaConvar( "lambdaplayers_tool_allow" .. toolname, 1, true, false, false, "If lambda players can use the " .. toolname .. " tool", 0, 1, { type = "Bool", name = "Allow " .. toolname .. " Tool", category = "Limits and Tool Permissions" } )
+    local convar = CreateLambdaConvar( "lambdaplayers_tool_allow" .. toolname, 1, true, false, false, "If Lambda Players can use the " .. toolname .. " tool", 0, 1, { type = "Bool", name = "Allow " .. toolname .. " Tool", category = "Limits and Tool Permissions" } )
     table_insert( LambdaToolGunTools, { toolname, convar, func } )
 end
 
