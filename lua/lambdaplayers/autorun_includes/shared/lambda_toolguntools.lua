@@ -50,6 +50,20 @@ local function CreateGmodEntity( classname, model, pos, ang, lambda )
 end
 
 
+-- To make the tools code breathe a bit more
+
+local function NotValidTool( ent, etype )
+    -- Check if our target ent is of class type if it's in the function call
+    local enttype = !IsValid(etype) and false or ent:GetClass() == type 
+
+    -- We return true if anything here is true because we can't target that
+    local notvalid = enttype or ent:IsNextBot() or ent:IsNPC() or ent:IsPlayer() 
+
+    -- Returns true if the target is Not Valid for tool usage
+    return notvalid
+end
+
+
 
 
 local function UseColorTool( self, target )
@@ -100,7 +114,7 @@ local function UseLightTool( self, target )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and ( trace.Entity:GetClass()=="gmod_light" or trace.Entity:IsNextBot() or trace.Entity:IsNPC() or trace.Entity:IsPlayer() )  then return end -- Check to avoid placing light on things they shouldn't be on
+    if IsValid( trace.Entity ) and NotValidTool( trace.Entity, "gmod_light" )  then return end -- Check to avoid placing light on things they shouldn't be on
 
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_light", nil, pos + trace.HitNormal * 8, trace.HitNormal:Angle() - Angle( 90, 0, 0 ), self ) -- Create the light
@@ -251,7 +265,7 @@ local function UseBalloonTool( self, target )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and ( trace.Entity:GetClass()=="gmod_balloon" or trace.Entity:IsNextBot() or trace.Entity:IsNPC() or trace.Entity:IsPlayer() ) then return end -- Check to avoid placing balloon on things they shouldn't be on
+    if IsValid( trace.Entity ) and ( NotValidTool( trace.Entity, "gmod_balloon" ) or !util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end -- Check to avoid placing balloon on things they shouldn't be on
 
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_balloon", balloonModel.model, pos, nil, self ) -- Create the balloon
@@ -259,6 +273,12 @@ local function UseBalloonTool( self, target )
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Balloon" )
     table_insert( self.l_SpawnedEntities, 1, ent )
+
+    local CurPos = ent:GetPos()
+	local NearestPoint = ent:NearestPoint( CurPos - ( trace.HitNormal * 512 ) )
+	local Offset = CurPos - NearestPoint
+
+	ent:SetPos( trace.HitPos + Offset ) -- Fix for balloons being placed on ceilings
 
     local traceent = trace.Entity
 
@@ -372,7 +392,7 @@ local function UseEmitterTool( self, target )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and ( trace.Entity:GetClass()=="gmod_emitter" or trace.Entity:IsNextBot() or trace.Entity:IsNPC() or trace.Entity:IsPlayer()  ) then return end -- Check to avoid placing emitter on things they shouldn't be on
+    if IsValid( trace.Entity ) and NotValidTool( trace.Entity, "gmod_emitter") then return end -- Check to avoid placing emitter on things they shouldn't be on
     
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_emitter", "models/props_lab/tpplug.mdl", pos + trace.HitNormal, trace.HitNormal:Angle() - Angle( 0, 90, 90 ), self )
@@ -421,6 +441,8 @@ local function UseRopeTool( self, target )
     -- For the world, it's just the regular map coords
     local lpos1 = firstent != world and firstent:WorldToLocal( self:Trace( firstent:WorldSpaceCenter() ).HitPos ) or self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) ).HitPos
     local lpos2 = secondent != world and secondent:WorldToLocal( self:Trace( secondent:WorldSpaceCenter() ).HitPos ) or self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) ).HitPos
+
+    if !util.IsValidPhysicsObject( lpos1.Entity, lpos1.PhysicsBone ) or !util.IsValidPhysicsObject( lpos2.Entity, lpos2.PhysicsBone ) then return end
 
     self:LookTo( ( firstent != world and firstent or lpos1 ), 2 )
 
@@ -475,7 +497,7 @@ local function UseHoverballTool( self, target )
 
     local trace = self:Trace( target:WorldSpaceCenter() )
 
-    if IsValid( trace.Entity ) and trace.Entity:GetClass()=="gmod_hoverball" then return end -- Check to avoid placing hoverball on hoverball using trace
+    if IsValid( trace.Entity ) and NotValidTool( trace.Entity, "gmod_hoverball") then return end -- Check to avoid placing hoverball on things they shouldn't be on
 
     local pos = trace.HitPos
 
@@ -537,7 +559,7 @@ local function UseThrusterTool( self, target )
 
     local trace = self:Trace( target:WorldSpaceCenter() )
 
-    if IsValid( trace.Entity ) and trace.Entity:GetClass()=="gmod_thruster" then return end -- Check to avoid placing thruster on thruster using trace
+    if IsValid( trace.Entity ) and NotValidTool( trace.Entity, "gmod_thruster") then return end -- Check to avoid placing thruster on thruster using trace
 
     local pos = trace.HitPos
     local ang = trace.HitNormal:Angle()
