@@ -47,9 +47,10 @@ function ENT:Combat()
     self:MoveToPos( self:GetEnemy(), combattbl )
 end
 
+-- Wander around until we find someone to jump
 function ENT:FindTarget()
 
-    self:SwitchToLethalWeapon()
+    if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
 
     self:Hook( "Tick", "CombatTick", function()
         if LambdaIsValid( self:GetEnemy() ) or self:GetState() != "FindTarget" then return "end" end
@@ -74,5 +75,12 @@ function ENT:Laughing()
 
     self:PlaySequenceAndWait( "taunt_laugh" )
 
+    self:SetState( "Idle" )
+end
+
+
+local acts = { "taunt_dance", "taunt_robot", "taunt_muscle", "taunt_cheer" }
+function ENT:UsingAct()
+    self:PlaySequenceAndWait( acts[ random( #acts ) ] )
     self:SetState( "Idle" )
 end

@@ -71,6 +71,14 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_debugforcecombat", function( ply 
 
 end, false, "Forces all Lambda Players within 1000 units to attack you", { name = "Force Attack You", category = "Debugging" } )
 
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_debugtogglegod", function( ply ) 
+    if IsValid( ply ) and !ply:IsAdmin() then return end
+
+    ply.l_debuggodmode = !ply.l_debuggodmode
+
+    LambdaPlayers_ChatAdd( ply, ply.l_debuggodmode and "Enabled God mode" or "Disabled God mode" )
+end, false, "Toggles God Mode, preventing any further damage to you", { name = "Toggle God Mode", category = "Debugging" } )
+
 
 -- Calls this hook when all default console commands have been created.
 -- This hook can be used to ensure the CreateLambdaConsoleCommand() function exists so custom console commands can be made
