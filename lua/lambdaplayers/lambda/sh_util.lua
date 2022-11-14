@@ -384,10 +384,10 @@ if SERVER then
         return CurTime() < self:GetLastSpeakingTime()
     end
 
-        -- If we have a lethal weapon
-        function ENT:HasLethalWeapon()
-            return self.l_HasLethal or false
-        end
+    -- If we have a lethal weapon
+    function ENT:HasLethalWeapon()
+        return self.l_HasLethal or false
+    end
 
     -- Returns the walk speed
     function ENT:GetWalkSpeed()
