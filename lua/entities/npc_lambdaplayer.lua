@@ -94,6 +94,7 @@ function ENT:Initialize()
         self.l_Weapon = ""
         self.debuginitstart = SysTime()
         self.l_nextidlesound = CurTime() + 5
+        self.l_nextspeedupdate = 0
         self.l_SpawnedEntities = {}
         self.l_Timers = {}
         self.l_SimpleTimers = {}
@@ -230,6 +231,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", 2, "Respawn" )
     self:NetworkVar( "Bool", 3, "HasCustomDrawFunction" )
     self:NetworkVar( "Bool", 4, "IsReloading" )
+    self:NetworkVar( "Bool", 5, "Run" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )
@@ -275,6 +277,12 @@ function ENT:Think()
             
             self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
             self.l_nextidlesound = CurTime() + 5
+        end
+
+        if CurTime() > self.l_nextspeedupdate then
+            local speed = ( self:GetCrouch() and self:GetCrouchSpeed() or self:GetRun() and self:GetRunSpeed() or self:GetWalkSpeed() ) +  self.l_CombatSpeedAdd
+            self.loco:SetDesiredSpeed( speed )
+            self.l_nextspeedupdate = CurTime() + 0.5
         end
         
         if CurTime() > self.l_NexthealthUpdate then
