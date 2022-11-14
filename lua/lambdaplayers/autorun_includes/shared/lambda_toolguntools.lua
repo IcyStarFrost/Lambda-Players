@@ -50,19 +50,6 @@ local function CreateGmodEntity( classname, model, pos, ang, lambda )
 end
 
 
--- To make the tools code breathe a bit more
-
-local function NotValidTool( ent, etype )
-    -- Check if our target ent is of class type if it's in the function call
-    local enttype = !IsValid(etype) and false or ent:GetClass() == type 
-
-    -- We return true if anything here is true because we can't target that
-    local notvalid = enttype or ent:IsNextBot() or ent:IsNPC() or ent:IsPlayer() 
-
-    -- Returns true if the target is Not Valid for tool usage
-    return notvalid
-end
-
 
 
 
@@ -114,7 +101,7 @@ local function UseLightTool( self, target )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and NotValidTool( trace.Entity, "gmod_light" )  then return end -- Check to avoid placing light on things they shouldn't be on
+    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_light" or !util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) )  then return end -- Check to avoid placing light on things they can't be attached to
 
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_light", nil, pos + trace.HitNormal * 8, trace.HitNormal:Angle() - Angle( 90, 0, 0 ), self ) -- Create the light
@@ -265,7 +252,7 @@ local function UseBalloonTool( self, target )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and ( NotValidTool( trace.Entity, "gmod_balloon" ) or !util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end -- Check to avoid placing balloon on things they shouldn't be on
+    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_balloon" or !util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end -- Check to avoid placing balloon on things they can't be attached to
 
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_balloon", balloonModel.model, pos, nil, self ) -- Create the balloon
@@ -392,7 +379,7 @@ local function UseEmitterTool( self, target )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and NotValidTool( trace.Entity, "gmod_emitter") then return end -- Check to avoid placing emitter on things they shouldn't be on
+    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_emitter" or !util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end -- Check to avoid placing emitter on things they can't be attached to
     
     self:UseWeapon( pos )
     local ent = CreateGmodEntity( "gmod_emitter", "models/props_lab/tpplug.mdl", pos + trace.HitNormal, trace.HitNormal:Angle() - Angle( 0, 90, 90 ), self )
@@ -418,6 +405,7 @@ AddToolFunctionToLambdaTools( "Emitter", UseEmitterTool )
 local ropematerials = { "cable/redlaser", "cable/cable2", "cable/rope", "cable/blue_elec", "cable/xbeam", "cable/physbeam", "cable/hydra" }
 local function UseRopeTool( self, target )
     if !self:IsUnderLimit( "Rope" ) then return end
+    print("RT - begin")
 
     local firstent
     local secondent
@@ -442,21 +430,27 @@ local function UseRopeTool( self, target )
     local lpos1 = firstent != world and firstent:WorldToLocal( self:Trace( firstent:WorldSpaceCenter() ).HitPos ) or self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) ).HitPos
     local lpos2 = secondent != world and secondent:WorldToLocal( self:Trace( secondent:WorldSpaceCenter() ).HitPos ) or self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) ).HitPos
 
-    if !util.IsValidPhysicsObject( lpos1.Entity, lpos1.PhysicsBone ) or !util.IsValidPhysicsObject( lpos2.Entity, lpos2.PhysicsBone ) then return end
-
     self:LookTo( ( firstent != world and firstent or lpos1 ), 2 )
+    print("RT - look 1")
 
     coroutine.wait( 1 )
     if IsNil( firstent ) then return end 
+    print("RT - 1 not nil")
+    if !util.IsValidPhysicsObject( firstent, firstent:GetPhysicsObjectCount() ) then return end
+    print("RT - 1 phys obj")
 
     self:UseWeapon( ( firstent != world and firstent:WorldSpaceCenter() or lpos1 ) )
 
     coroutine.wait( 0.3 )
 
     self:LookTo( ( secondent != world and secondent or lpos2 ), 2 )
+    print("RT - look 2")
 
     coroutine.wait( 1 )
     if IsNil( secondent ) or IsNil( firstent ) then return end
+    print("RT - 1 and 2 not nil")
+    if !util.IsValidPhysicsObject( secondent, secondent:GetPhysicsObjectCount() ) then return end
+    print("RT - 2 phys obj")
 
     self:UseWeapon( ( secondent != world and secondent:WorldSpaceCenter() or lpos2 ) )
 
@@ -497,7 +491,7 @@ local function UseHoverballTool( self, target )
 
     local trace = self:Trace( target:WorldSpaceCenter() )
 
-    if IsValid( trace.Entity ) and NotValidTool( trace.Entity, "gmod_hoverball") then return end -- Check to avoid placing hoverball on things they shouldn't be on
+    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_hoverball" or !util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end -- Check to avoid placing hoverball on things they can't be attached to
 
     local pos = trace.HitPos
 
@@ -559,7 +553,7 @@ local function UseThrusterTool( self, target )
 
     local trace = self:Trace( target:WorldSpaceCenter() )
 
-    if IsValid( trace.Entity ) and NotValidTool( trace.Entity, "gmod_thruster") then return end -- Check to avoid placing thruster on thruster using trace
+    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_thruster" or !util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end -- Check to avoid placing thruster on things they can't be attached to
 
     local pos = trace.HitPos
     local ang = trace.HitNormal:Angle()
