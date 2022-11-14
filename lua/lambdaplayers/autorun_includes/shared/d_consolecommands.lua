@@ -2,6 +2,8 @@ local table_insert = table.insert
 local ents_GetAll = ents.GetAll
 local ents_FindInSphere = ents.FindInSphere
 local ipairs = ipairs
+local random = math.random
+local IsValid = IsValid
 local distance = GetConVar('lambdaplayers_force_radius'):GetInt() or 750
 local spawnatplayerpoints = GetConVar( "lambdaplayers_lambda_spawnatplayerspawns" )
 
@@ -77,10 +79,10 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply 
 
         //need a cleaner way for this navmesh stuff
 
-        area = areas[math.random(#areas)]
+        area = areas[ random( #areas ) ]
         if !area or !area:IsValid() then
             areas = navmesh.GetAllNavAreas()
-            area = areas[math.random(#areas)]
+            area = areas[ random( #areas ) ]
         end
 
         if !area or !area:IsValid() then
@@ -92,33 +94,39 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply 
     else
         spawns = LambdaGetPossibleSpawns()
 
-        local spawn = spawns[math.random(#spawns)]
-        if IsValid(spawn) then
+        local spawn = spawns[ random( #spawns ) ]
+        if IsValid( spawn ) then
             point = spawn:GetPos()
         else
-            print('RANDOM LAMBDA SPAWN: Player Spawn Is not Valid!')
-            ply:EmitSound("buttons/button8.wav",50)
-            PrintMessage(HUD_PRINTTALK, "Spawn Failed! Check Console")
-            print("Player Spawns not vaild. Couldn't find any info_player_start on map. Using random navmesh area.")
+            print( "RANDOM LAMBDA SPAWN: Player Spawn Is not Valid!" )
+            ply:EmitSound( "buttons/button8.wav", 50 )
+            PrintMessage( HUD_PRINTTALK, "Spawn Failed! Check Console" )
+            print( "Player Spawns not valid. Couldn't find any info_player_start on map. Using random navmesh area." )
             return
         end
     end
 
-    local lambda = ents.Create('npc_lambdaplayer')
-    lambda:SetPos(point)
-    lambda:SetAngles(Angle(0,math.random(0,360,0),0))
+    local lambda = ents.Create( "npc_lambdaplayer" )
+    lambda:SetPos( point )
+    lambda:SetAngles( Angle( 0, random( 0, 360, 0 ), 0 ) )
     lambda:Spawn()
+
+    undo.Create( "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
+        undo.SetPlayer( ply )
+        undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
+        undo.AddEntity( lambda )
+    undo.Finish( "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
     
-    local dynLight = ents.Create("light_dynamic")
-	dynLight:SetKeyValue("brightness", "2")
-	dynLight:SetKeyValue("distance", "90")
-	dynLight:SetPos(lambda:GetPos())
-	dynLight:SetLocalAngles(lambda:GetAngles())
-	dynLight:Fire("Color","255 145 0")
+    local dynLight = ents.Create( "light_dynamic" )
+	dynLight:SetKeyValue( "brightness", "2" )
+	dynLight:SetKeyValue( "distance", "90" )
+	dynLight:SetPos( lambda:GetPos() )
+	dynLight:SetLocalAngles( lambda:GetAngles() )
+	dynLight:Fire( "Color", "255 145 0" )
 	dynLight:Spawn()
 	dynLight:Activate()
-	dynLight:Fire("TurnOn","",0)
-	dynLight:Fire("Kill", "", 0.75)
+	dynLight:Fire( "TurnOn", "", 0 )
+	dynLight:Fire( "Kill", "", 0.75 )
 
 end, false, "Spawns a random Lambda Player at a random Navmesh area", { name = "Spawn Random Lambda Player", category = "Force Menu" } )
 

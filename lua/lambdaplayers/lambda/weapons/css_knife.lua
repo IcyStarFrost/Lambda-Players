@@ -2,7 +2,7 @@ local random = math.random
 local CurTime = CurTime
 local firstSwing = true
 local firstSwingTime = 0
-local convar = CreateLambdaConvar( "lambdaplayers_weapons_knifebackstab", 1, true, false, true, "If Lambdas should be allowed to use the backstab feature of the Knife.", 0, 1, { type = "Bool", name = "Knife - Enable Backstab", category = "Weapon Utilities" } )
+local convar = CreateLambdaConvar( "lambdaplayers_weapons_knifebackstab", 1, true, false, true, "If Lambda Players should be allowed to use the backstab feature of the Knife.", 0, 1, { type = "Bool", name = "Knife - Enable Backstab", category = "Weapon Utilities" } )
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
