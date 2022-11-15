@@ -124,9 +124,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_PISTOL,
         jump = ACT_HL2MP_JUMP_PISTOL,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_PISTOL,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_PISTOL,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_PISTOL,
-        swimMove = ACT_HL2MP_SWIM_PISTOL
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_PISTOL
     },
     ["smg"] = {
         idle = ACT_HL2MP_IDLE_SMG1,
@@ -134,9 +132,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_SMG1,
         jump = ACT_HL2MP_JUMP_SMG1,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_SMG1,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_SMG1,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_SMG1,
-        swimMove = ACT_HL2MP_SWIM_SMG1
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_SMG1
     },
     ["ar2"] = {
         idle = ACT_HL2MP_IDLE_AR2,
@@ -144,9 +140,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_AR2,
         jump = ACT_HL2MP_JUMP_AR2,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_AR2,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_AR2,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_AR2,
-        swimMove = ACT_HL2MP_SWIM_AR2
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_AR2
     },
     ["shotgun"] = {
         idle = ACT_HL2MP_IDLE_SHOTGUN,
@@ -154,9 +148,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_SHOTGUN,
         jump = ACT_HL2MP_JUMP_SHOTGUN,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_SHOTGUN,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_SHOTGUN,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_SHOTGUN,
-        swimMove = ACT_HL2MP_SWIM_SHOTGUN
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_SHOTGUN
     },
     ["revolver"] = {
         idle = ACT_HL2MP_IDLE_REVOLVER,
@@ -164,9 +156,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_REVOLVER,
         jump = ACT_HL2MP_JUMP_REVOLVER,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_REVOLVER,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_REVOLVER,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_REVOLVER,
-        swimMove = ACT_HL2MP_SWIM_REVOLVER
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_REVOLVER
     },
     ["melee"] = {
         idle = ACT_HL2MP_IDLE_MELEE,
@@ -174,9 +164,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_MELEE,
         jump = ACT_HL2MP_JUMP_MELEE,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_MELEE,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_MELEE,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_MELEE,
-        swimMove = ACT_HL2MP_SWIM_MELEE
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_MELEE
     },
     ["melee2"] = {
         idle = ACT_HL2MP_IDLE_MELEE2,
@@ -184,9 +172,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_MELEE2,
         jump = ACT_HL2MP_JUMP_MELEE2,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_MELEE2,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_MELEE2,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_MELEE2,
-        swimMove = ACT_HL2MP_SWIM_MELEE2
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_MELEE2
     },
     ["grenade"] = {
         idle = ACT_HL2MP_IDLE_GRENADE,
@@ -194,9 +180,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_GRENADE,
         jump = ACT_HL2MP_JUMP_GRENADE,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_GRENADE,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_GRENADE,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_GRENADE,
-        swimMove = ACT_HL2MP_SWIM_GRENADE
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_GRENADE
     },
     ["slam"] = {
         idle = ACT_HL2MP_IDLE_SLAM,
@@ -204,9 +188,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_SLAM,
         jump = ACT_HL2MP_JUMP_SLAM,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_SLAM,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_SLAM,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_SLAM,
-        swimMove = ACT_HL2MP_SWIM_SLAM
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_SLAM
     },
     ["normal"] = {
         idle = ACT_HL2MP_IDLE,
@@ -214,9 +196,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK,
         jump = ACT_HL2MP_JUMP_SLAM,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH,
-        swimIdle = ACT_HL2MP_SWIM_IDLE,
-        swimMove = ACT_HL2MP_SWIM
+        crouchWalk = ACT_HL2MP_WALK_CROUCH
     },
     ["rpg"] = {
         idle = ACT_HL2MP_IDLE_RPG,
@@ -224,9 +204,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_RPG,
         jump = ACT_HL2MP_JUMP_RPG,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_RPG,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_RPG,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_RPG,
-        swimMove = ACT_HL2MP_SWIM_RPG
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_RPG
     },
     ["fist"] = {
         idle = ACT_HL2MP_IDLE_FIST,
@@ -234,9 +212,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_FIST,
         jump = ACT_HL2MP_JUMP_FIST,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_FIST,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_FIST,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_FIST,
-        swimMove = ACT_HL2MP_SWIM_FIST
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_FIST
     },
     ["camera"] = {
         idle = ACT_HL2MP_IDLE_CAMERA,
@@ -244,9 +220,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_CAMERA,
         jump = ACT_HL2MP_JUMP_CAMERA,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_CAMERA,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_CAMERA,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_CAMERA,
-        swimMove = ACT_HL2MP_SWIM_CAMERA
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_CAMERA
     },
     ["duel"] = {
         idle = ACT_HL2MP_IDLE_DUEL,
@@ -254,9 +228,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_DUEL,
         jump = ACT_HL2MP_JUMP_DUEL,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_DUEL,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_DUEL,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_DUEL,
-        swimMove = ACT_HL2MP_SWIM_DUEL
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_DUEL
     },
     ["magic"] = {
         idle = ACT_HL2MP_IDLE_MAGIC,
@@ -264,9 +236,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_MAGIC,
         jump = ACT_HL2MP_JUMP_MAGIC,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_MAGIC,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_MAGIC,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_MAGIC,
-        swimMove = ACT_HL2MP_SWIM_MAGIC
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_MAGIC
     },
     ["physgun"] = {
         idle = ACT_HL2MP_IDLE_PHYSGUN,
@@ -274,9 +244,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_PHYSGUN,
         jump = ACT_HL2MP_JUMP_PHYSGUN,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_PHYSGUN,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_PHYSGUN,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_PHYSGUN,
-        swimMove = ACT_HL2MP_SWIM_PHYSGUN
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_PHYSGUN
     },
     ["zombie"] = {
         idle = ACT_HL2MP_IDLE_ZOMBIE,
@@ -284,9 +252,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_ZOMBIE,
         jump = ACT_ZOMBIE_LEAPING,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_ZOMBIE,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_ZOMBIE_03,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_ZOMBIE,
-        swimMove = ACT_HL2MP_SWIM_ZOMBIE
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_ZOMBIE_03
     },
     ["knife"] = {
         idle = ACT_HL2MP_IDLE_KNIFE,
@@ -294,9 +260,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_KNIFE,
         jump = ACT_HL2MP_JUMP_KNIFE,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_KNIFE,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_KNIFE,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_KNIFE,
-        swimMove = ACT_HL2MP_SWIM_KNIFE
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_KNIFE
     },
     ["crossbow"] = {
         idle = ACT_HL2MP_IDLE_CROSSBOW,
@@ -304,9 +268,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_CROSSBOW,
         jump = ACT_HL2MP_JUMP_CROSSBOW,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_CROSSBOW,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_CROSSBOW,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_CROSSBOW,
-        swimMove = ACT_HL2MP_SWIM_CROSSBOW
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_CROSSBOW
     }
 }
 
