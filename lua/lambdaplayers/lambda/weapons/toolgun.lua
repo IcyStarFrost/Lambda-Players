@@ -10,6 +10,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         prettyname = "Toolgun",
         holdtype = "revolver",
         bonemerge = true,
+        waterproof = true,
 
         callback = function( self, wepent, target )
 

@@ -24,6 +24,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         prettyname = "Gravity Gun",
         bonemerge = true,
         holdtype = "physgun",
+        waterproof = true,
 
         Draw = function( lambda, wepent )
             if IsValid( wepent ) then

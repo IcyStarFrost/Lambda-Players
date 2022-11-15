@@ -11,6 +11,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 400,
         attackrange = 3500,
+        waterproof = true,
 
         clip = 1,
 

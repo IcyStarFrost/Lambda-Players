@@ -68,6 +68,7 @@ local bullettbl = {}
 -- I like this way more than before 
 local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabletbl )
     if self.l_Clip <= 0 then self:ReloadWeapon() return end
+
     disabletbl = disabletbl or {}
     if !disabletbl.cooldown then self.l_WeaponUseCooldown = CurTime() + weapondata.rateoffire end
     
@@ -137,8 +138,12 @@ function ENT:UseWeapon( target )
     if CurTime() < self.l_WeaponUseCooldown then return end
     local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
 
-
     local ismelee = weapondata.ismelee or false
+    
+    local iswaterproof = weapondata.waterproof or false
+
+    if ( !iswaterproof and !ismelee ) and self:WaterLevel() > 2 then return end
+
     local wepent = self:GetWeaponENT()
     local callback = weapondata.callback
     local result
