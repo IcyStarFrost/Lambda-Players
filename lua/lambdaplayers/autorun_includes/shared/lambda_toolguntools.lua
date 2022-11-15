@@ -507,8 +507,8 @@ local function UsePaintTool( self, target )
 	local Pos2 = trace.HitPos - trace.HitNormal
 
 	local Bone
-	if ( trace.PhysicsBone and trace.PhysicsBone < trace.Entity:GetPhysicsObjectCount() ) then Bone = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone ) end
-	if ( !IsValid( Bone ) ) then Bone = trace.Entity:GetPhysicsObject() end
+	if ( IsValid( trace.Entity ) and trace.PhysicsBone and trace.PhysicsBone < trace.Entity:GetPhysicsObjectCount() ) then Bone = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone ) end
+	if ( IsValid( trace.Entity ) and !IsValid( Bone ) ) then Bone = trace.Entity:GetPhysicsObject() end
 	if ( !IsValid( Bone ) ) then Bone = trace.Entity end
 
 	Pos1 = Bone:WorldToLocal( Pos1 )

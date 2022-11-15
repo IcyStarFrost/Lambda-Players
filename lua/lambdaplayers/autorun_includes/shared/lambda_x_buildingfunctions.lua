@@ -28,6 +28,20 @@ local function SpawnAProp( self )
 end
 AddBuildFunctionToLambdaBuildingFunctions( "prop", "Allow Prop Spawning", "If Lambda Players are allowed to spawn props", SpawnAProp )
 
+local function SpawnNPC( self )
+    if !self:IsUnderLimit( "NPC" ) then return end
+    
+    self.Face = self:WorldSpaceCenter() + VectorRand( -200, 200 )
+    coroutine.wait( rand( 0.2, 1 ) )
+    local npc = self:SpawnNPC()
+    if !IsValid( npc ) then return end
+    coroutine.wait( rand( 0.2, 1 ) )
+    self.Face = nil
+
+    return true
+end
+AddBuildFunctionToLambdaBuildingFunctions( "npc", "Allow NPC Spawning", "If Lambda Players are allowed to spawn NPCs", SpawnNPC )
+
 
 -- Called when all default building functions above have been loaded.
 -- This hook can be used to add more building functions with AddBuildFunctionToLambdaBuildingFunctions()
