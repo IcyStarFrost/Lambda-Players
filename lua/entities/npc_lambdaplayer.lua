@@ -55,8 +55,8 @@ end
     local idledir = GetConVar( "lambdaplayers_voice_idledir" )
     local drawflashlight = GetConVar( "lambdaplayers_drawflashlights" )
     local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
-    local ents_Create = ents.Create or nil
-    local navmesh_GetNavArea = navmesh.GetNavArea or nil
+    local ents_Create = ents and ents.Create or nil
+    local navmesh_GetNavArea = navmesh and navmesh.GetNavArea or nil
     local voiceprofilechance = GetConVar( "lambdaplayers_lambda_voiceprofileusechance" )
     local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
     local CurTime = CurTime
