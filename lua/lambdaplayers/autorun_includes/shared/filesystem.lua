@@ -15,8 +15,6 @@ file.CreateDir( "lambdaplayers/custom_profilepictures" )
 -- Lambda File System
 LAMBDAFS = {}
 
--- TODO: I need to rewrite some of these functions cause I'm not liking how things are being handled panel wise. Becoming very messy which is the opposite of what we want
-
 function LAMBDAFS:WriteFile( filename, content, type ) 
 	local f = file.Open( filename, "w", "DATA" )
 	if !f then return end
@@ -32,40 +30,57 @@ function LAMBDAFS:WriteFile( filename, content, type )
 	f:Close()
 end
 
--- Updates a file or creates a new file if it doesn't exist
+-- Updates or creates a new file containing a sequential table
 -- type should be json or compressed
-function LAMBDAFS:UpdateFile( filename, addcontent, type ) 
+function LAMBDAFS:UpdateSequentialFile( filename, addcontent, type ) 
     local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
 
     if contents then
-        if addcontent[ 1 ] == "!!INSERT" then table_insert( contents, addcontent[ 2 ] ) else contents[ addcontent[ 1 ] ] = addcontent[ 2 ] end
-        LAMBDAFS:WriteFile( filename, contents, type ) 
+        table_insert( contents, addcontent )
+        LAMBDAFS:WriteFile( filename, contents, type )
     else
-        local newtbl = istable( addcontent ) and addcontent or { addcontent }
-        LAMBDAFS:WriteFile( filename, newtbl, type ) 
+        LAMBDAFS:WriteFile( filename, addcontent, type )
+    end
+
+end
+
+-- Updates or creates a new file containing a table that uses strings as keys
+-- type should be json or compressed
+function LAMBDAFS:UpdateKeyValueFile( filename, addcontent, type ) 
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
+
+    if contents then
+        for k, v in pairs( addcontent ) do contents[ k ] = v end
+        LAMBDAFS:WriteFile( filename, contents, type )
+    else
+        LAMBDAFS:WriteFile( filename, addcontent, type )
     end
 
 end
 
 -- If a file has the provided value
--- Only works if the file is sequential
+-- Only works if the file contains a sequential table
 function LAMBDAFS:FileHasValue( filename, value, type ) 
     if !file.Exists( filename, "DATA" ) then return false end
     local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
     return table_HasValue( contents, value )
 end
 
--- Removes the specified value or key from a file.
-function LAMBDAFS:RemoveDataFromFile( filename, removevar, iskey, type ) 
+-- SQ short for Sequential
+-- Removes a value from the specified file containing a sequential table
+function LAMBDAFS:RemoveVarFromSQFile( filename, var, type )
     local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
-
-    for k, v in pairs( contents ) do
-        if iskey and k == removevar or !iskey and v == removevar then if isnumber( k ) then table.remove( contents, k ) else contents[ k ] = nil end end
-    end
-
-    LAMBDAFS:WriteFile( filename, contents, type ) 
+    table_RemoveByValue( contents, var )
+    LAMBDAFS:WriteFile( filename, contents, type )
 end
 
+-- KV short for Key Value
+-- Removes a key from the specified file containing a table that uses strings as keys
+function LAMBDAFS:RemoveVarFromKVFile( filename, key, type )
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
+    contents[ key ] = nil
+    LAMBDAFS:WriteFile( filename, contents, type )
+end
 
 
 function LAMBDAFS:ReadFile( filename, type, path )
