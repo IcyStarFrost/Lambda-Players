@@ -247,6 +247,19 @@ AddToolFunctionToLambdaTools( "Dynamite", UseDynamiteTool )
 
 
 
+local ropematerials = { "cable/redlaser", "cable/cable2", "cable/rope", "cable/blue_elec", "cable/xbeam", "cable/physbeam", "cable/hydra" }
+--[[local function UseElasticTool( self, target )
+
+    -- TODO
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Elastic", UseElasticTool )]]
+
+
+
+
+
 local effectlist = { "manhacksparks", "glassimpact", "striderblood", "shells", "cball_explode", "ar2impact", "bloodimpact", "sparks", "dirtywatersplash", "watersplash", "stunstickimpact", "thumperdust", "muzzleeffect", "bloodspray", "helicoptermegabomb", "rifleshells", "ar2explosion", "explosion", "cball_bounce", "shotgunshells", "underwaterexplosion", "smoke" }
 local function UseEmitterTool( self, target )
     if !self:IsUnderLimit( "Emitter" ) then return end
@@ -608,7 +621,6 @@ AddToolFunctionToLambdaTools( "Remover", UseRemoverTool )
 
 
 
-local ropematerials = { "cable/redlaser", "cable/cable2", "cable/rope", "cable/blue_elec", "cable/xbeam", "cable/physbeam", "cable/hydra" }
 local function UseRopeTool( self, target )
     if !self:IsUnderLimit( "Rope" ) then return end
 
@@ -770,25 +782,29 @@ AddToolFunctionToLambdaTools( "Trail", UseTrailTool )
 
 local wheelmodels = { "models/props_vehicles/apc_tire001.mdl", "models/props_vehicles/tire001a_tractor.mdl", "models/props_vehicles/tire001b_truck.mdl", "models/props_vehicles/tire001c_car.mdl", "models/props_trainstation/trainstation_clock001.mdl", "models/props_c17/pulleywheels_large01.mdl", "models/props_junk/sawblade001a.mdl", "models/props_wasteland/controlroom_filecabinet002a.mdl", "models/props_borealis/bluebarrel001.mdl", "models/props_c17/oildrum001.mdl", "models/props_c17/playground_carousel01.mdl", "models/props_c17/chair_office01a.mdl", "models/props_c17/TrapPropeller_Blade.mdl", "models/props_junk/metal_paintcan001a.mdl", "models/props_vehicles/carparts_wheel01a.mdl", "models/props_wasteland/wheel01.mdl" }
 local function UseWheelTool( self, target )
-    if !self:IsUnderLimit( "Wheel" ) or !IsValid( target ) then return end
+    if !self:IsUnderLimit( "Wheel" ) then return end
 
     -- TODO : Randomly choose between world or target
 
-    self:LookTo( target, 2 )
+    local world = random( 0, 1 )
+    if !world and !IsValid( target ) then return end
+
+    local trace = world and self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) ) or self:Trace( target:WorldSpaceCenter() )
+
+    -- -- --
+
+    self:LookTo( trace.HitPos , 2 )
 
     coroutine.wait( 1 )
-    if !IsValid( target ) then return end
 
-    local trace = self:Trace( target:WorldSpaceCenter() )
-
-    if IsValid( trace.Entity ) and !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return end -- Check to avoid placing wheel on things they can't be attached to
+    if IsValid( trace.Entity ) and !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return end
 
     local mdl = wheelmodels[ random( #wheelmodels ) ]
     local wheelAngTab = list.Get( "WheelModels" )[mdl]
     local wheelAngle = Angle( NormalizeAngle( wheelAngTab.wheel_rx ), NormalizeAngle( wheelAngTab.wheel_ry ), NormalizeAngle( wheelAngTab.wheel_rz ) )
     local torque = random( 10, 10000 )
 
-    self:UseWeapon( target:WorldSpaceCenter() )
+    self:UseWeapon( trace.HitPos )
     local ent = CreateGmodEntity( "gmod_wheel", mdl, trace.HitPos, trace.HitNormal:Angle() + wheelAngle, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
@@ -804,7 +820,7 @@ local function UseWheelTool( self, target )
     local LPos1 = ent:GetPhysicsObject():WorldToLocal( ent:GetPos() + trace.HitNormal )
     local LPos2 = targetPhys:WorldToLocal( trace.HitPos )
 
-    local const = constraint.Motor( ent, trace.Entity, 0, trace.PhysicsBone, LPos1, LPos2, random( 0, 100 ), torque, 0, tobool( random( 0, 1 ) ), 1 )
+    local const = constraint.Motor( ent, trace.Entity, 0, trace.PhysicsBone, LPos1, LPos2, random( 0, 100 ), torque, 0, random( 0, 1 ), 1 )
 
     ent:SetPos( trace.HitPos + wheelOffset )
     ent:SetPlayer( self )
