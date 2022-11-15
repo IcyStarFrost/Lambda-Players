@@ -167,9 +167,6 @@ end
 function ENT:HandleStuck()
     if self:GetIsDead() then self.loco:ClearStuck() return false end -- Who knows just in case
 
-    -- If the hook returns "stop" or "continue", don't run the unstuck process and assume who ever made the hook is handling the stuck status
-
-
     local mins, maxs = self:GetModelBounds()
 
     self.l_stucktimes = self.l_stucktimes + 1
