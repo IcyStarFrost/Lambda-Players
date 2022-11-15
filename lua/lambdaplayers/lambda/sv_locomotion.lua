@@ -166,10 +166,18 @@ end
 -- Unless false, don't continue and stop
 function ENT:HandleStuck()
     if self:GetIsDead() then self.loco:ClearStuck() return false end -- Who knows just in case
+
+    -- If the hook returns "stop" or "continue", don't run the unstuck process and assume who ever made the hook is handling the stuck status
+
+
     local mins, maxs = self:GetModelBounds()
 
     self.l_stucktimes = self.l_stucktimes + 1
     self.l_stucktimereset = CurTime() + 10
+
+    -- Allow external addons to control our stuck process. We assume whoever made that hook and returns "stop" or "continue" will handle the unstuck behaviour
+    local result = hook.Run( "LambdaOnStuck", self, self.l_stucktimes )
+    if result == "stop" then return false elseif result == "continue" then return true end
 
     if self.l_stucktimes > 2 then self.l_stucktimes = 0 self.loco:ClearStuck() return false end
 
