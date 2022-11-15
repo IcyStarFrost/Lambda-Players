@@ -590,6 +590,9 @@ if SERVER then
 
 elseif CLIENT then
 
+    function ENT:IsBeingDrawn()
+        return RealTime() < self.l_lastdraw
+    end
 
 
 end

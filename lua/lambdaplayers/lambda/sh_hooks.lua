@@ -299,7 +299,7 @@ function ENT:InitializeMiniHooks()
     elseif CLIENT then
 
         self:Hook( "PreDrawEffects", "CustomWeaponRenderEffects", function()
-            if self:GetIsDead() or RealTime() > self.l_lastdraw then return end
+            if self:GetIsDead() or !self:IsBeingDrawn() then return end
 
             if self:GetHasCustomDrawFunction() then
                 local func = _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ].Draw
