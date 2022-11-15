@@ -511,6 +511,8 @@ local function UsePaintTool( self, target )
 	if ( IsValid( trace.Entity ) and !IsValid( Bone ) ) then Bone = trace.Entity:GetPhysicsObject() end
 	if ( !IsValid( Bone ) ) then Bone = trace.Entity end
 
+    if !IsValid( Bone ) then return end
+
 	Pos1 = Bone:WorldToLocal( Pos1 )
 	Pos2 = Bone:WorldToLocal( Pos2 )
 

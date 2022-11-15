@@ -1,5 +1,6 @@
 local table_insert = table.insert
 local rand = math.Rand
+local VectorRand = VectorRand
 local coroutine = coroutine
 
 LambdaBuildingFunctions = {}
@@ -41,6 +42,21 @@ local function SpawnNPC( self )
     return true
 end
 AddBuildFunctionToLambdaBuildingFunctions( "npc", "Allow NPC Spawning", "If Lambda Players are allowed to spawn NPCs", SpawnNPC )
+
+
+local function SpawnEntity( self )
+    if !self:IsUnderLimit( "Entity" ) then return end
+    
+    self.Face = self:WorldSpaceCenter() + VectorRand( -200, 200 )
+    coroutine.wait( rand( 0.2, 1 ) )
+    local entity = self:SpawnEntity()
+    if !IsValid( entity ) then return end
+    coroutine.wait( rand( 0.2, 1 ) )
+    self.Face = nil
+
+    return true
+end
+AddBuildFunctionToLambdaBuildingFunctions( "entity", "Allow Entity Spawning", "If Lambda Players are allowed to spawn Entities", SpawnEntity )
 
 
 -- Called when all default building functions above have been loaded.

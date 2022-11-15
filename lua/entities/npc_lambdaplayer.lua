@@ -16,19 +16,19 @@ for k, luafile in ipairs( ENTFiles ) do
 
     if string.StartWith( luafile, "sv_" ) then -- Server Side Files
         include( "lambdaplayers/lambda/" .. luafile )
-        print( "Lambda Players: Included Server Side ENT Lua File [" .. luafile .. "]" )
+        print( "Lambda Players ENT TABLE: Included Server Side ENT Lua File [" .. luafile .. "]" )
     elseif string.StartWith( luafile, "sh_" ) then -- Shared Files
         if SERVER then
             AddCSLuaFile( "lambdaplayers/lambda/" .. luafile )
         end
         include( "lambdaplayers/lambda/" .. luafile )
-        print( "Lambda Players: Included Shared ENT Lua File [" .. luafile .. "]" )
+        print( "Lambda Players ENT TABLE: Included Shared ENT Lua File [" .. luafile .. "]" )
     elseif string.StartWith( luafile, "cl_" ) then -- Client Side Files
         if SERVER then
             AddCSLuaFile( "lambdaplayers/lambda/" .. luafile )
         else
             include( "lambdaplayers/lambda/" .. luafile )
-            print( "Lambda Players: Included Client Side ENT Lua File [" .. luafile .. "]" )
+            print( "Lambda Players ENT TABLE: Included Client Side ENT Lua File [" .. luafile .. "]" )
         end
     end
 end

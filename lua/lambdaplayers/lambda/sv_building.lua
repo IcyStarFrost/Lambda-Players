@@ -101,7 +101,6 @@ function ENT:SpawnNPC()
     self:EmitSound( "ui/buttonclickrelease.wav", 60 )
 
     local trace = self:GetEyeTrace()
-    local mdl = LambdaPlayerProps[ random( #LambdaPlayerProps ) ]
     local class = GetRandomNPCClassname()
 
     -- Internal function located at autorun_includes/server/building_npccreation.lua
@@ -119,5 +118,34 @@ function ENT:SpawnNPC()
 
     return NPC
 end
+
+local entlist
+
+function ENT:SpawnEntity()
+    if !self:IsUnderLimit( "Entity" ) then return end
+
+    self:EmitSound( "ui/buttonclickrelease.wav", 60 )
+
+    entlist = entlist or table_GetKeys( list.Get( "SpawnableEntities" ) )
+    local trace = self:GetEyeTrace()
+    local class = entlist[ random( #entlist ) ]
+
+    -- function located at autorun_includes/server/building_entitycreation.lua
+    local entity = LambdaSpawn_SENT( self, class, trace )
+    
+    if !IsValid( entity ) then return end
+
+    entity.LambdaOwner = self
+    entity.IsLambdaSpawned = true
+
+    self:DebugPrint( "spawned a Entity ", class )
+
+    self:ContributeEntToLimit( entity, "Entity" )
+    table_insert( self.l_SpawnedEntities, 1, entity )
+
+    return entity
+end
+
+
 
 ------

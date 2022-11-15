@@ -10,6 +10,7 @@ end
 
 
 CreateLambdaEntLimit( "Prop", 300, 50000 )
+CreateLambdaEntLimit( "Entity", 5, 200 )
 CreateLambdaEntLimit( "NPC", 1, 200 )
 CreateLambdaEntLimit( "Balloon", 10, 200 )
 CreateLambdaEntLimit( "Dynamite", 5, 200 )
