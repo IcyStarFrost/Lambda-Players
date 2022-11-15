@@ -81,6 +81,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_allowrandomaddonsmodels", 0, true, fal
 CreateLambdaConvar( "lambdaplayers_lambda_voiceprofileusechance", 0, true, false, false, "The chance a Lambda Player will use a random Voice Profile if one exists. Set to 0 to disable", 0, 100, { type = "Slider", decimals = 0, name = "VP Use Chance", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_realisticfalldamage", 0, true, false, false, "If Lambda Players should take fall damage similar to Realistic Fall Damage", 0, 1, { type = "Bool", name = "Realistic Fall Damage", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_respawnatplayerspawns", 0, true, false, false, "If Lambda Players should respawn at player spawn points", 0, 1, { type = "Bool", name = "Respawn At Player Spawns", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_allowswimming", 0, true, false, false, "If Lambda Players should able to swim in water", 0, 1, { type = "Bool", name = "Allow Swimming", category = "Lambda Server Settings" } )
 --
 
 -- Lambda Player Convars

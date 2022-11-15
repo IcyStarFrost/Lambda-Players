@@ -66,6 +66,7 @@ end
     local unstucktable = {}
     local sub = string.sub
     local RealTime = RealTime
+    local allowSwimming = GetConVar( "lambdaplayers_lambda_allowswimming" )
     
 --
 
@@ -110,6 +111,7 @@ function ENT:Initialize()
         self.l_WeaponUseCooldown = 0
         self.l_currentnavarea = navmesh.GetNavArea( self:WorldSpaceCenter(), 400 )
         self.l_FallVelocity = 0
+        self.l_MovePath = NULL
 
         -- Personal Stats --
         
@@ -314,6 +316,52 @@ function ENT:Think()
             debugoverlay.Line( attach.Pos, self:GetEyeTrace().HitPos, 0.1, color_white, true  )
         end
 
+        -- Swimming System --
+        -- W.I.P. -- 
+        if self:WaterLevel() == 3 then
+            local curVel = self:GetVelocity()
+            if curVel.z < -48 then
+                curVel.z = Lerp( 15 * FrameTime(), curVel.z, -48 )
+                self.loco:SetVelocity( curVel )
+            end
+
+            if self.IsMoving and allowSwimming:GetBool() then
+                local path = self.l_MovePath
+
+                local curSwimPos = ( ( !isvector( self.l_movepos ) and LambdaIsValid( self.l_movepos ) ) and self.l_movepos:GetPos() or self.l_movepos )
+                if self.l_HasMelee and LambdaIsValid( self:GetEnemy() ) and self:GetRangeSquaredTo( self:GetEnemy() ) > ( self.l_CombatKeepDistance * self.l_CombatKeepDistance ) then
+                    curSwimPos = self:GetEnemy():GetPos()
+                elseif IsValid( path ) then 
+                    curSwimPos = path:GetCurrentGoal().pos
+
+                    local startPos = nil
+                    for k, v in ipairs( path:GetAllSegments() ) do
+                        if bit.band( util.PointContents( v.pos ), CONTENTS_WATER ) != CONTENTS_WATER then break end
+                        if IsValid( self.l_currentnavarea ) and !v.area:IsCompletelyVisible( self.l_currentnavarea ) then break end
+                        startPos = v.pos
+                    end
+                    if startPos then curSwimPos = startPos end
+                end
+
+                if curSwimPos then
+                    if self:IsOnGround() then
+                        if ( curSwimPos.z - self:GetPos().z ) > 96.0 then 
+                            self.loco:Jump()
+                        end
+                    else
+                        local swimAng = ( curSwimPos - self:GetPos() ):Angle()
+                        local swimSpeed = ( ( self:GetRun() and !self:GetCrouch() ) and 320.0 or 160.0 )
+
+                        local swimUp = ( ( curSwimPos.z - self:GetPos().z ) > 48.0 and 48 or 0 )
+                        self.loco:SetVelocity( swimAng:Forward() * swimSpeed + swimAng:Up() * swimUp )
+
+                        if IsValid( path ) and path:GetAge() > 0.5 then path:Compute( self, path:GetEnd() ) end
+                        self.loco:FaceTowards( curSwimPos )
+                    end
+                end
+            end
+        end
+
         if !self:IsOnGround() then
             self.l_FallVelocity = self.loco:GetVelocity()[ 3 ]
             
@@ -335,6 +383,9 @@ function ENT:Think()
                     local moveAnim = ( self:GetCrouch() and anims.crouchWalk or anims.run )
                     if self:GetActivity() != moveAnim then self:StartActivity( moveAnim ) end
                 end
+            elseif self:WaterLevel() == 3 then
+                local swimAnim = ( self.IsMoving and anims.swimMove or anims.swimIdle )
+                if self:GetActivity() != swimAnim then self:StartActivity( swimAnim ) end
             elseif self:GetActivity() != anims.jump then
                 self:StartActivity( anims.jump )
             end
