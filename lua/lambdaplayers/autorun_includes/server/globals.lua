@@ -252,7 +252,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_ZOMBIE,
         jump = ACT_ZOMBIE_LEAPING,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_ZOMBIE,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_ZOMBIE
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_ZOMBIE_03
     },
     ["knife"] = {
         idle = ACT_HL2MP_IDLE_KNIFE,
