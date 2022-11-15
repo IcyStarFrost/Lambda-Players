@@ -783,15 +783,11 @@ AddToolFunctionToLambdaTools( "Trail", UseTrailTool )
 local wheelmodels = { "models/props_vehicles/apc_tire001.mdl", "models/props_vehicles/tire001a_tractor.mdl", "models/props_vehicles/tire001b_truck.mdl", "models/props_vehicles/tire001c_car.mdl", "models/props_trainstation/trainstation_clock001.mdl", "models/props_c17/pulleywheels_large01.mdl", "models/props_junk/sawblade001a.mdl", "models/props_wasteland/controlroom_filecabinet002a.mdl", "models/props_borealis/bluebarrel001.mdl", "models/props_c17/oildrum001.mdl", "models/props_c17/playground_carousel01.mdl", "models/props_c17/chair_office01a.mdl", "models/props_c17/TrapPropeller_Blade.mdl", "models/props_junk/metal_paintcan001a.mdl", "models/props_vehicles/carparts_wheel01a.mdl", "models/props_wasteland/wheel01.mdl" }
 local function UseWheelTool( self, target )
     if !self:IsUnderLimit( "Wheel" ) then return end
-
-    -- TODO : Randomly choose between world or target
-
     local world = random( 0, 1 )
+
     if !world and !IsValid( target ) then return end
 
     local trace = world and self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) ) or self:Trace( target:WorldSpaceCenter() )
-
-    -- -- --
 
     self:LookTo( trace.HitPos , 2 )
 
@@ -819,10 +815,10 @@ local function UseWheelTool( self, target )
     local targetPhys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
     local LPos1 = ent:GetPhysicsObject():WorldToLocal( ent:GetPos() + trace.HitNormal )
     local LPos2 = targetPhys:WorldToLocal( trace.HitPos )
+    ent:SetPos( trace.HitPos + wheelOffset )
 
     local const = constraint.Motor( ent, trace.Entity, 0, trace.PhysicsBone, LPos1, LPos2, random( 0, 100 ), torque, 0, random( 0, 1 ), 1 )
 
-    ent:SetPos( trace.HitPos + wheelOffset )
     ent:SetPlayer( self )
     ent:SetMotor( const )
     ent:SetDirection( const.direction )
