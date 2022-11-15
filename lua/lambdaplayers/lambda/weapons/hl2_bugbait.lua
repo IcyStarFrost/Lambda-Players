@@ -22,8 +22,16 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         OnEquip = function( self, wepent )
 
             local nextthrow = CurTime() + rand( 1, 10 )
+            local nextsqueeze = CurTime() + rand( 1, 20 )
+            
 
             self:Hook( "Tick", "Bugbaitthrowing", function()
+
+                if CurTime() > nextsqueeze then
+                    wepent:EmitSound( "weapons/bugbait/bugbait_squeeze" .. random( 1, 3 ) .. ".wav", 65, 100, 10, CHAN_WEAPON )
+                    nextsqueeze = CurTime() + rand( 1, 20 )
+                end
+
                 if CurTime() < nextthrow then return end
 
                 local nearby = self:FindInSphere( nil, 200, function( ent ) return IsCharacter( ent ) or self:HasVPhysics( ent ) end )
