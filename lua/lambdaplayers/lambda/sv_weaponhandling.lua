@@ -29,6 +29,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self.l_CombatKeepDistance = weapondata.keepdistance
     self.l_CombatAttackRange = weapondata.attackrange
     self.l_OnDamagefunction = weapondata.OnDamage
+    self.l_WeaponNoDraw = weapondata.nodraw
     self.l_CombatSpeedAdd = weapondata.addspeed or 0
     self.l_Clip = weapondata.clip or 0
     self.l_MaxClip = weapondata.clip or 0
@@ -221,8 +222,7 @@ end
 
 -- If the lambda's weapon data has nodraw enabled
 function ENT:IsWeaponMarkedNodraw()
-    local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
-    return weapondata.nodraw
+    return self.l_WeaponNoDraw
 end
 
 -- If we can equip the specified weapon name

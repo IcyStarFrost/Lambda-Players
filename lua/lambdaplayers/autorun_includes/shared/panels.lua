@@ -179,7 +179,7 @@ if CLIENT then
         for k, v in SortedPairs( sorttable ) do tbl[ #tbl + 1 ] = v end
     end
 
-
+    -- Requests data from the specified file from the server
     function LAMBDAPANELS:RequestDataFromServer( filepath, type, callback )
         net.Start( "lambdaplayers_requestdata" )
         net.WriteString( filepath )
@@ -204,11 +204,6 @@ if CLIENT then
         end )
 
     end
-
-
-
-
-
 
 
     -- Comment taken from shared/filesystem.lua
@@ -307,6 +302,8 @@ elseif SERVER then
     end )
 
     net.Receive( "lambdaplayers_requestdata", function( len, ply )
+        if !ply:IsSuperAdmin() then return end
+
         local filepath = net.ReadString()
         local _type = net.ReadString()
         local content = LAMBDAFS:ReadFile( filepath, _type, "DATA" )
