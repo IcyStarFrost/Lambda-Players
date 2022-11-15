@@ -41,11 +41,12 @@ function ENT:MoveToPos( pos, options )
 	if ( !path:IsValid() ) then return "failed" end
 
     self.IsMoving = true
+    self.l_MovePath = path
 
 	while ( path:IsValid() ) do
         if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end
         if self:GetIsDead() then return "dead" end
-        if self.AbortMovement then self.AbortMovement = false self.IsMoving = false return "aborted" end
+        if self.AbortMovement then self.AbortMovement = false self.IsMoving = false self.l_MovePath = NULL return "aborted" end
 
         local goal = path:GetCurrentGoal()
 
@@ -67,15 +68,14 @@ function ENT:MoveToPos( pos, options )
             -- This prevents the stuck handling from running if we are right next to the entity we are going to
             if !isvector( self.l_movepos ) and self:GetRangeSquaredTo( pos ) >= ( 100 * 100 ) or isvector( self.l_movepos ) then 
                 local result = self:HandleStuck()
-                if !result then self.IsMoving = false return "stuck" end
+                if !result then self.IsMoving = false self.l_MovePath = NULL return "stuck" end
             else
                 self.loco:ClearStuck()
             end
-
 		end
 
 		if timeout then
-			if path:GetAge() > timeout then self.IsMoving = false return "timeout" end
+			if path:GetAge() > timeout then self.IsMoving = false self.l_MovePath = NULL return "timeout" end
 		end
 
 		if update then
@@ -88,6 +88,7 @@ function ENT:MoveToPos( pos, options )
 	end
 
     self.IsMoving = false
+    self.l_MovePath = NULL
 
 	return "ok"
 
