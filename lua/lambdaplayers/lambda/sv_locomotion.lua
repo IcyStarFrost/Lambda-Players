@@ -40,15 +40,16 @@ function ENT:MoveToPos( pos, options )
 
 	if ( !path:IsValid() ) then return "failed" end
 
+    self.l_CurrentPath = path
     self.IsMoving = true
 
 	while ( path:IsValid() ) do
         if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end
         if self:GetIsDead() then return "dead" end
-        if self.AbortMovement then self.AbortMovement = false self.IsMoving = false return "aborted" end
+        if self.AbortMovement then self.AbortMovement = false self.IsMoving = false self.l_CurrentPath = nil return "aborted" end
 
         local goal = path:GetCurrentGoal()
-
+        
 
         if !aidisable:GetBool() then
             if callback and isfunction( callback ) then callback( goal ) end 
@@ -67,7 +68,7 @@ function ENT:MoveToPos( pos, options )
             -- This prevents the stuck handling from running if we are right next to the entity we are going to
             if !isvector( self.l_movepos ) and self:GetRangeSquaredTo( pos ) >= ( 100 * 100 ) or isvector( self.l_movepos ) then 
                 local result = self:HandleStuck()
-                if !result then self.IsMoving = false return "stuck" end
+                if !result then self.IsMoving = false self.l_CurrentPath = nil return "stuck" end
             else
                 self.loco:ClearStuck()
             end
@@ -87,6 +88,7 @@ function ENT:MoveToPos( pos, options )
 
 	end
 
+    self.l_CurrentPath = nil
     self.IsMoving = false
 
 	return "ok"
@@ -114,7 +116,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
     while IsValid( self ) do 
         if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end
         if self:GetIsDead() then return "dead" end
-        if self.AbortMovement then self.AbortMovement = false self.IsMoving = false return "aborted" end
+        if self.AbortMovement then self.AbortMovement = false self.IsMoving = false self.l_CurrentPath = nil return "aborted" end
         if self:GetRangeSquaredTo( ReplaceZ( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ) ) ) <= ( tolerance * tolerance ) then break end
 
         if !aidisable:GetBool() then
@@ -125,6 +127,8 @@ function ENT:MoveToPosOFFNAV( pos, options )
             self:DoorCheck()
         end
 
+        self.l_CurrentPath = ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos )
+
         if dev:GetBool() then
             debugoverlay.Line( self:GetPos(), ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), 0.1, color_white, true )
         end
@@ -133,7 +137,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
             -- This prevents the stuck handling from running if we are right next to the entity we are going to
             if !isvector( self.l_movepos ) and self:GetRangeSquaredTo( pos ) >= ( 100 * 100 ) or isvector( self.l_movepos ) then 
                 local result = self:HandleStuck()
-                if !result then self.IsMoving = false return "stuck" end
+                if !result then self.IsMoving = false self.l_CurrentPath = nil return "stuck" end
             else
                 self.loco:ClearStuck()
             end
@@ -145,7 +149,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
         coroutine.yield()
     end
 
-
+    self.l_CurrentPath = nil
     self.IsMoving = false
 
     return "ok"

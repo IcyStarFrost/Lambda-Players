@@ -103,6 +103,7 @@ function ENT:Initialize()
         self.l_stucktimes = 0
         self.NextFootstepTime = 0
         self.l_stucktimereset = 0
+        self.l_CurrentPath = nil
         self.l_movepos = nil
         self.l_nextdoorcheck = 0
         self.l_nextUA = CurTime() + rand( 1, 15 ) -- Universal Action
