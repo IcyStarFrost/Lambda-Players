@@ -15,6 +15,8 @@ file.CreateDir( "lambdaplayers/custom_profilepictures" )
 -- Lambda File System
 LAMBDAFS = {}
 
+-- TODO: I need to rewrite some of these functions cause I'm not liking how things are being handled panel wise. Becoming very messy which is the opposite of what we want
+
 function LAMBDAFS:WriteFile( filename, content, type ) 
 	local f = file.Open( filename, "w", "DATA" )
 	if !f then return end

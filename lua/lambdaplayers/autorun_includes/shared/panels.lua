@@ -7,6 +7,9 @@ local table_ClearKeys = table.ClearKeys
 local table_Empty = table.Empty
 local SortedPairs = SortedPairs
 
+
+-- TODO: Just like filesystem.lua, I need to rewrite some of these functions. Specifically file handling and networking
+
 -- Base panel stuff
 if CLIENT then
     local string_find = string.find
