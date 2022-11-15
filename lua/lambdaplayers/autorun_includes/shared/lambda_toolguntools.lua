@@ -6,6 +6,7 @@ local ColorRand = ColorRand
 local VectorRand = VectorRand
 local IsValid = IsValid
 local Round = math.Round
+local NormalizeAngle = math.NormalizeAngle
 local ents_Create = ents.Create
 local util_Effect = util.Effect
 local tobool = tobool
@@ -767,9 +768,7 @@ AddToolFunctionToLambdaTools( "Trail", UseTrailTool )
 
 
 
-local wheelmodels0 = { "models/props_vehicles/apc_tire001.mdl", "models/props_vehicles/tire001a_tractor.mdl", "models/props_vehicles/tire001b_truck.mdl", "models/props_vehicles/tire001c_car.mdl", "models/props_trainstation/trainstation_clock001.mdl", "models/props_c17/pulleywheels_large01.mdl" }
-local wheelmodels1 = { "models/props_junk/sawblade001a.mdl", "models/props_wasteland/controlroom_filecabinet002a.mdl", "models/props_borealis/bluebarrel001.mdl", "models/props_c17/oildrum001.mdl", "models/props_c17/playground_carousel01.mdl", "models/props_c17/chair_office01a.mdl", "models/props_c17/TrapPropeller_Blade.mdl", "models/props_junk/metal_paintcan001a.mdl" }
-local wheelmodels2 = { "models/props_vehicles/carparts_wheel01a.mdl", "models/props_wasteland/wheel01.mdl" }
+local wheelmodels = { "models/props_vehicles/apc_tire001.mdl", "models/props_vehicles/tire001a_tractor.mdl", "models/props_vehicles/tire001b_truck.mdl", "models/props_vehicles/tire001c_car.mdl", "models/props_trainstation/trainstation_clock001.mdl", "models/props_c17/pulleywheels_large01.mdl", "models/props_junk/sawblade001a.mdl", "models/props_wasteland/controlroom_filecabinet002a.mdl", "models/props_borealis/bluebarrel001.mdl", "models/props_c17/oildrum001.mdl", "models/props_c17/playground_carousel01.mdl", "models/props_c17/chair_office01a.mdl", "models/props_c17/TrapPropeller_Blade.mdl", "models/props_junk/metal_paintcan001a.mdl", "models/props_vehicles/carparts_wheel01a.mdl", "models/props_wasteland/wheel01.mdl" }
 local function UseWheelTool( self, target )
     if !self:IsUnderLimit( "Wheel" ) or !IsValid( target ) then return end
 
@@ -784,18 +783,9 @@ local function UseWheelTool( self, target )
 
     if IsValid( trace.Entity ) and !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return end -- Check to avoid placing wheel on things they can't be attached to
 
-    -- TODO : Simplify this
-    local wheelrand = random( 0, 1 ) -- To deal with an angle issue...
-    local wheelAngle = Angle( math.NormalizeAngle( 90 ), math.NormalizeAngle( 0 ), math.NormalizeAngle( 90 ) )
-    local mdl = wheelmodels2[ random( #wheelmodels2 ) ]
-
-    if wheelrand==0 then
-        wheelAngle = Angle( math.NormalizeAngle( 0 ), math.NormalizeAngle( 0 ), math.NormalizeAngle( 0 ) )
-        mdl = wheelmodels0[ random( #wheelmodels0 ) ]
-    elseif wheelrand==1 then
-        wheelAngle = Angle( math.NormalizeAngle( 90 ), math.NormalizeAngle( 0 ), math.NormalizeAngle( 0 ) )
-        mdl = wheelmodels1[ random( #wheelmodels1 ) ]
-    end
+    local mdl = wheelmodels[ random( #wheelmodels ) ]
+    local wheelAngTab = list.Get( "WheelModels" )[mdl]
+    local wheelAngle = Angle( NormalizeAngle( wheelAngTab.wheel_rx ), NormalizeAngle( wheelAngTab.wheel_ry ), NormalizeAngle( wheelAngTab.wheel_rz ) )
     local torque = random( 10, 10000 )
 
     self:UseWeapon( target:WorldSpaceCenter() )
@@ -814,7 +804,7 @@ local function UseWheelTool( self, target )
     local LPos1 = ent:GetPhysicsObject():WorldToLocal( ent:GetPos() + trace.HitNormal )
     local LPos2 = targetPhys:WorldToLocal( trace.HitPos )
 
-    local const = constraint.Motor( ent, trace.Entity, 0, trace.PhysicsBone, LPos1, LPos2, random( 0, 100 ), torque, 0, random( 0, 1 ), 1 )
+    local const = constraint.Motor( ent, trace.Entity, 0, trace.PhysicsBone, LPos1, LPos2, random( 0, 100 ), torque, 0, tobool( random( 0, 1 ) ), 1 )
 
     ent:SetPos( trace.HitPos + wheelOffset )
     ent:SetPlayer( self )
