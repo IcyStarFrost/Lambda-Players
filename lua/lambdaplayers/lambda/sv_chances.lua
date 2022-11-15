@@ -40,9 +40,11 @@ function ENT:Chance_Build()
 
     for index, buildtable in RandomPairs( self.l_BuildingFunctions ) do
         if !buildtable[ 2 ]:GetBool() then continue end
+        local result 
 
-        local result = buildtable[ 3 ]( self )
+        local ok, msg = pcall( function() result = buildtable[ 3 ]( self ) end )
 
+        if !ok then ErrorNoHaltWithStack( tooltable[ 1 ] .. " Building function had a error! If this is from a addon, report it to the author!", msg ) end
         if result then self:DebugPrint( "Used a building function: " .. buildtable[ 1 ] ) break end
     end
 
@@ -61,13 +63,17 @@ function ENT:Chance_Tool()
     local target = find[ random( #find ) ]
 
     -- Loops through random tools and only stops if a tool tells us it actually got used by returning true 
+    
     for index, tooltable in RandomPairs( self.l_ToolgunTools ) do
         if !tooltable[ 2 ]:GetBool() then continue end -- If the tool is allowed
+        local result
+        
+        local ok, msg = pcall( function() result = tooltable[ 3 ]( self, target ) end )
 
-        local result = tooltable[ 3 ]( self, target )
-
+        if !ok then ErrorNoHaltWithStack( tooltable[ 1 ] .. " Tool had a error! If this is from a addon, report it to the author!", msg ) end
         if result then self:DebugPrint( "Used " .. tooltable[ 1 ] .. " Tool" ) break end
     end
+
 
     self:PreventWeaponSwitch( false )
 end
