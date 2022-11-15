@@ -6,6 +6,7 @@ local ColorRand = ColorRand
 local VectorRand = VectorRand
 local IsValid = IsValid
 local Round = math.Round
+local NormalizeAngle = math.NormalizeAngle
 local ents_Create = ents.Create
 local util_Effect = util.Effect
 local tobool = tobool
@@ -34,8 +35,8 @@ function AddToolFunctionToLambdaTools( toolname, func )
 end
 
 
--- Helper function for gmod entities 
 
+-- Helper function for gmod entities 
 local function CreateGmodEntity( classname, model, pos, ang, lambda )
 
     local ent = ents_Create( classname )
@@ -52,63 +53,114 @@ end
 
 
 
+-- Helper function for the Paint Tool
+-- Taken from the ignite properties in sandbox
+local function CanEntityBeSetOnFire( ent )
 
+    -- func_pushable, func_breakable & func_physbox cannot be ignited
+    if ( ent:GetClass() == "item_item_crate" ) then return true end
+    if ( ent:GetClass() == "simple_physics_prop" ) then return true end
+    if ( ent:GetClass():match( "prop_physics*") ) then return true end
+    if ( ent:GetClass():match( "prop_ragdoll*") ) then return true end
+    if ( ent:IsNPC() ) then return true end
+
+    return false
+
+end
+
+
+
+-- Helper function for the Paint Tool
+-- Taken from the paint tool in sandbox
+local function PlaceDecal( ply, ent, data )
+
+    if ( !IsValid( ent ) and !ent:IsWorld() ) then return end
+
+    local bone
+    if ( data.bone and data.bone < ent:GetPhysicsObjectCount() ) then bone = ent:GetPhysicsObjectNum( data.bone ) end
+    if ( !IsValid( bone ) ) then bone = ent:GetPhysicsObject() end
+    if ( !IsValid( bone ) ) then bone = ent end
+
+    util.Decal( data.decal, bone:LocalToWorld( data.Pos1 ), bone:LocalToWorld( data.Pos2 ), ply )
+
+    local i = ent.DecalCount or 0
+    i = i + 1
+    ent.DecalCount = i
+
+end
+
+
+
+
+--[[A lot of tools here use self:Trace( position ) which here creates a line from the Lambda Player to a position provided
+    This gives us a table that contains useful information for tool usage such as:
+    trace.Entity - the Entity the trace collided with if any.
+    trace.HitPos - the Position the trace stopped at
+    trace.HitNormal - the direction of the surface that was hit
+]]
 
 local balloonnames = { "normal", "normal_skin1", "normal_skin2", "normal_skin3", "gman", "mossman", "dog", "heart", "star" }
 local function UseBalloonTool( self, target )
-    if !self:IsUnderLimit( "Balloon" ) then return end -- Can't create any more balloons
+    if !self:IsUnderLimit( "Balloon" ) then return end -- We check if the Lambda Players hasn't reached it's personal limit of Balloons
+    local world = random( 0, 1 )
 
-    local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
-    local pos = trace.HitPos
+    -- If we choose target but the target isn't valid, we don't do anything.
+    if !world and ( !IsValid( target ) or target:GetClass() == "gmod_balloon" ) then return end -- Returning nothing is equivalent to returning false
 
-    local randBalloon = balloonnames[ random( #balloonnames ) ]
-    local balloonModel = list.Get( "BalloonModels" )[randBalloon] -- Directly get model from Sandbox. Needed since some have skins.
+    -- We create a trace from the Lambda towards either a random place in the world or the target
+    -- Here we declare the variable trace. If world is true we use the trace after the 'and' otherwise we use the trace after the 'or'
+    local trace = world and self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) ) or self:Trace( target:WorldSpaceCenter() )
 
-    self:LookTo( pos, 2 )
+    self:LookTo( trace.HitPos, 2 ) -- We look towards the position the trace stopped at
 
-    coroutine.wait( 1 )
+    coroutine.wait( 1 ) -- We wait for a second
 
-    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_balloon" or !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end -- Check to avoid placing balloon on things they can't be attached to
+    -- Because we wait for 1 second we must make sure the target is still valid
+    if !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) or trace.Entity:GetClass() == "gmod_balloon" then return end
 
-    self:UseWeapon( pos )
-    local ent = CreateGmodEntity( "gmod_balloon", balloonModel.model, pos, nil, self ) -- Create the balloon
-    ent.LambdaOwner = self
-    ent.IsLambdaSpawned = true
-    self:ContributeEntToLimit( ent, "Balloon" )
+    self:UseWeapon( trace.HitPos ) -- Use the toolgun on the hit position of the trace to fake using a tool
+
+    -- We randomly select a model for the Lambda to spawn. This is a special case since certain balloons have skins.
+    local balloonModel = list.Get( "BalloonModels" )[balloonnames[ random( #balloonnames ) ]]
+
+    -- We create the balloon entity "gmod_balloon" with the random model, at the HitPos of the trace, with Angles of nil and the Lambda as the owner
+    local ent = CreateGmodEntity( "gmod_balloon", balloonModel.model, trace.HitPos, nil, self )
+
+    ent.LambdaOwner = self -- We set the owner of the entity as the Lambda Player that spawned it
+
+    ent.IsLambdaSpawned = true -- We specify that the entity has been spawned by a Lambda Player
+
+    self:ContributeEntToLimit( ent, "Balloon" ) -- We add the entity to the amount of similar entities the Lambda possess
     table_insert( self.l_SpawnedEntities, 1, ent )
 
     local CurPos = ent:GetPos()
-	local NearestPoint = ent:NearestPoint( CurPos - ( trace.HitNormal * 512 ) )
-	local Offset = CurPos - NearestPoint
+    local NearestPoint = ent:NearestPoint( CurPos - ( trace.HitNormal * 512 ) )
+    local Offset = CurPos - NearestPoint
 
-	ent:SetPos( trace.HitPos + Offset ) -- Fix for balloons being placed on ceilings
-
-    local traceent = trace.Entity
-
-    local LPos1 = Vector( 0, 0, 6.5 )
-    local LPos2 = !IsNil( traceent ) and traceent:WorldToLocal( trace.HitPos ) or trace.HitPos
-
-    traceent = !IsNil( traceent ) and traceent or Entity( 0 ) -- world
+    ent:SetPos( trace.HitPos + Offset ) -- Fix for balloons being placed on ceilings
+    
+    local LPos = !IsNil( trace.Entity ) and trace.Entity:WorldToLocal( trace.HitPos ) or trace.HitPos
+    trace.Entity = !IsNil( trace.Entity ) and trace.Entity or Entity( 0 ) -- If the trace manages to not hit anything, we force it to be the world
 
     if IsValid( trace.Entity ) then
 
-        local phys = traceent:GetPhysicsObjectNum( trace.PhysicsBone )
+        local phys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
         if IsValid( phys ) then
-            LPos2 = phys:WorldToLocal( trace.HitPos )
+            LPos = phys:WorldToLocal( trace.HitPos )
         end
 
     end
 
-    local constr, rope = constraint.Rope( ent, traceent, 0, trace.PhysicsBone, LPos1, LPos2, 0, random( 5, 1000 ), 0, 0.5, "cable/rope" )
+    local constr, rope = constraint.Rope( ent, trace.Entity, 0, trace.PhysicsBone, Vector( 0, 0, 0 ), LPos, 0, random( 5, 1000 ), 0, 0.5, "cable/rope" )
     table_insert( self.l_SpawnedEntities, 1, rope )
 
-    ent:SetPlayer( self )
-    ent:SetColor( ColorRand( true ) )
+    -- Here we configure the entity we created. The settings will depend on which entity we created. Here it's a balloon so it doesn't have much.
+    ent:SetPlayer( self ) -- We can safely set it to ourself since we 'hijacked' it
     if ( balloonModel.skin ) then ent:SetSkin( balloonModel.skin ) end
-    if ( balloonModel.nocolor ) then ent:SetColor( Color(255, 255, 255, 255) ) else ent:SetColor( ColorRand( ) ) end
-    ent:SetForce( random( 50, 2000 ) ) -- While players can use negative force for balloons it kinda looks less fun
+    if ( balloonModel.nocolor ) then ent:SetColor( Color(255, 255, 255, 255) ) else ent:SetColor( ColorRand( ) ) end -- We randomize the color of the balloon except if it tells us that it can't accept color.
+    ent:SetForce( random( 50, 2000 ) ) -- While players can use negative force for balloons, we limit the Lambda to positive forces to be more fun
 
-    return true
+    return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this!
 end
 AddToolFunctionToLambdaTools( "Balloon", UseBalloonTool )
 
@@ -122,12 +174,12 @@ local function UseColorTool( self, target )
     self:LookTo( target, 2 )
 
     coroutine.wait( 1 )
-    if !IsValid( target ) then return end -- Because we wait 1 second we must make sure the target is valid
+    if !IsValid( target ) then return end
 
-    self:UseWeapon( target:WorldSpaceCenter() ) -- Use the toolgun on the target to fake using a tool
+    self:UseWeapon( target:WorldSpaceCenter() )
     target:SetColor( ColorRand( false ) )
 
-    return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this
+    return true
 end
 AddToolFunctionToLambdaTools( "Color", UseColorTool )
 
@@ -140,14 +192,13 @@ local function UseDynamiteTool( self, target )
     if !self:IsUnderLimit( "Dynamite" ) then return end
 
     local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
-    local pos = trace.HitPos + trace.HitNormal * 10
     
-    self:LookTo( pos, 2 )
+    self:LookTo( trace.HitPos, 2 )
 
     coroutine.wait( 1 )
 
-    self:UseWeapon( pos )
-    local ent = CreateGmodEntity( "gmod_dynamite", dynamitemodels[ random( #dynamitemodels ) ], pos, nil, self )
+    self:UseWeapon( trace.HitPos )
+    local ent = CreateGmodEntity( "gmod_dynamite", dynamitemodels[ random( #dynamitemodels ) ], trace.HitPos + trace.HitNormal * 10, nil, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Dynamite" )
@@ -174,7 +225,7 @@ local function UseDynamiteTool( self, target )
     
             local effectdata = EffectData()
             effectdata:SetOrigin( self:GetPos() )
-            util.Effect( "Explosion", effectdata, true, true )
+            util_Effect( "Explosion", effectdata, true, true )
     
             if ( self:GetShouldRemove() ) then self:Remove() return end
             if ( self:GetMaxHealth() > 0 && self:Health() <= 0 ) then self:SetHealth( self:GetMaxHealth() ) end
@@ -196,32 +247,44 @@ AddToolFunctionToLambdaTools( "Dynamite", UseDynamiteTool )
 
 
 
+local ropematerials = { "cable/redlaser", "cable/cable2", "cable/rope", "cable/blue_elec", "cable/xbeam", "cable/physbeam", "cable/hydra" }
+--[[local function UseElasticTool( self, target )
+
+    -- TODO
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Elastic", UseElasticTool )]]
+
+
+
+
+
 local effectlist = { "manhacksparks", "glassimpact", "striderblood", "shells", "cball_explode", "ar2impact", "bloodimpact", "sparks", "dirtywatersplash", "watersplash", "stunstickimpact", "thumperdust", "muzzleeffect", "bloodspray", "helicoptermegabomb", "rifleshells", "ar2explosion", "explosion", "cball_bounce", "shotgunshells", "underwaterexplosion", "smoke" }
 local function UseEmitterTool( self, target )
     if !self:IsUnderLimit( "Emitter" ) then return end
 
+    -- TODO : Randomly choose between world or target
+
     local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
 
-    local pos = trace.HitPos
     local ang = trace.HitNormal:Angle()
-	ang:RotateAroundAxis( trace.HitNormal, 0 )
+    ang:RotateAroundAxis( trace.HitNormal, 0 )
 
-    self:LookTo( pos, 2 )
+    self:LookTo( trace.HitPos, 2 )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_emitter" or !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end -- Check to avoid placing emitter on things they can't be attached to
-    
-    -- We want to only weld to props
+    if !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) or trace.Entity:GetClass() == "gmod_emitter" then return end -- Check to avoid placing emitter on things they can't be attached to
 
-    self:UseWeapon( pos )
-    local ent = CreateGmodEntity( "gmod_emitter", "models/props_lab/tpplug.mdl", pos + trace.HitNormal, ang, self )
+    self:UseWeapon( trace.HitPos )
+    local ent = CreateGmodEntity( "gmod_emitter", "models/props_lab/tpplug.mdl", trace.HitPos + trace.HitNormal, ang, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Emitter" )
     table_insert( self.l_SpawnedEntities, 1, ent )
 
-    if trace.Entity != NULL && !trace.Entity:IsWorld() then
+    if trace.Entity != NULL and !trace.Entity:IsWorld() then -- Only want to weld to props
         local weld = constraint.Weld( ent, trace.Entity, 0, trace.PhysicsBone, 0, true, true )
 
         if ( IsValid( ent:GetPhysicsObject() ) ) then ent:GetPhysicsObject():EnableCollisions( false ) end
@@ -244,40 +307,39 @@ AddToolFunctionToLambdaTools( "Emitter", UseEmitterTool )
 
 local hoverballmodels = { "models/dav0r/hoverball.mdl", "models/maxofs2d/hover_basic.mdl", "models/maxofs2d/hover_classic.mdl", "models/maxofs2d/hover_plate.mdl", "models/maxofs2d/hover_propeller.mdl", "models/maxofs2d/hover_rings.mdl" }
 local function UseHoverballTool( self, target )
-    if !self:IsUnderLimit( "Hoverball" ) or !IsValid( target ) or target:GetClass()=="gmod_hoverball" then return end
+    if !self:IsUnderLimit( "Hoverball" ) then return end
+    local world = random( 0, 1 )
 
-    self:LookTo( target, 2 )
+    if !world and ( !IsValid( target ) or target:GetClass()=="gmod_hoverball" ) then return end
+
+    local trace = world and self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) ) or self:Trace( target:WorldSpaceCenter() )
+
+    self:LookTo( trace.HitPos , 2 )
 
     coroutine.wait( 1 )
-    if !IsValid( target ) then return end
+    if !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) or trace.Entity:GetClass() == "gmod_hoverball" then return end -- Check to avoid placing hoverball on things they can't be attached to
 
-    local trace = self:Trace( target:WorldSpaceCenter() )
+    local ang = trace.HitNormal:Angle()
+    ang.pitch = ang.pitch + 90
 
-    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_hoverball" or !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end -- Check to avoid placing hoverball on things they can't be attached to
-
-    local pos = trace.HitPos
-
-    self:UseWeapon( target:WorldSpaceCenter() )
-    local ent = CreateGmodEntity( "gmod_hoverball", hoverballmodels[ random( #hoverballmodels ) ], pos, nil, self )
+    self:UseWeapon( trace.HitPos )
+    local ent = CreateGmodEntity( "gmod_hoverball", hoverballmodels[ random( #hoverballmodels ) ], trace.HitPos, ang, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Hoverball" )
     table_insert( self.l_SpawnedEntities, 1, ent )
 
-    local const = constraint.Weld( ent, target, 0, trace.PhysicsBone, 0, 0, true )
+    local CurPos = ent:GetPos()
+    local NearestPoint = ent:NearestPoint( CurPos - ( trace.HitNormal * 512 ) )
+    local Offset = CurPos - NearestPoint
+    ent:SetPos( trace.HitPos + Offset )
 
-    if IsValid( ent:GetPhysicsObject() ) then ent:GetPhysicsObject():EnableCollisions( false ) end
-    ent:SetCollisionGroup( COLLISION_GROUP_WORLD )
-
-    local ang = trace.HitNormal:Angle()
-	ang.pitch = ang.pitch + 90
-	ent:SetAngles( ang )
-
-	local CurPos = ent:GetPos()
-	local NearestPoint = ent:NearestPoint( CurPos - ( trace.HitNormal * 512 ) )
-	local Offset = CurPos - NearestPoint
-	ent:SetPos( trace.HitPos + Offset )
-
+    if trace.Entity != NULL and !trace.Entity:IsWorld() then -- Hoverballs spawned on world are not welded nor notcollided
+        local const = constraint.Weld( ent, trace.Entity, 0, trace.PhysicsBone, 0, 0, true )
+        if ( IsValid( ent:GetPhysicsObject() ) ) then ent:GetPhysicsObject():EnableCollisions( false ) end
+        ent:SetCollisionGroup( COLLISION_GROUP_WORLD )
+    end
+    
     ent:SetPlayer( self )
     ent:SetEnabled( true )
     ent:SetSpeed( random( 1, 10 ) )
@@ -330,18 +392,6 @@ AddToolFunctionToLambdaTools( "KeepUpright", UseKeepUprightTool )
 
 
 
-local function CanEntityBeSetOnFire( ent ) -- Taken from the ignite properties in sandbox
-
-	-- func_pushable, func_breakable & func_physbox cannot be ignited
-	if ( ent:GetClass() == "item_item_crate" ) then return true end
-	if ( ent:GetClass() == "simple_physics_prop" ) then return true end
-	if ( ent:GetClass():match( "prop_physics*") ) then return true end
-	if ( ent:GetClass():match( "prop_ragdoll*") ) then return true end
-	if ( ent:IsNPC() ) then return true end
-
-	return false
-
-end
 local function UseIgniteTool( self, target ) -- Technically only a context menu right click tool
     if !IsValid( target ) then return end
 
@@ -350,7 +400,6 @@ local function UseIgniteTool( self, target ) -- Technically only a context menu 
     coroutine.wait( 1 )
     if !IsValid( target ) or !CanEntityBeSetOnFire( target ) then return end
     if target:IsOnFire() then target:Extinguish() else target:Ignite( 360 ) end
-
 
     self:UseWeapon( target:WorldSpaceCenter() ) -- Not a 'real' tool but still want to see it happen
 
@@ -368,21 +417,23 @@ local function UseLampTool( self, target )
     if !self:IsUnderLimit( "Lamp" ) then return end
 
     local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
-    local ang = self:GetAngles()
-    ang[ 1 ] = 0
-    ang[ 3 ] = 0
-    local pos = trace.HitPos
 
-    self:LookTo( pos, 2 )
+    self:LookTo( trace.HitPos, 2 )
 
     coroutine.wait( 1 )
 
-    self:UseWeapon( pos )
-    local ent = CreateGmodEntity( "gmod_lamp", lampmodels[ random( 1, 3 ) ], pos, ang, self )
+    self:UseWeapon( trace.HitPos )
+    local ent = CreateGmodEntity( "gmod_lamp", lampmodels[ random( 1, 3 ) ], trace.HitPos, angle_zero, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Lamp" )
     table_insert( self.l_SpawnedEntities, 1, ent )
+
+    local CurPos = ent:GetPos()
+	local NearestPoint = ent:NearestPoint( CurPos - ( trace.HitNormal * 512 ) )
+	local Offset = CurPos - NearestPoint
+
+	ent:SetPos( trace.HitPos + Offset ) -- Fix to avoid lamps from being placed into things
 
     ent:SetColor( ColorRand( false ) )
     ent:SetFlashlightTexture( lamptextures[ random( #lamptextures) ] )
@@ -400,49 +451,46 @@ AddToolFunctionToLambdaTools( "Lamp", UseLampTool )
 
 
 
--- Light Tool
 
 local function UseLightTool( self, target )
     if !self:IsUnderLimit( "Light" ) then return end -- Can't create any more lights
+    local world = random( 0, 1 )
 
-    local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) )
-    local pos = trace.HitPos
+    if !world and ( !IsValid( target ) or target:GetClass()=="gmod_light" ) then return end
+
+    local trace = world and self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) ) or self:Trace( target:WorldSpaceCenter() )
     
-    self:LookTo( pos, 2 )
+    self:LookTo( trace.HitPos, 2 )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_light" or !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) )  then return end -- Check to avoid placing light on things they can't be attached to
+    if !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) or trace.Entity:GetClass() == "gmod_light" then return end -- Check to avoid placing light on things they can't be attached to
 
-    self:UseWeapon( pos )
-    local ent = CreateGmodEntity( "gmod_light", nil, pos + trace.HitNormal * 8, trace.HitNormal:Angle() - Angle( 90, 0, 0 ), self ) -- Create the light
+    self:UseWeapon( trace.HitPos )
+    local ent = CreateGmodEntity( "gmod_light", nil, trace.HitPos + trace.HitNormal * 8, trace.HitNormal:Angle() - Angle( 90, 0, 0 ), self ) -- Create the light
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Light" )
     table_insert( self.l_SpawnedEntities, 1, ent )
 
-    if random( 1, 2 ) == 1 then
-        local traceent = trace.Entity
+    if random( 0, 1 ) == 1 then
+        local LPos = !IsNil( trace.Entity ) and trace.Entity:WorldToLocal( trace.HitPos ) or trace.HitPos
+        trace.Entity = !IsNil( trace.Entity ) and trace.Entity or Entity( 0 ) -- world
 
-        local LPos1 = Vector( 0, 0, 6.5 )
-        local LPos2 = !IsNil( traceent ) and traceent:WorldToLocal( trace.HitPos ) or trace.HitPos
+        if IsValid( trace.Entity ) then
 
-        traceent = !IsNil( traceent ) and traceent or Entity( 0 ) -- world
-
-        if IsValid( traceent ) then
-
-            local phys = traceent:GetPhysicsObjectNum( trace.PhysicsBone )
+            local phys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
             if IsValid( phys ) then
-                LPos2 = phys:WorldToLocal( trace.HitPos )
+                LPos = phys:WorldToLocal( trace.HitPos )
             end
 
         end
 
-        local constr, rope = constraint.Rope( ent, traceent, 0, trace.PhysicsBone, LPos1, LPos2, 0, random( 256 ), 0, 1, "cable/rope" )
+        local constr, rope = constraint.Rope( ent, trace.Entity, 0, trace.PhysicsBone, Vector( 0, 0, 6.5 ), LPos, 0, random( 256 ), 0, 1, "cable/rope" )
         table_insert( self.l_SpawnedEntities, 1, rope )
     end
 
-    -- Aaannd configure it
+    -- We configure the entity. Some settings will depend on the entity itself.
     ent:SetPlayer( self ) -- We can safely set this to ourselves since it was "hijacked"
     ent:SetOn( true )
     ent:SetColor( ColorRand( false ) )
@@ -474,51 +522,35 @@ AddToolFunctionToLambdaTools( "Material", UseMaterialTool )
 
 
 
-local function PlaceDecal( ply, ent, data ) -- Directly taken from the paint tool
-
-	if ( !IsValid( ent ) && !ent:IsWorld() ) then return end
-
-	local bone
-	if ( data.bone && data.bone < ent:GetPhysicsObjectCount() ) then bone = ent:GetPhysicsObjectNum( data.bone ) end
-	if ( !IsValid( bone ) ) then bone = ent:GetPhysicsObject() end
-	if ( !IsValid( bone ) ) then bone = ent end
-
-	util.Decal( data.decal, bone:LocalToWorld( data.Pos1 ), bone:LocalToWorld( data.Pos2 ), ply )
-
-	local i = ent.DecalCount or 0
-	i = i + 1
-	ent.DecalCount = i
-
-end
 local decallist = { "Eye", "Dark", "Smile", "Cross", "Nought", "Noughtsncrosses" } -- Keeping it simple for now
 local function UsePaintTool( self, target )
     local world = random( 0, 1 )
-    
-    local trace = world and self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) ) or self:Trace( target:WorldSpaceCenter() )
     if !world and !IsValid( target ) then return end
-    
+
+    local trace = world and self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) ) or self:Trace( target:WorldSpaceCenter() )
+
     self:LookTo( trace.HitPos, 2 )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return end
+    if !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return end
 
     local Pos1 = trace.HitPos + trace.HitNormal
-	local Pos2 = trace.HitPos - trace.HitNormal
+    local Pos2 = trace.HitPos - trace.HitNormal
 
-	local Bone
-	if ( IsValid( trace.Entity ) and trace.PhysicsBone and trace.PhysicsBone < trace.Entity:GetPhysicsObjectCount() ) then Bone = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone ) end
-	if ( IsValid( trace.Entity ) and !IsValid( Bone ) ) then Bone = trace.Entity:GetPhysicsObject() end
-	if ( !IsValid( Bone ) ) then Bone = trace.Entity end
+    local Bone
+    if ( IsValid( trace.Entity ) and trace.PhysicsBone and trace.PhysicsBone < trace.Entity:GetPhysicsObjectCount() ) then Bone = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone ) end
+    if ( IsValid( trace.Entity ) and !IsValid( Bone ) ) then Bone = trace.Entity:GetPhysicsObject() end
+    if ( !IsValid( Bone ) ) then Bone = trace.Entity end
 
     if !IsValid( Bone ) then return end
 
-	Pos1 = Bone:WorldToLocal( Pos1 )
-	Pos2 = Bone:WorldToLocal( Pos2 )
+    Pos1 = Bone:WorldToLocal( Pos1 )
+    Pos2 = Bone:WorldToLocal( Pos2 )
 
     self:UseWeapon( trace.HitPos )
 
-	PlaceDecal( self:GetOwner(), trace.Entity, { Pos1 = Pos1, Pos2 = Pos2, bone = trace.PhysicsBone, decal = decallist[ random( #decallist ) ] } )
+    PlaceDecal( self:GetOwner(), trace.Entity, { Pos1 = Pos1, Pos2 = Pos2, bone = trace.PhysicsBone, decal = decallist[ random( #decallist ) ] } )
 
     --self:EmitSound( "SprayCan.Paint" )
 
@@ -534,20 +566,15 @@ local physproperties = { "metal_bouncy", "metal", "dirt", "slipperyslime", "wood
 local function UsePhysPropTool( self, target )
     if !IsValid( target ) then return end
     
+    local trace = self:Trace( target:WorldSpaceCenter() )
     self:LookTo( target, 2 )
 
     coroutine.wait( 1 )
-    if !IsValid( target ) then return end
-
-    local trace = self:Trace( target:WorldSpaceCenter() )
-    local pos = trace.HitPos
-
-    local ent = trace.Entity
-    if !IsValid( ent ) or ent!=target then return end
+    if !IsValid( target ) or !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return end -- it's pretty much a double IsValid but just in case
 
     self:UseWeapon( target:WorldSpaceCenter() )
 
-    construct.SetPhysProp( target:GetOwner(), ent, trace.PhysicsBone, nil, { GravityToggle = random( 0, 1 ) == 1, Material = physproperties[ random( #physproperties ) ] } ) -- Set the properties
+    construct.SetPhysProp( target:GetOwner(), trace.Entity, trace.PhysicsBone, nil, { GravityToggle = tobool( random( 0, 1 ) ), Material = physproperties[ random( #physproperties ) ] } ) -- Set the properties
 
     return true
 end
@@ -588,10 +615,8 @@ AddToolFunctionToLambdaTools( "Remover", UseRemoverTool )
 
 
 
-local ropematerials = { "cable/redlaser", "cable/cable2", "cable/rope", "cable/blue_elec", "cable/xbeam", "cable/physbeam", "cable/hydra" }
 local function UseRopeTool( self, target )
     if !self:IsUnderLimit( "Rope" ) then return end
-    print("RT - begin")
 
     local firstent
     local secondent
@@ -651,7 +676,6 @@ local function UseRopeTool( self, target )
         table_insert( self.l_SpawnedEntities, 1, rope )
     end
 
-
     return true
 end
 AddToolFunctionToLambdaTools( "Rope", UseRopeTool )
@@ -664,44 +688,45 @@ local thrustermodels = { "models/dav0r/thruster.mdl", "models/MaxOfS2D/thruster_
 local thrustersounds = { "", "PhysicsCannister.ThrusterLoop", "WeaponDissolve.Charge", "WeaponDissolve.Beam", "eli_lab.elevator_move", "combine.sheild_loop", "k_lab.ringsrotating", "k_lab.teleport_rings_high", "k_lab2.DropshipRotorLoop", "Town.d1_town_01_spin_loop" }
 local thrustereffects = { "none", "fire", "plasma", "magic", "rings", "smoke" }
 local function UseThrusterTool( self, target )
-    if !self:IsUnderLimit( "Thruster" ) or !IsValid( target ) or target:GetClass()=="gmod_thruster" then return end
+    if !self:IsUnderLimit( "Thruster" ) then return end
+    local world = random( 0, 1 )
 
-    self:LookTo( target, 2 )
+    if !world and ( !IsValid( target ) or target:GetClass()=="gmod_thruster" ) then return end
+
+    local trace = world and self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) ) or self:Trace( target:WorldSpaceCenter() )
+
+    self:LookTo( trace.HitPos, 2 )
 
     coroutine.wait( 1 )
-    if !IsValid( target ) then return end
+    if !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) or trace.Entity:GetClass() == "gmod_thruster" then return end -- Check to avoid placing thruster on things they can't be attached to
 
-    local trace = self:Trace( target:WorldSpaceCenter() )
-
-    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_thruster" or !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end -- Check to avoid placing thruster on things they can't be attached to
-
-    local pos = trace.HitPos
     local ang = trace.HitNormal:Angle()
-	ang.pitch = ang.pitch + 90
+    ang.pitch = ang.pitch + 90
 
-    self:UseWeapon( target:WorldSpaceCenter() )
-    local ent = CreateGmodEntity( "gmod_thruster", thrustermodels[ random( #thrustermodels ) ], pos, ang, self )
+    self:UseWeapon( trace.HitPos )
+    local ent = CreateGmodEntity( "gmod_thruster", thrustermodels[ random( #thrustermodels ) ], trace.HitPos, ang, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Thruster" )
     table_insert( self.l_SpawnedEntities, 1, ent )
 
     local min = ent:OBBMins()
-	ent:SetPos( trace.HitPos - trace.HitNormal * min.z )
+    ent:SetPos( trace.HitPos - trace.HitNormal * min.z )
 
-    local const = constraint.Weld( ent, target, 0, trace.PhysicsBone, 0, 0, true )
+    if trace.Entity != NULL and !trace.Entity:IsWorld() then -- Thruster spawned on world are not welded
+        local const = constraint.Weld( ent, trace.Entity, 0, trace.PhysicsBone, 0, 0, true )
+        if ( IsValid( ent:GetPhysicsObject() ) ) then ent:GetPhysicsObject():EnableCollisions( false ) end
+        if random( 0 , 1 ) == 1 then -- Randomly can be nocollided or not to the attached prop
+            ent:SetCollisionGroup( COLLISION_GROUP_WORLD )
+            ent:GetPhysicsObject():SetMass( Clamp( ent:GetPhysicsObject():GetMass(), 1, 20 ) ) -- Let's avoid them being too heavy
+        end
+    end
 
     ent:SetPlayer( self )
     ent:SetEffect( thrustereffects[ random( #thrustereffects ) ] )
     ent:SetForce( random( 10000 ) )
     ent:SetToggle( true )
     ent:SetSound( thrustersounds[ random( #thrustersounds ) ] )
-
-    if random( 0, 1 ) == 1 then
-        if ( IsValid( ent:GetPhysicsObject() ) ) then ent:GetPhysicsObject():EnableCollisions( false ) end
-        ent:SetCollisionGroup( COLLISION_GROUP_WORLD ) -- Only nocollide to world if attached to something
-        ent:GetPhysicsObject():SetMass( Clamp( ent:GetPhysicsObject():GetMass(), 1, 20 ) ) -- If they are nocollided to the world, let's avoid them being too heavy
-    end
 
     local rndtime = CurTime() + rand( 1, 10 )
     ent:LambdaHookTick( "ThrusterRandomOnOff", function( thruster )
@@ -732,9 +757,9 @@ local function UseTrailTool( self, target )
 
     self:UseWeapon( target:WorldSpaceCenter() )
     if ( IsValid( target.SToolTrail ) ) then -- If target already has trail, remove old one
-		target.SToolTrail:Remove()
-		target.SToolTrail = nil
-	end
+        target.SToolTrail:Remove()
+        target.SToolTrail = nil
+    end
 
     local trailStartSize, trailEndSize = random(128), random(128)
 
@@ -749,67 +774,57 @@ AddToolFunctionToLambdaTools( "Trail", UseTrailTool )
 
 
 
-local wheelmodels0 = { "models/props_vehicles/apc_tire001.mdl", "models/props_vehicles/tire001a_tractor.mdl", "models/props_vehicles/tire001b_truck.mdl", "models/props_vehicles/tire001c_car.mdl", "models/props_trainstation/trainstation_clock001.mdl", "models/props_c17/pulleywheels_large01.mdl" }
-local wheelmodels1 = { "models/props_junk/sawblade001a.mdl", "models/props_wasteland/controlroom_filecabinet002a.mdl", "models/props_borealis/bluebarrel001.mdl", "models/props_c17/oildrum001.mdl", "models/props_c17/playground_carousel01.mdl", "models/props_c17/chair_office01a.mdl", "models/props_c17/TrapPropeller_Blade.mdl", "models/props_junk/metal_paintcan001a.mdl" }
-local wheelmodels2 = { "models/props_vehicles/carparts_wheel01a.mdl", "models/props_wasteland/wheel01.mdl" }
+local wheelmodels = { "models/props_vehicles/apc_tire001.mdl", "models/props_vehicles/tire001a_tractor.mdl", "models/props_vehicles/tire001b_truck.mdl", "models/props_vehicles/tire001c_car.mdl", "models/props_trainstation/trainstation_clock001.mdl", "models/props_c17/pulleywheels_large01.mdl", "models/props_junk/sawblade001a.mdl", "models/props_wasteland/controlroom_filecabinet002a.mdl", "models/props_borealis/bluebarrel001.mdl", "models/props_c17/oildrum001.mdl", "models/props_c17/playground_carousel01.mdl", "models/props_c17/chair_office01a.mdl", "models/props_c17/TrapPropeller_Blade.mdl", "models/props_junk/metal_paintcan001a.mdl", "models/props_vehicles/carparts_wheel01a.mdl", "models/props_wasteland/wheel01.mdl" }
 local function UseWheelTool( self, target )
-    if !self:IsUnderLimit( "Wheel" ) or !IsValid( target ) then return end
+    if !self:IsUnderLimit( "Wheel" ) then return end
+    local world = random( 0, 1 )
 
-    self:LookTo( target, 2 )
+    if !world and !IsValid( target ) then return end
+
+    local trace = world and self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) ) or self:Trace( target:WorldSpaceCenter() )
+
+    self:LookTo( trace.HitPos , 2 )
 
     coroutine.wait( 1 )
-    if !IsValid( target ) then return end
 
-    local trace = self:Trace( target:WorldSpaceCenter() )
+    if !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return end
 
-    if IsValid( trace.Entity ) and !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return end -- Check to avoid placing wheel on things they can't be attached to
-
-    local pos = trace.HitPos
-
-    local wheelrand = random( 0, 1 ) -- To deal with an angle issue...
-    local wheelAngle = Angle( math.NormalizeAngle( 90 ), math.NormalizeAngle( 0 ), math.NormalizeAngle( 90 ) )
-    local mdl = wheelmodels2[ random( #wheelmodels2 ) ]
-
-    if wheelrand==0 then
-        wheelAngle = Angle( math.NormalizeAngle( 0 ), math.NormalizeAngle( 0 ), math.NormalizeAngle( 0 ) )
-        mdl = wheelmodels0[ random( #wheelmodels0 ) ]
-    elseif wheelrand==1 then
-        wheelAngle = Angle( math.NormalizeAngle( 90 ), math.NormalizeAngle( 0 ), math.NormalizeAngle( 0 ) )
-        mdl = wheelmodels1[ random( #wheelmodels1 ) ]
-    end
+    local mdl = wheelmodels[ random( #wheelmodels ) ]
+    local wheelAngTab = list.Get( "WheelModels" )[mdl]
+    local wheelAngle = Angle( NormalizeAngle( wheelAngTab.wheel_rx ), NormalizeAngle( wheelAngTab.wheel_ry ), NormalizeAngle( wheelAngTab.wheel_rz ) )
     local torque = random( 10, 10000 )
 
-    self:UseWeapon( target:WorldSpaceCenter() )
-    local ent = CreateGmodEntity( "gmod_wheel", mdl, pos, trace.HitNormal:Angle() + wheelAngle, self )
+    self:UseWeapon( trace.HitPos )
+    local ent = CreateGmodEntity( "gmod_wheel", mdl, trace.HitPos, trace.HitNormal:Angle() + wheelAngle, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Wheel" )
     table_insert( self.l_SpawnedEntities, 1, ent )
 
     local CurPos = ent:GetPos()
-	local NearestPoint = ent:NearestPoint( CurPos - ( trace.HitNormal * 512 ) )
-	local wheelOffset = CurPos - NearestPoint
+    local NearestPoint = ent:NearestPoint( CurPos - ( trace.HitNormal * 512 ) )
+    local wheelOffset = CurPos - NearestPoint
 
     -- Set the hinge Axis perpendicular to the trace hit surface
-	local targetPhys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
-	local LPos1 = ent:GetPhysicsObject():WorldToLocal( ent:GetPos() + trace.HitNormal )
-	local LPos2 = targetPhys:WorldToLocal( trace.HitPos )
+    local targetPhys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
+    local LPos1 = ent:GetPhysicsObject():WorldToLocal( ent:GetPos() + trace.HitNormal )
+    local LPos2 = targetPhys:WorldToLocal( trace.HitPos )
+    ent:SetPos( trace.HitPos + wheelOffset )
 
     local const = constraint.Motor( ent, trace.Entity, 0, trace.PhysicsBone, LPos1, LPos2, random( 0, 100 ), torque, 0, random( 0, 1 ), 1 )
-    -- -- -- -- -- --
-    ent:SetPos( trace.HitPos + wheelOffset )
+
     ent:SetPlayer( self )
     ent:SetMotor( const )
-	ent:SetDirection( const.direction )
-	ent:SetAxis( trace.HitNormal )
+    ent:SetDirection( const.direction )
+    ent:SetAxis( trace.HitNormal )
     ent:SetBaseTorque(torque)
-	ent:DoDirectionEffect()
+    ent:DoDirectionEffect()
 
     local rndtime = CurTime() + rand( 1, 10 )
     ent:LambdaHookTick( "WheelRandomOnOff", function( wheel )
         if CurTime() > rndtime then
             if !IsValid( wheel ) then return true end
-            wheel:Forward( random( 0, 1 ) == 1 )-- Randomly switch it on or off
+            wheel:Forward( tobool( random( 0, 1 ) ) )-- Randomly switch it on or off
 
             rndtime = CurTime() + rand( 1, 10 )
         end
