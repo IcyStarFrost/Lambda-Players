@@ -116,7 +116,7 @@ local function UseBalloonTool( self, target )
     coroutine.wait( 1 ) -- We wait for a second
 
     -- Because we wait for 1 second we must make sure the target is still valid
-    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_balloon" or !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end
+    if !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) or trace.Entity:GetClass() == "gmod_balloon" then return end
 
     self:UseWeapon( trace.HitPos ) -- Use the toolgun on the hit position of the trace to fake using a tool
 
@@ -275,9 +275,7 @@ local function UseEmitterTool( self, target )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_emitter" or !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end -- Check to avoid placing emitter on things they can't be attached to
-
-    -- We want to only weld to props
+    if !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) or trace.Entity:GetClass() == "gmod_emitter" then return end -- Check to avoid placing emitter on things they can't be attached to
 
     self:UseWeapon( trace.HitPos )
     local ent = CreateGmodEntity( "gmod_emitter", "models/props_lab/tpplug.mdl", trace.HitPos + trace.HitNormal, ang, self )
@@ -286,7 +284,7 @@ local function UseEmitterTool( self, target )
     self:ContributeEntToLimit( ent, "Emitter" )
     table_insert( self.l_SpawnedEntities, 1, ent )
 
-    if trace.Entity != NULL and !trace.Entity:IsWorld() then
+    if trace.Entity != NULL and !trace.Entity:IsWorld() then -- Only want to weld to props
         local weld = constraint.Weld( ent, trace.Entity, 0, trace.PhysicsBone, 0, true, true )
 
         if ( IsValid( ent:GetPhysicsObject() ) ) then ent:GetPhysicsObject():EnableCollisions( false ) end
@@ -319,7 +317,7 @@ local function UseHoverballTool( self, target )
     self:LookTo( trace.HitPos , 2 )
 
     coroutine.wait( 1 )
-    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_hoverball" or !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end -- Check to avoid placing hoverball on things they can't be attached to
+    if !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) or trace.Entity:GetClass() == "gmod_hoverball" then return end -- Check to avoid placing hoverball on things they can't be attached to
 
     local ang = trace.HitNormal:Angle()
     ang.pitch = ang.pitch + 90
@@ -466,7 +464,7 @@ local function UseLightTool( self, target )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_light" or !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) )  then return end -- Check to avoid placing light on things they can't be attached to
+    if !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) or trace.Entity:GetClass() == "gmod_light" then return end -- Check to avoid placing light on things they can't be attached to
 
     self:UseWeapon( trace.HitPos )
     local ent = CreateGmodEntity( "gmod_light", nil, trace.HitPos + trace.HitNormal * 8, trace.HitNormal:Angle() - Angle( 90, 0, 0 ), self ) -- Create the light
@@ -535,7 +533,7 @@ local function UsePaintTool( self, target )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return end
+    if !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return end
 
     local Pos1 = trace.HitPos + trace.HitNormal
     local Pos2 = trace.HitPos - trace.HitNormal
@@ -568,19 +566,15 @@ local physproperties = { "metal_bouncy", "metal", "dirt", "slipperyslime", "wood
 local function UsePhysPropTool( self, target )
     if !IsValid( target ) then return end
     
+    local trace = self:Trace( target:WorldSpaceCenter() )
     self:LookTo( target, 2 )
 
     coroutine.wait( 1 )
-    if !IsValid( target ) then return end
-
-    local trace = self:Trace( target:WorldSpaceCenter() )
-
-    local ent = trace.Entity
-    if !IsValid( ent ) or ent!=target then return end
+    if !IsValid( target ) or !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return end -- it's pretty much a double IsValid but just in case
 
     self:UseWeapon( target:WorldSpaceCenter() )
 
-    construct.SetPhysProp( target:GetOwner(), ent, trace.PhysicsBone, nil, { GravityToggle = tobool( random( 0, 1 ) ), Material = physproperties[ random( #physproperties ) ] } ) -- Set the properties
+    construct.SetPhysProp( target:GetOwner(), trace.Entity, trace.PhysicsBone, nil, { GravityToggle = tobool( random( 0, 1 ) ), Material = physproperties[ random( #physproperties ) ] } ) -- Set the properties
 
     return true
 end
@@ -704,7 +698,7 @@ local function UseThrusterTool( self, target )
     self:LookTo( trace.HitPos, 2 )
 
     coroutine.wait( 1 )
-    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_thruster" or !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end -- Check to avoid placing thruster on things they can't be attached to
+    if !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) or trace.Entity:GetClass() == "gmod_thruster" then return end -- Check to avoid placing thruster on things they can't be attached to
 
     local ang = trace.HitNormal:Angle()
     ang.pitch = ang.pitch + 90
@@ -793,7 +787,7 @@ local function UseWheelTool( self, target )
 
     coroutine.wait( 1 )
 
-    if IsValid( trace.Entity ) and !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return end
+    if !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return end
 
     local mdl = wheelmodels[ random( #wheelmodels ) ]
     local wheelAngTab = list.Get( "WheelModels" )[mdl]
