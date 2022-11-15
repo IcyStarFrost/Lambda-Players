@@ -205,6 +205,15 @@ if CLIENT then
 
     end
 
+
+
+
+
+
+
+    -- Comment taken from shared/filesystem.lua
+    -- Updates or creates a new file containing a sequential table
+    -- type should be json or compressed
     function LAMBDAPANELS:UpdateSequentialFile( filename, addcontent, type ) 
         net.Start( "lambdaplayers_updatesequentialfile" )
         net.WriteString( filename )
@@ -213,6 +222,9 @@ if CLIENT then
         net.SendToServer() 
     end
 
+    -- Comment taken from shared/filesystem.lua
+    -- Updates or creates a new file containing a table that uses strings as keys
+    -- type should be json or compressed
     function LAMBDAPANELS:UpdateKeyValueFile( filename, addcontent, type ) 
         net.Start( "lambdaplayers_updatekvfile" )
         net.WriteString( filename )
@@ -221,6 +233,9 @@ if CLIENT then
         net.SendToServer() 
     end
 
+    -- Comment taken from shared/filesystem.lua
+    -- SQ short for Sequential
+    -- Removes a value from the specified file containing a sequential table
     function LAMBDAPANELS:RemoveVarFromSQFile( filename, var, type ) 
         net.Start( "lambdaplayers_removevarfromsqfile" )
         net.WriteString( filename )
@@ -229,6 +244,9 @@ if CLIENT then
         net.SendToServer() 
     end
 
+    -- Comment taken from shared/filesystem.lua
+    -- KV short for Key Value
+    -- Removes a key from the specified file containing a table that uses strings as keys
     function LAMBDAPANELS:RemoveVarFromKVFile( filename, key, type ) 
         net.Start( "lambdaplayers_removevarfromsqfile" )
         net.WriteString( filename )
