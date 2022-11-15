@@ -91,52 +91,58 @@ end
 
 
 
+--[[A lot of tools here use self:Trace( position ) which here creates a line from the Lambda Player to a position provided
+    This gives us a table that contains useful information for tool usage such as:
+    trace.Entity - the Entity the trace collided with if any.
+    trace.HitPos - the Position the trace stopped at
+    trace.HitNormal - the direction of the surface that was hit
+]]
 
 local balloonnames = { "normal", "normal_skin1", "normal_skin2", "normal_skin3", "gman", "mossman", "dog", "heart", "star" }
 local function UseBalloonTool( self, target )
-    if !self:IsUnderLimit( "Balloon" ) then return end -- Can't create any more balloons
+    if !self:IsUnderLimit( "Balloon" ) then return end -- Returning nothing is basically the same as returning false
 
     local balloonModel = list.Get( "BalloonModels" )[balloonnames[ random( #balloonnames ) ]] -- Directly get model from Sandbox. Needed since some have skins.
 
     local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
-    local pos = trace.HitPos
 
-    self:LookTo( pos, 2 )
+    self:LookTo( trace.HitPos, 2 ) -- We look towards the position the trace stopped at
 
-    coroutine.wait( 1 )
+    coroutine.wait( 1 ) -- We wait for a second
 
-    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_balloon" or !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end -- Check to avoid placing balloon on things they can't be attached to
+    -- Because we wait 1 second we must make sure the target is still valid
+    if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_balloon" or !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end
 
-    self:UseWeapon( pos )
-    local ent = CreateGmodEntity( "gmod_balloon", balloonModel.model, pos, nil, self ) -- Create the balloon
-    ent.LambdaOwner = self
-    ent.IsLambdaSpawned = true
-    self:ContributeEntToLimit( ent, "Balloon" )
+    self:UseWeapon( trace.HitPos ) -- Use the toolgun on the hit position of the trace to fake using a tool
+
+    local ent = CreateGmodEntity( "gmod_balloon", balloonModel.model, trace.HitPos, nil, self ) -- Create the balloon
+
+    ent.LambdaOwner = self -- We set the owner of the entity as the Lambda Player that spawned it
+
+    ent.IsLambdaSpawned = true -- We specify that the entity has been spawned by a Lambda Player
+
+    self:ContributeEntToLimit( ent, "Balloon" ) -- We add that new entity to the amount of that specific entities the Lambda possess
     table_insert( self.l_SpawnedEntities, 1, ent )
 
     local CurPos = ent:GetPos()
     local NearestPoint = ent:NearestPoint( CurPos - ( trace.HitNormal * 512 ) )
     local Offset = CurPos - NearestPoint
 
-    ent:SetPos( pos + Offset ) -- Fix for balloons being placed on ceilings
-
-    local traceent = trace.Entity
-
-    local LPos1 = Vector( 0, 0, 6.5 )
-    local LPos2 = !IsNil( traceent ) and traceent:WorldToLocal( pos ) or pos
-
-    traceent = !IsNil( traceent ) and traceent or Entity( 0 ) -- world
+    ent:SetPos( trace.HitPos + Offset ) -- Fix for balloons being placed on ceilings
+    
+    local LPos = !IsNil( trace.Entity ) and trace.Entity:WorldToLocal( trace.HitPos ) or trace.HitPos
+    trace.Entity = !IsNil( trace.Entity ) and trace.Entity or Entity( 0 ) -- If the trace manages to not hit anything, we force it to be the world
 
     if IsValid( trace.Entity ) then
 
-        local phys = traceent:GetPhysicsObjectNum( trace.PhysicsBone )
+        local phys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
         if IsValid( phys ) then
-            LPos2 = phys:WorldToLocal( pos )
+            LPos = phys:WorldToLocal( trace.HitPos )
         end
 
     end
 
-    local constr, rope = constraint.Rope( ent, traceent, 0, trace.PhysicsBone, LPos1, LPos2, 0, random( 5, 1000 ), 0, 0.5, "cable/rope" )
+    local constr, rope = constraint.Rope( ent, trace.Entity, 0, trace.PhysicsBone, Vector( 0, 0, 0 ), LPos, 0, random( 5, 1000 ), 0, 0.5, "cable/rope" )
     table_insert( self.l_SpawnedEntities, 1, rope )
 
     ent:SetPlayer( self )
@@ -145,7 +151,7 @@ local function UseBalloonTool( self, target )
     if ( balloonModel.nocolor ) then ent:SetColor( Color(255, 255, 255, 255) ) else ent:SetColor( ColorRand( ) ) end
     ent:SetForce( random( 50, 2000 ) ) -- While players can use negative force for balloons it kinda looks less fun
 
-    return true
+    return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this
 end
 AddToolFunctionToLambdaTools( "Balloon", UseBalloonTool )
 
@@ -177,14 +183,14 @@ local function UseDynamiteTool( self, target )
     if !self:IsUnderLimit( "Dynamite" ) then return end
 
     local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
-    local pos = trace.HitPos + trace.HitNormal * 10
+    local tracepos = trace.HitPos + trace.HitNormal * 10
     
-    self:LookTo( pos, 2 )
+    self:LookTo( tracepos, 2 )
 
     coroutine.wait( 1 )
 
-    self:UseWeapon( pos )
-    local ent = CreateGmodEntity( "gmod_dynamite", dynamitemodels[ random( #dynamitemodels ) ], pos, nil, self )
+    self:UseWeapon( tracepos )
+    local ent = CreateGmodEntity( "gmod_dynamite", dynamitemodels[ random( #dynamitemodels ) ], tracepos, nil, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Dynamite" )
@@ -239,11 +245,10 @@ local function UseEmitterTool( self, target )
 
     local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
 
-    local pos = trace.HitPos
     local ang = trace.HitNormal:Angle()
     ang:RotateAroundAxis( trace.HitNormal, 0 )
 
-    self:LookTo( pos, 2 )
+    self:LookTo( trace.HitPos, 2 )
 
     coroutine.wait( 1 )
 
@@ -251,8 +256,8 @@ local function UseEmitterTool( self, target )
 
     -- We want to only weld to props
 
-    self:UseWeapon( pos )
-    local ent = CreateGmodEntity( "gmod_emitter", "models/props_lab/tpplug.mdl", pos + trace.HitNormal, ang, self )
+    self:UseWeapon( trace.HitPos )
+    local ent = CreateGmodEntity( "gmod_emitter", "models/props_lab/tpplug.mdl", trace.HitPos + trace.HitNormal, ang, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Emitter" )
