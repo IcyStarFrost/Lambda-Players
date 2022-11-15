@@ -284,7 +284,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_ZOMBIE,
         jump = ACT_ZOMBIE_LEAPING,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_ZOMBIE,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_ZOMBIE,
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_ZOMBIE_03,
         swimIdle = ACT_HL2MP_SWIM_IDLE_ZOMBIE,
         swimMove = ACT_HL2MP_SWIM_ZOMBIE
     },

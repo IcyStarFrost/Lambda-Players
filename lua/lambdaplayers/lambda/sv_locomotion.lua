@@ -63,8 +63,15 @@ function ENT:MoveToPos( pos, options )
         end
 
 		if ( self.loco:IsStuck() ) then
-			local result = self:HandleStuck()
-            if !result then self.IsMoving = false self.l_MovePath = NULL return "stuck" end
+            local pos = ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos)
+
+            -- This prevents the stuck handling from running if we are right next to the entity we are going to
+            if !isvector( self.l_movepos ) and self:GetRangeSquaredTo( pos ) >= ( 100 * 100 ) or isvector( self.l_movepos ) then 
+                local result = self:HandleStuck()
+                if !result then self.IsMoving = false self.l_MovePath = NULL return "stuck" end
+            else
+                self.loco:ClearStuck()
+            end
 		end
 
 		if timeout then
@@ -124,8 +131,13 @@ function ENT:MoveToPosOFFNAV( pos, options )
         end
 
         if ( self.loco:IsStuck() ) then
-			local result = self:HandleStuck()
-            if !result then self.IsMoving = false return "stuck" end
+            -- This prevents the stuck handling from running if we are right next to the entity we are going to
+            if !isvector( self.l_movepos ) and self:GetRangeSquaredTo( pos ) >= ( 100 * 100 ) or isvector( self.l_movepos ) then 
+                local result = self:HandleStuck()
+                if !result then self.IsMoving = false return "stuck" end
+            else
+                self.loco:ClearStuck()
+            end
 		end
 
         if timeout then
