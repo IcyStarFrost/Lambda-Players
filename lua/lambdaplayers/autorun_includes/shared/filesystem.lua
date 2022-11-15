@@ -39,7 +39,7 @@ function LAMBDAFS:UpdateSequentialFile( filename, addcontent, type )
         table_insert( contents, addcontent )
         LAMBDAFS:WriteFile( filename, contents, type )
     else
-        LAMBDAFS:WriteFile( filename, addcontent, type )
+        LAMBDAFS:WriteFile( filename, { addcontent }, type )
     end
 
 end
@@ -53,7 +53,9 @@ function LAMBDAFS:UpdateKeyValueFile( filename, addcontent, type )
         for k, v in pairs( addcontent ) do contents[ k ] = v end
         LAMBDAFS:WriteFile( filename, contents, type )
     else
-        LAMBDAFS:WriteFile( filename, addcontent, type )
+        local tbl = {}
+        for k, v in pairs( addcontent ) do tbl[ k ] = v end
+        LAMBDAFS:WriteFile( filename, tbl, type )
     end
 
 end

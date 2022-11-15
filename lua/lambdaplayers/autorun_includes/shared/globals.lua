@@ -190,3 +190,16 @@ function LambdaHijackGmodEntity( ent, lambda )
     end
 
 end
+
+
+function LambdaCreateThread( func )
+    local thread = coroutine.create( func ) 
+    hook.Add( "Think", "lambdaplayersThread_" .. tostring( func ), function() 
+        if coroutine.status( thread ) != "dead" then
+            local ok, msg = coroutine.resume( thread )
+            if !ok then ErrorNoHaltWithStack( msg ) end
+        else
+            hook.Remove( "Think", "lambdaplayersThread_" .. tostring( func ) )
+        end
+    end )
+end

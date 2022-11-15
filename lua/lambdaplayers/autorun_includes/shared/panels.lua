@@ -2,13 +2,38 @@ local net = net
 local pairs = pairs
 local table_insert = table.insert
 local TableToJSON = util.TableToJSON
+local NiceSize = string.NiceSize
 local JSONToTable = util.JSONToTable
 local table_ClearKeys = table.ClearKeys
 local table_Empty = table.Empty
+local table_Count = table.Count
+local ipairs = ipairs
+local string_sub = string.sub
+local table_concat = table.concat
+local table_IsEmpty = table.IsEmpty
 local SortedPairs = SortedPairs
 
+-- Data splitting done by https://github.com/alexgrist/NetStream
+-- Very helpful function here
+local function DataSplit( data )
+    local index = 1
+    local result = {}
+    local buffer = {}
 
--- TODO: Just like filesystem.lua, I need to rewrite some of these functions. Specifically file handling and networking
+    for i = 0, #data do
+        buffer[ #buffer + 1 ] = string_sub( data, i, i )
+                
+        if #buffer == 32768 then
+            result[ #result + 1 ] = table_concat( buffer )
+                index = index + 1
+            buffer = {}
+        end
+    end
+            
+    result[ #result + 1 ] = table_concat( buffer )
+    
+    return result
+end
 
 -- Base panel stuff
 if CLIENT then
@@ -33,6 +58,7 @@ if CLIENT then
         return panel
     end
 
+    -- Simply creates a label. Shocking!
     function LAMBDAPANELS:CreateLabel( text, parent, dock )
 
         local panel = vgui.Create( "DLabel", parent )
@@ -42,6 +68,7 @@ if CLIENT then
         return panel
     end
 
+    -- Creates a button that will export the specified table to a specified file path
     function LAMBDAPANELS:CreateExportPanel( name, parent, dock, buttontext, targettable, exporttype, exportpath )
 
         local button = vgui.Create( "DButton", parent )
@@ -55,6 +82,7 @@ if CLIENT then
 
     end
 
+    -- Creates a button that will open a panel that will search for files to import. importfunction must be used to handle the importing
     function LAMBDAPANELS:CreateImportPanel( name, parent, dock, buttontext, labels, searchpath, importfunction )
 
 
@@ -143,149 +171,160 @@ if CLIENT then
         return panel
     end
     
-
-    function LAMBDAPANELS:SortValues( tbl )
+    -- Sorts a table of strings by alphabet
+    function LAMBDAPANELS:SortStrings( tbl )
         local sorttable = {}
-
         for k, v in pairs( tbl ) do sorttable[ v ] = v end
-
         table_Empty( tbl )
         for k, v in SortedPairs( sorttable ) do tbl[ #tbl + 1 ] = v end
     end
 
-    function LAMBDAPANELS:WriteServerFile( filename, content, type )
-        net.Start( "lambdaplayers_writefile" )
-        net.WriteString( filename )
-        net.WriteString( TableToJSON( { content } ) )
-        net.WriteString( type )
-        net.SendToServer()
-    end
 
-    function LAMBDAPANELS:AddToServerFile( filename, content, type )
-        net.Start( "lambdaplayers_addtoserverfile" )
-        net.WriteString( filename )
-        net.WriteString( TableToJSON( { content } ) )
-        net.WriteString( type )
-        net.SendToServer()
-    end
-
-    function LAMBDAPANELS:RemoveDataFromServerFile( filename, content, iskey, type )
-        net.Start( "lambdaplayers_removedatafromfile" )
-        net.WriteString( filename )
-        net.WriteString( TableToJSON( { content } ) )
-        net.WriteString( type )
-        net.WriteBool( iskey )
-        net.SendToServer()
-    end
-
-    function LAMBDAPANELS:RequestDataFromServer( filepath, callback )
+    function LAMBDAPANELS:RequestDataFromServer( filepath, type, callback )
         net.Start( "lambdaplayers_requestdata" )
         net.WriteString( filepath )
-        net.WriteString( "json" )
+        net.WriteString( type )
         net.SendToServer()
 
-        local retrieveddata = {}
+        local datastring = ""
         local bytes = 0
 
-        net.Receive( "lambdaplayers_returndata", function( len )
-            local key = net.ReadString()
-            local value = net.ReadString()
+        net.Receive( "lambdaplayers_returndata", function() 
+            local chunkdata = net.ReadString()
             local isdone = net.ReadBool()
-            
-
-            bytes = bytes + #value + #key
-            if key != "" and value != "" then
-                key = JSONToTable( key ) [ 1 ]
-                value = JSONToTable( value )[ 1 ]
-
-                retrieveddata[ key ] = value
-            end
+        
+            datastring = datastring .. chunkdata
+            bytes = bytes + #chunkdata
 
             if isdone then
-                callback( retrieveddata, bytes )
+                callback( datastring != "!!NIL" and JSONToTable( datastring ) or nil )
+                chat.AddText( "Received all data from server! " .. NiceSize( bytes ) .. " of data was received" )
             end
-
+            
         end )
 
     end
 
+    function LAMBDAPANELS:UpdateSequentialFile( filename, addcontent, type ) 
+        net.Start( "lambdaplayers_updatesequentialfile" )
+        net.WriteString( filename )
+        net.WriteType( addcontent )
+        net.WriteString( type )
+        net.SendToServer() 
+    end
+
+    function LAMBDAPANELS:UpdateKeyValueFile( filename, addcontent, type ) 
+        net.Start( "lambdaplayers_updatekvfile" )
+        net.WriteString( filename )
+        net.WriteString( TableToJSON( addcontent ) )
+        net.WriteString( type )
+        net.SendToServer() 
+    end
+
+    function LAMBDAPANELS:RemoveVarFromSQFile( filename, var, type ) 
+        net.Start( "lambdaplayers_removevarfromsqfile" )
+        net.WriteString( filename )
+        net.WriteType( var )
+        net.WriteString( type )
+        net.SendToServer() 
+    end
+
+    function LAMBDAPANELS:RemoveVarFromKVFile( filename, key, type ) 
+        net.Start( "lambdaplayers_removevarfromsqfile" )
+        net.WriteString( filename )
+        net.WriteString( key )
+        net.WriteString( type )
+        net.SendToServer() 
+    end
+
+
+
+--[[     LAMBDAFS:UpdateSequentialFile( filename, addcontent, type ) 
+    LAMBDAFS:UpdateKeyValueFile( filename, addcontent, type ) 
+    LAMBDAFS:RemoveVarFromSQFile( filename, var, type )
+    LAMBDAFS:RemoveVarFromKVFile( filename, key, type ) ]]
+
 elseif SERVER then
     util.AddNetworkString( "lambdaplayers_requestdata" )
+    util.AddNetworkString( "lambdaplayers_updatesequentialfile" )
+    util.AddNetworkString( "lambdaplayers_updatekvfile" )
+    util.AddNetworkString( "lambdaplayers_removevarfromsqfile" )
+    util.AddNetworkString( "lambdaplayers_removevarfromkvfile" )
     util.AddNetworkString( "lambdaplayers_returndata" )
-    util.AddNetworkString( "lambdaplayers_addtoserverfile" )
-    util.AddNetworkString( "lambdaplayers_writefile" )
-    util.AddNetworkString( "lambdaplayers_removedatafromfile" )
 
-    local table_Count = table.Count
-    local NiceSize = string.NiceSize
-
-
-    net.Receive( "lambdaplayers_writefile", function( len, ply )
+    net.Receive( "lambdaplayers_removevarfromsqfile", function( len, ply )
+        if !ply:IsSuperAdmin() then return end
         local filename = net.ReadString()
-        local content = net.ReadString()
-        local type = net.ReadString()
-        content = JSONToTable( content )[ 1 ]
+        local key = net.ReadString()
+        local _type = net.ReadString()
     
-        LAMBDAFS:WriteFile( filename, content, type ) 
+        LAMBDAFS:RemoveVarFromKVFile( filename, key, _type )
     end )
 
-    net.Receive( "lambdaplayers_addtoserverfile", function( len, ply )
+    net.Receive( "lambdaplayers_removevarfromsqfile", function( len, ply )
+        if !ply:IsSuperAdmin() then return end
         local filename = net.ReadString()
-        local content = net.ReadString()
-        local type = net.ReadString()
-        content = JSONToTable( content )[ 1 ]
+        local var = net.ReadType()
+        local _type = net.ReadString()
     
-        LAMBDAFS:UpdateFile( filename, content, type ) 
+        LAMBDAFS:RemoveVarFromSQFile( filename, var, _type )
+    end )
+    
+    net.Receive( "lambdaplayers_updatekvfile", function( len, ply )
+        if !ply:IsSuperAdmin() then return end
+        local filename = net.ReadString()
+        local content = JSONToTable( net.ReadString() )
+        local _type = net.ReadString()
 
+        LAMBDAFS:UpdateKeyValueFile( filename, content, _type ) 
     end )
 
-    net.Receive( "lambdaplayers_removedatafromfile", function( len, ply )
+    net.Receive( "lambdaplayers_updatesequentialfile", function( len, ply )
+        if !ply:IsSuperAdmin() then return end
         local filename = net.ReadString()
-        local content = net.ReadString()
-        local type = net.ReadString()
-        local iskey = net.ReadBool()
-        content = JSONToTable( content )[ 1 ]
-        LAMBDAFS:RemoveDataFromFile( filename, content, iskey, type )
+        local content = net.ReadType() 
+        local _type = net.ReadString()
+
+        LAMBDAFS:UpdateSequentialFile( filename, content, _type ) 
     end )
 
     net.Receive( "lambdaplayers_requestdata", function( len, ply )
-        local requestedfilepath = net.ReadString()
-        local filetype = net.ReadString()
+        local filepath = net.ReadString()
+        local _type = net.ReadString()
+        local content = LAMBDAFS:ReadFile( filepath, _type, "DATA" )
         local bytes = 0
+        local index = 0
 
-        local fileexists = file.Exists( requestedfilepath, "DATA" )
+        LambdaCreateThread( function()
 
-        print( "Lambda Players Net: " .. ply:Name() .. " | " .. ply:SteamID() .. " requested data from " .. requestedfilepath )
+            print( "Lambda Players Net: Preparing to send data from " .. filepath .. " to " .. ply:Name() .. " | " .. ply:SteamID() )
 
-        if !fileexists then
-            net.Start( "lambdaplayers_returndata" )
-                net.WriteString( "" )
-                net.WriteString( "" )
-                net.WriteBool( true )
-            net.Send( ply )
-            bytes = 1
-        else
-            local filedata = LAMBDAFS:ReadFile( requestedfilepath, filetype )
-            local count = table_Count( filedata )
-            local currentindex = 0
-            for k, v in pairs( filedata ) do
-                currentindex = currentindex + 1
-
-                local json = TableToJSON( { v } )
-                bytes = bytes + #json
-
+            if !content or table_IsEmpty( content ) then
                 net.Start( "lambdaplayers_returndata" )
-                    net.WriteString( TableToJSON( { k } ) )
-                    net.WriteString( json )
-                    net.WriteBool( currentindex == count )
+                net.WriteString( "!!NIL" ) -- JSON chunk
+                net.WriteBool( true ) -- Is done
                 net.Send( ply )
-                
+            else
+                content = TableToJSON( content )
+                local chunks = DataSplit( content )
+
+                for key, chunk in ipairs( chunks ) do
+                    index = index + 1
+                    
+                    net.Start( "lambdaplayers_returndata" )
+                    net.WriteString( chunk ) -- JSON chunk
+                    net.WriteBool( index == key ) -- Is done
+                    net.Send( ply )
+
+                    bytes = bytes + #chunk
+                    coroutine.wait( 0.5 )
+                end
+
             end
 
-        end
 
-        print( "Lambda Players Net: Sent " .. NiceSize( bytes ) .. " to " .. ply:Name() .. " | " .. ply:SteamID() )
-    
+            print( "Lambda Players Net: Sent " .. NiceSize( bytes ) .. " to " .. ply:Name() .. " | " .. ply:SteamID() )
+        end )
     end )
 
 end

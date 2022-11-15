@@ -46,7 +46,7 @@ local function OpenNamePanel( ply )
             for k, v in ipairs( jsoncontents ) do
                 if !table.HasValue( names, v ) then 
                     count = count + 1 
-                    LAMBDAPANELS:AddToServerFile( "lambdaplayers/customnames.json", { "!!INSERT", v }, "json" ) 
+                    LAMBDAPANELS:UpdateSequentialFile( "lambdaplayers/customnames.json", v, "json" )
 
                     local line = listview:AddLine( v )
                     line:SetSortValue( 1, v )
@@ -63,7 +63,7 @@ local function OpenNamePanel( ply )
             for k, v in ipairs( txtcontents ) do
                 if !table.HasValue( names, v ) then 
                     count = count + 1 
-                    LAMBDAPANELS:AddToServerFile( "lambdaplayers/customnames.json", { "!!INSERT", v }, "json" ) 
+                    LAMBDAPANELS:UpdateSequentialFile( "lambdaplayers/customnames.json", v, "json" )
 
                     local line = listview:AddLine( v )
                     line:SetSortValue( 1, v )
@@ -91,21 +91,22 @@ local function OpenNamePanel( ply )
         table.insert( names, value )
 
         chat.AddText( "Added " .. value .. " to the Server's Custom Names" )
-        LAMBDAPANELS:AddToServerFile( "lambdaplayers/customnames.json", { "!!INSERT", value }, "json" )
+        LAMBDAPANELS:UpdateSequentialFile( "lambdaplayers/customnames.json", value, "json" )
     end
 
     function listview:OnRowRightClick( id, line )
         chat.AddText( "Removed " .. line:GetSortValue( 1 ) .. " from the Server's names!" ) 
         table.RemoveByValue( names , line:GetSortValue( 1 ) )
-        LAMBDAPANELS:RemoveDataFromServerFile( "lambdaplayers/customnames.json", line:GetSortValue( 1 ), false, "json" )
+        LAMBDAPANELS:RemoveVarFromSQFile( "lambdaplayers/customnames.json", line:GetSortValue( 1 ), "json" ) 
         listview:RemoveLine( id )
     end
 
     chat.AddText( "Requesting Names from Server.." )
 
-    LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/customnames.json", function( data, bytes )
+    LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/customnames.json", "json", function( data )
+        if !data then return end
 
-        LAMBDAPANELS:SortValues( data )
+        LAMBDAPANELS:SortStrings( data )
         table.Merge( names, data ) 
         
         hasdata = true
@@ -117,9 +118,8 @@ local function OpenNamePanel( ply )
 
         listview:InvalidateLayout()
 
-        chat.AddText( "Received all names from Server! " .. string.NiceSize( bytes ) .. " of data was received" )
     end )
 
 end
 
---RegisterLambdaPanel( "Name", "Opens a panel that allows you to create custom names for Lambda Players. You must be a Super Admin to use this Panel", OpenNamePanel )
+RegisterLambdaPanel( "Name", "Opens a panel that allows you to create custom names for Lambda Players. You must be a Super Admin to use this Panel", OpenNamePanel )
