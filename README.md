@@ -145,3 +145,13 @@ Called when a lambda's ENT:Think() hook runs. This hook can be used to add onto 
 ### Server and Client
 
 Called when a lambda player initializes. This hook can be used to add onto the ENT:Initialize() hook each Lambda Player has
+
+
+
+### `LambdaOnStuck( Entity lambda, Number stucktimes )`
+### Server-Side
+
+*stucktimes is a variable that holds how many times the Lambda Player got stuck within the last 10 seconds + now*
+
+Called when a Lambda Player gets stuck. This hook can be used to make a custom unstuck function. Return "stop" to make the Lambda Player give up in their path or return "continue" to make the Lambda Player continue down their path
+
