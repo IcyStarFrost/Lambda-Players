@@ -100,30 +100,36 @@ end
 
 local balloonnames = { "normal", "normal_skin1", "normal_skin2", "normal_skin3", "gman", "mossman", "dog", "heart", "star" }
 local function UseBalloonTool( self, target )
-    if !self:IsUnderLimit( "Balloon" ) then return end -- Returning nothing is basically the same as returning false
+    if !self:IsUnderLimit( "Balloon" ) then return end -- We check if the Lambda Players hasn't reached it's personal limit of Balloons
+    local world = random( 0, 1 )
 
-    -- TODO : Randomly choose between world or target
+    -- If we choose target but the target isn't valid or a gmod_balloon entity, we don't do anything.
+    if !world and ( !IsValid( target ) or target:GetClass() == "gmod_balloon" ) then return end -- Returning nothing is equivalent to returning false
 
-    local balloonModel = list.Get( "BalloonModels" )[balloonnames[ random( #balloonnames ) ]] -- Directly get model from Sandbox. Needed since some have skins.
-
-    local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
+    -- We create a trace from the Lambda towards either a random place in the world or the target
+    -- Here we declare the variable trace. If world is true we use the trace after the 'and' otherwise we use the trace after the 'or'
+    local trace = world and self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) ) or self:Trace( target:WorldSpaceCenter() )
 
     self:LookTo( trace.HitPos, 2 ) -- We look towards the position the trace stopped at
 
     coroutine.wait( 1 ) -- We wait for a second
 
-    -- Because we wait 1 second we must make sure the target is still valid
+    -- Because we wait for 1 second we must make sure the target is still valid
     if IsValid( trace.Entity ) and ( trace.Entity:GetClass() == "gmod_balloon" or !util_IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) ) then return end
 
     self:UseWeapon( trace.HitPos ) -- Use the toolgun on the hit position of the trace to fake using a tool
 
-    local ent = CreateGmodEntity( "gmod_balloon", balloonModel.model, trace.HitPos, nil, self ) -- Create the balloon
+    -- We randomly select a model for the Lambda to spawn. This is a special case since certain balloons have skins.
+    local balloonModel = list.Get( "BalloonModels" )[balloonnames[ random( #balloonnames ) ]]
+
+    -- We create the balloon entity "gmod_balloon" with the random model, at the HitPos of the trace, with Angles of nil and the Lambda as the owner
+    local ent = CreateGmodEntity( "gmod_balloon", balloonModel.model, trace.HitPos, nil, self )
 
     ent.LambdaOwner = self -- We set the owner of the entity as the Lambda Player that spawned it
 
     ent.IsLambdaSpawned = true -- We specify that the entity has been spawned by a Lambda Player
 
-    self:ContributeEntToLimit( ent, "Balloon" ) -- We add that new entity to the amount of that specific entities the Lambda possess
+    self:ContributeEntToLimit( ent, "Balloon" ) -- We add the entity to the amount of similar entities the Lambda possess
     table_insert( self.l_SpawnedEntities, 1, ent )
 
     local CurPos = ent:GetPos()
@@ -147,14 +153,13 @@ local function UseBalloonTool( self, target )
     local constr, rope = constraint.Rope( ent, trace.Entity, 0, trace.PhysicsBone, Vector( 0, 0, 0 ), LPos, 0, random( 5, 1000 ), 0, 0.5, "cable/rope" )
     table_insert( self.l_SpawnedEntities, 1, rope )
 
-    -- Aaannd configure it
+    -- Here we configure the entity we created. The settings will depend on which entity we created. Here it's a balloon so it doesn't have much.
     ent:SetPlayer( self ) -- We can safely set it to ourself since we 'hijacked' it
-    ent:SetColor( ColorRand( true ) )
     if ( balloonModel.skin ) then ent:SetSkin( balloonModel.skin ) end
-    if ( balloonModel.nocolor ) then ent:SetColor( Color(255, 255, 255, 255) ) else ent:SetColor( ColorRand( ) ) end
-    ent:SetForce( random( 50, 2000 ) ) -- While players can use negative force for balloons it kinda looks less fun
+    if ( balloonModel.nocolor ) then ent:SetColor( Color(255, 255, 255, 255) ) else ent:SetColor( ColorRand( ) ) end -- We randomize the color of the balloon except if it tells us that it can't accept color.
+    ent:SetForce( random( 50, 2000 ) ) -- While players can use negative force for balloons, we limit the Lambda to positive forces to be more fun
 
-    return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this
+    return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this!
 end
 AddToolFunctionToLambdaTools( "Balloon", UseBalloonTool )
 
@@ -168,12 +173,12 @@ local function UseColorTool( self, target )
     self:LookTo( target, 2 )
 
     coroutine.wait( 1 )
-    if !IsValid( target ) then return end -- Because we wait 1 second we must make sure the target is valid
+    if !IsValid( target ) then return end
 
-    self:UseWeapon( target:WorldSpaceCenter() ) -- Use the toolgun on the target to fake using a tool
+    self:UseWeapon( target:WorldSpaceCenter() )
     target:SetColor( ColorRand( false ) )
 
-    return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this
+    return true
 end
 AddToolFunctionToLambdaTools( "Color", UseColorTool )
 
@@ -473,7 +478,7 @@ local function UseLightTool( self, target )
         table_insert( self.l_SpawnedEntities, 1, rope )
     end
 
-    -- Aaannd configure it
+    -- We configure the entity. The settings will depend on the entity itself.
     ent:SetPlayer( self ) -- We can safely set this to ourselves since it was "hijacked"
     ent:SetOn( true )
     ent:SetColor( ColorRand( false ) )
@@ -561,7 +566,7 @@ local function UsePhysPropTool( self, target )
 
     self:UseWeapon( target:WorldSpaceCenter() )
 
-    construct.SetPhysProp( target:GetOwner(), ent, trace.PhysicsBone, nil, { GravityToggle = random( 0, 1 ) == 1, Material = physproperties[ random( #physproperties ) ] } ) -- Set the properties
+    construct.SetPhysProp( target:GetOwner(), ent, trace.PhysicsBone, nil, { GravityToggle = tobool( random( 0, 1 ) ), Material = physproperties[ random( #physproperties ) ] } ) -- Set the properties
 
     return true
 end
@@ -810,7 +815,7 @@ local function UseWheelTool( self, target )
     local LPos2 = targetPhys:WorldToLocal( trace.HitPos )
 
     local const = constraint.Motor( ent, trace.Entity, 0, trace.PhysicsBone, LPos1, LPos2, random( 0, 100 ), torque, 0, random( 0, 1 ), 1 )
-    -- -- -- -- -- --
+
     ent:SetPos( trace.HitPos + wheelOffset )
     ent:SetPlayer( self )
     ent:SetMotor( const )
@@ -823,7 +828,7 @@ local function UseWheelTool( self, target )
     ent:LambdaHookTick( "WheelRandomOnOff", function( wheel )
         if CurTime() > rndtime then
             if !IsValid( wheel ) then return true end
-            wheel:Forward( random( 0, 1 ) == 1 )-- Randomly switch it on or off
+            wheel:Forward( tobool( random( 0, 1 ) ) )-- Randomly switch it on or off
 
             rndtime = CurTime() + rand( 1, 10 )
         end
