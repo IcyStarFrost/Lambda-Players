@@ -134,7 +134,6 @@ local function UseBalloonTool( self, target )
     ent.IsLambdaSpawned = true -- We specify that the entity has been spawned by a Lambda Player
 
     self:ContributeEntToLimit( ent, "Balloon" ) -- We add the entity to the amount of similar entities the Lambda possess
-    table_insert( self.l_SpawnedEntities, 1, ent )
 
     local CurPos = ent:GetPos()
     local NearestPoint = ent:NearestPoint( CurPos - ( trace.HitNormal * 512 ) )
@@ -156,6 +155,7 @@ local function UseBalloonTool( self, target )
 
     local constr, rope = constraint.Rope( ent, entity, 0, physbone, Vector( 0, 0, 0 ), LPos, 0, random( 5, 1000 ), 0, 0.5, "cable/rope" )
     table_insert( self.l_SpawnedEntities, 1, rope )
+    table_insert( self.l_SpawnedEntities, 1, ent ) -- Insert the balloon last so if the Lambda decide to undo, it will meet the balloon first
 
     -- Here we configure the entity we created. The settings will depend on which entity we created. Here it's a balloon so it doesn't have much.
     ent:SetPlayer( self ) -- We can safely set it to ourself since we 'hijacked' it
@@ -166,6 +166,60 @@ local function UseBalloonTool( self, target )
     return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this!
 end
 AddToolFunctionToLambdaTools( "Balloon", UseBalloonTool )
+
+
+
+
+
+local function UseBallsocketTool( self, target )
+    if !IsValid( target ) then return end
+
+    local world = random( 0, 1 )
+    local find = self:FindInSphere( nil, 800, function( ent ) if ent != target and !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
+    local target2 = find[ random( #find ) ]
+
+    if !IsValid( target2 ) and !world then return end
+    target2 = !world and target2 or Entity( 0 )
+
+    local lpos1 = target:WorldToLocal( self:Trace( target:WorldSpaceCenter() ).HitPos )
+    local lpos2 = !world and target2:WorldToLocal( self:Trace( target2:WorldSpaceCenter() ).HitPos ) or self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) ).HitPos
+
+    self:LookTo( target , 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) then return end
+    if !util_IsValidPhysicsObject( target, target:GetPhysicsObjectCount()-1 ) then return end
+
+    self:UseWeapon( target:WorldSpaceCenter() )
+
+    coroutine.wait( 0.3 )
+
+    self:LookTo( ( !world and target2 or lpos2 ), 2 )
+
+    coroutine.wait( 1 )
+    if IsNil( target2 ) or IsNil( target ) then return end
+    if !util_IsValidPhysicsObject( target2, target2:GetPhysicsObjectCount()-1 ) then return end
+
+    self:UseWeapon( ( !world and target2:WorldSpaceCenter() or lpos2 ) )
+
+    local dist = ( target:GetPos() ):Distance( ( world and lpos2 or target2:GetPos() ) )
+
+    local cons, ballsocket = constraint.Ballsocket( target, target2, 0, 0, lpos2, 0, 0, 0 ) -- forcelimit, unused, nocollide to other.
+
+    if IsValid( cons ) then
+        cons.LambdaOwner = self
+        cons.IsLambdaSpawned = true
+        table_insert( self.l_SpawnedEntities, 1, cons )
+    elseif IsValid( ballsocket ) then
+        ballsocket.LambdaOwner = self
+        ballsocket.IsLambdaSpawned = true
+        table_insert( self.l_SpawnedEntities, 1, ballsocket )
+    end
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Ballsocket", UseBallSocketTool )
+
 
 
 
@@ -252,13 +306,57 @@ AddToolFunctionToLambdaTools( "Dynamite", UseDynamiteTool )
 
 
 local ropematerials = { "cable/redlaser", "cable/cable2", "cable/rope", "cable/blue_elec", "cable/xbeam", "cable/physbeam", "cable/hydra" }
---[[local function UseElasticTool( self, target )
+local function UseElasticTool( self, target )
+    if !self:IsUnderLimit( "Rope" ) then return end -- It's technically a special rope
+    if !IsValid( target ) then return end
 
-    -- TODO
+    local world = random( 0, 1 )
+    local find = self:FindInSphere( nil, 800, function( ent ) if ent != target and !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
+    local target2 = find[ random( #find ) ]
+
+    if !IsValid( target2 ) and !world then return end
+    target2 = !world and target2 or Entity( 0 )
+
+    local lpos1 = target:WorldToLocal( self:Trace( target:WorldSpaceCenter() ).HitPos )
+    local lpos2 = !world and target2:WorldToLocal( self:Trace( target2:WorldSpaceCenter() ).HitPos ) or self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) ).HitPos
+
+    self:LookTo( target , 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) then return end
+    if !util_IsValidPhysicsObject( target, target:GetPhysicsObjectCount()-1 ) then return end
+
+    self:UseWeapon( target:WorldSpaceCenter() )
+
+    coroutine.wait( 0.3 )
+
+    self:LookTo( ( !world and target2 or lpos2 ), 2 )
+
+    coroutine.wait( 1 )
+    if IsNil( target2 ) or IsNil( target ) then return end
+    if !util_IsValidPhysicsObject( target2, target2:GetPhysicsObjectCount()-1 ) then return end
+
+    self:UseWeapon( ( !world and target2:WorldSpaceCenter() or lpos2 ) )
+
+    local dist = ( target:GetPos() ):Distance( ( world and lpos2 or target2:GetPos() ) )
+
+    local cons, rope = constraint.Elastic( target, target2, 0, 0, lpos1, lpos2, random( 0, 4000 ), random( 0, 50 ), rand( 0 , 1 ), ropematerials[ random( #ropematerials ) ], rand( 0, 20 ), random( 0, 1 ), ColorRand() )
+
+    if IsValid( cons ) then
+        cons.LambdaOwner = self
+        cons.IsLambdaSpawned = true
+        self:ContributeEntToLimit( cons, "Rope" )
+        table_insert( self.l_SpawnedEntities, 1, cons )
+    elseif IsValid( rope ) then
+        rope.LambdaOwner = self
+        rope.IsLambdaSpawned = true
+        self:ContributeEntToLimit( rope, "Rope" )
+        table_insert( self.l_SpawnedEntities, 1, rope )
+    end
 
     return true
 end
-AddToolFunctionToLambdaTools( "Elastic", UseElasticTool )]]
+AddToolFunctionToLambdaTools( "Elastic", UseElasticTool )
 
 
 
@@ -484,7 +582,6 @@ local function UseLightTool( self, target )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Light" )
-    table_insert( self.l_SpawnedEntities, 1, ent )
 
     if random( 0, 1 ) == 1 then
         local LPos = !IsNil( entity ) and entity:WorldToLocal( hitpos ) or hitpos
@@ -502,6 +599,7 @@ local function UseLightTool( self, target )
         local constr, rope = constraint.Rope( ent, entity, 0, physbone, Vector( 0, 0, 6.5 ), LPos, 0, random( 256 ), 0, 1, "cable/rope" )
         table_insert( self.l_SpawnedEntities, 1, rope )
     end
+    table_insert( self.l_SpawnedEntities, 1, ent )
 
     -- We configure the entity. Some settings will depend on the entity itself.
     ent:SetPlayer( self ) -- We can safely set this to ourselves since it was "hijacked"
@@ -664,7 +762,7 @@ local function UseRopeTool( self, target )
 
     coroutine.wait( 1 )
     if IsNil( firstent ) then return end 
-    if !util_IsValidPhysicsObject( firstent, firstent:GetPhysicsObjectCount() ) then return end
+    if !util_IsValidPhysicsObject( firstent, firstent:GetPhysicsObjectCount()-1 ) then return end
 
     self:UseWeapon( ( firstent != world and firstent:WorldSpaceCenter() or lpos1 ) )
 
@@ -674,7 +772,7 @@ local function UseRopeTool( self, target )
 
     coroutine.wait( 1 )
     if IsNil( secondent ) or IsNil( firstent ) then return end
-    if !util_IsValidPhysicsObject( secondent, secondent:GetPhysicsObjectCount() ) then return end
+    if !util_IsValidPhysicsObject( secondent, secondent:GetPhysicsObjectCount()-1 ) then return end
 
     self:UseWeapon( ( secondent != world and secondent:WorldSpaceCenter() or lpos2 ) )
 
@@ -698,6 +796,62 @@ local function UseRopeTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Rope", UseRopeTool )
+
+
+
+
+
+local function UseSliderTool( self, target )
+    if !self:IsUnderLimit( "Rope" ) then return end -- It's technically a special rope
+    if !IsValid( target ) then return end
+
+    local world = random( 0, 1 )
+    local find = self:FindInSphere( nil, 800, function( ent ) if ent != target and !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
+    local target2 = find[ random( #find ) ]
+
+    if !IsValid( target2 ) and !world then return end
+    target2 = !world and target2 or Entity( 0 )
+
+    local lpos1 = target:WorldToLocal( self:Trace( target:WorldSpaceCenter() ).HitPos )
+    local lpos2 = !world and target2:WorldToLocal( self:Trace( target2:WorldSpaceCenter() ).HitPos ) or self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) ).HitPos
+
+    self:LookTo( target , 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) then return end
+    if !util_IsValidPhysicsObject( target, target:GetPhysicsObjectCount()-1 ) then return end
+
+    self:UseWeapon( target:WorldSpaceCenter() )
+
+    coroutine.wait( 0.3 )
+
+    self:LookTo( ( !world and target2 or lpos2 ), 2 )
+
+    coroutine.wait( 1 )
+    if IsNil( target2 ) or IsNil( target ) then return end
+    if !util_IsValidPhysicsObject( target2, target2:GetPhysicsObjectCount()-1 ) then return end
+
+    self:UseWeapon( ( !world and target2:WorldSpaceCenter() or lpos2 ) )
+
+    local dist = ( target:GetPos() ):Distance( ( world and lpos2 or target2:GetPos() ) )
+
+    local cons, rope = constraint.Slider( target, target2, 0, 0, lpos1, lpos2, random( 0, 10 ), ropematerials[ random( #ropematerials ) ], ColorRand() )
+
+    if IsValid( cons ) then
+        cons.LambdaOwner = self
+        cons.IsLambdaSpawned = true
+        self:ContributeEntToLimit( cons, "Rope" )
+        table_insert( self.l_SpawnedEntities, 1, cons )
+    elseif IsValid( rope ) then
+        rope.LambdaOwner = self
+        rope.IsLambdaSpawned = true
+        self:ContributeEntToLimit( rope, "Rope" )
+        table_insert( self.l_SpawnedEntities, 1, rope )
+    end
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Slider", UseSliderTool )
 
 
 

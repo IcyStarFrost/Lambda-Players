@@ -9,6 +9,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         origin = "Half Life: 2",
         prettyname = "Stunstick",
         holdtype = "melee",
+        killicon = "weapon_stunstick",
         ismelee = true,
         bonemerge = true,
         keepdistance = 10,
