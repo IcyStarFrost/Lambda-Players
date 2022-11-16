@@ -203,9 +203,11 @@ local function UseBallsocketTool( self, target )
 
     local cons = constraint.Ballsocket( target, target2, 0, 0, lpos2, 0, 0, 0 ) -- forcelimit, unused, nocollide to other.
     
-    cons.LambdaOwner = self
-    cons.IsLambdaSpawned = true
-    table_insert( self.l_SpawnedEntities, 1, cons )
+    if cons then
+        cons.LambdaOwner = self
+        cons.IsLambdaSpawned = true
+        table_insert( self.l_SpawnedEntities, 1, cons )
+    end
 
     return true
 end
@@ -930,6 +932,54 @@ local function UseTrailTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Trail", UseTrailTool )
+
+
+
+
+
+local function UseWeldTool( self, target )
+    if !IsValid( target ) then return end
+
+    local world = random( 0, 1 )
+    local find = self:FindInSphere( nil, 800, function( ent ) if ent != target and !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
+    local target2 = find[ random( #find ) ]
+
+    if !IsValid( target2 ) and !world then return end
+    target2 = !world and target2 or Entity( 0 )
+
+    local lpos1 = target:WorldToLocal( self:Trace( target:WorldSpaceCenter() ).HitPos )
+    local lpos2 = !world and target2:WorldToLocal( self:Trace( target2:WorldSpaceCenter() ).HitPos ) or self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) ).HitPos
+
+    self:LookTo( target , 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) then return end
+    if !util_IsValidPhysicsObject( target, target:GetPhysicsObjectCount()-1 ) then return end
+
+    self:UseWeapon( target:WorldSpaceCenter() )
+
+    coroutine.wait( 0.3 )
+
+    self:LookTo( ( !world and target2 or lpos2 ), 2 )
+
+    coroutine.wait( 1 )
+    if IsNil( target2 ) or IsNil( target ) then return end
+    if !util_IsValidPhysicsObject( target2, target2:GetPhysicsObjectCount()-1 ) then return end
+
+    self:UseWeapon( ( !world and target2:WorldSpaceCenter() or lpos2 ) )
+
+    local cons = constraint.Weld( target, target2, 0, 0, 0, true, true )
+    
+    if cons then
+        cons.LambdaOwner = self
+        cons.IsLambdaSpawned = true
+        table_insert( self.l_SpawnedEntities, 1, cons ) -- Lambda Players should be able to undo Welds like players
+    end
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Weld", UseWeldTool )
+
 
 
 

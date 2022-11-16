@@ -419,7 +419,7 @@ if SERVER then
         return Trace( tracetable )
     end
 
-    -- Prevents the Lambda player from switching weapons when this is true
+    -- Prevents the Lambda Player from switching weapons when this is true
     function ENT:PreventWeaponSwitch( bool )
         self.l_NoWeaponSwitch = bool
     end
