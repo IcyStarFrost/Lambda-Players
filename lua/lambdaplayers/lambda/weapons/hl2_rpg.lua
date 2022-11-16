@@ -8,6 +8,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         origin = "Half Life: 2",
         prettyname = "RPG",
         holdtype = "rpg",
+        killicon = "rpg_missile",
         bonemerge = true,
         keepdistance = 800,
         attackrange = 5000,

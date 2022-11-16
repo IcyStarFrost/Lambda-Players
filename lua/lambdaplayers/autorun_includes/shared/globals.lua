@@ -2,6 +2,7 @@ local table_insert = table.insert
 local pairs = pairs
 local string_find = string.find
 local tostring = tostring
+local iconColor = Color(255, 80, 0, 255)
 
 _LAMBDAPLAYERSWEAPONS = {}
 
@@ -23,7 +24,20 @@ _LAMBDAWEAPONALLOWCONVARS = {}
 for k, v in pairs( _LAMBDAPLAYERSWEAPONS ) do
     local convar = CreateLambdaConvar( "lambdaplayers_weapons_allow" .. k, 1, true, false, false, "Allows the Lambda Players to equip " .. v.prettyname, 0, 1 )
 	_LAMBDAWEAPONALLOWCONVARS[ k ] = convar
-	if CLIENT then _LAMBDAPLAYERSWEAPONORIGINS[ v.origin ] = v.origin end
+	if CLIENT then 
+        _LAMBDAPLAYERSWEAPONORIGINS[ v.origin ] = v.origin 
+
+        if v.killicon then
+            local iskilliconfilepath = string_find( v.killicon, "/" )
+
+            if iskilliconfilepath then
+                killicon.Add( "lambdaplayers_weaponkillicons_" .. k, v.killicon, iconColor )
+            else
+                killicon.AddAlias( "lambdaplayers_weaponkillicons_" .. k, v.killicon )
+            end
+        end
+
+    end
 end
 
 _LAMBDAWEAPONCLASSANDPRINTS = {}

@@ -63,6 +63,8 @@ if SERVER then
 
         self:GetPhysicsObject():EnableCollisions( false )
 
+        LambdaKillFeedAdd( self, info:GetAttacker(), info:GetInflictor() )
+
         self:RemoveTimers()
         self:TerminateNonIgnoredDeadTimers()
         self:RemoveFlags( FL_OBJECT )
@@ -133,6 +135,8 @@ if SERVER then
             self:DebugPrint( "killed ", victim )
 
             if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "kill" ) ) end 
+
+            if !victim.IsLambdaPlayer then LambdaKillFeedAdd( victim, info:GetAttacker(), info:GetInflictor() ) end
 
         else -- Someone else killed the victim
 

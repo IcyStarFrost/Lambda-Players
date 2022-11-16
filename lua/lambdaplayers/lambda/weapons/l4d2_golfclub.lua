@@ -9,6 +9,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         origin = "Left 4 Dead 2",
         prettyname = "Golf Club",
         holdtype = "melee2",
+        killicon = "lambdaplayers/killicons/icon_golfclub",
         ismelee = true,
         bonemerge = false,
         keepdistance = 10,

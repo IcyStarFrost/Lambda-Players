@@ -13,6 +13,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         origin = "Half Life: 2",
         prettyname = "S.L.A.M",
         holdtype = "slam",
+        killicon = "npc_satchel",
         bonemerge = true,
         keepdistance = 200,
         attackrange = 500,
@@ -68,7 +69,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                         effData:SetOrigin( satchel:GetPos() )
                         EmitEffect( "Explosion", effData, true, true )
 
-                        EmitExplosion( satchel, self, satchel:GetPos(), 200, 150 )
+                        EmitExplosion( satchel, self or satchel, satchel:GetPos(), 200, 150 )
                     end )
                     
                     thinkTime = CurTime() + 1.0

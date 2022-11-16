@@ -176,6 +176,7 @@ function ENT:Initialize()
         self.WeaponEnt:SetAngles( attachpoint.Ang )
         self.WeaponEnt:SetParent( self, ap )
         self.WeaponEnt:Spawn()
+        self.WeaponEnt.IsLambdaWeapon = true
         self.WeaponEnt:SetNW2Vector( "lambda_weaponcolor", self:GetPhysColor() )
         self.WeaponEnt:SetNoDraw( true )
         self:SetWeaponENT( self.WeaponEnt )

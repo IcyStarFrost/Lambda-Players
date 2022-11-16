@@ -5,6 +5,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         origin = "Half Life: 2",
         prettyname = "Crowbar",
         holdtype = "melee",
+        killicon = "weapon_crowbar",
         ismelee = true,
         bonemerge = true,
         keepdistance = 10,

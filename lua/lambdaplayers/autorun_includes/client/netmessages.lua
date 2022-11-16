@@ -317,3 +317,13 @@ net.Receive( "lambdaplayers_chatadd", function()
 
     chat_AddText( unpack( args ) )
 end )
+
+net.Receive( "lambdaplayers_addtokillfeed", function() 
+    local attackername = net.ReadString()
+    local attackerteam = net.ReadInt( 8 )
+    local victimname = net.ReadString()
+    local victimteam = net.ReadInt( 8 )
+    local inflictorname = net.ReadString()
+
+    GAMEMODE:AddDeathNotice( attackername, attackerteam, inflictorname, victimname, victimteam )
+end )

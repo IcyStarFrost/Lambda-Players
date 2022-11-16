@@ -47,6 +47,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         prettyname = "Physics Gun",
         bonemerge = true,
         holdtype = "physgun",
+        killicon = "weapon_physcannon",
 
         OnEquip = function( lambda, wepent )
             wepent:SetSkin( 1 )

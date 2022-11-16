@@ -11,6 +11,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         origin = "Misc",
         prettyname = "Volver",
         holdtype = "crossbow",
+        killicon = "lambdaplayers/killicons/icon_volver",
         bonemerge = false,
         keepdistance = 600,
         attackrange = 4000,
