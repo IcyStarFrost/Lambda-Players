@@ -101,6 +101,8 @@ function ENT:Initialize()
         self.l_unstuck = false -- If true, runs our unstuck process
         self.l_UpdateAnimations = true -- If we can update our animations. Used for the purpose of playing sequences
 
+        self.l_deaths = 0 -- The amount of deaths we have had
+        self.l_frags = 0 -- The amount of kills we have
         self.l_UnstuckBounds = 50 -- The distance the unstuck process will use to check. This value increments during the process and set back to 50 when done
         self.l_nextspeedupdate = 0 -- The next time we update our speed
         self.l_NexthealthUpdate = 0 -- The next time we update our networked health
@@ -114,6 +116,7 @@ function ENT:Initialize()
         self.debuginitstart = SysTime() -- Debug time from initialize to ENT:RunBehaviour()
         self.l_nextidlesound = CurTime() + 5 -- The next time we will play a idle sound
         self.l_nextUA = CurTime() + rand( 1, 15 ) -- The next time we will run a UAction. See lambda/sv_x_universalactions.lua
+
 
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
         self.l_movepos = nil -- The position or entity we are going to
@@ -149,7 +152,7 @@ function ENT:Initialize()
 
         local vpchance = voiceprofilechance:GetInt()
         if vpchance > 0 and random( 1, 100 ) < vpchance then local vps = table_GetKeys( LambdaVoiceProfiles ) self.l_VoiceProfile = vps[ random( #vps ) ] end
-
+        self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
         ----
 
         SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
@@ -181,6 +184,7 @@ function ENT:Initialize()
         self.WeaponEnt:SetNoDraw( true )
         self:SetWeaponENT( self.WeaponEnt )
         self.l_SpawnWeapon = "physgun" -- The weapon we spawned with
+        self:SetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon )
 
         self:InitializeMiniHooks()
         self:SwitchWeapon( "physgun", true )
@@ -250,6 +254,8 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 3, "CombatChance" )
     self:NetworkVar( "Int", 4, "VoiceChance" )
     self:NetworkVar( "Int", 5, "ToolChance" )
+    self:NetworkVar( "Int", 6, "Frags" )
+    self:NetworkVar( "Int", 7, "Deaths" )
     
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
 end

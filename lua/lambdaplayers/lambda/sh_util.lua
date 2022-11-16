@@ -225,11 +225,13 @@ function ENT:ExportLambdaInfo()
         --
 
         voicepitch = self:GetVoicePitch(),
-        voiceprofile = self.l_VoiceProfile,
+        voiceprofile = self:GetNW2String( "lambda_vp", self.l_VoiceProfile ),
 
         -- Non personal data --
         respawn = self:GetRespawn(),
-        spawnwep = self.l_SpawnWeapon,
+        spawnwep = self:GetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon ),
+        frags = self:GetFrags(),
+        deaths = self:GetDeaths(),
 
         -- NW Vars --
         nwvars = self:GetNWVarTable(),
@@ -275,11 +277,16 @@ if SERVER then
 
             self:SetVoicePitch( info.voicepitch or self:GetVoicePitch() )
             self.l_VoiceProfile = info.voiceprofile or self.l_VoiceProfile
-
+            self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
             -- Non Personal Data --
-
+            local spawnwep = info.spawnwep or self.l_SpawnWeapon
             self:SetRespawn( info.respawn or self:GetRespawn() )
-            self:SwitchWeapon( info.spawnwep or self.l_Weapon )
+            self:SwitchWeapon( spawnwep )
+            
+            self:SetNW2String( "lambda_spawnweapon", spawnwep )
+
+            self:SetFrags( info.frags or self:GetFrags() )
+            self:SetDeaths( info.deaths or self:GetDeaths() )
 
             -- NW Vars --
             local nw = info.nwvars

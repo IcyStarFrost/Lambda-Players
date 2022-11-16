@@ -64,6 +64,7 @@ if SERVER then
         self:GetPhysicsObject():EnableCollisions( false )
 
         LambdaKillFeedAdd( self, info:GetAttacker(), info:GetInflictor() )
+        self:SetDeaths( self:GetDeaths() + 1 )
 
         self:RemoveTimers()
         self:TerminateNonIgnoredDeadTimers()
@@ -133,6 +134,7 @@ if SERVER then
         if attacker == self then
             local killlines = LambdaVoiceLinesTable.kill
             self:DebugPrint( "killed ", victim )
+            self:SetFrags( self:GetFrags() + 1 )
 
             if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "kill" ) ) end 
 

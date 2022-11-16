@@ -22,6 +22,17 @@ function ENT:GetAimVector()
     return self:GetAttachmentPoint( "eyes" ).Ang:Forward()
 end
 
+-- Returns our kill count
+function ENT:Frags()
+    return self:GetFrags()
+end
+
+-- Returns how much we died
+function ENT:Deaths()
+    return self:GetDeaths()
+end
+
+
 -- Similar to Real Player's :GetEyeTrace()
 function ENT:GetEyeTrace()
     local attach = self:GetAttachmentPoint( "eyes" )
