@@ -1,6 +1,6 @@
 UnlitGeneric
 {
-	"$baseTexture" 		"vgui\zetaplayers\killicons\l4d2\icon_frying_pan"
+	"$baseTexture" 		"lambdaplayers/killicons/icon_frying_pan"
 	"$vertexcolor" 		1
 	"$vertexalpha" 		1
 	"$nolod" 			1
