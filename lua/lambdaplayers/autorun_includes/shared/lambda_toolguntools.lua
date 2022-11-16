@@ -134,7 +134,6 @@ local function UseBalloonTool( self, target )
     ent.IsLambdaSpawned = true -- We specify that the entity has been spawned by a Lambda Player
 
     self:ContributeEntToLimit( ent, "Balloon" ) -- We add the entity to the amount of similar entities the Lambda possess
-    table_insert( self.l_SpawnedEntities, 1, ent )
 
     local CurPos = ent:GetPos()
     local NearestPoint = ent:NearestPoint( CurPos - ( trace.HitNormal * 512 ) )
@@ -156,6 +155,7 @@ local function UseBalloonTool( self, target )
 
     local constr, rope = constraint.Rope( ent, entity, 0, physbone, Vector( 0, 0, 0 ), LPos, 0, random( 5, 1000 ), 0, 0.5, "cable/rope" )
     table_insert( self.l_SpawnedEntities, 1, rope )
+    table_insert( self.l_SpawnedEntities, 1, ent ) -- Insert the balloon last so if the Lambda decide to undo, it will meet the balloon first
 
     -- Here we configure the entity we created. The settings will depend on which entity we created. Here it's a balloon so it doesn't have much.
     ent:SetPlayer( self ) -- We can safely set it to ourself since we 'hijacked' it
@@ -528,7 +528,6 @@ local function UseLightTool( self, target )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Light" )
-    table_insert( self.l_SpawnedEntities, 1, ent )
 
     if random( 0, 1 ) == 1 then
         local LPos = !IsNil( entity ) and entity:WorldToLocal( hitpos ) or hitpos
@@ -546,6 +545,7 @@ local function UseLightTool( self, target )
         local constr, rope = constraint.Rope( ent, entity, 0, physbone, Vector( 0, 0, 6.5 ), LPos, 0, random( 256 ), 0, 1, "cable/rope" )
         table_insert( self.l_SpawnedEntities, 1, rope )
     end
+    table_insert( self.l_SpawnedEntities, 1, ent )
 
     -- We configure the entity. Some settings will depend on the entity itself.
     ent:SetPlayer( self ) -- We can safely set this to ourselves since it was "hijacked"
