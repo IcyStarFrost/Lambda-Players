@@ -202,24 +202,15 @@ local function UseBallsocketTool( self, target )
 
     self:UseWeapon( ( !world and target2:WorldSpaceCenter() or lpos2 ) )
 
-    local dist = ( target:GetPos() ):Distance( ( world and lpos2 or target2:GetPos() ) )
-
-    local cons, ballsocket = constraint.Ballsocket( target, target2, 0, 0, lpos2, 0, 0, 0 ) -- forcelimit, unused, nocollide to other.
-
-    if IsValid( cons ) then
-        cons.LambdaOwner = self
-        cons.IsLambdaSpawned = true
-        table_insert( self.l_SpawnedEntities, 1, cons )
-    elseif IsValid( ballsocket ) then
-        ballsocket.LambdaOwner = self
-        ballsocket.IsLambdaSpawned = true
-        table_insert( self.l_SpawnedEntities, 1, ballsocket )
-    end
+    local cons = constraint.Ballsocket( target, target2, 0, 0, lpos2, 0, 0, 0 ) -- forcelimit, unused, nocollide to other.
+    
+    cons.LambdaOwner = self
+    cons.IsLambdaSpawned = true
+    table_insert( self.l_SpawnedEntities, 1, cons )
 
     return true
 end
-AddToolFunctionToLambdaTools( "Ballsocket", UseBallSocketTool )
-
+AddToolFunctionToLambdaTools( "Ballsocket", UseBallsocketTool )
 
 
 
@@ -337,8 +328,6 @@ local function UseElasticTool( self, target )
     if !util_IsValidPhysicsObject( target2, target2:GetPhysicsObjectCount()-1 ) then return end
 
     self:UseWeapon( ( !world and target2:WorldSpaceCenter() or lpos2 ) )
-
-    local dist = ( target:GetPos() ):Distance( ( world and lpos2 or target2:GetPos() ) )
 
     local cons, rope = constraint.Elastic( target, target2, 0, 0, lpos1, lpos2, random( 0, 4000 ), random( 0, 50 ), rand( 0 , 1 ), ropematerials[ random( #ropematerials ) ], rand( 0, 20 ), random( 0, 1 ), ColorRand() )
 
@@ -832,8 +821,6 @@ local function UseSliderTool( self, target )
     if !util_IsValidPhysicsObject( target2, target2:GetPhysicsObjectCount()-1 ) then return end
 
     self:UseWeapon( ( !world and target2:WorldSpaceCenter() or lpos2 ) )
-
-    local dist = ( target:GetPos() ):Distance( ( world and lpos2 or target2:GetPos() ) )
 
     local cons, rope = constraint.Slider( target, target2, 0, 0, lpos1, lpos2, random( 0, 10 ), ropematerials[ random( #ropematerials ) ], ColorRand() )
 
