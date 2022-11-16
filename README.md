@@ -121,6 +121,16 @@ Called when all default Building Functions have been loaded. Use this hook if yo
 
 
 
+### `LambdaOnPersonalitiesLoaded`
+### Must be Shared!
+
+*"Personalities" are functions that have chances ordered from highest to lowest applied to them. When a Lambda Player is in the idle state, each chance will be tested and if it succeeds, the function will run. Personalities are responsible for the decisions on building stuff or fighting*
+
+Called when all default Personality types have been loaded. Use this hook if you want to create custom personality types with LambdaCreatePersonalityType() See lambdaplayers/autorun_includes/shared/lambda_personalityfuncs.lua
+
+
+
+
 ### `LambdaOnKilled( Entity lambda, CTakeDamageInfo info  )`
 ### Server-Side
 
