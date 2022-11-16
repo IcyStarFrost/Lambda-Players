@@ -17,7 +17,6 @@ local util = util
 local coroutine = coroutine
 local constraint = constraint
 local Clamp = math.Clamp
-local zeroangle = Angle()
 
 local function IsNil( any )
     return any == nil or any == NULL
@@ -41,9 +40,9 @@ local function CreateGmodEntity( classname, model, pos, ang, lambda )
 
     local ent = ents_Create( classname )
     ent:SetPos( pos )
-    ent:SetAngles( ang or zeroangle )
+    ent:SetAngles( ang or angle_zero )
     ent:SetModel( model or "" )
-    LambdaHijackGmodEntity( ent, lambda ) -- Make it support the lambda
+    LambdaHijackGmodEntity( ent, lambda ) -- Make it support the Lambda
     ent:Spawn()
     ent:Activate()
     DoPropSpawnedEffect( ent )
@@ -277,7 +276,7 @@ local function UseDynamiteTool( self, target )
             util_Effect( "Explosion", effectdata, true, true )
     
             if ( self:GetShouldRemove() ) then self:Remove() return end
-            if ( self:GetMaxHealth() > 0 && self:Health() <= 0 ) then self:SetHealth( self:GetMaxHealth() ) end
+            if ( self:GetMaxHealth() > 0 and self:Health() <= 0 ) then self:SetHealth( self:GetMaxHealth() ) end
             self:Explode( self:GetDelay(), ply )
         else
     

@@ -234,7 +234,7 @@ function ENT:HandleShellEject( name, offpos, offang )
     Effect( name, effect, true )
 end
 
--- If the lambda's weapon data has nodraw enabled
+-- If the Lambda's weapon data has nodraw enabled
 function ENT:IsWeaponMarkedNodraw()
     return self.l_WeaponNoDraw
 end

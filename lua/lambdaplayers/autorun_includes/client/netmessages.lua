@@ -209,7 +209,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             local tickent -- This variable is used so we don't redefine ent and can allow the sound to return to the Lambda when they respawn
 
             -- This has proved to be a bit of a challenge.
-            -- There were issues with the sounds not going back the lambda player when they respawn and there were issues when the ragdoll gets removed.
+            -- There were issues with the sounds not going back the Lambda player when they respawn and there were issues when the ragdoll gets removed.
             -- Right now this code seems to work just as I think I want it to. Unsure if it could be optimized better but to me it looks as good as it is gonna get
 
             hook.Add( "Tick", "lambdaplayersvoicetick" .. index, function()

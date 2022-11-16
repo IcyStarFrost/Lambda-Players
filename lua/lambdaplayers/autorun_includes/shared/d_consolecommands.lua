@@ -53,7 +53,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cleanupclientsideents", function(
     surface.PlaySound( "buttons/button15.wav" )
     notification.AddLegacy( "Cleaned up Client Side Entities!", NOTIFY_CLEANUP, 3 )
 
-end, true, "Removes lambda client side entities such as ragdolls and dropped weapons", { name = "Remove Lambda Client Side ents", category = "Utilities" } )
+end, true, "Removes Lambda client side entities such as ragdolls and dropped weapons", { name = "Remove Lambda Client Side ents", category = "Utilities" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_cleanuplambdaents", function( ply ) 
     if IsValid( ply ) and !ply:IsAdmin() then return end
@@ -62,7 +62,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cleanuplambdaents", function( ply
         if IsValid( v ) and v.IsLambdaSpawned then v:Remove() end
     end
 
-    LambdaPlayers_Notify( ply, "Cleaned up all lambda entities!", NOTIFY_CLEANUP, "buttons/button15.wav" )
+    LambdaPlayers_Notify( ply, "Cleaned up all Lambda entities!", NOTIFY_CLEANUP, "buttons/button15.wav" )
 end, false, "Removes all entities that were spawned by Lambda Players", { name = "Cleanup Lambda Entities", category = "Utilities" } )
 
 

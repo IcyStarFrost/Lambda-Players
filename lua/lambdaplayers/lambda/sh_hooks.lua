@@ -18,7 +18,7 @@ local callnpchook = GetConVar( "lambdaplayers_lambda_callonnpckilledhook" )
 
 if SERVER then
 
-    -- Due to the issues of lambda players not taking damage when they die internally, we have no choice but to recreate them to get around this.
+    -- Due to the issues of Lambda Players not taking damage when they die internally, we have no choice but to recreate them to get around this.
     -- If there is a fix for the damage handling failing to prevent them from actually getting below 0 please make it known so it can be fixed ASAP.
     function ENT:OnKilled( info )
         if debugvar:GetBool() then ErrorNoHaltWithStack( "WARNING! ", self:GetLambdaName(), " was killed on a engine level! The entity will be recreated!" ) end
@@ -269,7 +269,7 @@ function ENT:InitializeMiniHooks()
     if SERVER then
 
         -- Hoookay so interesting stuff here. When a nextbot actually dies by reaching 0 or below hp, no matter how high you set their health after the fact, they will no longer take damage.
-        -- To get around that we basically predict if the lambda is gonna die and completely block the damage so we don't actually die. This of course is exclusive to Respawning
+        -- To get around that we basically predict if the Lambda is gonna die and completely block the damage so we don't actually die. This of course is exclusive to Respawning
         self:Hook( "EntityTakeDamage", "DamageHandling", function( target, info )
             if target != self then return end
 

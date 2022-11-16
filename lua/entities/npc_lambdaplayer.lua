@@ -198,7 +198,7 @@ function ENT:Initialize()
 
         self:InitializeMiniHooks()
 
-        -- For some reason having this properly makes the weapon go invisible when the lambda dies in multiplayer
+        -- For some reason having this properly makes the weapon go invisible when the Lambda dies in multiplayer
         timer.Simple( 0, function()
             local wep = self:GetWeaponENT()
             wep.Draw = function( entity )

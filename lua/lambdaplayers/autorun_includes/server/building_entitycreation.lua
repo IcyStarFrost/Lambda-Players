@@ -32,7 +32,7 @@ local function fixupProp( lambda, ent, hitpos, mins, maxs )
     local tr_up = Trace( tracetable)
 
 	-- Both traces hit meaning we are probably inside a wall on both sides, do nothing
-	if ( tr_up.Hit && tr_down.Hit ) then return end
+	if ( tr_up.Hit and tr_down.Hit ) then return end
 
 	if ( tr_down.Hit ) then ent:SetPos( entPos + ( tr_down.HitPos - endposD ) ) end
 	if ( tr_up.Hit ) then ent:SetPos( entPos + ( tr_up.HitPos - endposU ) ) end

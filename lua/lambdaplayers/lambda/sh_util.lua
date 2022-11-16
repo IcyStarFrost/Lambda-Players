@@ -42,7 +42,7 @@ function ENT:DebugPrint( ... )
     print( self:GetLambdaName() .. " EntIndex = ( " .. self:EntIndex() .. " )" .. ": ", ... )
 end
 
--- Creates a hook that will remove itself if it runs while the lambda is invalid or if the provided function returns false
+-- Creates a hook that will remove itself if it runs while the Lambda is invalid or if the provided function returns false
 -- preserve makes the hook not remove itself when the Entity is considered "dead" by self:GetIsDead(). Mainly used by Respawning
 -- cooldown arg is meant to be used with Tick and Think hooks
 function ENT:Hook( hookname, uniquename, func, preserve, cooldown )
@@ -362,7 +362,7 @@ if SERVER then
         return name
     end
 
-    -- Makes the lambda face the position or a entity if provided
+    -- Makes the Lambda face the position or a entity if provided
     function ENT:LookTo( pos, time )
         self.Face = pos
         self.l_Faceend = time and CurTime() + time or nil
@@ -419,7 +419,7 @@ if SERVER then
         return Trace( tracetable )
     end
 
-    -- Prevents the lambda player from switching weapons when this is true
+    -- Prevents the Lambda player from switching weapons when this is true
     function ENT:PreventWeaponSwitch( bool )
         self.l_NoWeaponSwitch = bool
     end
@@ -435,7 +435,7 @@ if SERVER then
         return result.Entity == ent
     end
 
-    -- Respawns the lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time
+    -- Respawns the Lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time
     function ENT:LambdaRespawn()
         self:DebugPrint( "Respawned" )
         self:SetIsDead( false )
@@ -569,7 +569,7 @@ if SERVER then
     -- Makes the entity no longer draw on the client if bool is set to true.
     -- Making a entity nodraw server side seemed to have issues in multiplayer.
 
-    -- As of 11/2/2022, it seems we need the server nodraw, client nodraw, and usage of Draw functions to make the lambda players to not draw. Kinda cringe but alright
+    -- As of 11/2/2022, it seems we need the server nodraw, client nodraw, and usage of Draw functions to make the Lambda Players to not draw. Kinda cringe but alright
 
     function ENT:ClientSideNoDraw( ent, bool )
         net.Start( "lambdaplayers_setnodraw" )
