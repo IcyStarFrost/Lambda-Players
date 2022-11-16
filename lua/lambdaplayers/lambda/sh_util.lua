@@ -217,14 +217,8 @@ function ENT:ExportLambdaInfo()
         plycolor = self:GetPlyColor(),
         physcolor = self:GetPhysColor(),
 
-        -- Chances
-        build = self:GetBuildChance(),
-        tool = self:GetToolChance(),
-        combat = self:GetCombatChance(),
-        voice = self:GetVoiceChance(),
-        --
-
         voicepitch = self:GetVoicePitch(),
+        voice = self:GetVoiceChance(),
         voiceprofile = self:GetNW2String( "lambda_vp", self.l_VoiceProfile ),
 
         -- Non personal data --
@@ -233,10 +227,15 @@ function ENT:ExportLambdaInfo()
         frags = self:GetFrags(),
         deaths = self:GetDeaths(),
 
-        -- NW Vars --
+--[[         -- NW Vars --
         nwvars = self:GetNWVarTable(),
-        nw2vars = self:GetNW2VarTable(),
+        nw2vars = self:GetNW2VarTable(), ]]
     }
+
+    info.personality = {}
+    for k, v in ipairs( self.l_Personality ) do
+        info.personality[ v[ 1 ] ] = self:GetNW2Int( "lambda_chance_" .. v[ 1 ], 0 )
+    end
 
     return info
 end
@@ -264,15 +263,11 @@ if SERVER then
             self:SetPhysColor( info.physcolor or self:GetPhysColor() )
             self.WeaponEnt:SetNW2Vector( "lambda_weaponcolor", ( info.physcolor or self:GetPhysColor() ) )
 
-            self:SetBuildChance( info.build or self:GetBuildChance() )
-            self:SetCombatChance( info.combat or self:GetCombatChance() )
+            if info.personality then
+                self:BuildPersonalityTable( info.personality )
+            end
+
             self:SetVoiceChance( info.voice or self:GetVoiceChance() )
-            self:SetToolChance( info.tool or self:GetToolChance() )
-            self.l_Personality = {
-                { "Build", info.build or self:GetBuildChance() },
-                { "Tool", info.tool or self:GetToolChance() },
-                { "Combat", info.combat or self:GetCombatChance() },
-            }
             SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
             self:SetVoicePitch( info.voicepitch or self:GetVoicePitch() )
@@ -288,7 +283,7 @@ if SERVER then
             self:SetFrags( info.frags or self:GetFrags() )
             self:SetDeaths( info.deaths or self:GetDeaths() )
 
-            -- NW Vars --
+--[[             -- NW Vars --
             local nw = info.nwvars
             local nw2 = info.nw2vars
             if istable( nw ) then
@@ -300,7 +295,7 @@ if SERVER then
                 for k, vartable in pairs( nw2 ) do
                     self:SetNW2Var( k, vartable.value )
                 end
-            end
+            end ]]
             
         end, true )
     end

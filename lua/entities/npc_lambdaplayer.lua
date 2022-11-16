@@ -82,6 +82,9 @@ function ENT:Initialize()
     self.l_SpawnPos = self:GetPos() -- Used for Respawning
     self.l_SpawnAngles = self:GetAngles()
 
+    -- Has to be here so the client can run this too. Originally was under Personal Stats
+    self:BuildPersonalityTable() -- Builds all personality chances from autorun_includes/shared/lambda_personalityfuncs.lua for use in chance testing and creates Get/Set functions for each one
+
     if SERVER then
         
         self:SetSolid( SOLID_BBOX )
@@ -124,7 +127,6 @@ function ENT:Initialize()
 
 
         -- Personal Stats --
-        
         self:SetLambdaName( self:GetOpenName() )
         self:SetProfilePicture( #Lambdaprofilepictures > 0 and Lambdaprofilepictures[ random( #Lambdaprofilepictures ) ] or "spawnicons/".. sub( self:GetModel(), 1, #self:GetModel() - 4 ).. ".png" )
 
@@ -137,16 +139,7 @@ function ENT:Initialize()
         self.l_PlyRealColor = self:GetPlyColor():ToColor()
         self.l_PhysRealColor = self:GetPhysColor():ToColor()
 
-        self:SetBuildChance( random( 1, 100 ) )
-        self:SetCombatChance( random( 1, 100 ) )
-        self:SetVoiceChance( random( 1, 100 ) )
-        self:SetToolChance( random( 1, 100 ) )
-        self.l_Personality = { -- See sv_chances.lua
-            { "Build", self:GetBuildChance() },
-            { "Tool", self:GetToolChance() },
-            { "Combat", self:GetCombatChance() },
-        }
-        
+        -- Personality function was relocated to the start of the code since it needs to be shared so clients can have Get functions
         
         self:SetVoicePitch( random( voicepitchmin:GetInt(), voicepitchmax:GetInt() ) )
 
@@ -250,12 +243,9 @@ function ENT:SetupDataTables()
 
     self:NetworkVar( "Int", 0, "VoicePitch" )
     self:NetworkVar( "Int", 1, "NWMaxHealth" )
-    self:NetworkVar( "Int", 2, "BuildChance" )
-    self:NetworkVar( "Int", 3, "CombatChance" )
-    self:NetworkVar( "Int", 4, "VoiceChance" )
-    self:NetworkVar( "Int", 5, "ToolChance" )
-    self:NetworkVar( "Int", 6, "Frags" )
-    self:NetworkVar( "Int", 7, "Deaths" )
+    self:NetworkVar( "Int", 2, "VoiceChance" )
+    self:NetworkVar( "Int", 3, "Frags" )
+    self:NetworkVar( "Int", 4, "Deaths" )
     
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
 end

@@ -54,7 +54,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             lambda:SimpleTimer( 0.1, function() -- So we can pretend to block
                 if !lambda:IsPlayingGesture( ACT_HL2MP_FIST_BLOCK ) then return end
                 lambda:RemoveGesture( ACT_HL2MP_FIST_BLOCK )
-            end )
+            end, true )
 
             local sparkPos = dmginfo:GetDamagePosition()
             if lambda:GetRangeSquaredTo( sparkPos ) > ( 150 * 150 ) then sparkPos = wepent:GetPos() end
