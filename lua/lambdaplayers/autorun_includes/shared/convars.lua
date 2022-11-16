@@ -76,7 +76,7 @@ CreateLambdaConvar( "lambdaplayers_voice_warnvoicestereo", 0, true, true, false,
 --
 
 -- Lambda Player Server Convars
-CreateLambdaConvar( "lambdaplayers_lambda_allownonadminrespawn", 0, true, false, false, "If Non Admins are allowed to spawn respawning Lambda Players. If off, only admins can spawn respawning lambda players", 0, 1, { type = "Bool", name = "Allow Non Admin Respawn", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_allownonadminrespawn", 0, true, false, false, "If Non Admins are allowed to spawn respawning Lambda Players. If off, only admins can spawn respawning Lambda Players", 0, 1, { type = "Bool", name = "Allow Non Admin Respawn", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_allowrandomaddonsmodels", 0, true, false, false, "If Lambda Players can use random addon playermodels", 0, 1, { type = "Bool", name = "Addon Playermodels", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_voiceprofileusechance", 0, true, false, false, "The chance a Lambda Player will use a random Voice Profile if one exists. Set to 0 to disable", 0, 100, { type = "Slider", decimals = 0, name = "VP Use Chance", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_realisticfalldamage", 0, true, false, false, "If Lambda Players should take fall damage similar to Realistic Fall Damage", 0, 1, { type = "Bool", name = "Realistic Fall Damage", category = "Lambda Server Settings" } )
@@ -86,7 +86,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_callonnpckilledhook", 0, true, false, 
 --
 
 -- Lambda Player Convars
-CreateLambdaConvar( "lambdaplayers_lambda_shouldrespawn", 0, true, true, true, "If Lambda Players should respawn when they die. Note: Changing this will only apply to newly spawned lambda players AND only if the server allows the respawn option for non admins", 0, 1, { type = "Bool", name = "Respawn", category = "Lambda Player Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_shouldrespawn", 0, true, true, true, "If Lambda Players should respawn when they die. Note: Changing this will only apply to newly spawned Lambda Players AND only if the server allows the respawn option for non admins", 0, 1, { type = "Bool", name = "Respawn", category = "Lambda Player Settings" } )
 ---- lambdaplayers_lambda_voiceprofile Located in shared/voiceprofiles.lua
 ---- lambdaplayers_lambda_spawnweapon  Located in shared/globals.lua due to code order
 --
@@ -100,7 +100,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_allowphysgunpickup", 1, true, false, f
 
 -- Voice Related Convars
 CreateLambdaConvar( "lambdaplayers_voice_globalvoice", 0, true, true, false, "If the Lambda Player voices should be heard globally", 0, 1, { type = "Bool", name = "Global Voices", category = "Voice Options" } )
-CreateLambdaConvar( "lambdaplayers_voice_voicepopups", 1, true, true, false, "If lambda players who are speaking should have a Voice Popup", 0, 1, { type = "Bool", name = "Allow Voice Popups", category = "Voice Options" } )
+CreateLambdaConvar( "lambdaplayers_voice_voicepopups", 1, true, true, false, "If Lambda Players who are speaking should have a Voice Popup", 0, 1, { type = "Bool", name = "Allow Voice Popups", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_talklimit", 0, true, true, false, "The amount of Lambda Players that can speak at a time. 0 for infinite", 0, 20, { type = "Slider", decimals = 0, name = "Speak Limit", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_voicevolume", 1, true, true, false, "The volume of the Lambda Player voices", 0, 10, { type = "Slider", name = "Voice Volume", decimals = 2, category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_voicepopupxpos", 278, true, true, false, "The position of the voice popups on the x axis of your screen", 0, ( CLIENT and ScrW() or 1 ), { type = "Slider", decimals = 0, name = "Voice Popup X", category = "Voice Options" } )

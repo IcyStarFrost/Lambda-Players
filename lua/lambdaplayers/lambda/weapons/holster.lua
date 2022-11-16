@@ -14,13 +14,13 @@
     killicon | String | The file path to a material ( without the file extension ) to use as the kill icon for this weapon or the alias name of a existing kill icon, example weapon_ar2 is a existing kill icon
     nodraw | Bool | If the weapon should not draw
     islethal | Bool | If the weapon is capable of hurting anything
-    holdtype | String | The animation set lambda should use. See globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
+    holdtype | String | The animation set Lambda should use. See globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
     ismelee | Bool | If the weapon is considered a melee weapon. False for ranged
     
 
     addspeed | Number | The amount to add to speed while in combat
-    keepdistance | Number | The distance the lambda will keep from the target
-    attackrange | Number | The range the lambda can attack from
+    keepdistance | Number | The distance the Lambda will keep from the target
+    attackrange | Number | The range the Lambda can attack from
     damage  | Number | The amount of damage the weapon can deal
     rateoffire | Number | How fast the weapon is fired/used
     attackanim | Number | The ACT Gesture to play when used
@@ -44,12 +44,12 @@
     killicon | String | The file path to a material ( without the file extension ) to use as the kill icon for this weapon or the alias name of a existing kill icon, example weapon_ar2 is a existing kill icon
     nodraw | Bool | If the weapon should not draw
     islethal | Bool | If the weapon is capable of hurting anything
-    holdtype | String | The animation set lambda should use. See autorun_includes/server/globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
+    holdtype | String | The animation set Lambda should use. See autorun_includes/server/globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
     ismelee | Bool | If the weapon is considered a melee weapon. False for ranged
 
     addspeed | Number | The amount to add to speed while in combat
-    keepdistance | Number | The distance the lambda will keep from the target
-    attackrange | Number | The range the lambda can attack from
+    keepdistance | Number | The distance the Lambda will keep from the target
+    attackrange | Number | The range the Lambda can attack from
     damage  | Number | The amount of damage the weapon can deal
     rateoffire | Number | How fast the weapon is fired/used
     attackanim | Number | The ACT Gesture to play when used

@@ -24,7 +24,7 @@ function LambdaInternalSpawnNPC( lambda, Position, Normal, Class, SpawnFlagsSave
 		end
 
 	-- This NPC has to be spawned on a floor ( Turrets )
-	elseif NPCData.OnFloor && Vector( 0, 0, 1 ):Dot( Normal ) < 0.95 then
+	elseif NPCData.OnFloor and Vector( 0, 0, 1 ):Dot( Normal ) < 0.95 then
 		return nil
 	else
 		bDropToFloor = true
@@ -115,7 +115,7 @@ function LambdaInternalSpawnNPC( lambda, Position, Normal, Class, SpawnFlagsSave
 	-- For those NPCs that set their model in Spawn function
 	-- We have to keep the call above for NPCs that want a model set by Spawn() time
 	-- BAD: They may adversly affect entity collision bounds
-	if NPCData.Model && NPC:GetModel():lower() != NPCData.Model:lower() then
+	if NPCData.Model and NPC:GetModel():lower() != NPCData.Model:lower() then
 		NPC:SetModel( NPCData.Model )
 	end
 

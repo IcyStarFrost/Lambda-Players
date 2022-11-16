@@ -11,20 +11,20 @@ hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function()
 			ply.NextSpawnTime = CurTime() + 2
 			ply.DeathTime = CurTime()
 
-			if ( IsValid( attacker ) && attacker:GetClass() == "trigger_hurt" ) then attacker = ply end
+			if ( IsValid( attacker ) and attacker:GetClass() == "trigger_hurt" ) then attacker = ply end
 
-			if ( IsValid( attacker ) && attacker:IsVehicle() && IsValid( attacker:GetDriver() ) ) then
+			if ( IsValid( attacker ) and attacker:IsVehicle() and IsValid( attacker:GetDriver() ) ) then
 				attacker = attacker:GetDriver()
 			end
 
-			if ( !IsValid( inflictor ) && IsValid( attacker ) ) then
+			if ( !IsValid( inflictor ) and IsValid( attacker ) ) then
 				inflictor = attacker
 			end
 
 			-- Convert the inflictor to the weapon that they're holding if we can.
 			-- This can be right or wrong with NPCs since combine can be holding a
 			-- pistol but kill you by hitting you with their arm.
-			if ( IsValid( inflictor ) && inflictor == attacker && ( inflictor:IsPlayer() || inflictor:IsNPC() ) ) then
+			if ( IsValid( inflictor ) and inflictor == attacker and ( inflictor:IsPlayer() or inflictor:IsNPC() ) ) then
 
 				inflictor = inflictor:GetActiveWeapon()
 				if ( !IsValid( inflictor ) ) then inflictor = attacker end
@@ -74,20 +74,20 @@ hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function()
 		function GAMEMODE:OnNPCKilled( ent, attacker, inflictor )
 
 			-- Don't spam the killfeed with scripted stuff
-			if ( ent:GetClass() == "npc_bullseye" || ent:GetClass() == "npc_launcher" ) then return end
+			if ( ent:GetClass() == "npc_bullseye" or ent:GetClass() == "npc_launcher" ) then return end
 		
-			if ( IsValid( attacker ) && attacker:GetClass() == "trigger_hurt" ) then attacker = ent end
+			if ( IsValid( attacker ) and attacker:GetClass() == "trigger_hurt" ) then attacker = ent end
 			
-			if ( IsValid( attacker ) && attacker:IsVehicle() && IsValid( attacker:GetDriver() ) ) then
+			if ( IsValid( attacker ) and attacker:IsVehicle() and IsValid( attacker:GetDriver() ) ) then
 				attacker = attacker:GetDriver()
 			end
 		
-			if ( !IsValid( inflictor ) && IsValid( attacker ) ) then
+			if ( !IsValid( inflictor ) and IsValid( attacker ) ) then
 				inflictor = attacker
 			end
 			
 			-- Convert the inflictor to the weapon that they're holding if we can.
-			if ( IsValid( inflictor ) && attacker == inflictor && ( inflictor:IsPlayer() || inflictor:IsNPC() ) ) then
+			if ( IsValid( inflictor ) and attacker == inflictor and ( inflictor:IsPlayer() or inflictor:IsNPC() ) ) then
 			
 				inflictor = inflictor:GetActiveWeapon()
 				if ( !IsValid( attacker ) ) then inflictor = attacker end
