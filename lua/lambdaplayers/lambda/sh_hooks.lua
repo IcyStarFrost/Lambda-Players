@@ -14,6 +14,7 @@ local ceil = math.ceil
 local deathdir = GetConVar( "lambdaplayers_voice_deathdir" )
 local killdir = GetConVar( "lambdaplayers_voice_killdir" )
 local debugvar = GetConVar( "lambdaplayers_debug" )
+local callnpchook = GetConVar( "lambdaplayers_lambda_callonnpckilledhook" )
 
 if SERVER then
 
@@ -64,6 +65,7 @@ if SERVER then
         self:GetPhysicsObject():EnableCollisions( false )
 
         LambdaKillFeedAdd( self, info:GetAttacker(), info:GetInflictor() )
+        if callnpchook:GetBool() then hook.Run( "OnNPCKilled", self, info:GetAttacker(), info:GetInflictor() ) end
         self:SetDeaths( self:GetDeaths() + 1 )
 
         self:RemoveTimers()
