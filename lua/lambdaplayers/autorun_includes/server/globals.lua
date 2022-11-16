@@ -252,7 +252,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_ZOMBIE,
         jump = ACT_ZOMBIE_LEAPING,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_ZOMBIE,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_ZOMBIE
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_ZOMBIE_03
     },
     ["knife"] = {
         idle = ACT_HL2MP_IDLE_KNIFE,
@@ -359,3 +359,20 @@ function LambdaGetPossibleSpawns()
 end
 
 hook.Add( "InitPostEntity", "lambdaplayersgetspawns", function() LambdaSpawnPoints = LambdaGetPossibleSpawns() end )
+
+
+function LambdaKillFeedAdd( victim, attacker, inflictor )
+    local attackername = attacker.IsLambdaPlayer and attacker:GetLambdaName() or attacker.IsZetaPlayer and attacker.zetaname or attacker:IsPlayer() and attacker:Name() or "#" .. attacker:GetClass()
+    local victimname = victim.IsLambdaPlayer and victim:GetLambdaName() or victim.IsZetaPlayer and victim.zetaname or victim:IsPlayer() and victim:Name() or "#" .. victim:GetClass()
+    local inflictorname = IsValid( inflictor ) and ( ( inflictor.IsLambdaWeapon and inflictor.l_killiconname ) or ( inflictor == attacker and IsValid( attacker ) and attacker.GetActiveWeapon and IsValid( attacker:GetActiveWeapon() ) and attacker:GetActiveWeapon():GetClass() ) or IsValid( inflictor ) and inflictor:GetClass() ) or "suicide"
+    local attackerteam = attacker.IsLambdaPlayer and 0 or attacker:IsPlayer() and attacker:Team() or -1
+    local victimteam = victim.IsLambdaPlayer and 0 or victim:IsPlayer() and victim:Team() or -1
+
+    net.Start( "lambdaplayers_addtokillfeed" )
+        net.WriteString( attackername )
+        net.WriteInt( attackerteam, 8 )
+        net.WriteString( victimname )
+        net.WriteInt( victimteam, 8 )
+        net.WriteString( inflictorname )
+    net.Broadcast()
+end

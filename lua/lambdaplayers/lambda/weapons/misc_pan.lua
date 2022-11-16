@@ -22,7 +22,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             
             -- To make sure damage syncs with the animation
             self:SimpleTimer(0.25, function()
-                if self:GetRangeSquaredTo( target ) > ( 70 * 70 ) then return end
+                if !IsValid( target ) or self:GetRangeSquaredTo( target ) > ( 70 * 70 ) then return end
                 
                 local dmg = DamageInfo()
                 dmg:SetDamage( 15 )

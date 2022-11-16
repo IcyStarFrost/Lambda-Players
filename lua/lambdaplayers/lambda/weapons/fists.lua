@@ -12,6 +12,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         origin = "Garry's Mod",
         prettyname = "Fists",
         holdtype = "fist",
+        killicon = "lambdaplayers/killicons/icon_fist",
         ismelee = true,
         nodraw = true,
         keepdistance = 15,

@@ -9,6 +9,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         origin = "Misc",
         prettyname = "Shovel",
         holdtype = "melee2",
+        killicon = "lambdaplayers/killicons/icon_shovel",
         ismelee = true,
         bonemerge = true,
         keepdistance = 10,

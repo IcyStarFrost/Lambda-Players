@@ -52,7 +52,7 @@ function ENT:FindTarget()
 
     self:Hook( "Tick", "CombatTick", function()
         if LambdaIsValid( self:GetEnemy() ) or self:GetState() != "FindTarget" then return "end" end
-        local find = self:FindInSphere( nil, 1500, function( ent ) return self:CanTarget( ent ) end )
+        local find = self:FindInSphere( nil, 1500, function( ent ) return self:CanTarget( ent ) and self:CanSee( ent ) end )
 
         for k, v in RandomPairs( find ) do
             self:AttackTarget( v )

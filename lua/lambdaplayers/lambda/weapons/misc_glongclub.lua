@@ -10,6 +10,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         origin = "Misc",
         prettyname = "Comically Long Golf Club",
         holdtype = "melee2",
+        killicon = "lambdaplayers/killicons/icon_golfclub",
         ismelee = true,
         bonemerge = true,
         keepdistance = 64,

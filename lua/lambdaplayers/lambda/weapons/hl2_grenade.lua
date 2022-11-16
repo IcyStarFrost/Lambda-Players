@@ -8,6 +8,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         origin = "Half Life: 2",
         prettyname = "Grenade",
         holdtype = "grenade",
+        killicon = "npc_grenade_frag",
         bonemerge = true,
         keepdistance = 500,
         attackrange = 1000,

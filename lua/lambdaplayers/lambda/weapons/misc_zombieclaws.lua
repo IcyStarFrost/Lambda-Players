@@ -13,6 +13,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         origin = "Misc",
         prettyname = "Zombie Claws",
         holdtype = "zombie",
+        killicon = "lambdaplayers/killicons/icon_zclaws",
         ismelee = true,
         nodraw = true,
         keepdistance = 10,

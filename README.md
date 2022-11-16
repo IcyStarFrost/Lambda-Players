@@ -89,7 +89,7 @@ Called when all default console commands have been created. Use this hook if you
 ### `LambdaOnUAloaded`
 ### Server-Side
 
-*Universal Actions or UActions are functions that randomly get called during a lambda's life. Example of a UAction being weapon switching.*
+*Universal Actions or UActions are functions that randomly get called during a Lambda's life. Example of a UAction being weapon switching.*
 
 Called when all default UActions have been made. Use this hook if you want add a function to the UActions with `AddUActionToLambdaUA()` See lambdaplayers/lambda/sv_x_universalactions.lua
 
@@ -120,6 +120,14 @@ Called when all default Building Functions have been loaded. Use this hook if yo
 
 
 
+
+### `LambdaOnKilled( Entity lambda, CTakeDamageInfo info  )`
+### Server-Side
+
+Called when a Lambda Player is killed. This hook can be used to add onto the ENT:OnKilled() hook each Lambda Player has
+
+
+
 ### `LambdaOnInjured( Entity lambda, CTakeDamageInfo info )`
 ### Server-Side
 
@@ -130,18 +138,27 @@ Called when a Lambda Player takes damage. This hook can be used to add onto the 
 ### `LambdaOnOtherKilled( Entity lambda, Entity victim, CTakeDamageInfo info )`
 ### Server-Side
 
-Called when a someone that is not the lambda player dies. This hook can be used to add onto the ENT:OnOtherKilled() hook each Lambda Player has
+Called when a someone that is not the Lambda Player dies. This hook can be used to add onto the ENT:OnOtherKilled() hook each Lambda Player has
 
 
 
 ### `LambdaOnThink( Entity lambda, Entity lambdaWeaponEntity )`
 ### Server and Client
 
-Called when a lambda's ENT:Think() hook runs. This hook can be used to add onto the ENT:Think() hook each Lambda Player has
+Called when a Lambda's ENT:Think() hook runs. This hook can be used to add onto the ENT:Think() hook each Lambda Player has
 
 
 
 ### `LambdaOnInitialize( Entity lambda, Entity lambdaWeaponEntity )`
 ### Server and Client
 
-Called when a lambda player initializes. This hook can be used to add onto the ENT:Initialize() hook each Lambda Player has
+Called when a Lambda Player initializes. This hook can be used to add onto the ENT:Initialize() hook each Lambda Player has
+
+
+
+### `LambdaOnStuck( Entity lambda, Number stucktimes )`
+### Server-Side
+
+*stucktimes is a variable that holds how many times the Lambda Player got stuck within the last 10 seconds + now*
+
+Called when a Lambda Player gets stuck. This hook can be used to make a custom unstuck function. Return "stop" to make the Lambda Player give up in their path or return "continue" to make the Lambda Player continue down their path

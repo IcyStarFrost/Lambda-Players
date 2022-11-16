@@ -7,6 +7,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         model = "models/weapons/w_smg1.mdl",
         origin = "Half Life: 2",
         prettyname = "SMG",
+        killicon = "weapon_smg1",
         holdtype = "smg",
         bonemerge = true,
         keepdistance = 300,

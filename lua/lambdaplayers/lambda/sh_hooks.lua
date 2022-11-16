@@ -14,6 +14,7 @@ local ceil = math.ceil
 local deathdir = GetConVar( "lambdaplayers_voice_deathdir" )
 local killdir = GetConVar( "lambdaplayers_voice_killdir" )
 local debugvar = GetConVar( "lambdaplayers_debug" )
+local callnpchook = GetConVar( "lambdaplayers_lambda_callonnpckilledhook" )
 
 if SERVER then
 
@@ -62,6 +63,10 @@ if SERVER then
         self.WeaponEnt:DrawShadow( false )
 
         self:GetPhysicsObject():EnableCollisions( false )
+
+        LambdaKillFeedAdd( self, info:GetAttacker(), info:GetInflictor() )
+        if callnpchook:GetBool() then hook.Run( "OnNPCKilled", self, info:GetAttacker(), info:GetInflictor() ) end
+        self:SetDeaths( self:GetDeaths() + 1 )
 
         self:RemoveTimers()
         self:TerminateNonIgnoredDeadTimers()
@@ -131,8 +136,11 @@ if SERVER then
         if attacker == self then
             local killlines = LambdaVoiceLinesTable.kill
             self:DebugPrint( "killed ", victim )
+            self:SetFrags( self:GetFrags() + 1 )
 
             if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "kill" ) ) end 
+
+            if !victim.IsLambdaPlayer then LambdaKillFeedAdd( victim, info:GetAttacker(), info:GetInflictor() ) end
 
         else -- Someone else killed the victim
 
@@ -299,7 +307,7 @@ function ENT:InitializeMiniHooks()
     elseif CLIENT then
 
         self:Hook( "PreDrawEffects", "CustomWeaponRenderEffects", function()
-            if self:GetIsDead() or RealTime() > self.l_lastdraw then return end
+            if self:GetIsDead() or !self:IsBeingDrawn() then return end
 
             if self:GetHasCustomDrawFunction() then
                 local func = _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ].Draw

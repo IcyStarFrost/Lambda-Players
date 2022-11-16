@@ -5,6 +5,7 @@ local RandomPairs = RandomPairs
 local ipairs = ipairs
 local Effect = util.Effect
 local CurTime = CurTime
+local string_find = string.find
 
 -- Switch to a weapon with the provided name.
 -- See the lambda/weapons folder for weapons. Check out the holster.lua file to see the current valid weapon settings
@@ -33,6 +34,17 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self.l_CombatSpeedAdd = weapondata.addspeed or 0
     self.l_Clip = weapondata.clip or 0
     self.l_MaxClip = weapondata.clip or 0
+
+    local killicon_ = weapondata.killicon
+    if killicon_ then
+        local ispath = string_find( killicon_, "/" )
+        if ispath then
+            wepent.l_killiconname = "lambdaplayers_weaponkillicons_" .. weaponname
+        else
+            wepent.l_killiconname = killicon_
+        end
+    end
+
     
     self:ClientSideNoDraw( self.WeaponEnt, weapondata.nodraw )
     self:SetHasCustomDrawFunction( isfunction( weapondata.Draw ) )

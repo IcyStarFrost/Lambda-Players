@@ -81,6 +81,8 @@ CreateLambdaConvar( "lambdaplayers_lambda_allowrandomaddonsmodels", 0, true, fal
 CreateLambdaConvar( "lambdaplayers_lambda_voiceprofileusechance", 0, true, false, false, "The chance a Lambda Player will use a random Voice Profile if one exists. Set to 0 to disable", 0, 100, { type = "Slider", decimals = 0, name = "VP Use Chance", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_realisticfalldamage", 0, true, false, false, "If Lambda Players should take fall damage similar to Realistic Fall Damage", 0, 1, { type = "Bool", name = "Realistic Fall Damage", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_respawnatplayerspawns", 0, true, false, false, "If Lambda Players should respawn at player spawn points", 0, 1, { type = "Bool", name = "Respawn At Player Spawns", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_overridegamemodehooks", 0, true, false, false, "If the addon is allowed to override the following GAMEMODE hooks to support Lambda Players: GM:PlayerDeath() GM:OnNPCKilled() Changing this requires you to restart the server/game for the changes to apply! This can cause conflicts hence why this is off by default", 0, 1, { type = "Bool", name = "Override Gamemode Hooks", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_callonnpckilledhook", 0, true, false, false, "If killed Lambda Players should call the OnNPCKilled hook. Best used with the Override Gamemode Hooks option!", 0, 1, { type = "Bool", name = "Call OnNPCKilled Hook On Death", category = "Lambda Server Settings" } )
 --
 
 -- Lambda Player Convars

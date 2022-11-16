@@ -16,6 +16,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         origin = "Misc",
         prettyname = "Katana",
         holdtype = "melee2",
+        killicon = "lambdaplayers/killicons/icon_katana",
         ismelee = true,
         bonemerge = true,
         keepdistance = 10,

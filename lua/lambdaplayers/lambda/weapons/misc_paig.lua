@@ -12,6 +12,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         origin = "Misc",
         prettyname = "Punch Activated Impact Grenade",
         holdtype = "grenade",
+        killicon = "npc_grenade_frag",
         ismelee = true,
         bonemerge = true,
         keepdistance = 5,

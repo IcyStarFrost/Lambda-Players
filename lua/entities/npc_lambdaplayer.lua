@@ -55,6 +55,8 @@ end
     local idledir = GetConVar( "lambdaplayers_voice_idledir" )
     local drawflashlight = GetConVar( "lambdaplayers_drawflashlights" )
     local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
+    local ents_Create = ents and ents.Create or nil
+    local navmesh_GetNavArea = navmesh and navmesh.GetNavArea or nil
     local voiceprofilechance = GetConVar( "lambdaplayers_lambda_voiceprofileusechance" )
     local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
     local CurTime = CurTime
@@ -87,29 +89,39 @@ function ENT:Initialize()
 
         self:SetModel( allowaddonmodels:GetBool() and _LAMBDAPLAYERS_Allplayermodels[ random( #_LAMBDAPLAYERS_Allplayermodels ) ] or _LAMBDAPLAYERSDEFAULTMDLS[ random( #_LAMBDAPLAYERSDEFAULTMDLS ) ] )
 
-        self.IsMoving = false
-        self.l_unstuck = false
-        self.l_UnstuckBounds = 50
-        self.l_State = "Idle" -- See sv_states.lua
-        self.l_Weapon = ""
-        self.debuginitstart = SysTime()
-        self.l_nextidlesound = CurTime() + 5
-        self.l_nextspeedupdate = 0
-        self.l_SpawnedEntities = {}
-        self.l_Timers = {}
-        self.l_SimpleTimers = {}
-        self.l_UpdateAnimations = true
-        self.l_NexthealthUpdate = 0
-        self.l_stucktimes = 0
-        self.NextFootstepTime = 0
-        self.l_stucktimereset = 0
-        self.l_movepos = nil
-        self.l_nextdoorcheck = 0
-        self.l_nextUA = CurTime() + rand( 1, 15 ) -- Universal Action
-        self.l_nextphysicsupdate = 0
-        self.l_WeaponUseCooldown = 0
-        self.l_currentnavarea = navmesh.GetNavArea( self:WorldSpaceCenter(), 400 )
-        self.l_FallVelocity = 0
+
+        self.l_SpawnedEntities = {} -- The table holding every entity we have spawned
+        self.l_Timers = {} -- The table holding all named timers
+        self.l_SimpleTimers = {} -- The table holding all simple timers
+
+        self.l_State = "Idle" -- The state we are in. See sv_states.lua
+        self.l_Weapon = "" -- The weapon we currently have
+
+        self.IsMoving = false -- If we are moving
+        self.l_unstuck = false -- If true, runs our unstuck process
+        self.l_UpdateAnimations = true -- If we can update our animations. Used for the purpose of playing sequences
+
+        self.l_deaths = 0 -- The amount of deaths we have had
+        self.l_frags = 0 -- The amount of kills we have
+        self.l_UnstuckBounds = 50 -- The distance the unstuck process will use to check. This value increments during the process and set back to 50 when done
+        self.l_nextspeedupdate = 0 -- The next time we update our speed
+        self.l_NexthealthUpdate = 0 -- The next time we update our networked health
+        self.l_stucktimes = 0 -- How many times did we get stuck in the past 10 seconds
+        self.l_stucktimereset = 0 -- The time until l_stucktimes gets reset to 0
+        self.NextFootstepTime = 0 -- The next time we play a footstep sound
+        self.l_nextdoorcheck = 0 -- The next time we will check for doors to open
+        self.l_nextphysicsupdate = 0 -- The next time we will update our Physics Shadow
+        self.l_WeaponUseCooldown = 0 -- The time before we can use our weapon again
+        self.l_FallVelocity = 0 -- How fast we are falling
+        self.debuginitstart = SysTime() -- Debug time from initialize to ENT:RunBehaviour()
+        self.l_nextidlesound = CurTime() + 5 -- The next time we will play a idle sound
+        self.l_nextUA = CurTime() + rand( 1, 15 ) -- The next time we will run a UAction. See lambda/sv_x_universalactions.lua
+
+
+        self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
+        self.l_movepos = nil -- The position or entity we are going to
+        self.l_currentnavarea = navmesh_GetNavArea( self:WorldSpaceCenter(), 400 ) -- The current nav area we are in
+
 
         -- Personal Stats --
         
@@ -140,7 +152,7 @@ function ENT:Initialize()
 
         local vpchance = voiceprofilechance:GetInt()
         if vpchance > 0 and random( 1, 100 ) < vpchance then local vps = table_GetKeys( LambdaVoiceProfiles ) self.l_VoiceProfile = vps[ random( #vps ) ] end
-
+        self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
         ----
 
         SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
@@ -162,30 +174,27 @@ function ENT:Initialize()
         local ap = self:LookupAttachment( "anim_attachment_RH" )
         local attachpoint = self:GetAttachmentPoint( "hand" )
 
-        self.WeaponEnt = ents.Create( "base_anim" )
+        self.WeaponEnt = ents_Create( "base_anim" )
         self.WeaponEnt:SetPos( attachpoint.Pos )
         self.WeaponEnt:SetAngles( attachpoint.Ang )
         self.WeaponEnt:SetParent( self, ap )
         self.WeaponEnt:Spawn()
+        self.WeaponEnt.IsLambdaWeapon = true
         self.WeaponEnt:SetNW2Vector( "lambda_weaponcolor", self:GetPhysColor() )
         self.WeaponEnt:SetNoDraw( true )
         self:SetWeaponENT( self.WeaponEnt )
-        self.l_SpawnWeapon = "physgun"
+        self.l_SpawnWeapon = "physgun" -- The weapon we spawned with
+        self:SetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon )
 
         self:InitializeMiniHooks()
         self:SwitchWeapon( "physgun", true )
         
-        
-        
-
         self:HandleAllValidNPCRelations()
-
-
 
     elseif CLIENT then
 
-        self.l_lastdraw = 0
-        self.l_lightupdate = 0
+        self.l_lastdraw = 0 -- The time since we were "last" drawn. Used with ENT:IsBeingDrawn() to test if we are in a client's PVS
+        self.l_lightupdate = 0 -- The next time to check if we need to turn on our flashlight or off
 
         self:InitializeMiniHooks()
 
@@ -245,6 +254,8 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 3, "CombatChance" )
     self:NetworkVar( "Int", 4, "VoiceChance" )
     self:NetworkVar( "Int", 5, "ToolChance" )
+    self:NetworkVar( "Int", 6, "Frags" )
+    self:NetworkVar( "Int", 7, "Deaths" )
     
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
 end
@@ -411,7 +422,7 @@ function ENT:Think()
         if CurTime() > self.l_lightupdate then
             local lightvec = render.GetLightColor( self:WorldSpaceCenter() )
 
-            if lightvec:Length() < 0.02 and !self:GetIsDead() and drawflashlight:GetBool() and RealTime() < self.l_lastdraw then
+            if lightvec:Length() < 0.02 and !self:GetIsDead() and drawflashlight:GetBool() and self:IsBeingDrawn() then
                 if !IsValid( self.l_flashlight ) then
                     self.l_flashlight = ProjectedTexture() 
                     self.l_flashlight:SetTexture( "effects/flashlight001" ) 
