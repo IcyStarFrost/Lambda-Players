@@ -1,5 +1,7 @@
+local IsValid = IsValid
 local CurTime = CurTime
 local random = math.random
+local ents_Create = ents.Create
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
@@ -14,36 +16,39 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 1000,
         
         callback = function( self, wepent, target )
+            local grenade = ents_Create( "npc_grenade_frag" )
+            if !IsValid( grenade ) then return end
+
             self.l_WeaponUseCooldown = CurTime() + 1.8
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
 
-            local throwforce = 1200
-            local normal = self:GetForward()
-
-            wepent:EmitSound( "WeaponFrag.Throw" )
-
-            if IsValid( target ) and self:GetRangeSquaredTo( target ) < ( 350 * 350 ) then
-                throwforce = 400
-            end
-            if IsValid( target ) then
-                normal = ( target:GetPos() - self:GetPos() ):Angle():Forward()
-            end
-
-            local grenade = ents.Create( "npc_grenade_frag" )
-            grenade:SetPos( self:GetPos() + Vector( 0, 0, 60 ) + self:GetForward() * 20 + self:GetRight() * -10 )
+            grenade:SetPos( self:GetPos() + self:GetUp() * 60 + self:GetForward() * 20 + self:GetRight() * -10 )
             grenade:Fire( "SetTimer", 3, 0 )
             grenade:SetSaveValue( "m_hThrower", self )
             grenade:SetOwner( self )
             grenade:Spawn()
             grenade:SetHealth( 99999 )
-            local frag = grenade:GetPhysicsObject()
-            if IsValid( frag ) then
-                frag:ApplyForceCenter( normal * throwforce )
-                frag:AddAngleVelocity( Vector( 600, random(-1200,1200), 0 ) )
+
+            local throwForce = 1200
+            local throwDir = self:GetForward()
+            local throwSnd = "WeaponFrag.Throw"
+            if IsValid( target ) then
+                throwDir = ( target:GetPos() - grenade:GetPos() ):GetNormalized()
+                if self:GetRangeSquaredTo( target ) < ( 350 * 350 ) then
+                    throwForce = 400
+                    throwSnd = "WeaponFrag.Roll"
+                end
             end
-            
+            wepent:EmitSound( throwSnd )
+
+            local phys = grenade:GetPhysicsObject()
+            if IsValid( phys ) then
+                phys:ApplyForceCenter( throwDir * throwForce )
+                phys:AddAngleVelocity( Vector( 600, random(-1200, 1200) ) )
+            end
+
             return true
         end,
 

@@ -1,3 +1,4 @@
+local IsValid = IsValid
 local random = math.random
 local CurTime = CurTime
 local Rand = math.Rand
@@ -23,20 +24,19 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             
             self:SimpleTimer( 0.3, function()
-                if self:GetRangeSquaredTo( target ) > ( 65 * 65 ) then return end
-                
-                local dmg = random( 40,50 )
+                if !IsValid( target ) or self:GetRangeSquaredTo( target ) > ( 65 * 65 ) then return end
+
+                local dmg = random( 40, 50 )
                 local dmginfo = DamageInfo()
                 dmginfo:SetDamage( dmg )
                 dmginfo:SetAttacker( self )
                 dmginfo:SetInflictor( wepent )
                 dmginfo:SetDamageType( DMG_SLASH )
                 dmginfo:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg )
-                
-                target:EmitSound( "lambdaplayers/weapons/meathook/hook-"..random(3)..".mp3", 70 )
-                
                 target:TakeDamageInfo( dmginfo )
-            end)
+
+                target:EmitSound( "lambdaplayers/weapons/meathook/hook-" .. random(3) .. ".mp3", 70 )
+            end )
             
             return true
         end,

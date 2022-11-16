@@ -1,3 +1,4 @@
+local IsValid = IsValid
 local random = math.random
 local CurTime = CurTime
 local Rand = math.Rand
@@ -16,15 +17,15 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 70,
                 
         callback = function( self, wepent, target )
-            self.l_WeaponUseCooldown = CurTime() + Rand(0.8, 0.95)
+            self.l_WeaponUseCooldown = CurTime() + Rand( 0.8, 0.95 )
 
             wepent:EmitSound( "npc/zombie/claw_miss1.wav", 70, 100, 1, CHAN_WEAPON )
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             
             self:SimpleTimer( 0.3, function()
-                if self:GetRangeSquaredTo( target ) > ( 70 * 70 ) then return end
-                
+                if !IsValid( target ) or self:GetRangeSquaredTo( target ) > ( 70 * 70 ) then return end
+
                 local dmg = random( 25,30 )
                 local dmginfo = DamageInfo()
                 dmginfo:SetDamage( dmg )
@@ -32,13 +33,12 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 dmginfo:SetInflictor( wepent )
                 dmginfo:SetDamageType( DMG_CLUB )
                 dmginfo:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg )
-                
-                wepent:EmitSound( "physics/metal/metal_sheet_impact_hard"..random(6,7)..".wav", 70 )
-                wepent:EmitSound( "physics/body/body_medium_impact_hard"..random(6)..".wav", 70 )
-                
                 target:TakeDamageInfo( dmginfo )
-            end)
-            
+
+                wepent:EmitSound( "physics/metal/metal_sheet_impact_hard" .. random( 6, 7 ) .. ".wav", 70 )
+                wepent:EmitSound( "physics/body/body_medium_impact_hard" .. random( 6 ) .. ".wav", 70 )
+            end )
+
             return true
         end,
 
