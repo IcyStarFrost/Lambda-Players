@@ -17,6 +17,7 @@ local util = util
 local coroutine = coroutine
 local constraint = constraint
 local Clamp = math.Clamp
+local angle_zero = angle_zero
 
 local function IsNil( any )
     return any == nil or any == NULL
