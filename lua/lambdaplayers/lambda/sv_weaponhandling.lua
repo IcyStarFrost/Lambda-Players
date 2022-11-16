@@ -43,6 +43,8 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
         else
             wepent.l_killiconname = killicon_
         end
+    else
+        wepent.l_killiconname = nil
     end
 
     
