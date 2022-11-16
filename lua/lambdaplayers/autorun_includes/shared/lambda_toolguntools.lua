@@ -252,13 +252,58 @@ AddToolFunctionToLambdaTools( "Dynamite", UseDynamiteTool )
 
 
 local ropematerials = { "cable/redlaser", "cable/cable2", "cable/rope", "cable/blue_elec", "cable/xbeam", "cable/physbeam", "cable/hydra" }
---[[local function UseElasticTool( self, target )
+local function UseElasticTool( self, target )
+    if !self:IsUnderLimit( "Rope" ) then return end -- It's technically a special rope
+    if !IsValid( target ) then return end
 
-    -- TODO
+    local world = random( 0, 1 )
+    local find = self:FindInSphere( nil, 800, function( ent ) if ent != target and !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
+    local target2 = find[ random( #find ) ]
+    print("world target : ", world)
+
+    if !IsValid( target2 ) and !world then return end
+    target2 = !world and target2 or Entity( 0 )
+
+    local lpos1 = target:WorldToLocal( self:Trace( target:WorldSpaceCenter() ).HitPos )
+    local lpos2 = !world and target2:WorldToLocal( self:Trace( target2:WorldSpaceCenter() ).HitPos ) or self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) ).HitPos
+
+    self:LookTo( target , 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) then return end
+    if !util_IsValidPhysicsObject( target, target:GetPhysicsObjectCount()-1 ) then return end
+
+    self:UseWeapon( target:WorldSpaceCenter() )
+
+    coroutine.wait( 0.3 )
+
+    self:LookTo( ( !world and target2 or lpos2 ), 2 )
+
+    coroutine.wait( 1 )
+    if IsNil( target2 ) or IsNil( target ) then return end
+    if !util_IsValidPhysicsObject( target2, target2:GetPhysicsObjectCount()-1 ) then return end
+
+    self:UseWeapon( ( !world and target2:WorldSpaceCenter() or lpos2 ) )
+
+    local dist = ( target:GetPos() ):Distance( ( world and lpos2 or target2:GetPos() ) )
+
+    local cons, rope = constraint.Elastic( target, target2, 0, 0, lpos1, lpos2, random( 0, 4000 ), random( 0, 50 ), rand( 0 , 1 ), ropematerials[ random( #ropematerials ) ], rand( 0, 20 ), random( 0, 1 ), ColorRand() )
+
+    if IsValid( cons ) then
+        cons.LambdaOwner = self
+        cons.IsLambdaSpawned = true
+        self:ContributeEntToLimit( cons, "Rope" )
+        table_insert( self.l_SpawnedEntities, 1, cons )
+    elseif IsValid( rope ) then
+        rope.LambdaOwner = self
+        rope.IsLambdaSpawned = true
+        self:ContributeEntToLimit( rope, "Rope" )
+        table_insert( self.l_SpawnedEntities, 1, rope )
+    end
 
     return true
 end
-AddToolFunctionToLambdaTools( "Elastic", UseElasticTool )]]
+AddToolFunctionToLambdaTools( "Elastic", UseElasticTool )
 
 
 
@@ -664,7 +709,7 @@ local function UseRopeTool( self, target )
 
     coroutine.wait( 1 )
     if IsNil( firstent ) then return end 
-    if !util_IsValidPhysicsObject( firstent, firstent:GetPhysicsObjectCount() ) then return end
+    if !util_IsValidPhysicsObject( firstent, firstent:GetPhysicsObjectCount()-1 ) then return end
 
     self:UseWeapon( ( firstent != world and firstent:WorldSpaceCenter() or lpos1 ) )
 
@@ -674,7 +719,7 @@ local function UseRopeTool( self, target )
 
     coroutine.wait( 1 )
     if IsNil( secondent ) or IsNil( firstent ) then return end
-    if !util_IsValidPhysicsObject( secondent, secondent:GetPhysicsObjectCount() ) then return end
+    if !util_IsValidPhysicsObject( secondent, secondent:GetPhysicsObjectCount()-1 ) then return end
 
     self:UseWeapon( ( secondent != world and secondent:WorldSpaceCenter() or lpos2 ) )
 
