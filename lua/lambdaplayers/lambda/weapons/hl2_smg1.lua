@@ -43,9 +43,9 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self.l_WeaponUseCooldown = CurTime() + 0.5
 
             wepent:EmitSound( "Weapon_SMG1.Double" )
-
+            
+            local vecThrow = ( target:WorldSpaceCenter() - self:EyePos() ):Angle()
             grenade:SetPos( self:EyePos() + vecThrow:Forward() * 32 + vecThrow:Up() * 32 )
-            local vecThrow = ( target:WorldSpaceCenter() - grenade:GetPos() ):Angle()
             grenade:SetAngles( vecThrow )
             grenade:SetOwner( self )
             grenade:Spawn()
