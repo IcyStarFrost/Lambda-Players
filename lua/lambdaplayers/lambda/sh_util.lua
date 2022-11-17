@@ -227,6 +227,8 @@ function ENT:ExportLambdaInfo()
         frags = self:GetFrags(),
         deaths = self:GetDeaths(),
 
+        externalvars = table_Copy( self.l_ExternalVars ),
+
 --[[         -- NW Vars --
         nwvars = self:GetNWVarTable(),
         nw2vars = self:GetNW2VarTable(), ]]
@@ -283,6 +285,10 @@ if SERVER then
             self:SetFrags( info.frags or self:GetFrags() )
             self:SetDeaths( info.deaths or self:GetDeaths() )
 
+            for k, v in pairs( info.externalvars ) do
+                self.l_ExternalVars[ k ] = v
+            end
+
 --[[             -- NW Vars --
             local nw = info.nwvars
             local nw2 = info.nw2vars
@@ -298,6 +304,16 @@ if SERVER then
             end ]]
             
         end, true )
+    end
+
+    -- Set a value that will be exported with :ExportLambdaInfo()
+    function ENT:SetExternalVar( key, val )
+        self.l_ExternalVars[ key ] = val
+    end
+
+    -- Gets a value set by :SetExternalVar( key, val )
+    function ENT:GetExternalVar( key )
+        return self.l_ExternalVars[ key ]
     end
     
     -- If the we can target the ent

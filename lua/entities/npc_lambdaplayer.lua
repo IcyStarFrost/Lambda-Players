@@ -94,6 +94,7 @@ function ENT:Initialize()
 
 
         self.l_SpawnedEntities = {} -- The table holding every entity we have spawned
+        self.l_ExternalVars = {} -- The table holding any custom variables external addons want saved onto the Lambda so it can exported along with other Lambda Info
         self.l_Timers = {} -- The table holding all named timers
         self.l_SimpleTimers = {} -- The table holding all simple timers
 
