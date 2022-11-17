@@ -226,10 +226,13 @@ if SERVER then
     
     function ENT:OnLandOnGround( ent )
         local damage = 0
+        local falldistance = abs( self.l_FallVelocity )
+        local maxsafefallspeed = 630 -- While player max safe fall speed is 580, nextbot seem to need 50 more to have the same simulated fall damage
+        local damageforfall = 100 / (1074 - maxsafefallspeed) -- Simulate the same fall damage as players
         
         if realisticfalldamage:GetBool() then
-            damage = max( 0, ceil( 0.3218 * abs( self.l_FallVelocity ) - 153.75 ) )
-        elseif abs( self.l_FallVelocity ) > 500 then
+            damage = (falldistance - maxsafefallspeed) * damageforfall -- If the fall isn't long enough it gives us a negative number and that's fine, we check for higher than 0 anyway. 
+        elseif falldistance > maxsafefallspeed then
             damage = 10
         end
 
