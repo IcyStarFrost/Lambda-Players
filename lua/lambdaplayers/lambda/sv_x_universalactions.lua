@@ -39,6 +39,7 @@ end )
 
 -- Crouch
 AddUActionToLambdaUA( function( self )
+    if random( 1, 2 ) != 1 then return end
     self:SetCrouch( true )
 
     local lastState = self:GetState()
@@ -53,7 +54,7 @@ end )
 
 -- Jump around
 AddUActionToLambdaUA( function( self )
-    if self:GetState() != "Idle" then return end
+    if random( 1, 2 ) != 1 or self:GetState() != "Idle" then return end
     self.loco:Jump()
 
     if self.IsMoving then
