@@ -654,7 +654,7 @@ AddToolFunctionToLambdaTools( "Material", UseMaterialTool )
 
 
 
-local decallist = { "Eye", "Dark", "Smile", "Cross", "Nought", "Noughtsncrosses" } -- Keeping it simple for now
+local decallist = { "Eye", "Dark", "Smile", "Cross", "Nought", "Noughtsncrosses", "Light", "Blood", "YellowBlood", "Impact.Metal", "Scorch", "BeerSplash", "ExplosiveGunshot", "BirdPoop", "PaintSplatPink", "PaintSplatGreen", "PaintSplatBlue", "ManhackCut", "FadingScorch", "Antlion.Splat", "Splash.Large", "BulletProof", "GlassBreak", "Impact.Sand", "Impact.BloodyFlesh", "Impact.Antlion", "Impact.Glass", "Impact.Wood", "Impact.Concrete" }
 local function UsePaintTool( self, target )
     local world = random( 0, 1 )
     if !world and !IsValid( target ) then return end
