@@ -28,7 +28,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         reloadtime = 1.5,
         reloadanim = ACT_HL2MP_GESTURE_RELOAD_AR2,
-        reloadanimationspeed = 1,
+        reloadanimspeed = 1,
         reloadsounds = { 
             { 0, "Weapon_AR2.Reload_Rotate" },
             { 0.63, "Weapon_AR2.Reload_Push" }
