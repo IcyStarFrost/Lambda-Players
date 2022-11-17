@@ -226,10 +226,14 @@ if SERVER then
     
     function ENT:OnLandOnGround( ent )
         local damage = 0
+        local falldistance = abs( self.l_FallVelocity )
+        local fatalfallspeed = 1200 -- sqrt( 2 * gravity * 60 * 12 ) but right now this will do
+        local maxsafefallspeed = 650 -- sqrt( 2 * gravity * 20 * 12 )
+        local damageforfall = 100 / (fatalfallspeed - maxsafefallspeed) -- Simulate the same fall damage as players
         
         if realisticfalldamage:GetBool() then
-            damage = max( 0, ceil( 0.3218 * abs( self.l_FallVelocity ) - 153.75 ) )
-        elseif abs( self.l_FallVelocity ) > 500 then
+            damage = (falldistance - maxsafefallspeed) * damageforfall -- If the fall isn't long enough it gives us a negative number and that's fine, we check for higher than 0 anyway. 
+        elseif falldistance > maxsafefallspeed then
             damage = 10
         end
 
