@@ -93,7 +93,7 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
     
     if !disabletbl.sound then wepent:EmitSound( TranslateRandomization( weapondata.attacksnd ), 70, 100, 1, CHAN_WEAPON ) end
     
-    if !disabletbl.muzzleflash then self:HandleMuzzleFlash( weapondata.muzzleflash, weapondata.muzzleflashpos, weapondata.muzzleflashang ) end
+    if !disabletbl.muzzleflash then self:HandleMuzzleFlash( weapondata.muzzleflash, weapondata.muzzleoffpos, weapondata.muzzleoffang ) end
     if !disabletbl.shell then self:HandleShellEject( weapondata.shelleject, weapondata.shelloffpos, weapondata.shelloffang ) end
 
     if !disabletbl.anim then
@@ -181,7 +181,7 @@ function ENT:ReloadWeapon()
     local wep = self:GetWeaponENT()
     local time = weapondata.reloadtime or 1
     local anim = weapondata.reloadanim
-    local animspeed = weapondata.reloadanimationspeed or 1
+    local animspeed = weapondata.reloadanimspeed or 1
     local snds = weapondata.reloadsounds
 
     if snds and #snds > 0 then

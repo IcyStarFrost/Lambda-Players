@@ -24,7 +24,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         reloadtime = 3,
         reloadanim = ACT_HL2MP_GESTURE_RELOAD_SHOTGUN,
-        reloadanimationspeed = 1,
+        reloadanimspeed = 1,
 
         callback = function( self, wepent, target )
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
