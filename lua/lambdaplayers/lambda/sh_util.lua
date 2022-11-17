@@ -220,6 +220,7 @@ function ENT:ExportLambdaInfo()
         voicepitch = self:GetVoicePitch(),
         voice = self:GetVoiceChance(),
         voiceprofile = self:GetNW2String( "lambda_vp", self.l_VoiceProfile ),
+        pingrange = self:GetAbsPing(),
 
         -- Non personal data --
         respawn = self:GetRespawn(),
@@ -272,6 +273,7 @@ if SERVER then
             self:SetVoiceChance( info.voice or self:GetVoiceChance() )
             SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
+            self:SetAbsPing( info.pingrange or self:GetAbsPing() )
             self:SetVoicePitch( info.voicepitch or self:GetVoicePitch() )
             self.l_VoiceProfile = info.voiceprofile or self.l_VoiceProfile
             self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
