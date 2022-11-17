@@ -60,6 +60,7 @@ end
     local voiceprofilechance = GetConVar( "lambdaplayers_lambda_voiceprofileusechance" )
     local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
     local CurTime = CurTime
+    local Clamp = math.Clamp
     local min = math.min
     local color_white = color_white
     local TraceHull = util.TraceHull
@@ -107,6 +108,8 @@ function ENT:Initialize()
 
         self.l_deaths = 0 -- The amount of deaths we have had
         self.l_frags = 0 -- The amount of kills we have
+        self.l_pingabsrange = 0  -- The lowest point our fake ping can get
+        self.l_ping = 0 -- Our actual fake ping
         self.l_UnstuckBounds = 50 -- The distance the unstuck process will use to check. This value increments during the process and set back to 50 when done
         self.l_nextspeedupdate = 0 -- The next time we update our speed
         self.l_NexthealthUpdate = 0 -- The next time we update our networked health
@@ -140,6 +143,10 @@ function ENT:Initialize()
         self.l_PlyRealColor = self:GetPlyColor():ToColor()
         self.l_PhysRealColor = self:GetPhysColor():ToColor()
 
+        local rndpingrange = random( 1, 120 )
+        self.l_pingabsrange = rndpingrange
+        self:SetPing( rndpingrange )
+        
         -- Personality function was relocated to the start of the code since it needs to be shared so clients can have Get functions
         
         self:SetVoicePitch( random( voicepitchmin:GetInt(), voicepitchmax:GetInt() ) )
@@ -247,6 +254,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 2, "VoiceChance" )
     self:NetworkVar( "Int", 3, "Frags" )
     self:NetworkVar( "Int", 4, "Deaths" )
+    self:NetworkVar( "Int", 5, "Ping" )
     
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
 end
@@ -297,6 +305,11 @@ function ENT:Think()
             phys:UpdateShadow( self:GetPos(), self:GetAngles(), 0 )
             self.l_nextphysicsupdate = CurTime() + 0.5
         end
+
+        if random( 125 ) == 1 then
+            self:SetPing( Clamp( self:GetPing() + random( -20, ( 24 - ( self:GetPing() / self.l_pingabsrange ) ) ), self.l_pingabsrange, 999 ) )
+        end
+
 
         if self.l_Clip < self.l_MaxClip and random( 100 ) == 1 and CurTime() > self.l_WeaponUseCooldown + 1 then
             self:ReloadWeapon()

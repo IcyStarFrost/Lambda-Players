@@ -32,6 +32,10 @@ function ENT:Deaths()
     return self:GetDeaths()
 end
 
+function ENT:Ping()
+    return self:GetPing()
+end
+
 
 -- Similar to Real Player's :GetEyeTrace()
 function ENT:GetEyeTrace()
