@@ -58,7 +58,7 @@ function EntMeta:LambdaDisintegrate()
     local endtime = RealTime() + 5
     local norm = Angle( 0, random( 360 ), 0 ):Forward()
     self:SetRenderClipPlaneEnabled( true )
-    self:EmitSound( "lambdaplayers/misc/disintegrate.mp3", 65, random( 80, 100 ) )
+    self:EmitSound( "lambdaplayers/misc/disintegrate" .. random( 1, 3 ) .. ".mp3", 65, random( 80, 100 ) )
 
     table_insert( disintegratingents, self )
     

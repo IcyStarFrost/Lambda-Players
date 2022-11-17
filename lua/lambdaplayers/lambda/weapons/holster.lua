@@ -16,7 +16,8 @@
     islethal | Bool | If the weapon is capable of hurting anything
     holdtype | String | The animation set Lambda should use. See globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
     ismelee | Bool | If the weapon is considered a melee weapon. False for ranged
-    
+    offpos | Vector | The offset position of the weapon local to the Lambda's considered hand position
+    offang | Angle | The offset angle of the weapon local to the Lambda
 
     addspeed | Number | The amount to add to speed while in combat
     keepdistance | Number | The distance the Lambda will keep from the target
@@ -46,6 +47,8 @@
     islethal | Bool | If the weapon is capable of hurting anything
     holdtype | String | The animation set Lambda should use. See autorun_includes/server/globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
     ismelee | Bool | If the weapon is considered a melee weapon. False for ranged
+    offpos | Vector | The offset position of the weapon local to the Lambda's considered hand position
+    offang | Angle | The offset angle of the weapon local to the Lambda
 
     addspeed | Number | The amount to add to speed while in combat
     keepdistance | Number | The distance the Lambda will keep from the target

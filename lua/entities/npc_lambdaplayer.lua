@@ -271,7 +271,7 @@ function ENT:Think()
             local result = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32600, self )
             local stepsounds = _LAMBDAPLAYERSFootstepMaterials[ result.MatType ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ]
             self:EmitSound( stepsounds[ random( #stepsounds ) ], 75, 100, 0.5 )
-            self.NextFootstepTime = CurTime() + min(0.25 * (400 / desSpeed), 0.35)
+            self.NextFootstepTime = CurTime() + min(0.25 * (self:GetRunSpeed() / desSpeed), 0.35)
         end
         
         if CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 1, 100 ) <= self:GetVoiceChance() then

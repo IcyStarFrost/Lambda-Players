@@ -6,6 +6,8 @@ local ipairs = ipairs
 local Effect = util.Effect
 local CurTime = CurTime
 local string_find = string.find
+local origin = Vector()
+local angle_zero = Angle()
 
 -- Switch to a weapon with the provided name.
 -- See the lambda/weapons folder for weapons. Check out the holster.lua file to see the current valid weapon settings
@@ -54,8 +56,12 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self.WeaponEnt:SetNoDraw( weapondata.nodraw )
     self.WeaponEnt:DrawShadow( !weapondata.nodraw )
 
-    wepent:SetModel( weapondata.model )
+    self.WeaponEnt:SetLocalPos( weapondata.offpos or origin )
+    self.WeaponEnt:SetLocalAngles( weapondata.offang or angle_zero )
 
+    wepent:SetModel( weapondata.model )
+    
+    
     if isfunction( weapondata.OnEquip ) then weapondata.OnEquip( self, wepent ) end
 
 end
