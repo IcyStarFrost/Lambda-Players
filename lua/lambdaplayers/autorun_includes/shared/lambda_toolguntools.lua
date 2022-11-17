@@ -401,6 +401,34 @@ AddToolFunctionToLambdaTools( "Emitter", UseEmitterTool )
 
 
 
+local function UseFaceposerTool( self, target )
+    if !IsValid( target ) or target:GetClass() != "prop_ragdoll" then return end
+    
+    local trace = self:Trace( target:WorldSpaceCenter() )
+    local entity = trace.Entity
+    local physbone = trace.PhysicsBone
+    self:LookTo( target, 2 )
+
+    coroutine.wait( 1 )
+    if !IsValid( target ) or !util_IsValidPhysicsObject( entity, physbone ) then return end -- it's pretty much a double IsValid but just in case
+
+    self:UseWeapon( target:WorldSpaceCenter() )
+
+    for i = 0, target:GetFlexNum()-1 do
+        if random( 4 ) > 1 then -- 25% chance to not edit a flex, to add a bit of randomness to that
+            target:SetFlexWeight(i, math.random()*math.random(5))
+        end
+    end
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Faceposer", UseFaceposerTool )
+
+
+
+
+
+
 local hoverballmodels = { "models/dav0r/hoverball.mdl", "models/maxofs2d/hover_basic.mdl", "models/maxofs2d/hover_classic.mdl", "models/maxofs2d/hover_plate.mdl", "models/maxofs2d/hover_propeller.mdl", "models/maxofs2d/hover_rings.mdl" }
 local function UseHoverballTool( self, target )
     if !self:IsUnderLimit( "Hoverball" ) then return end
@@ -602,6 +630,8 @@ local function UseLightTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Light", UseLightTool )
+
+
 
 
 
@@ -941,7 +971,7 @@ AddToolFunctionToLambdaTools( "Trail", UseTrailTool )
 local function UseWeldTool( self, target )
     if !IsValid( target ) then return end
 
-    local world = random( 0, 1 )
+    local world = random( 5 ) == 1 --To avoid welding to the world too much by default
     local find = self:FindInSphere( nil, 800, function( ent ) if ent != target and !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
     local target2 = find[ random( #find ) ]
 
@@ -980,7 +1010,6 @@ local function UseWeldTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Weld", UseWeldTool )
-
 
 
 
