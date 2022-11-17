@@ -4,7 +4,7 @@ local IsValid = IsValid
 local util_Effect = util.Effect
 local tracetbl = {}
 
--- Effects idle gravity gun
+-- Effects for gravity gun idle
 local ggunGlowSprite = Material("sprites/glow04_noz")
 
 -- Effects for pulling and grabbing active
