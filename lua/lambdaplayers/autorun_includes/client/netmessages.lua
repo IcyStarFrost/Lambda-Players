@@ -97,7 +97,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
 
 end )
 
-
+local Material = Material
 local voiceicon = Material( "voice/icntlk_pl" )
 
 

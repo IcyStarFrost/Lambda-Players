@@ -322,16 +322,6 @@ function LambdaPlayers_ChatAdd( ply, ... )
     if ply == nil then net.Broadcast() else net.Send( ply ) end
 end
 
-local ents_GetAll = ents.GetAll
-local ipairs = ipairs
-local IsValid = IsValid
-function GetLambdaPlayers()
-    local lambdas = {}
-    for k, v in ipairs( ents_GetAll() ) do
-        if IsValid( v ) and v.IsLambdaPlayer then lambdas[ #lambdas + 1 ] = v end
-    end
-    return lambdas
-end
 
 local FindByClass = ents.FindByClass
 local table_Add = table.Add
