@@ -157,7 +157,7 @@ function ENT:Initialize()
 
         SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
-        self.loco:SetJumpHeight( 80 )
+        self.loco:SetJumpHeight( 60 )
         self.loco:SetAcceleration( 1000 )
         self.loco:SetDeceleration( 1000 )
         self.loco:SetStepHeight( 30 )
