@@ -11,6 +11,7 @@ local FindInSphere = ents.FindInSphere
 local table_empty = table.Empty
 local file_Find = file.Find
 local table_Empty = table.Empty
+local table_IsEmpty = table.IsEmpty
 local table_RemoveByValue = table.RemoveByValue
 local table_Copy = table.Copy
 local ents_GetAll = ents.GetAll
@@ -214,6 +215,9 @@ function ENT:ExportLambdaInfo()
         model = self:GetModel(),
         health = self:GetNWMaxHealth(),
 
+        mdlSkin = self:GetSkin(),
+        bodygroups = self.l_BodyGroupData,
+
         plycolor = self:GetPlyColor(),
         physcolor = self:GetPhysColor(),
 
@@ -261,6 +265,16 @@ if SERVER then
             self:SetMaxHealth( info.health or self:GetMaxHealth() )
             self:SetHealth( info.health or self:GetMaxHealth() )
             self:SetNWMaxHealth( info.health or self:GetMaxHealth() )
+
+            self:SetSkin( info.mdlSkin or 0 )
+
+            local bodygroups = info.bodygroups
+            if bodygroups and !table_IsEmpty( bodygroups ) then
+                self.l_BodyGroupData = bodygroups
+                for _, v in ipairs( self:GetBodyGroups() ) do
+                    self:SetBodygroup( v.id, ( bodygroups[ v.id ] or 0 ) )
+                end
+            end
 
             self:SetPlyColor( info.plycolor or self:GetPlyColor() )
             self:SetPhysColor( info.physcolor or self:GetPhysColor() )
