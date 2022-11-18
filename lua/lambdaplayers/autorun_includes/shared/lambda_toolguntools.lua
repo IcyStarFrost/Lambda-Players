@@ -53,7 +53,7 @@ end
 
 
 
--- Helper function for the Paint Tool
+-- Helper function for the Ignite Tool
 -- Taken from the ignite properties in sandbox
 local function CanEntityBeSetOnFire( ent )
 
