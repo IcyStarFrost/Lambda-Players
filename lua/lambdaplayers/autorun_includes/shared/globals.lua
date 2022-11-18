@@ -1,3 +1,4 @@
+local IsValid = IsValid
 local table_insert = table.insert
 local pairs = pairs
 local string_find = string.find
@@ -122,7 +123,6 @@ function EntMeta:RemoveLambdaHookTick( name )
 end
 
 
-local IsValid = IsValid
 function LambdaIsValid( object )
 	if !object then return false end
 
@@ -207,7 +207,6 @@ end
 
 local ents_GetAll = ents.GetAll
 local ipairs = ipairs
-local IsValid = IsValid
 function GetLambdaPlayers()
     local lambdas = {}
     for k, v in ipairs( ents_GetAll() ) do

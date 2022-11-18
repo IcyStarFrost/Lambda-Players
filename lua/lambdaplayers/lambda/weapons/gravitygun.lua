@@ -1,6 +1,6 @@
+local IsValid = IsValid
 local random = math.random
 local math_min = math.min
-local IsValid = IsValid
 local util_Effect = util.Effect
 local tracetbl = {}
 

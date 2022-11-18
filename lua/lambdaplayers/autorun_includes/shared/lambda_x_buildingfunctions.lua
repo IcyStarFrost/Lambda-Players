@@ -1,3 +1,4 @@
+local IsValid = IsValid
 local table_insert = table.insert
 local rand = math.Rand
 local VectorRand = VectorRand
