@@ -161,7 +161,7 @@ function ENT:Initialize()
         self.loco:SetAcceleration( 1000 )
         self.loco:SetDeceleration( 1000 )
         self.loco:SetStepHeight( 30 )
-        self.loco:SetGravity( -physenv.GetGravity().z ) -- Makes us fall at the same speed as real players do
+        self.loco:SetGravity( -physenv.GetGravity().z ) -- Makes us fall at the same speed as the real players do
 
         self:PhysicsInitShadow()
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )

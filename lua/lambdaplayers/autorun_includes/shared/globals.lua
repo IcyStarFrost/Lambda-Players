@@ -124,7 +124,7 @@ end
 
 local VecMeta = FindMetaTable( "Vector" )
 
--- Checks if the vector position is underwater. Might be perform faster than ENT:WaterLevel()
+-- Checks if the vector position is underwater. Might perform faster than ENT:WaterLevel()
 local bit_band = bit.band
 local util_PointContents = util.PointContents
 function VecMeta:IsUnderwater()
