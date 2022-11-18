@@ -93,7 +93,7 @@ if SERVER then
         if self:GetRespawn() then
             self:SimpleTimer( 2, function() self:LambdaRespawn() end, true )
         else
-            self:SimpleTimer( 0.1, function() print("Remove") self:Remove() end, true )
+            self:SimpleTimer( 0.1, function() self:Remove() end, true )
         end
 
         for k ,v in ipairs( ents_GetAll() ) do
