@@ -15,7 +15,7 @@ end
 
 -- Our team
 function ENT:Team()
-    return 0
+    return TEAM_UNASSIGNED
 end
 
 -- Returns our eye angles
@@ -60,7 +60,7 @@ end
 function ENT:GetEyeTrace()
     local attach = self:GetAttachmentPoint( "eyes" )
     eyetracetable.start = attach.Pos
-    eyetracetable.endpos = attach.Ang:Forward() * 30000
+    eyetracetable.endpos = attach.Ang:Forward() * 32768
     eyetracetable.filter = self
     local result = Trace( eyetracetable )
     return result
