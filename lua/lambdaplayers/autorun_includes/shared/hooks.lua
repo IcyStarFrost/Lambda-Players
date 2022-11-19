@@ -37,6 +37,10 @@ if SERVER then
         LambdaSpawnPoints = LambdaGetPossibleSpawns()
     end )
 
+    hook.Add("PlayerInitialSpawn", "Lambdasetserverhost", function( ply )
+        if ply:IsListenServerHost() then ply:SetNW2Bool( "lambda_serverhost", true ) end
+    end )
+
 elseif CLIENT then
     
     local DrawText = draw.DrawText

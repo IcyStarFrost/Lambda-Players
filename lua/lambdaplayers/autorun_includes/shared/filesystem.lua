@@ -11,7 +11,6 @@ local table_Add = table.Add
 local mergevoicelines = GetConVar( "lambdaplayers_voice_mergeaddonvoicelines" )
 
 file.CreateDir( "lambdaplayers" )
-file.CreateDir( "lambdaplayers/custom_profilepictures" )
 -- Lambda File System
 LAMBDAFS = {}
 
@@ -250,6 +249,7 @@ function LAMBDAFS:GetVoiceProfiles()
 end
 
 
+LambdaPersonalProfiles = LambdaPersonalProfiles or file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
 LambdaPlayerNames = LambdaPlayerNames or LAMBDAFS:GetNameTable()
 LambdaPlayerProps = LambdaPlayerProps or LAMBDAFS:GetPropTable()
 LambdaPlayerMaterials = LambdaPlayerMaterials or LAMBDAFS:GetMaterialTable()

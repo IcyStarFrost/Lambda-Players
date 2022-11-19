@@ -35,7 +35,7 @@ local function OpenNamePanel( ply )
 
     LAMBDAPANELS:CreateExportPanel( "Name", panel, BOTTOM, "Export Names to file", names, "json", "lambdaplayers/exportednames/nameexport.json" )
 
-    LAMBDAPANELS:CreateImportPanel( "Name", panel, BOTTOM, "Import .TXT/.JSON files", labels, "lambdaplayers/nameimport", function( path )
+    LAMBDAPANELS:CreateImportPanel( "Name", panel, BOTTOM, "Import .TXT/.JSON files", labels, "lambdaplayers/nameimport/*", function( path )
         local isjson = string.EndsWith( path, ".json" )
 
         local count = 0

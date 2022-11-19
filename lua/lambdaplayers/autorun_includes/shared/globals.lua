@@ -1,4 +1,3 @@
-local IsValid = IsValid
 local table_insert = table.insert
 local pairs = pairs
 local string_find = string.find
@@ -123,6 +122,17 @@ function EntMeta:RemoveLambdaHookTick( name )
 end
 
 
+local VecMeta = FindMetaTable( "Vector" )
+
+-- Checks if the vector position is underwater. Might perform faster than ENT:WaterLevel()
+local bit_band = bit.band
+local util_PointContents = util.PointContents
+function VecMeta:IsUnderwater()
+    return ( bit_band( util_PointContents( self ), CONTENTS_WATER ) == CONTENTS_WATER )
+end
+
+
+local IsValid = IsValid
 function LambdaIsValid( object )
 	if !object then return false end
 
@@ -207,6 +217,10 @@ end
 
 local ents_GetAll = ents.GetAll
 local ipairs = ipairs
+local IsValid = IsValid
+local lower = string.lower
+
+-- Gets all Lambda Players currently active
 function GetLambdaPlayers()
     local lambdas = {}
     for k, v in ipairs( ents_GetAll() ) do
@@ -215,6 +229,12 @@ function GetLambdaPlayers()
     return lambdas
 end
 
+-- Gets a Lambda Player by their name
+function GetLambdaPlayerByName( name )
+    for k, v in ipairs( GetLambdaPlayers() ) do
+        if lower( v:GetLambdaName() ) == lower( name ) then return v end
+    end
+end
 
 function LambdaCreateThread( func )
     local thread = coroutine.create( func ) 

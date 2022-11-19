@@ -54,15 +54,18 @@ end
     local voicepitchmax = GetConVar( "lambdaplayers_voice_voicepitchmax" )
     local idledir = GetConVar( "lambdaplayers_voice_idledir" )
     local drawflashlight = GetConVar( "lambdaplayers_drawflashlights" )
+    local profilechance = GetConVar( "lambdaplayers_lambda_profileusechance" )
     local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
     local ents_Create = ents and ents.Create or nil
     local navmesh_GetNavArea = navmesh and navmesh.GetNavArea or nil
     local voiceprofilechance = GetConVar( "lambdaplayers_lambda_voiceprofileusechance" )
+    local thinkrate = GetConVar( "lambdaplayers_lambda_singleplayerthinkrate" )
     local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
     local CurTime = CurTime
     local Clamp = math.Clamp
     local min = math.min
     local color_white = color_white
+    local RandomPairs = RandomPairs
     local TraceHull = util.TraceHull
     local QuickTrace = util.QuickTrace
     local FrameTime = FrameTime
@@ -157,10 +160,11 @@ function ENT:Initialize()
 
         SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
-        self.loco:SetJumpHeight( 80 )
+        self.loco:SetJumpHeight( 60 )
         self.loco:SetAcceleration( 1000 )
         self.loco:SetDeceleration( 1000 )
         self.loco:SetStepHeight( 30 )
+        self.loco:SetGravity( -physenv.GetGravity().z ) -- Makes us fall at the same speed as the real players do
 
         self:PhysicsInitShadow()
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
@@ -190,6 +194,17 @@ function ENT:Initialize()
         self:SwitchWeapon( "physgun", true )
         
         self:HandleAllValidNPCRelations()
+
+
+        if LambdaPersonalProfiles and random( 0, 100 ) < profilechance:GetInt() then
+            for k, v in RandomPairs( LambdaPersonalProfiles ) do
+                if self:IsNameOpen( k ) then
+                    self:SetLambdaName( k )
+                end
+            end
+        end
+
+        self:ProfileCheck()
 
     elseif CLIENT then
 
@@ -330,13 +345,7 @@ function ENT:Think()
         end
 
         if !self:IsOnGround() then
-            self.l_FallVelocity = self.loco:GetVelocity()[ 3 ]
-            
-            -- Sometimes when they fall in water and touch a flat ground surface, they don't register it as being water
-            -- This is here just so if they enter water during the fall, it negates the damage
-            if self:WaterLevel() >= 1 then
-                self.l_FallVelocity = 0
-            end
+            self.l_FallVelocity = -self.loco:GetVelocity().z
         end
 
         -- Animations --
@@ -453,7 +462,10 @@ function ENT:Think()
         end
 
     end
-    
+    if game.SinglePlayer() then
+        self:NextThink( CurTime() + thinkrate:GetFloat() )
+        return true
+    end
 
 end
 

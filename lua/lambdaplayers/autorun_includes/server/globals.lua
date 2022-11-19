@@ -322,7 +322,6 @@ function LambdaPlayers_ChatAdd( ply, ... )
     if ply == nil then net.Broadcast() else net.Send( ply ) end
 end
 
-
 local FindByClass = ents.FindByClass
 local table_Add = table.Add
 function LambdaGetPossibleSpawns()

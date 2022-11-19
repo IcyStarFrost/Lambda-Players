@@ -212,6 +212,7 @@ function ENT:ExportLambdaInfo()
     local info = {
         name = self:GetLambdaName(),
         model = self:GetModel(),
+        profilepicture = self:GetProfilePicture(),
         health = self:GetNWMaxHealth(),
 
         plycolor = self:GetPlyColor(),
@@ -257,6 +258,7 @@ if SERVER then
             self:DebugPrint( "had Lambda Info applied to them" )
 
             self:SetLambdaName( info.name or self:GetLambdaName() )
+            self:SetProfilePicture( info.profilepicture or self:GetProfilePicture() )
             self:SetModel( info.model or self:GetModel() )
             self:SetMaxHealth( info.health or self:GetMaxHealth() )
             self:SetHealth( info.health or self:GetMaxHealth() )
@@ -287,9 +289,14 @@ if SERVER then
             self:SetFrags( info.frags or self:GetFrags() )
             self:SetDeaths( info.deaths or self:GetDeaths() )
 
-            for k, v in pairs( info.externalvars ) do
-                self.l_ExternalVars[ k ] = v
+            if info.externalvars then
+                for k, v in pairs( info.externalvars ) do
+                    print( k, v )
+                    self.l_ExternalVars[ k ] = v
+                    self[ k ] = v
+                end
             end
+
 
 --[[             -- NW Vars --
             local nw = info.nwvars
@@ -311,6 +318,7 @@ if SERVER then
     -- Set a value that will be exported with :ExportLambdaInfo()
     function ENT:SetExternalVar( key, val )
         self.l_ExternalVars[ key ] = val
+        self[ key ] = val
     end
 
     -- Gets a value set by :SetExternalVar( key, val )
@@ -320,6 +328,7 @@ if SERVER then
     
     -- If the we can target the ent
     function ENT:CanTarget( ent )
+        if hook.Run( "LambdaCanTarget", self, ent ) then return false end
         return self:Visible( ent ) and ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() and ent:Alive() )
     end
 
@@ -371,6 +380,21 @@ if SERVER then
         local name = nametablecopy[ random( #nametablecopy ) ]
         if !name then name = LambdaPlayerNames[ random( #LambdaPlayerNames ) ] end
         return name
+    end
+
+    -- If the provided name is being used or not
+    function ENT:IsNameOpen( name )
+        for k, v in ipairs( GetLambdaPlayers() ) do
+            if v != self and v:GetLambdaName() == name then return false end
+        end
+        return true
+    end
+
+    -- Checks if our name has a profile. If so, apply the profile info
+    function ENT:ProfileCheck()
+        if LambdaPersonalProfiles[ self:GetLambdaName() ] then
+            self:ApplyLambdaInfo( LambdaPersonalProfiles[ self:GetLambdaName() ] )
+        end
     end
 
     -- Makes the Lambda face the position or a entity if provided
