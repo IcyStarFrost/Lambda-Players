@@ -69,12 +69,14 @@ end
 local laughdir = GetConVar( "lambdaplayers_voice_laughdir" )
 function ENT:Laughing()
     self:PlaySoundFile( laughdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "laugh" ), true )
-    coroutine.wait( self:GetLayerDuration( self:AddGesture( ACT_GMOD_TAUNT_LAUGH ) ) )
+    
+    self:PlayGestureAndWait( ACT_GMOD_TAUNT_LAUGH )
     self:SetState( "Idle" )
 end
 
 local acts = { ACT_GMOD_TAUNT_DANCE, ACT_GMOD_TAUNT_ROBOT, ACT_GMOD_TAUNT_MUSCLE, ACT_GMOD_TAUNT_CHEER }
 function ENT:UsingAct()
-    coroutine.wait( self:GetLayerDuration( self:AddGesture( acts[ random( #acts) ] ) ) )
+    
+    self:PlayGestureAndWait( acts[ random( #acts ) ] )
     self:SetState( "Idle" )
 end
