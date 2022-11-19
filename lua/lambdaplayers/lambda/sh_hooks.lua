@@ -5,7 +5,6 @@ local ents_Create = ents.Create
 local tobool = tobool
 local undo = undo
 local ents_GetAll = ents.GetAll
-local abs = math.abs
 local table_Merge = table.Merge
 local isfunction = isfunction
 local ipairs = ipairs
@@ -48,7 +47,7 @@ if SERVER then
         if self:GetIsDead() then return end
         self:DebugPrint( "was killed by ", info:GetAttacker() )
 
-        local deathsounds = LambdaVoiceLinesTable.death
+        self:EmitSound( info:IsDamageType( DMG_FALL ) and "Player.FallGib" or "Player.Death" )
         
         self:PlaySoundFile( deathdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "death" ) )
 
@@ -221,31 +220,34 @@ if SERVER then
     -- Fall damage handling
     -- Note that this doesn't always work due to nextbot quirks but that's alright.
 
-    local snds = { "player/pl_fallpain1.wav", "player/pl_fallpain3.wav" }
     local realisticfalldamage = GetConVar( "lambdaplayers_lambda_realisticfalldamage" )
     
     function ENT:OnLandOnGround( ent )
-        local damage = 0
-        local falldistance = abs( self.l_FallVelocity )
-        local fatalfallspeed = 1200 -- sqrt( 2 * gravity * 60 * 12 ) but right now this will do
-        local maxsafefallspeed = 650 -- sqrt( 2 * gravity * 20 * 12 )
-        local damageforfall = 100 / (fatalfallspeed - maxsafefallspeed) -- Simulate the same fall damage as players
-        
-        if realisticfalldamage:GetBool() then
-            damage = (falldistance - maxsafefallspeed) * damageforfall -- If the fall isn't long enough it gives us a negative number and that's fine, we check for higher than 0 anyway. 
-        elseif falldistance > maxsafefallspeed then
-            damage = 10
-        end
+        -- Play land animation
+        self:AddGesture( ACT_LAND )
 
-        if damage > 0 then
-            local info = DamageInfo()
-            info:SetDamage( damage )
-            info:SetAttacker( Entity( 0 ) )
-            info:SetDamageType( DMG_FALL)
+        if !self:GetPos():IsUnderwater() then
+            local damage = 0
+            local maxsafefallspeed = 526.5 -- sqrt( 2 * gravity * 20 * 12 )
 
-            self:EmitSound( snds[ random( 1, 2 ) ], 65 )
+            if realisticfalldamage:GetBool() then
+                local fatalfallspeed = 922.5 -- sqrt( 2 * gravity * 60 * 12 ) but right now this will do
+                local damageforfall = 100 / (fatalfallspeed - maxsafefallspeed) -- Simulate the same fall damage as players
 
-            self:TakeDamageInfo( info )
+                damage = (self.l_FallVelocity - maxsafefallspeed) * damageforfall -- If the fall isn't long enough it gives us a negative number and that's fine, we check for higher than 0 anyway. 
+            elseif self.l_FallVelocity > maxsafefallspeed then
+                damage = 10
+            end
+
+            if damage > 0 then
+                local info = DamageInfo()
+                info:SetDamage( damage )
+                info:SetAttacker( Entity( 0 ) )
+                info:SetDamageType( DMG_FALL)
+                self:TakeDamageInfo( info )
+
+                self:EmitSound( "Player.FallDamage" )
+            end
         end
     end
 

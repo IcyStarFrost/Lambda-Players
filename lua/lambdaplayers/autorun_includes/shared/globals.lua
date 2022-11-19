@@ -122,6 +122,16 @@ function EntMeta:RemoveLambdaHookTick( name )
 end
 
 
+local VecMeta = FindMetaTable( "Vector" )
+
+-- Checks if the vector position is underwater. Might perform faster than ENT:WaterLevel()
+local bit_band = bit.band
+local util_PointContents = util.PointContents
+function VecMeta:IsUnderwater()
+    return ( bit_band( util_PointContents( self ), CONTENTS_WATER ) == CONTENTS_WATER )
+end
+
+
 local IsValid = IsValid
 function LambdaIsValid( object )
 	if !object then return false end
