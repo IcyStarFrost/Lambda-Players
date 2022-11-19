@@ -328,6 +328,7 @@ if SERVER then
     
     -- If the we can target the ent
     function ENT:CanTarget( ent )
+        if hook.Run( "LambdaCanTarget", self, ent ) then return false end
         return self:Visible( ent ) and ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() and ent:Alive() )
     end
 
