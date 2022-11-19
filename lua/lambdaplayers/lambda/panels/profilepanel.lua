@@ -45,13 +45,17 @@ local function OpenProfilePanel( ply )
         table_Merge( profiles, localprofiles )
     end
 
-    local function UpdateprofileLine( profilename, newinfo )
+    local function UpdateprofileLine( profilename, newinfo, islocal )
         local lines = profilelist:GetLines()
 
         for k, v in ipairs( lines ) do
             local info = v:GetSortValue( 1 )
-            if info.name == profilename then v:SetSortValue( 1, newinfo ) break end
+            if info.name == profilename then v:SetSortValue( 1, newinfo ) return end
         end
+
+        local line =  profilelist:AddLine( compiledinfo.name .. ( islocal and " | Local" or " | SERVER" ) )
+        line.l_isprofilelocal = islocal
+        line:SetSortValue( 1, compiledinfo )
     end
 
     function profilelist:DoDoubleClick( id, line )
@@ -88,10 +92,7 @@ local function OpenProfilePanel( ply )
         chat.AddText( "Saved " .. compiledinfo.name .. " to your Profiles!" )
         surface.PlaySound( "buttons/button15.wav" )
 
-        local line =  profilelist:AddLine( compiledinfo.name .. " | Local" )
-        line.l_isprofilelocal = true
-        line:SetSortValue( 1, compiledinfo )
-        UpdateprofileLine( compiledinfo.name, compiledinfo )
+        UpdateprofileLine( compiledinfo.name, compiledinfo, true )
         if !LAMBDAFS:FileHasValue( "lambdaplayers/customnames.json", compiledinfo.name, "json" ) then LAMBDAFS:UpdateSequentialFile( "lambdaplayers/customnames.json", compiledinfo.name, "json" )  end
         LAMBDAFS:UpdateKeyValueFile( "lambdaplayers/profiles.json", { [ compiledinfo.name ] = compiledinfo }, "json" ) 
     end )
@@ -108,7 +109,7 @@ local function OpenProfilePanel( ply )
         line:SetSortValue( 1, compiledinfo )
         if LocalPlayer():GetNW2Bool( "lambda_serverhost", false ) and !LAMBDAFS:FileHasValue( "lambdaplayers/customnames.json", compiledinfo.name, "json" ) then LAMBDAFS:UpdateSequentialFile( "lambdaplayers/customnames.json", compiledinfo.name, "json" ) end
 
-        UpdateprofileLine( compiledinfo.name, compiledinfo )
+        UpdateprofileLine( compiledinfo.name, compiledinfo, true )
         LAMBDAPANELS:UpdateKeyValueFile( "lambdaplayers/profiles.json", { [ compiledinfo.name ] = compiledinfo }, "json" ) 
     end )
 
