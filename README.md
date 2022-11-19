@@ -176,6 +176,12 @@ Called when the Profile Panel has been loaded. Use this hook if you want to add 
 
 
 
+### `LambdaCanTarget( Entity Lambda, Entity Target )`
+### Server-Side
+
+Called when a Lambda Player wants to know if they can attack someone. Return true to make them not attack the target
+
+
 # Lambda Player Addon Hooks
 
 *The hooks below can be used to add onto certain features of the lambdas*
