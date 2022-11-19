@@ -92,6 +92,7 @@ local function OpenProfilePanel( ply )
         line.l_isprofilelocal = true
         line:SetSortValue( 1, compiledinfo )
         UpdateprofileLine( compiledinfo.name, compiledinfo )
+        if !LAMBDAFS:FileHasValue( "lambdaplayers/customnames.json", compiledinfo.name, "json" ) then LAMBDAFS:UpdateSequentialFile( "lambdaplayers/customnames.json", compiledinfo.name, "json" )  end
         LAMBDAFS:UpdateKeyValueFile( "lambdaplayers/profiles.json", { [ compiledinfo.name ] = compiledinfo }, "json" ) 
     end )
 
@@ -105,6 +106,7 @@ local function OpenProfilePanel( ply )
         local line =  profilelist:AddLine( compiledinfo.name .. " | Server" )
         line.l_isprofilelocal = false
         line:SetSortValue( 1, compiledinfo )
+        if LocalPlayer():GetNW2Bool( "lambda_serverhost", false ) and !LAMBDAFS:FileHasValue( "lambdaplayers/customnames.json", compiledinfo.name, "json" ) then LAMBDAFS:UpdateSequentialFile( "lambdaplayers/customnames.json", compiledinfo.name, "json" ) end
 
         UpdateprofileLine( compiledinfo.name, compiledinfo )
         LAMBDAPANELS:UpdateKeyValueFile( "lambdaplayers/profiles.json", { [ compiledinfo.name ] = compiledinfo }, "json" ) 
