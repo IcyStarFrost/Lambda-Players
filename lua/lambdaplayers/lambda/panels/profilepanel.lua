@@ -12,7 +12,8 @@ local function OpenProfilePanel( ply )
 
     local frame = LAMBDAPANELS:CreateFrame( "Profile Editor", 700, 350 )
 
-
+    
+    LAMBDAPANELS:CreateURLLabel( "Click here to learn on how to use this panel!", "https://github.com/IcyStarFrost/Lambda-Players/blob/master/README.md#lambda-profiles", frame, TOP )
 
     -- Profile Listing and buttons --
     local rightpanel = LAMBDAPANELS:CreateBasicPanel( frame )
@@ -86,6 +87,10 @@ local function OpenProfilePanel( ply )
 
         chat.AddText( "Saved " .. compiledinfo.name .. " to your Profiles!" )
         surface.PlaySound( "buttons/button15.wav" )
+
+        local line =  profilelist:AddLine( compiledinfo.name .. " | Local" )
+        line.l_isprofilelocal = true
+        line:SetSortValue( 1, compiledinfo )
         UpdateprofileLine( compiledinfo.name, compiledinfo )
         LAMBDAFS:UpdateKeyValueFile( "lambdaplayers/profiles.json", { [ compiledinfo.name ] = compiledinfo }, "json" ) 
     end )
@@ -96,6 +101,11 @@ local function OpenProfilePanel( ply )
 
         surface.PlaySound( "buttons/button15.wav" )
         chat.AddText( "Saved " .. compiledinfo.name .. " to the Server's Profiles")
+
+        local line =  profilelist:AddLine( compiledinfo.name .. " | Server" )
+        line.l_isprofilelocal = false
+        line:SetSortValue( 1, compiledinfo )
+
         UpdateprofileLine( compiledinfo.name, compiledinfo )
         LAMBDAPANELS:UpdateKeyValueFile( "lambdaplayers/profiles.json", { [ compiledinfo.name ] = compiledinfo }, "json" ) 
     end )
