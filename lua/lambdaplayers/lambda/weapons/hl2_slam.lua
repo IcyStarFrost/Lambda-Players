@@ -61,9 +61,9 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 for _, v in ipairs( ents.FindInSphere( satchel:GetPos(), 150 ) ) do
                     if v == self or v == satchel or !LambdaIsValid( v ) or !v:IsNPC() and !v:IsNextBot() and ( !v:IsPlayer() or !v:Alive() or ignorePlayers:GetBool() ) or !satchel:Visible( v ) then continue end
                     
-                    satchel:EmitSound( "ui/buttonclick.wav", 70 )
                     SimpleTimer( 0.3, function() 
                         if !IsValid( satchel ) then return end
+                        wepent:EmitSound( "ui/buttonclick.wav", 80 )
 
                         local effData = EffectData()
                         effData:SetOrigin( satchel:GetPos() )
