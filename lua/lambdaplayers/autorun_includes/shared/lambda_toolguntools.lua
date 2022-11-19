@@ -708,7 +708,7 @@ local function UsePhysPropTool( self, target )
     self:LookTo( target, 2 )
 
     coroutine.wait( 1 )
-    if !IsValid( target ) or !util_IsValidPhysicsObject( entity, physbone ) then return end -- it's pretty much a double IsValid but just in case
+    if !IsValid( target ) or !util_IsValidPhysicsObject( entity, physbone ) or entity == Entity( 0 ) then return end -- it's pretty much a double IsValid but just in case
 
     self:UseWeapon( target:WorldSpaceCenter() )
 

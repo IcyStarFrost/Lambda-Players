@@ -40,6 +40,7 @@ if CLIENT then
     local string_find = string.find
     local lower = string.lower
     local tostring = tostring
+    local vgui = vgui
 
     LAMBDAPANELS = {}
 
@@ -58,16 +59,100 @@ if CLIENT then
         return panel
     end
 
+    -- Creates a basic Editable panel
+    function LAMBDAPANELS:CreateBasicPanel( parent, dock )
+        local editablepanel = vgui.Create( "EditablePanel", parent )
+        if dock then editablepanel:Dock( FILL ) end
+        return editablepanel
+    end
+
+    -- Creates a slider
+    function LAMBDAPANELS:CreateNumSlider( parent, dock, default, text, min, max, decimals )
+        local numslider = vgui.Create( "DNumSlider", parent )
+        if dock then numslider:Dock( dock ) end
+        numslider:SetText( text or "" )
+        numslider:SetMin( min )
+        numslider:SetMax( max )
+        numslider:SetDecimals( decimals or 0 )
+        numslider:SetValue( default )
+        return numslider
+    end
+
+    -- Creates a box with a list of options
+    -- I hate combo box. It's so weird
+    function LAMBDAPANELS:CreateComboBox( parent, dock, options )
+        local choiceindexes = { keys = {}, values = {} }
+        local combobox = vgui.Create( "DComboBox", parent )
+        if dock then combobox:Dock( dock ) end
+
+        for k, v in pairs( options ) do 
+            local index = combobox:AddChoice( k, v )
+            choiceindexes.keys[ k ] = index
+            choiceindexes.values[ v ] = index
+        end
+
+        function combobox:SelectOptionByKey( key )
+            if choiceindexes.keys[ key ] then
+                combobox:ChooseOptionID( choiceindexes.keys[ key ] )
+            elseif choiceindexes.values[ key ] then
+                combobox:ChooseOptionID( choiceindexes.values[ key ] )
+            end
+        end
+
+        return combobox
+    end
+
+    -- Creates a text box
+    function LAMBDAPANELS:CreateTextEntry( parent, dock, placeholder )
+        local textentry = vgui.Create( "DTextEntry", parent )
+        if dock then textentry:Dock( dock ) end
+        textentry:SetPlaceholderText( placeholder or "" )
+        return textentry
+    end
+
+    -- Creates a color mixer
+    function LAMBDAPANELS:CreateColorMixer( parent, dock )
+        local mixer = vgui.Create( "DColorMixer", parent )
+        if dock then mixer:Dock( dock ) end
+        return mixer
+    end
+
+    -- Creates a button
+    function LAMBDAPANELS:CreateButton( parent, dock, text, doclick )
+        local button = vgui.Create( "DButton", parent )
+        if dock then button:Dock( dock ) end
+        button:SetText( text or "" )
+        button.DoClick = doclick
+        return button
+    end
+
+    -- Creates a scroll panel
+    function LAMBDAPANELS:CreateScrollPanel( parent, ishorizontal, dock )
+        local class = ishorizontal and "DHorizontalScroller" or "DScrollPanel"
+        local scroll = vgui.Create( class, parent )
+        if dock then scroll:Dock( dock ) end
+        return scroll 
+    end
+
     -- Simply creates a label. Shocking!
     function LAMBDAPANELS:CreateLabel( text, parent, dock )
-
         local panel = vgui.Create( "DLabel", parent )
         panel:SetText( text )
-        panel:Dock( dock )
+        if dock then panel:Dock( dock ) end
 
         return panel
     end
 
+    -- Creates a label that contains a URL
+    function LAMBDAPANELS:CreateURLLabel( text, url, parent, dock )
+        local panel = vgui.Create( "DLabelURL", parent )
+        panel:SetText( text )
+        panel:SetURL( url )
+        if dock then panel:Dock( dock ) end
+
+        return panel
+    end
+    
     -- Creates a button that will export the specified table to a specified file path
     function LAMBDAPANELS:CreateExportPanel( name, parent, dock, buttontext, targettable, exporttype, exportpath )
 
@@ -103,7 +188,7 @@ if CLIENT then
             listview:Dock( FILL )
             listview:AddColumn( "Files", 1 )
 
-            local files, _ = file.Find( searchpath .. "/*", "DATA", "nameasc" )
+            local files, _ = file.Find( searchpath, "DATA", "nameasc" )
 
             for k, v in ipairs( files ) do
                 local line = listview:AddLine( v )
@@ -128,8 +213,8 @@ if CLIENT then
     end
 
     -- Creates a Text entry that acts as a search bar
-    function LAMBDAPANELS:CreateSearchBar( listview, tbl, parent, searchkeys )
-
+    function LAMBDAPANELS:CreateSearchBar( listview, tbl, parent, searchkeys, linetextprefix )
+        linetextprefix = linetextprefix or ""
         local panel = vgui.Create( "DTextEntry", parent )
         panel:SetPlaceholderText( "Search Bar" )
 
@@ -145,30 +230,55 @@ if CLIENT then
 
             if value == "" then 
 
-                for k, v in pairs( panel.l_searchtable ) do
-                    local line = listview:AddLine( searchkeys and k or v  ) 
+                for k, v in SortedPairs( panel.l_searchtable ) do
+                    local line = listview:AddLine( ( searchkeys and k or v ) .. linetextprefix ) 
                     line:SetSortValue( 1, v )
                 end
                 
                 return 
             end
             
-            for k, v in pairs( panel.l_searchtable ) do
+            for k, v in SortedPairs( panel.l_searchtable ) do
 
                 if searchkeys then
                     local match = string_find( lower( tostring( k ) ), lower( value ) )
 
-                    if match then local line = listview:AddLine( k ) line:SetSortValue( 1, v ) end
+                    if match then local line = listview:AddLine( k .. linetextprefix ) line:SetSortValue( 1, v ) end
                 else
                     local match = string_find( lower( tostring( v ) ), lower( value ) )
 
-                    if match then local line = listview:AddLine( v ) line:SetSortValue( 1, v ) end
+                    if match then local line = listview:AddLine( v .. linetextprefix ) line:SetSortValue( 1, v ) end
                 end
 
             end
         end
 
         return panel
+    end
+
+
+    local panelgetvalues = {
+        [ "DTextEntry" ] = function( self ) return self:GetText() != "" and self:GetText() or nil end,
+        [ "DCheckBox" ] = function( self ) return self:GetChecked() end,
+        [ "DNumSlider" ] = function( self ) return self:GetValue() end,
+        [ "DColorMixer" ] = function( self ) return self:GetColor() end,
+        [ "DComboBox" ] = function( self ) local _,data = self:GetSelected() return data end,
+    }
+
+    local panelSetvalues = {
+        [ "DTextEntry" ] = function( self, value ) self:SetText( value ) end,
+        [ "DCheckBox" ] = function( self, value ) self:SetChecked( value ) end,
+        [ "DNumSlider" ] = function( self, value ) self:SetValue( value ) end,
+        [ "DColorMixer" ] = function( self, value ) self:SetColor( value ) end,
+        [ "DComboBox" ] = function( self, value ) self:SelectOptionByKey( value ) end,
+    }
+
+    function LAMBDAPANELS:GetValue( pnl )
+        if panelgetvalues[ pnl.LambdapnlClass ] then return panelgetvalues[ pnl.LambdapnlClass ]( pnl ) end 
+    end
+
+    function LAMBDAPANELS:SetValue( pnl, value )
+        if panelSetvalues[ pnl.LambdapnlClass ] then panelSetvalues[ pnl.LambdapnlClass ]( pnl, value ) end 
     end
     
     -- Sorts a table of strings by alphabet

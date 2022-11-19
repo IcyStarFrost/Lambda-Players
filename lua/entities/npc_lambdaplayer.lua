@@ -54,15 +54,18 @@ end
     local voicepitchmax = GetConVar( "lambdaplayers_voice_voicepitchmax" )
     local idledir = GetConVar( "lambdaplayers_voice_idledir" )
     local drawflashlight = GetConVar( "lambdaplayers_drawflashlights" )
+    local profilechance = GetConVar( "lambdaplayers_lambda_profileusechance" )
     local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
     local ents_Create = ents and ents.Create or nil
     local navmesh_GetNavArea = navmesh and navmesh.GetNavArea or nil
     local voiceprofilechance = GetConVar( "lambdaplayers_lambda_voiceprofileusechance" )
+    local thinkrate = GetConVar( "lambdaplayers_lambda_singleplayerthinkrate" )
     local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
     local CurTime = CurTime
     local Clamp = math.Clamp
     local min = math.min
     local color_white = color_white
+    local RandomPairs = RandomPairs
     local TraceHull = util.TraceHull
     local QuickTrace = util.QuickTrace
     local FrameTime = FrameTime
@@ -190,6 +193,17 @@ function ENT:Initialize()
         self:SwitchWeapon( "physgun", true )
         
         self:HandleAllValidNPCRelations()
+
+
+        if LambdaPersonalProfiles and random( 0, 100 ) < profilechance:GetInt() then
+            for k, v in RandomPairs( LambdaPersonalProfiles ) do
+                if self:IsNameOpen( k ) then
+                    self:SetLambdaName( k )
+                end
+            end
+        end
+
+        self:ProfileCheck()
 
     elseif CLIENT then
 
@@ -453,7 +467,10 @@ function ENT:Think()
         end
 
     end
-    
+    if game.SinglePlayer() then
+        self:NextThink( CurTime() + thinkrate:GetFloat() )
+        return true
+    end
 
 end
 
