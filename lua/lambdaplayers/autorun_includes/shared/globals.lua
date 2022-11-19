@@ -208,6 +208,9 @@ end
 local ents_GetAll = ents.GetAll
 local ipairs = ipairs
 local IsValid = IsValid
+local lower = string.lower
+
+-- Gets all Lambda Players currently active
 function GetLambdaPlayers()
     local lambdas = {}
     for k, v in ipairs( ents_GetAll() ) do
@@ -216,6 +219,12 @@ function GetLambdaPlayers()
     return lambdas
 end
 
+-- Gets a Lambda Player by their name
+function GetLambdaPlayerByName( name )
+    for k, v in ipairs( GetLambdaPlayers() ) do
+        if lower( v:GetLambdaName() ) == lower( name ) then return v end
+    end
+end
 
 function LambdaCreateThread( func )
     local thread = coroutine.create( func ) 
