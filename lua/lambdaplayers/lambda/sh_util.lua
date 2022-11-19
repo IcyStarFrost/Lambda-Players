@@ -297,6 +297,9 @@ if SERVER then
                 end
             end
 
+            self:SetCollisionBounds( Vector( -10, -10, 0 ), Vector( 10, 10, 72 ) )
+            self:PhysicsInitShadow()
+
 
 --[[             -- NW Vars --
             local nw = info.nwvars

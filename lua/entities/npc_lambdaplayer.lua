@@ -90,9 +90,7 @@ function ENT:Initialize()
     self:BuildPersonalityTable() -- Builds all personality chances from autorun_includes/shared/lambda_personalityfuncs.lua for use in chance testing and creates Get/Set functions for each one
 
     if SERVER then
-        
-        self:SetSolid( SOLID_BBOX )
-        self:SetCollisionBounds( Vector( -17, -17, 0 ), Vector( 17, 17, 72 ) )
+    
 
         self:SetModel( allowaddonmodels:GetBool() and _LAMBDAPLAYERS_Allplayermodels[ random( #_LAMBDAPLAYERS_Allplayermodels ) ] or _LAMBDAPLAYERSDEFAULTMDLS[ random( #_LAMBDAPLAYERSDEFAULTMDLS ) ] )
 
@@ -166,11 +164,14 @@ function ENT:Initialize()
         self.loco:SetStepHeight( 30 )
         self.loco:SetGravity( -physenv.GetGravity().z ) -- Makes us fall at the same speed as the real players do
 
+        self:SetCollisionBounds( Vector( -10, -10, 0 ), Vector( 10, 10, 72 ) )
         self:PhysicsInitShadow()
-        self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
+        self:SetCollisionGroup( COLLISION_GROUP_NPC )
         self:AddCallback( "PhysicsCollide", function( self, data )
             self:HandleCollision( data )
         end)
+
+        
 
         self:SetLagCompensated( true )
         self:AddFlags( FL_OBJECT + FL_NPC + FL_CLIENT )
