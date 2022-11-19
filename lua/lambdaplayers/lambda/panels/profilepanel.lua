@@ -101,7 +101,7 @@ local function OpenProfilePanel( ply )
         local compiledinfo = CompileSettings()
 
         surface.PlaySound( "buttons/button15.wav" )
-        chat.AddText( "Saved " .. compiledinfo.name .. " to the Server's Profiles")
+        chat.AddText( "Saved " .. compiledinfo.name .. " to the Server's Profiles. Make sure the name exists in the Server's names by using the Name Panel")
 
         local line =  profilelist:AddLine( compiledinfo.name .. " | Server" )
         line.l_isprofilelocal = false
