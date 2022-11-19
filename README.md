@@ -80,6 +80,15 @@ Called when all default convars have been created. Use this hook if you want use
 
 Called when all default console commands have been created. Use this hook if you want use the `CreateLambdaConsoleCommand()` function to create custom console commands for Lambda Players externally See lambdaplayers/autorun_includes/shared/d_consolecommands.lua
 
+
+
+### `LambdaOnProfilePanelLoaded`
+### Client-Side/Shared
+
+Called when the Profile Panel has been loaded. Use this hook if you want to add more settings to the Profile Panel using `LambdaCreateProfileSetting()` See lambdaplayers/autorun_includes/shared/z_z_lambda_profilepanelextras.lua
+
+
+
 # Lambda Player Addon Hooks
 
 *The hooks below can be used to add onto certain features of the lambdas*
