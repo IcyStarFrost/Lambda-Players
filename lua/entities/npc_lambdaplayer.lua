@@ -160,10 +160,11 @@ function ENT:Initialize()
 
         SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
-        self.loco:SetJumpHeight( 80 )
+        self.loco:SetJumpHeight( 60 )
         self.loco:SetAcceleration( 1000 )
         self.loco:SetDeceleration( 1000 )
         self.loco:SetStepHeight( 30 )
+        self.loco:SetGravity( -physenv.GetGravity().z ) -- Makes us fall at the same speed as the real players do
 
         self:PhysicsInitShadow()
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
@@ -344,13 +345,7 @@ function ENT:Think()
         end
 
         if !self:IsOnGround() then
-            self.l_FallVelocity = self.loco:GetVelocity()[ 3 ]
-            
-            -- Sometimes when they fall in water and touch a flat ground surface, they don't register it as being water
-            -- This is here just so if they enter water during the fall, it negates the damage
-            if self:WaterLevel() >= 1 then
-                self.l_FallVelocity = 0
-            end
+            self.l_FallVelocity = -self.loco:GetVelocity().z
         end
 
         -- Animations --
