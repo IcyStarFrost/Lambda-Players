@@ -96,6 +96,11 @@ For Eve, I think I will use the Female Metro Cop model by simply scrolling throu
 
 ![image](https://user-images.githubusercontent.com/109770359/202868941-e0cff2a1-bc1c-47f2-bce0-3d65f5ae6259.png)
 
+You can scroll to the far right to find the Bodygroups and Skins section. However since our model doesn't have skins nor bodygroups we will not worry about that.
+
+![image](https://user-images.githubusercontent.com/109770359/202915587-a375426e-f880-4b0a-9de9-7da63cf61206.png)
+
+
 Next I need to give "her" a profile picture. If you don't know how to add Profile Pictures, please scroll up to the Profile Picture section. I'm gonna look through the Profile Pictures and find one that I want to use 
 
 ![image](https://user-images.githubusercontent.com/109770359/202869021-11d43e65-506d-440b-8d73-be49b0a72e00.png)
