@@ -310,7 +310,7 @@ function LambdaPlayers_Notify( ply, text, notifynum, snd )
     if !IsValid( ply ) then return end
     net.Start( "lambdaplayers_notification" )
     net.WriteString( text )
-    net.WriteUInt( notifynum or NOTIFY_GENERIC, 3 )
+    net.WriteUInt( notifynum or 0, 3 )
     net.WriteString( snd or "" )
     net.Send( ply )
 end
