@@ -7,6 +7,7 @@ local table_Merge = table.Merge
 local table_Empty = table.Empty
 local string_upper = string.upper
 local isfunction = isfunction
+local table_Copy = table.Copy
 local string_Explode = string.Explode
 local string_len = string.len
 local string_Left = string.Left
@@ -251,7 +252,9 @@ local function OpenProfilePanel( ply )
 
     LAMBDAPANELS:CreateLabel( "Spawn Weapon", mainscroll, TOP )
     LAMBDAPANELS:CreateLabel( "The weapon to spawn with", mainscroll, TOP )
-    local spawnweapon = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, _LAMBDAWEAPONCLASSANDPRINTS )
+    local copy = table_Copy( _LAMBDAWEAPONCLASSANDPRINTS )
+    copy[ "No Weapon" ] = "/NIL"
+    local spawnweapon = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, copy )
 
     LAMBDAPANELS:CreateLabel( "Ping", mainscroll, TOP )
     LAMBDAPANELS:CreateLabel( "The lowest point this Lambda's Ping can get", mainscroll, TOP )
@@ -464,7 +467,7 @@ local function OpenProfilePanel( ply )
 
             externalvars = profileinfo and profileinfo.externalvars or nil,
 
-            spawnwep = weapon
+            spawnwep = weapon != "/NIL" and weapon or nil
 
         }
 
@@ -532,7 +535,7 @@ local function OpenProfilePanel( ply )
         
         pingrange:SetValue( infotable.pingrange )
 
-        if infotable.spawnwep then spawnweapon:SelectOptionByKey( infotable.spawnwep ) end
+        if infotable.spawnwep then spawnweapon:SelectOptionByKey( infotable.spawnwep ) else spawnweapon:SelectOptionByKey( "/NIL" ) end
 
         if infotable.externalvars then
             for k, v in pairs( infotable.externalvars ) do
