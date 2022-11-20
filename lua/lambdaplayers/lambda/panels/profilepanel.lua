@@ -310,11 +310,9 @@ local function OpenProfilePanel( ply )
 
     local personalityscroll = LAMBDAPANELS:CreateScrollPanel( personalitypanel, false, FILL )
     LAMBDAPANELS:CreateLabel( "-- Personality Settings --", personalityscroll, TOP )
-    LAMBDAPANELS:CreateLabel( "If this profile's personality", personalityscroll, TOP )
-    LAMBDAPANELS:CreateLabel( "should be random. Note, this", personalityscroll, TOP )
-    LAMBDAPANELS:CreateLabel( "will reset the sliders on save", personalityscroll, TOP )
-
-    local israndompersonality = LAMBDAPANELS:CreateCheckBox( personalityscroll, TOP, false, "Random Personality" )
+    LAMBDAPANELS:CreateLabel( "If this Profile should", personalityscroll, TOP )
+    LAMBDAPANELS:CreateLabel( "use these sliders", personalityscroll, TOP )
+    local usepersonality = LAMBDAPANELS:CreateCheckBox( personalityscroll, TOP, true, "Use Personality Slider" )
 
     for k, v in ipairs( LambdaPersonalities ) do 
         local numslider = LAMBDAPANELS:CreateNumSlider( personalityscroll, TOP, 30, v[ 1 ], 0, 100, 0 )
@@ -333,14 +331,19 @@ local function OpenProfilePanel( ply )
 
     local colorscroll = LAMBDAPANELS:CreateScrollPanel( colorframe, false, FILL )
 
+    
+
     LAMBDAPANELS:CreateLabel( "-- Playermodel Color --", colorscroll, TOP )
+    local useplycolor = LAMBDAPANELS:CreateCheckBox( colorscroll, TOP, true, "Use Playermodel Color" )
     local playermodelcolor = LAMBDAPANELS:CreateColorMixer( colorscroll, TOP )
 
     function playermodelcolor:ValueChanged( col )
         playermodelpreview:UpdateColors( Vector( col.r / 255, col.g / 255, col.b / 255 ) )
     end
 
+
     LAMBDAPANELS:CreateLabel( "-- Physgun Color --", colorscroll, TOP )
+    local usephyscolor = LAMBDAPANELS:CreateCheckBox( colorscroll, TOP, true, "Use Physgun Color" )
     local physguncolor = LAMBDAPANELS:CreateColorMixer( colorscroll, TOP )
     ---- ---- ---- ---- ---- ----
 
@@ -387,9 +390,10 @@ local function OpenProfilePanel( ply )
             model = model:GetText() != "" and model:GetText() or nil,
             profilepicture = profilepicture:GetText() != "" and "lambdaplayers/custom_profilepictures/" .. profilepicture:GetText() or nil,
 
-            plycolor = playermodelcolor:GetVector(),
-            physcolor = physguncolor:GetVector(),
-
+            plycolor = useplycolor:GetChecked() and playermodelcolor:GetVector() or nil,
+            physcolor = usephyscolor:GetChecked() and physguncolor:GetVector() or nil,
+            
+            
             voicepitch = round( voicepitch:GetValue(), 0 ),
             voice = round( voicechance:GetValue(), 0 ),
             voiceprofile = vp != "/NIL" and vp or nil,
@@ -406,7 +410,7 @@ local function OpenProfilePanel( ply )
             infotable.externalvars[ k ] = LAMBDAPANELS:GetValue( v )
         end
 
-        if !israndompersonality:GetChecked() then
+        if !usepersonality:GetChecked() then
             infotable.personality = {}
             for k, v in pairs( personalitysliders ) do
                 infotable.personality[ k ] = round( v:GetValue(), 0 )
@@ -429,9 +433,10 @@ local function OpenProfilePanel( ply )
             profilepicture:SetText( !isspawnicon and string.Replace( infotable.profilepicture, "lambdaplayers/custom_profilepictures/", "" ) or "" )
         end
         
-
-        playermodelcolor:SetVector( infotable.plycolor )
-        physguncolor:SetVector( infotable.physcolor )
+        useplycolor:SetChecked( infotable.plycolor != nil )
+        usephyscolor:SetChecked( infotable.physcolor != nil )
+        playermodelcolor:SetVector( infotable.plycolor or Vector( 1, 1, 1 ) )
+        physguncolor:SetVector( infotable.physcolor or Vector( 1, 1, 1 ) )
 
         profilepicture:OnChange()
         model:OnChange()
@@ -458,9 +463,9 @@ local function OpenProfilePanel( ply )
                 local slider = personalitysliders[ k ]
                 if slider then slider:SetValue( v ) end
             end
-            israndompersonality:SetChecked( false )
+            usepersonality:SetChecked( false )
         else
-            israndompersonality:SetChecked( true )
+            usepersonality:SetChecked( true )
         end
 
     end

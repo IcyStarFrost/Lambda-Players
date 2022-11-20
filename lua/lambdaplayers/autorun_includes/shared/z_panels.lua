@@ -85,6 +85,7 @@ if CLIENT then
         local checkbox = vgui.Create( "DCheckBox", basepnl )
         checkbox:SetSize( 16, 16 )
         checkbox:Dock( LEFT )
+        checkbox:SetChecked( default or false )
 
         local lbl = LAMBDAPANELS:CreateLabel( text, basepnl, LEFT )
         lbl:SetSize( 400, 100 )
