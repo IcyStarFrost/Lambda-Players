@@ -7,6 +7,8 @@ local table_Merge = table.Merge
 local table_Empty = table.Empty
 
 
+-- Later I will make a Bodygroups and Skins settings for the panel by default
+
 local function OpenProfilePanel( ply )
     if !IsValid( ply ) then return end
 

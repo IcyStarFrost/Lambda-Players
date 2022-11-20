@@ -33,6 +33,18 @@ function ENT:GetAimVector()
     return self:GetAttachmentPoint( "eyes" ).Ang:Forward()
 end
 
+
+-- Add a certain amount to the Lambda's frag count (or kills count)
+function ENT:AddFrags( count ) 
+    self:SetFrags( self:GetFrags() + count )
+end
+
+-- Add a certain amount to the Lambda's death count
+function ENT:AddDeaths( count ) 
+    self:AddDeaths( self:GetDeaths() + count )
+end
+
+
 -- Returns our kill count
 function ENT:Frags()
     return self:GetFrags()
