@@ -47,6 +47,8 @@ elseif CLIENT then
     local tostring = tostring
     local uiscale = GetConVar( "lambdaplayers_uiscale" )
 
+    local displayArmor = GetConVar( "lambdaplayers_displayarmor" )
+
     hook.Add( "HUDPaint", "LambdaPlayers_NameDisplay", function()
         local sw, sh = ScrW(), ScrH()
         local traceent = LocalPlayer():GetEyeTrace().Entity
@@ -57,8 +59,15 @@ elseif CLIENT then
             local colvec = traceent:GetPlyColor()
             local hp = traceent:GetNW2Float( "lambda_health", "NAN" )
             
+            local hpW = 2
+            local armor = traceent:GetArmor()
+            if armor > 0 and displayArmor:GetBool() then
+                hpW = 2.1
+                DrawText( tostring( armor ) .. "%", "lambdaplayers_healthfont", ( sw / 1.9 ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), placeholdercolor, TEXT_ALIGN_CENTER)
+            end
+
             DrawText( name, "lambdaplayers_displayname", ( sw / 2 ), ( sh / 1.95 ) , placeholdercolor, TEXT_ALIGN_CENTER )
-            DrawText( tostring( hp ) .. "%", "lambdaplayers_healthfont", ( sw / 2 ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), placeholdercolor, TEXT_ALIGN_CENTER)
+            DrawText( tostring( hp ) .. "%", "lambdaplayers_healthfont", ( sw / hpW ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), placeholdercolor, TEXT_ALIGN_CENTER)
         end
     
     end )
