@@ -62,7 +62,7 @@ if CLIENT then
     -- Creates a basic Editable panel
     function LAMBDAPANELS:CreateBasicPanel( parent, dock )
         local editablepanel = vgui.Create( "EditablePanel", parent )
-        if dock then editablepanel:Dock( FILL ) end
+        if dock then editablepanel:Dock( dock ) end
         return editablepanel
     end
 
@@ -76,6 +76,21 @@ if CLIENT then
         numslider:SetDecimals( decimals or 0 )
         numslider:SetValue( default )
         return numslider
+    end
+
+    function LAMBDAPANELS:CreateCheckBox( parent, dock, default, text )
+        local basepnl = LAMBDAPANELS:CreateBasicPanel( parent, dock )
+        basepnl:SetSize( 400, 16 )
+        
+        local checkbox = vgui.Create( "DCheckBox", basepnl )
+        checkbox:SetSize( 16, 16 )
+        checkbox:Dock( LEFT )
+
+        local lbl = LAMBDAPANELS:CreateLabel( text, basepnl, LEFT )
+        lbl:SetSize( 400, 100 )
+        lbl:DockMargin( 5, 0, 0, 0 )
+
+        return checkbox
     end
 
     -- Creates a box with a list of options

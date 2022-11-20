@@ -306,8 +306,15 @@ local function OpenProfilePanel( ply )
     personalitypanel:Dock( LEFT )
     scroll:AddPanel( personalitypanel )
 
+
+
     local personalityscroll = LAMBDAPANELS:CreateScrollPanel( personalitypanel, false, FILL )
     LAMBDAPANELS:CreateLabel( "-- Personality Settings --", personalityscroll, TOP )
+    LAMBDAPANELS:CreateLabel( "If this profile's personality", personalityscroll, TOP )
+    LAMBDAPANELS:CreateLabel( "should be random. Note, this", personalityscroll, TOP )
+    LAMBDAPANELS:CreateLabel( "will reset the sliders on save", personalityscroll, TOP )
+
+    local israndompersonality = LAMBDAPANELS:CreateCheckBox( personalityscroll, TOP, false, "Random Personality" )
 
     for k, v in ipairs( LambdaPersonalities ) do 
         local numslider = LAMBDAPANELS:CreateNumSlider( personalityscroll, TOP, 30, v[ 1 ], 0, 100, 0 )
@@ -399,9 +406,11 @@ local function OpenProfilePanel( ply )
             infotable.externalvars[ k ] = LAMBDAPANELS:GetValue( v )
         end
 
-        infotable.personality = {}
-        for k, v in pairs( personalitysliders ) do
-            infotable.personality[ k ] = round( v:GetValue(), 0 )
+        if !israndompersonality:GetChecked() then
+            infotable.personality = {}
+            for k, v in pairs( personalitysliders ) do
+                infotable.personality[ k ] = round( v:GetValue(), 0 )
+            end
         end
 
         return infotable
@@ -444,9 +453,14 @@ local function OpenProfilePanel( ply )
             end
         end
 
-        for k, v in pairs( infotable.personality ) do
-            local slider = personalitysliders[ k ]
-            if slider then slider:SetValue( v ) end
+        if infotable.personality then
+            for k, v in pairs( infotable.personality ) do
+                local slider = personalitysliders[ k ]
+                if slider then slider:SetValue( v ) end
+            end
+            israndompersonality:SetChecked( false )
+        else
+            israndompersonality:SetChecked( true )
         end
 
     end
