@@ -155,9 +155,9 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             hook.Add( "PreDrawEffects", "lambdavoiceicon" .. id,function()
                 followEnt = LambdaIsValid( ent ) and ent or IsValid( ent.ragdoll ) and ent.ragdoll or followEnt
 
-                if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then hook.Remove( "PreDrawEffects", "zetavoiceicon" .. id ) return end
-                if RealTime() > RealTime() + length then hook.Remove( "PreDrawEffects", "zetavoiceicon" .. id ) return end
-                if !IsValid( followEnt ) then hook.Remove( "PreDrawEffects", "zetavoiceicon" .. id ) return end
+                if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
+                if RealTime() > RealTime() + length then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
+                if !IsValid( followEnt ) then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
 
                 local ang = EyeAngles()
                 local pos = followEnt:GetPos() + Vector( 0, 0, 80 )
