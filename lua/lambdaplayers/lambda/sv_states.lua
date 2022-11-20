@@ -18,7 +18,6 @@ function ENT:Idle()
 end
 
 local combattbl = { update = 0.2, run = true }
-
 function ENT:Combat()
     if !LambdaIsValid( self:GetEnemy() ) then self:SetState( "Idle" ) return end
 
@@ -65,6 +64,33 @@ function ENT:FindTarget()
     self:MoveToPos( self:GetRandomPosition() )
 end
 
+-- We look for a button and press it
+function ENT:FindButton()
+    local find = self:FindInSphere( self:GetPos(), 1000, function( ent ) if IsValid( ent ) and ( ent:GetClass() == "func_button" or ent:GetClass() == "gmod_button" or ent:GetClass() == "gmod_wire_button" ) and self:CanSee( ent ) then return true end end )
+    local button = find[ random( #find ) ]
+    if !IsValid( button ) then self:SetState( "Idle" ) return end
+    local pos = button:GetPos()
+
+    self:CancelMovement()
+
+    self:LookTo( button, 1 )
+    coroutine.wait( 1 )
+    
+    self:MoveToPos( pos )
+
+    if !IsValid( button ) then self:SetState( "Idle" ) return end
+
+    if button:GetClass() == "func_button" then
+        button:Fire("Press")
+    elseif button:GetClass() == "gmod_button" then
+        button:Toggle( !button:GetOn(), self )
+    elseif button:GetClass() == "gmod_wire_button" then
+        button:Switch( !button:GetOn() )
+    end
+    button:EmitSound( "HL2Player.Use", 80 )
+
+    self:SetState( "Idle" )
+end
 
 local laughdir = GetConVar( "lambdaplayers_voice_laughdir" )
 function ENT:Laughing()

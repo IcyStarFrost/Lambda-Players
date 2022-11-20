@@ -8,7 +8,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     medkit = {
         model = "models/weapons/w_medkit.mdl",
-        origin = "Misc",
+        origin = "Garry's Mod",
         prettyname = "Medkit",
         holdtype = "slam",
         bonemerge = true,
