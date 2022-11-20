@@ -393,9 +393,10 @@ local function OpenProfilePanel( ply )
             plycolor = useplycolor:GetChecked() and playermodelcolor:GetVector() or nil,
             physcolor = usephyscolor:GetChecked() and physguncolor:GetVector() or nil,
             
+
             
             voicepitch = round( voicepitch:GetValue(), 0 ),
-            voice = round( voicechance:GetValue(), 0 ),
+            voice = usepersonality:GetChecked() and round( voicechance:GetValue(), 0 ) or nil,
             voiceprofile = vp != "/NIL" and vp or nil,
             pingrange = round( pingrange:GetValue(), 0 ),
 
@@ -410,12 +411,15 @@ local function OpenProfilePanel( ply )
             infotable.externalvars[ k ] = LAMBDAPANELS:GetValue( v )
         end
 
-        if !usepersonality:GetChecked() then
+        if usepersonality:GetChecked() then
             infotable.personality = {}
             for k, v in pairs( personalitysliders ) do
                 infotable.personality[ k ] = round( v:GetValue(), 0 )
             end
+        else
+            infotable.personality = nil
         end
+
 
         return infotable
     end
@@ -461,15 +465,15 @@ local function OpenProfilePanel( ply )
         end
 
         if infotable.personality then
+            usepersonality:SetChecked( true )
             for k, v in pairs( infotable.personality ) do
                 local slider = personalitysliders[ k ]
                 if slider then slider:SetValue( v ) end
             end
-            usepersonality:SetChecked( false )
         else
-            usepersonality:SetChecked( true )
+            for k, v in pairs( personalitysliders ) do v:SetValue( 30 ) end
+            usepersonality:SetChecked( false )
         end
-
     end
 
 end
