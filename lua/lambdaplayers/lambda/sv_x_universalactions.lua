@@ -37,6 +37,12 @@ AddUActionToLambdaUA( function( self )
     self:NamedTimer( "Undoentities", rand( 0.3, 0.6 ), random( 1, 6 ), function() self:UndoLastSpawnedEnt() end )
 end )
 
+-- Look for and press a button
+AddUActionToLambdaUA( function( self )
+    if self:GetState() != "Idle" then return end
+    self:SetState( "FindButton" )
+end )
+
 -- Crouch
 AddUActionToLambdaUA( function( self )
     if random( 1, 2 ) != 1 then return end

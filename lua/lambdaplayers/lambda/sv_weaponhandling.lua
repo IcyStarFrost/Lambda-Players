@@ -21,8 +21,6 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     local oldwepdata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
     if oldwepdata and isfunction( oldwepdata.OnUnequip ) then oldwepdata.OnUnequip( self, wepent ) end
 
-    
-
     if weapondata.bonemerge then wepent:AddEffects( EF_BONEMERGE ) else wepent:RemoveEffects( EF_BONEMERGE ) end
 
     self.l_Weapon = weaponname
@@ -229,7 +227,7 @@ end
 
 function ENT:HandleShellEject( name, offpos, offang )
     local wepent = self:GetWeaponENT()
-    if !IsValid( wepent ) then return end
+    if !IsValid( wepent ) or name == "none" then return end
     offpos = offpos or Vector()
     offang = offang or Angle()
 
