@@ -8,6 +8,7 @@ ENT.IsLambdaPlayer = true
 local include = include
 local print = print
 local AddCSLuaFile = AddCSLuaFile
+local ipairs = ipairs
 
 --- Include files based on sv_ sh_ or cl_
 local ENTFiles = file.Find( "lambdaplayers/lambda/*", "LUA", "nameasc" )
@@ -72,6 +73,7 @@ end
     local unstucktable = {}
     local sub = string.sub
     local RealTime = RealTime
+    local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
     
 --
 
@@ -146,6 +148,23 @@ function ENT:Initialize()
         self:SetAbsPing( rndpingrange )  -- The lowest point our fake ping can get
         self:SetPing( rndpingrange ) -- Our actual fake ping
         
+        self.l_BodyGroupData = {}
+        if rndBodyGroups:GetBool() then
+            -- Randomize my model's bodygroups
+            for _, v in ipairs( self:GetBodyGroups() ) do
+                local subMdls = #v.submodels
+                if subMdls == 0 then continue end 
+                    
+                local rndID = random( 0, subMdls )
+                self:SetBodygroup( v.id, rndID )
+                self.l_BodyGroupData[ v.id ] = rndID
+            end
+
+            -- Randomize my model's skingroup
+            local skinCount = self:SkinCount()
+            if skinCount > 0 then self:SetSkin( random( 0, skinCount - 1 ) ) end
+        end
+
         -- Personality function was relocated to the start of the code since it needs to be shared so clients can have Get functions
         
         self:SetVoiceChance( random( 1, 100 ) )
