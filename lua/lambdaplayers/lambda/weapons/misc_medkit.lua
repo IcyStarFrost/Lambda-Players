@@ -2,7 +2,7 @@ local CurTime = CurTime
 local min = math.min
 local max = math.max
 local random = math.random
-local IsValid = LambdaIsValid
+local LambdaIsValid = LambdaIsValid
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
