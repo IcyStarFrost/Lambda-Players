@@ -369,7 +369,7 @@ if CLIENT then
     -- KV short for Key Value
     -- Removes a key from the specified file containing a table that uses strings as keys
     function LAMBDAPANELS:RemoveVarFromKVFile( filename, key, type ) 
-        net.Start( "lambdaplayers_removevarfromsqfile" )
+        net.Start( "lambdaplayers_removevarfromkvfile" )
         net.WriteString( filename )
         net.WriteString( key )
         net.WriteString( type )
@@ -391,7 +391,7 @@ elseif SERVER then
     util.AddNetworkString( "lambdaplayers_removevarfromkvfile" )
     util.AddNetworkString( "lambdaplayers_returndata" )
 
-    net.Receive( "lambdaplayers_removevarfromsqfile", function( len, ply )
+    net.Receive( "lambdaplayers_removevarfromkvfile", function( len, ply )
         if !ply:IsSuperAdmin() then return end
         local filename = net.ReadString()
         local key = net.ReadString()
