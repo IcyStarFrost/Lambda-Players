@@ -41,7 +41,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedata", function( ply )
     LambdaVoiceProfiles = LAMBDAFS:GetVoiceProfiles()
     LambdaPersonalProfiles = file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
 
-    LambdaPlayers_Notify( ply, "Updated Lambda Data", NOTIFY_HINT, "buttons/button15.wav" )
+    LambdaPlayers_Notify( ply, "Updated Lambda Data", 3, "buttons/button15.wav" )
 
 end, false, "Updates data such as names, props, ect. ", { name = "Update Lambda Data", category = "Utilities" } )
 
@@ -52,7 +52,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cleanupclientsideents", function(
     end
 
     surface.PlaySound( "buttons/button15.wav" )
-    notification.AddLegacy( "Cleaned up Client Side Entities!", NOTIFY_CLEANUP, 3 )
+    notification.AddLegacy( "Cleaned up Client Side Entities!", 4, 3 )
 
 end, true, "Removes Lambda client side entities such as ragdolls and dropped weapons", { name = "Remove Lambda Client Side ents", category = "Utilities" } )
 
@@ -63,7 +63,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cleanuplambdaents", function( ply
         if IsValid( v ) and v.IsLambdaSpawned then v:Remove() end
     end
 
-    LambdaPlayers_Notify( ply, "Cleaned up all Lambda entities!", NOTIFY_CLEANUP, "buttons/button15.wav" )
+    LambdaPlayers_Notify( ply, "Cleaned up all Lambda entities!", 4, "buttons/button15.wav" )
 end, false, "Removes all entities that were spawned by Lambda Players", { name = "Cleanup Lambda Entities", category = "Utilities" } )
 
 

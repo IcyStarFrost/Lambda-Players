@@ -4,7 +4,7 @@ file.CreateDir( "lambdaplayers/exportednames" )
 
 -- This took way to long to make. It wasn't this panel's fault it was more so I was having so much trouble with file writing and that stuff
 local function OpenNamePanel( ply )
-    if !IsValid( ply ) then return elseif !ply:IsSuperAdmin() then notification.AddLegacy( "You must be a Super Admin in order to use this!", NOTIFY_ERROR, 4) surface.PlaySound( "buttons/button10.wav" ) return end
+    if !IsValid( ply ) then return elseif !ply:IsSuperAdmin() then notification.AddLegacy( "You must be a Super Admin in order to use this!", 1, 4) surface.PlaySound( "buttons/button10.wav" ) return end
 
     local names = {}
     local sortednames = {}
