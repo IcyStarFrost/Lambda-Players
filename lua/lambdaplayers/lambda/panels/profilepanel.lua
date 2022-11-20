@@ -55,9 +55,9 @@ local function OpenProfilePanel( ply )
             if info.name == profilename then v:SetSortValue( 1, newinfo ) return end
         end
 
-        local line =  profilelist:AddLine( compiledinfo.name .. ( islocal and " | Local" or " | SERVER" ) )
+        local line =  profilelist:AddLine( newinfo.name .. ( islocal and " | Local" or " | SERVER" ) )
         line.l_isprofilelocal = islocal
-        line:SetSortValue( 1, compiledinfo )
+        line:SetSortValue( 1, newinfo )
     end
 
     function profilelist:DoDoubleClick( id, line )
