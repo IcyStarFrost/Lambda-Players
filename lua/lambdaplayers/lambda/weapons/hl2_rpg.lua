@@ -42,13 +42,15 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             local spawnAttach = wepent:GetAttachment(2)
             local targetAng = ( target:WorldSpaceCenter() - wepent:GetPos() ):Angle()
-            rocket:SetPos( spawnAttach.Pos + targetAng:Forward() * 100 + targetAng:Up() * 15 )
+            rocket:SetPos( spawnAttach.Pos + targetAng:Forward() * 40 + targetAng:Up() * 15 )
             rocket:SetAngles( ( target:WorldSpaceCenter() - rocket:GetPos() ):Angle() )
             rocket:SetOwner( self )
+            rocket:SetMoveType( MOVETYPE_FLYGRAVITY )
+            rocket:SetAbsVelocity( self:GetForward() * 300 + Vector( 0, 0, 128 ) )
             rocket:SetCollisionGroup( COLLISION_GROUP_DEBRIS ) -- SetOwner should prevent collision but it doesn't
             rocket:Spawn()
 
-            self:SimpleTimer( 0.3, function() -- Grace period to avoid collision with the shooter
+            self:SimpleTimer( 0.4, function() -- Grace period to avoid collision with the shooter
                 if !IsValid( rocket ) then return end
                 rocket:SetCollisionGroup( COLLISION_GROUP_PROJECTILE )
             end)

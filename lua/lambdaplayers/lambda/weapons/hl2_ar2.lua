@@ -1,3 +1,4 @@
+local IsValid = IsValid
 local CurTime = CurTime
 local random = math.random
 local ballMass = GetConVar( "sk_weapon_ar2_alt_fire_mass" )

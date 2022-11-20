@@ -1,3 +1,5 @@
+local IsValid = IsValid
+
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     revolver = {

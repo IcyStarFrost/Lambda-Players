@@ -1,6 +1,6 @@
+local IsValid = IsValid
 local random = math.random
 local math_min = math.min
-local IsValid = IsValid
 local util_Effect = util.Effect
 local tracetbl = {}
 
@@ -29,7 +29,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         Draw = function( lambda, wepent )
             if IsValid( wepent ) then
                 local attachtab = { "fork1m", "fork1t", "fork2m", "fork2t", "fork3m", "fork3t" }
-                local sizeBlast = 0
 
                 for i = 1, #attachtab do
                     local at = wepent:GetAttachment( wepent:LookupAttachment( attachtab[i] ) )

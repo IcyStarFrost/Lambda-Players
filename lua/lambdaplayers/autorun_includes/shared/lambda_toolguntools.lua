@@ -53,7 +53,7 @@ end
 
 
 
--- Helper function for the Paint Tool
+-- Helper function for the Ignite Tool
 -- Taken from the ignite properties in sandbox
 local function CanEntityBeSetOnFire( ent )
 
@@ -102,7 +102,7 @@ end
 local balloonnames = { "normal", "normal_skin1", "normal_skin2", "normal_skin3", "gman", "mossman", "dog", "heart", "star" }
 local function UseBalloonTool( self, target )
     if !self:IsUnderLimit( "Balloon" ) then return end -- We check if the Lambda Players hasn't reached it's personal limit of Balloons
-    local world = random( 0, 1 )
+    local world = tobool( random( 0, 1 ) )
 
     -- If we choose target but the target isn't valid, we don't do anything.
     if !world and ( !IsValid( target ) or target:GetClass() == "gmod_balloon" ) then return end -- Returning nothing is equivalent to returning false
@@ -174,7 +174,7 @@ AddToolFunctionToLambdaTools( "Balloon", UseBalloonTool )
 local function UseBallsocketTool( self, target )
     if !IsValid( target ) then return end
 
-    local world = random( 0, 1 )
+    local world = tobool( random( 0, 1 ) )
     local find = self:FindInSphere( nil, 800, function( ent ) if ent != target and !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
     local target2 = find[ random( #find ) ]
 
@@ -303,7 +303,7 @@ local function UseElasticTool( self, target )
     if !self:IsUnderLimit( "Rope" ) then return end -- It's technically a special rope
     if !IsValid( target ) then return end
 
-    local world = random( 0, 1 )
+    local world = tobool( random( 0, 1 ) )
     local find = self:FindInSphere( nil, 800, function( ent ) if ent != target and !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
     local target2 = find[ random( #find ) ]
 
@@ -356,10 +356,11 @@ AddToolFunctionToLambdaTools( "Elastic", UseElasticTool )
 local effectlist = { "manhacksparks", "glassimpact", "striderblood", "shells", "cball_explode", "ar2impact", "bloodimpact", "sparks", "dirtywatersplash", "watersplash", "stunstickimpact", "thumperdust", "muzzleeffect", "bloodspray", "helicoptermegabomb", "rifleshells", "ar2explosion", "explosion", "cball_bounce", "shotgunshells", "underwaterexplosion", "smoke" }
 local function UseEmitterTool( self, target )
     if !self:IsUnderLimit( "Emitter" ) then return end
+    local world = tobool( random( 0, 1 ) )
 
-    -- TODO : Randomly choose between world or target
+    if !world and ( !IsValid( target ) or target:GetClass()=="gmod_emitter" ) then return end
 
-    local trace = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
+    local trace =  world and self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) ) or self:Trace( target:WorldSpaceCenter() )
     local hitpos = trace.HitPos
     local entity = trace.Entity
     local physbone = trace.PhysicsBone
@@ -432,7 +433,7 @@ AddToolFunctionToLambdaTools( "Faceposer", UseFaceposerTool )
 local hoverballmodels = { "models/dav0r/hoverball.mdl", "models/maxofs2d/hover_basic.mdl", "models/maxofs2d/hover_classic.mdl", "models/maxofs2d/hover_plate.mdl", "models/maxofs2d/hover_propeller.mdl", "models/maxofs2d/hover_rings.mdl" }
 local function UseHoverballTool( self, target )
     if !self:IsUnderLimit( "Hoverball" ) then return end
-    local world = random( 0, 1 )
+    local world = tobool( random( 0, 1 ) )
 
     if !world and ( !IsValid( target ) or target:GetClass()=="gmod_hoverball" ) then return end
 
@@ -581,7 +582,7 @@ AddToolFunctionToLambdaTools( "Lamp", UseLampTool )
 
 local function UseLightTool( self, target )
     if !self:IsUnderLimit( "Light" ) then return end -- Can't create any more lights
-    local world = random( 0, 1 )
+    local world = tobool( random( 0, 1 ) )
 
     if !world and ( !IsValid( target ) or target:GetClass()=="gmod_light" ) then return end
 
@@ -656,7 +657,7 @@ AddToolFunctionToLambdaTools( "Material", UseMaterialTool )
 
 local decallist = { "Eye", "Dark", "Smile", "Cross", "Nought", "Noughtsncrosses", "Light", "Blood", "YellowBlood", "Impact.Metal", "Scorch", "BeerSplash", "ExplosiveGunshot", "BirdPoop", "PaintSplatPink", "PaintSplatGreen", "PaintSplatBlue", "ManhackCut", "FadingScorch", "Antlion.Splat", "Splash.Large", "BulletProof", "GlassBreak", "Impact.Sand", "Impact.BloodyFlesh", "Impact.Antlion", "Impact.Glass", "Impact.Wood", "Impact.Concrete" }
 local function UsePaintTool( self, target )
-    local world = random( 0, 1 )
+    local world = tobool( random( 0, 1 ) )
     if !world and !IsValid( target ) then return end
 
     local trace = world and self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) ) or self:Trace( target:WorldSpaceCenter() )
@@ -826,7 +827,7 @@ local function UseSliderTool( self, target )
     if !self:IsUnderLimit( "Rope" ) then return end -- It's technically a special rope
     if !IsValid( target ) then return end
 
-    local world = random( 0, 1 )
+    local world = tobool( random( 0, 1 ) )
     local find = self:FindInSphere( nil, 800, function( ent ) if ent != target and !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
     local target2 = find[ random( #find ) ]
 
@@ -881,7 +882,7 @@ local thrustersounds = { "", "PhysicsCannister.ThrusterLoop", "WeaponDissolve.Ch
 local thrustereffects = { "none", "fire", "plasma", "magic", "rings", "smoke" }
 local function UseThrusterTool( self, target )
     if !self:IsUnderLimit( "Thruster" ) then return end
-    local world = random( 0, 1 )
+    local world = tobool( random( 0, 1 ) )
 
     if !world and ( !IsValid( target ) or target:GetClass()=="gmod_thruster" ) then return end
 
@@ -971,7 +972,7 @@ AddToolFunctionToLambdaTools( "Trail", UseTrailTool )
 local function UseWeldTool( self, target )
     if !IsValid( target ) then return end
 
-    local world = random( 5 ) == 1 --To avoid welding to the world too much by default
+    local world = random( 4 ) == 1 --To avoid welding to the world too much by default
     local find = self:FindInSphere( nil, 800, function( ent ) if ent != target and !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
     local target2 = find[ random( #find ) ]
 
@@ -1018,7 +1019,7 @@ AddToolFunctionToLambdaTools( "Weld", UseWeldTool )
 local wheelmodels = { "models/props_vehicles/apc_tire001.mdl", "models/props_vehicles/tire001a_tractor.mdl", "models/props_vehicles/tire001b_truck.mdl", "models/props_vehicles/tire001c_car.mdl", "models/props_trainstation/trainstation_clock001.mdl", "models/props_c17/pulleywheels_large01.mdl", "models/props_junk/sawblade001a.mdl", "models/props_wasteland/controlroom_filecabinet002a.mdl", "models/props_borealis/bluebarrel001.mdl", "models/props_c17/oildrum001.mdl", "models/props_c17/playground_carousel01.mdl", "models/props_c17/chair_office01a.mdl", "models/props_c17/TrapPropeller_Blade.mdl", "models/props_junk/metal_paintcan001a.mdl", "models/props_vehicles/carparts_wheel01a.mdl", "models/props_wasteland/wheel01.mdl" }
 local function UseWheelTool( self, target )
     if !self:IsUnderLimit( "Wheel" ) then return end
-    local world = random( 0, 1 )
+    local world = tobool( random( 0, 1 ) )
 
     if !world and !IsValid( target ) then return end
 

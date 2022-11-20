@@ -2,6 +2,7 @@ local TraceLine = util.TraceLine
 local util_Effect = util.Effect
 local random = math.random
 local tracetbl = {}
+
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     toolgun = {

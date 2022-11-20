@@ -6,6 +6,7 @@
 local Trace = util.TraceLine
 local Vector = Vector
 local pairs = pairs
+local IsValid = IsValid
 local tracetable = {}
 local list = list
 local scripted_ents = scripted_ents

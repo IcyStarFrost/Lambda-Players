@@ -1,3 +1,4 @@
+local IsValid = IsValid
 local random = math.random
 local CurTime = CurTime
 

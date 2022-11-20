@@ -365,14 +365,12 @@ if SERVER then
         self:SetState( "Laughing" )
     end
 
-    function ENT:PlaySequenceAndWait( name, speed )
+    function ENT:PlayGestureAndWait( name, speed )
 
         self.l_UpdateAnimations = false
-        local len = self:SetSequence( name )
+        local len = self:GetLayerDuration( self:AddGesture( name ) )
         speed = speed or 1
     
-        self:ResetSequenceInfo()
-        self:SetCycle( 0 )
         self:SetPlaybackRate( speed )
     
         -- wait for it to finish

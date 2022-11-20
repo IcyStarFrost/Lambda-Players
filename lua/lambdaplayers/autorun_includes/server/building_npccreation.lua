@@ -5,6 +5,7 @@
 
 local ents_Create = ents.Create
 local random = math.random
+local IsValid = IsValid
 
 function LambdaInternalSpawnNPC( lambda, Position, Normal, Class, SpawnFlagsSaved )
 
