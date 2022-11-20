@@ -225,7 +225,7 @@ local function OpenProfilePanel( ply )
     for k, v in pairs( LAMBDAFS:GetVoiceProfiles() ) do
         combotable[ k ] = k
     end
-
+    combotable[ "No Voice Profile" ] = "/NIL"
     local voiceprofile = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, combotable )
 
     LAMBDAPANELS:CreateLabel( "Voice Pitch", mainscroll, TOP )
@@ -392,7 +392,7 @@ local function OpenProfilePanel( ply )
 
             voicepitch = round( voicepitch:GetValue(), 0 ),
             voice = round( voicechance:GetValue(), 0 ),
-            voiceprofile = vp,
+            voiceprofile = vp != "/NIL" and vp or nil,
             pingrange = round( pingrange:GetValue(), 0 ),
 
             externalvars = profileinfo and profileinfo.externalvars or nil,
@@ -439,7 +439,7 @@ local function OpenProfilePanel( ply )
 
         voicepitch:SetValue( infotable.voicepitch )
         voicechance:SetValue( infotable.voice )
-        if infotable.voiceprofile then voiceprofile:SelectOptionByKey( infotable.voiceprofile ) end
+        if infotable.voiceprofile then voiceprofile:SelectOptionByKey( infotable.voiceprofile ) else voiceprofile:SelectOptionByKey( "/NIL" ) end
         
         pingrange:SetValue( infotable.pingrange )
 
