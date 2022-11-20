@@ -431,6 +431,8 @@ local function OpenProfilePanel( ply )
             local isspawnicon = string.StartWith( infotable.profilepicture, "spawnicons/" )
 
             profilepicture:SetText( !isspawnicon and string.Replace( infotable.profilepicture, "lambdaplayers/custom_profilepictures/", "" ) or "" )
+        else
+            profilepicture:SetText( "" )
         end
         
         useplycolor:SetChecked( infotable.plycolor != nil )
