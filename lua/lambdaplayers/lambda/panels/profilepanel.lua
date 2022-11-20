@@ -470,7 +470,7 @@ local function OpenProfilePanel( ply )
 
         infotable.bodygroups = {}
         for k, v in pairs( bodygroupdata ) do
-            infotable.bodygroups[ k ] = round( v:GetValue(), 0 )
+            if infotable.bodygroups[ k ] then infotable.bodygroups[ k ] = round( v:GetValue(), 0 ) end
         end
 
         for k, v in pairs( externalpanels ) do
