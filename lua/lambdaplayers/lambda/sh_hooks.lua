@@ -8,6 +8,7 @@ local ents_GetAll = ents.GetAll
 local table_Merge = table.Merge
 local isfunction = isfunction
 local ipairs = ipairs
+local bor = bit.bor
 local max = math.max
 local ceil = math.ceil
 local deathdir = GetConVar( "lambdaplayers_voice_deathdir" )
@@ -278,6 +279,25 @@ function ENT:InitializeMiniHooks()
         -- To get around that we basically predict if the Lambda is gonna die and completely block the damage so we don't actually die. This of course is exclusive to Respawning
         self:Hook( "EntityTakeDamage", "DamageHandling", function( target, info )
             if target != self then return end
+
+            -- Armor Damage Reduction
+            local curArmor = self:GetArmor()
+            if curArmor > 0 and !info:IsDamageType( bor( DMG_DROWN, DMG_POISON, DMG_FALL, DMG_RADIATION ) ) then
+                local flDmg = info:GetDamage()
+                local flNew = flDmg * 0.2
+                local flArmor = max( ( flDmg - flNew ), 1 )
+
+                if flArmor > curArmor then
+                    flArmor = curArmor
+                    flNew = ( flDmg - flArmor )
+                    self:SetArmor( 0 )
+                else
+                    self:SetArmor( curArmor - flArmor )
+                end
+
+                flDmg = flNew
+                info:SetDamage( flDmg )
+            end
 
             if isfunction( self.l_OnDamagefunction ) then self.l_OnDamagefunction( self, self:GetWeaponENT(), info )  end
 

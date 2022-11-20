@@ -124,6 +124,7 @@ function ENT:Initialize()
         self.debuginitstart = SysTime() -- Debug time from initialize to ENT:RunBehaviour()
         self.l_nextidlesound = CurTime() + 5 -- The next time we will play a idle sound
         self.l_nextUA = CurTime() + rand( 1, 15 ) -- The next time we will run a UAction. See lambda/sv_x_universalactions.lua
+        self.l_NextPickupCheck = 0 -- The next time we will check for nearby items to pickup
 
 
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
@@ -138,6 +139,9 @@ function ENT:Initialize()
         self:SetMaxHealth( 100 )
         self:SetNWMaxHealth( 100 )
         self:SetHealth( 100 )
+
+        self:SetArmor( 0 ) -- Our current armor
+        self:SetMaxArmor( 100 ) -- Our maximum armor
 
         self:SetPlyColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
         self:SetPhysColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
@@ -290,6 +294,8 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 4, "Deaths" )
     self:NetworkVar( "Int", 5, "Ping" )
     self:NetworkVar( "Int", 6, "AbsPing" )
+    self:NetworkVar( "Int", 7, "Armor" )
+    self:NetworkVar( "Int", 8, "MaxArmor" )
     
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
 end
@@ -339,6 +345,14 @@ function ENT:Think()
             local phys = self:GetPhysicsObject()
             phys:UpdateShadow( self:GetPos(), self:GetAngles(), 0 )
             self.l_nextphysicsupdate = CurTime() + 0.5
+        end
+
+        if CurTime() > self.l_NextPickupCheck then
+            for _, v in ipairs( self:FindInSphere( self:WorldSpaceCenter(), 48 ) ) do
+                local pickFunc = _LAMBDAPLAYERSItemPickupFunctions[ v:GetClass() ]
+                if isfunction( pickFunc ) and self:Visible( v ) then pickFunc( self, v ) end
+            end
+            self.l_NextPickupCheck = CurTime() + 0.1
         end
 
         if random( 125 ) == 1 then

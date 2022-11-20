@@ -306,6 +306,54 @@ _LAMBDAPLAYERSEnemyRelations = {
   }
 
 
+local min = math.min
+_LAMBDAPLAYERSItemPickupFunctions = {
+    [ "item_healthvial" ] = function( self, ent )
+        if self:Health() >= self:GetMaxHealth() then return end
+        self:SetHealth( min( self:Health() + 10, self:GetMaxHealth() ) )
+        ent:EmitSound( "HealthKit.Touch" ); ent:Remove()
+    end,
+    [ "item_healthkit" ] = function( self, ent )
+        if self:Health() >= self:GetMaxHealth() then return end
+        self:SetHealth( min( self:Health() + 25, self:GetMaxHealth() ) )
+        ent:EmitSound( "HealthKit.Touch" ); ent:Remove()
+    end,
+    [ "item_battery" ] = function( self, ent )
+        if self:GetArmor() >= self:GetMaxArmor() then return end
+        self:SetArmor( min( self:GetArmor() + 15, self:GetMaxArmor() ) )
+        ent:EmitSound( "ItemBattery.Touch" ); ent:Remove()
+    end,
+    [ "sent_ball" ] = function( self, ent )
+        self:SetHealth( self:Health() + 5 )
+        ent:Remove()
+    end,
+    [ "hl1_item_healthkit" ] = function( self, ent )
+        if self:Health() >= self:GetMaxHealth() then return end
+        self:SetHealth( min( self:Health() + 25, self:GetMaxHealth() ) )
+        ent:EmitSound( "HealthKit.Touch" ); ent:Remove()
+    end,
+    [ "hl1_item_battery" ] = function( self, ent )
+        if self:GetArmor() >= self:GetMaxArmor() then return end
+        self:SetArmor( min( self:GetArmor() + 15, self:GetMaxArmor() ) )
+        ent:EmitSound( "Item.Pickup" ); ent:Remove()
+    end
+}
+
+-- Adds a new item to pickup and use for Lambda Players
+-- class = The class of an entity
+-- func = A function to run as soon as the entity is picked up
+function LambdaPlayers_AddItemPickup( class, func )
+    _LAMBDAPLAYERSItemPickupFunctions[ class ] = func
+end
+
+--[[ Just an example of adding new item pickups:
+    LambdaPlayers_AddItemPickup( "sent_vj_adminhealthkit", function( self, ent )
+        self:LookTo( ent:GetPos(), 1 )
+        self:SetHealth( self:Health() + 1000000 )
+        ent:EmitSound( "HealthKit.Touch" ); ent:Remove()
+    end )
+]]
+
 function LambdaPlayers_Notify( ply, text, notifynum, snd )
     if !IsValid( ply ) then return end
     net.Start( "lambdaplayers_notification" )

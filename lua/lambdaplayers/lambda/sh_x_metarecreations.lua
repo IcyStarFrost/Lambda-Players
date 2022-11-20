@@ -33,6 +33,11 @@ function ENT:GetAimVector()
     return self:GetAttachmentPoint( "eyes" ).Ang:Forward()
 end
 
+-- Returns our current armor value
+function ENT:Armor()
+    return self:GetArmor()
+end
+
 
 -- Add a certain amount to the Lambda's frag count (or kills count)
 function ENT:AddFrags( count ) 

@@ -504,6 +504,7 @@ if SERVER then
         self.WeaponEnt:DrawShadow( !self:IsWeaponMarkedNodraw() )
 
         self:SetHealth( self:GetMaxHealth() )
+        self:SetArmor( 0 )
         self:AddFlags( FL_OBJECT )
         self:SwitchWeapon( self.l_SpawnWeapon )
         self:UpdateHealthDisplay()
