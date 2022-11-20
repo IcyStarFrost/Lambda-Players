@@ -409,7 +409,7 @@ if SERVER then
 
     -- Checks if our name has a profile. If so, apply the profile info
     function ENT:ProfileCheck()
-        if LambdaPersonalProfiles[ self:GetLambdaName() ] then
+        if LambdaPersonalProfiles and LambdaPersonalProfiles[ self:GetLambdaName() ] then
             self:ApplyLambdaInfo( LambdaPersonalProfiles[ self:GetLambdaName() ] )
         end
     end
