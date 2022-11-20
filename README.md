@@ -112,17 +112,17 @@ The rest in this pillar of settings is pretty much self explanatory
 
 ![image](https://user-images.githubusercontent.com/109770359/202869153-bbcb6614-3281-4758-9f90-d291be06c18d.png)
 
-Next, let's tweak the personality settings. These are the default personality sliders
+Next, let's tweak the personality settings. These are the default personality sliders.
 
-![image](https://user-images.githubusercontent.com/109770359/202869184-f32728f8-8101-47f0-8c15-257024a80efc.png)
+![image](https://user-images.githubusercontent.com/109770359/202888441-8a599cc4-6267-41e2-8587-cc22c64fc9b1.png)
 
 Eve to me isn't the type that would really fight people so I'll make her favor building and stuff over combat
 
-![image](https://user-images.githubusercontent.com/109770359/202869226-8c36765f-63d8-4149-b1cf-ed8c335e258d.png)
+![image](https://user-images.githubusercontent.com/109770359/202888434-7eb6140c-7ba6-40c8-b5ac-e6592af046c0.png)
 
-After that, let's move onto the colors. I want the colors to sorta match the colors in the Profile Picture so I'll choose them according to that
+After that, let's move onto the colors. I want the colors to sorta match the colors in the Profile Picture so I'll choose them according to that. In regards of the use check boxes, turning those off make whichever color to be random
 
-![image](https://user-images.githubusercontent.com/109770359/202869284-ac16e65d-764c-42a9-9c8b-f34977cd6ddc.png)
+![image](https://user-images.githubusercontent.com/109770359/202888464-86ffe15a-f948-4148-bf49-69839a42170d.png)
 
 Notice the Playermodel Preview changes as you change the playermodel color
 
