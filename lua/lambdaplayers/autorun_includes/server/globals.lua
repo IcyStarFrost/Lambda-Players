@@ -354,6 +354,10 @@ end
     end )
 ]]
 
+-- Called when all default pickup functions have been loaded
+-- This hook can be used to use LambdaPlayers_AddItemPickup() as it'll ensure that the function exists
+hook.Run( "LambdaOnLoadPickupFuncs" )
+
 function LambdaPlayers_Notify( ply, text, notifynum, snd )
     if !IsValid( ply ) then return end
     net.Start( "lambdaplayers_notification" )
