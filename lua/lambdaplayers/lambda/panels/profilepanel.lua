@@ -5,6 +5,23 @@ local round = math.Round
 local random = math.random
 local table_Merge = table.Merge
 local table_Empty = table.Empty
+local string_upper = string.upper
+local isfunction = isfunction
+local string_Explode = string.Explode
+local string_len = string.len
+local string_Left = string.Left
+local string_Right = string.Right
+
+local function MakeNiceName( str )
+    local newname = {}
+
+    for _, s in pairs( string_Explode( "_", str ) ) do
+        if ( string_len( s ) == 1 ) then table_insert( newname, string_upper( s ) ) continue end
+        table_insert( newname, string_upper( string_Left( s, 1 ) ) .. string_Right( s, string_len( s ) - 1 ) )
+    end
+
+    return string.Implode( " ", newname )
+end
 
 
 -- Later I will make a Bodygroups and Skins settings for the panel by default
@@ -29,6 +46,7 @@ local function OpenProfilePanel( ply )
 
     local CompileSettings
     local ImportProfile
+    local UpdateSBSliders
     local profiles = {}
     local profileinfo = {}
 
@@ -293,6 +311,7 @@ local function OpenProfilePanel( ply )
 
     function model:OnChange() 
         playermodelpreview:SetModel( model:GetText() != "" and model:GetText() or "models/error.mdl" )
+        if isfunction( UpdateSBSliders ) then UpdateSBSliders() end
     end
     ---- ---- ---- ---- ---- ----
 
@@ -348,6 +367,49 @@ local function OpenProfilePanel( ply )
     ---- ---- ---- ---- ---- ----
 
 
+    ---- Skins and bodygroups ----
+    local skinslider
+    local bodygroupdata = {}
+    local sbframe = LAMBDAPANELS:CreateBasicPanel( scroll )
+    sbframe:SetSize( 200, 200 )
+    sbframe:Dock( LEFT )
+    scroll:AddPanel( sbframe )
+
+    LAMBDAPANELS:CreateLabel( "-- BodyGroups/Skins --", sbframe, TOP )
+
+    local sbscroll = LAMBDAPANELS:CreateScrollPanel( sbframe, false, FILL )
+    
+
+    UpdateSBSliders = function()
+        local ent = playermodelpreview:GetEntity()
+
+        if skinslider then skinslider:Remove() skinslider = nil end
+        for k, v in pairs( bodygroupdata ) do if v then v:Remove() v = nil end end
+
+        skinslider = LAMBDAPANELS:CreateNumSlider( sbscroll, TOP, 0, "Skin", 0, ent:SkinCount() - 1, 0 )
+
+        function skinslider:OnValueChanged( val ) ent:SetSkin( round( val, 0 ) ) end
+        
+        for _, v in ipairs( ent:GetBodyGroups() ) do
+            local smds = #v.submodels
+            if smds == 0 then continue end 
+
+            local bgslider = LAMBDAPANELS:CreateNumSlider( sbscroll, TOP, 0, MakeNiceName( v.name ), 0, smds, 0 )
+
+            function bgslider:OnValueChanged( val )
+                ent:SetBodygroup( v.id, round( val, 0 ))
+            end
+
+            bodygroupdata[ v.id ] = bgslider
+        end
+
+    end
+
+    UpdateSBSliders()
+
+    ---- ---- ---- ---- ---- ----
+
+
     ---- External addon panels ----
     local externalpanels = {}
     local categories = {}
@@ -393,7 +455,7 @@ local function OpenProfilePanel( ply )
             plycolor = useplycolor:GetChecked() and playermodelcolor:GetVector() or nil,
             physcolor = usephyscolor:GetChecked() and physguncolor:GetVector() or nil,
             
-
+            mdlSkin = round( skinslider:GetValue(), 0 ),
             
             voicepitch = round( voicepitch:GetValue(), 0 ),
             voice = usepersonality:GetChecked() and round( voicechance:GetValue(), 0 ) or nil,
@@ -405,6 +467,11 @@ local function OpenProfilePanel( ply )
             spawnwep = weapon
 
         }
+
+        infotable.bodygroups = {}
+        for k, v in pairs( bodygroupdata ) do
+            infotable.bodygroups[ k ] = round( v:GetValue(), 0 )
+        end
 
         for k, v in pairs( externalpanels ) do
             infotable.externalvars = infotable.externalvars or {}
@@ -426,8 +493,9 @@ local function OpenProfilePanel( ply )
 
 
     ImportProfile = function( infotable )
+        local ent = playermodelpreview:GetEntity()
         profileinfo = infotable
-
+        
         name:SetText( infotable.name )
         model:SetText( infotable.model or "" )
 
@@ -447,6 +515,16 @@ local function OpenProfilePanel( ply )
         profilepicture:OnChange()
         model:OnChange()
         playermodelpreview:UpdateColors( infotable.plycolor )
+
+        skinslider:SetValue( infotable.mdlSkin or 0 )
+        ent:SetSkin( infotable.mdlSkin or 0 )
+
+        if infotable.bodygroups then
+            for k, v in pairs( infotable.bodygroups ) do
+                bodygroupdata[ k ]:SetValue( v )
+                ent:SetBodygroup( k, v )
+            end
+        end
 
         voicepitch:SetValue( infotable.voicepitch )
         voicechance:SetValue( infotable.voice )
