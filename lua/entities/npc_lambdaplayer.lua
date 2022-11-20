@@ -109,8 +109,6 @@ function ENT:Initialize()
         self.l_unstuck = false -- If true, runs our unstuck process
         self.l_UpdateAnimations = true -- If we can update our animations. Used for the purpose of playing sequences
 
-        self.l_deaths = 0 -- The amount of deaths we have had
-        self.l_frags = 0 -- The amount of kills we have
         self.l_UnstuckBounds = 50 -- The distance the unstuck process will use to check. This value increments during the process and set back to 50 when done
         self.l_nextspeedupdate = 0 -- The next time we update our speed
         self.l_NexthealthUpdate = 0 -- The next time we update our networked health
