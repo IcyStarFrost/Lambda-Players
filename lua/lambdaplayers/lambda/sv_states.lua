@@ -9,7 +9,7 @@ local IsValid = IsValid
 
 
 function ENT:Idle()
-    if random( 1, 2 ) == 1 then
+    if random( 1, 100 ) < 70 then
         self:ComputeChance()
     else
         local pos = self:GetRandomPosition()
@@ -91,14 +91,12 @@ end
 local laughdir = GetConVar( "lambdaplayers_voice_laughdir" )
 function ENT:Laughing()
     self:PlaySoundFile( laughdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "laugh" ), true )
-    
     self:PlayGestureAndWait( ACT_GMOD_TAUNT_LAUGH )
     self:SetState( "Idle" )
 end
 
 local acts = { ACT_GMOD_TAUNT_DANCE, ACT_GMOD_TAUNT_ROBOT, ACT_GMOD_TAUNT_MUSCLE, ACT_GMOD_TAUNT_CHEER }
 function ENT:UsingAct()
-    
     self:PlayGestureAndWait( acts[ random( #acts ) ] )
     self:SetState( "Idle" )
 end

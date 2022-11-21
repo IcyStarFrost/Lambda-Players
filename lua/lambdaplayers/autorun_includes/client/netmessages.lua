@@ -222,7 +222,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
                 if !globalvoice:GetBool() and !is3d then
                     local ply = LocalPlayer()
-                    lastpos = IsValid( tickent ) and tickent:GetPos() or lastpos
+                    lastpos = IsValid( tickent ) and tickent:GetPos() or lastpos or origin
 
                     local dist = ply:GetPos():DistToSqr( lastpos )
                     if dist < ( 2000 * 2000 ) then

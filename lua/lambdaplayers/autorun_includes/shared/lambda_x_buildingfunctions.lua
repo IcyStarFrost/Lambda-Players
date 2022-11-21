@@ -1,6 +1,7 @@
 local IsValid = IsValid
 local table_insert = table.insert
 local rand = math.Rand
+local random = math.random
 local VectorRand = VectorRand
 local coroutine = coroutine
 
@@ -28,7 +29,24 @@ local function SpawnAProp( self )
 
     return true -- Just like for toolguns, we return true to let the for loop know we completed what we wanted to do and it can break
 end
-AddBuildFunctionToLambdaBuildingFunctions( "prop", "Allow Prop Spawning", "If Lambda Players are allowed to spawn props", SpawnAProp )
+
+local function SpawnMultipleProps( self )
+    if !self:IsUnderLimit( "Prop" ) then return end
+    
+    for i=1, random( 2, 12 ) do
+        if !self:IsUnderLimit( "Prop" ) then return end
+
+        self.Face = self:GetPos() + VectorRand( -100, 100 )
+        coroutine.wait( rand( 0.2, 1 ) )
+        self:SpawnProp()
+        coroutine.wait( rand( 0.2, 1 ) )
+        self.Face = nil
+
+    end
+
+    return true -- Just like for toolguns, we return true to let the for loop know we completed what we wanted to do and it can break
+end
+
 
 local function SpawnNPC( self )
     if !self:IsUnderLimit( "NPC" ) then return end
@@ -42,7 +60,6 @@ local function SpawnNPC( self )
 
     return true
 end
-AddBuildFunctionToLambdaBuildingFunctions( "npc", "Allow NPC Spawning", "If Lambda Players are allowed to spawn NPCs", SpawnNPC )
 
 
 local function SpawnEntity( self )
@@ -57,8 +74,12 @@ local function SpawnEntity( self )
 
     return true
 end
-AddBuildFunctionToLambdaBuildingFunctions( "entity", "Allow Entity Spawning", "If Lambda Players are allowed to spawn Entities", SpawnEntity )
 
+
+AddBuildFunctionToLambdaBuildingFunctions( "prop", "Allow Prop Spawning", "If Lambda Players are allowed to spawn props", SpawnAProp )
+AddBuildFunctionToLambdaBuildingFunctions( "prop", "Allow Prop Spawning", "If Lambda Players are allowed to spawn props", SpawnMultipleProps )
+AddBuildFunctionToLambdaBuildingFunctions( "npc", "Allow NPC Spawning", "If Lambda Players are allowed to spawn NPCs", SpawnNPC )
+AddBuildFunctionToLambdaBuildingFunctions( "entity", "Allow Entity Spawning", "If Lambda Players are allowed to spawn Entities", SpawnEntity )
 
 -- Called when all default building functions above have been loaded.
 -- This hook can be used to add more building functions with AddBuildFunctionToLambdaBuildingFunctions()
