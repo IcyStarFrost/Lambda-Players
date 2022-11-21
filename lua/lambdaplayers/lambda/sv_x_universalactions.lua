@@ -37,10 +37,22 @@ AddUActionToLambdaUA( function( self )
     self:NamedTimer( "Undoentities", rand( 0.3, 0.6 ), random( 1, 6 ), function() self:UndoLastSpawnedEnt() end )
 end )
 
+local isbutton = {
+    [ "func_button" ] = true,
+    [ "gmod_button" ] = true,
+    [ "gmod_wire_button" ] = true
+}
 -- Look for and press a button
 AddUActionToLambdaUA( function( self )
     if self:GetState() != "Idle" then return end
-    self:SetState( "FindButton" )
+    local find = self:FindInSphere( self:GetPos(), 2000, function( ent ) if IsValid( ent ) and isbutton[ ent:GetClass() ] and self:CanSee( ent ) then return true end end )
+    local button = find[ random( #find ) ]
+    print(" UACTIOn", button )
+    if IsValid( button ) then
+        self.l_buttonentity = button
+        self:CancelMovement()
+        self:SetState( "PushButton" )
+    end
 end )
 
 -- Crouch

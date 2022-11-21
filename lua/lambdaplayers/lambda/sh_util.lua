@@ -197,6 +197,13 @@ function ENT:GetAttachmentPoint( pointtype )
 end
 --
 
+-- Returns a normal direction to the pos or entity
+function ENT:GetNormalTo( pos )
+    pos = isentity( pos ) and pos:GetPos() or pos
+    return ( pos - self:WorldSpaceCenter() ):GetNormalized()
+end
+
+
 -- AI/Nextbot creators can assign .LambdaPlayerSTALP = true to their entities if they want the Lambda Players to treat them like players
 function ENT:ShouldTreatAsLPlayer( ent )
     if ent.LambdaPlayerSTALP then return true end

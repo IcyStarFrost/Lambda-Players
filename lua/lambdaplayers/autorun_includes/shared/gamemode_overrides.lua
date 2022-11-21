@@ -12,7 +12,7 @@ if CLIENT then
 
 	local function CreateProfilePictureMat( ent )
 		local pfp = ent:GetProfilePicture()
-	
+		
 		local profilepicturematerial = Material( pfp )
 	
 		if profilepicturematerial:IsError() then

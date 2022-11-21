@@ -65,29 +65,25 @@ function ENT:FindTarget()
 end
 
 -- We look for a button and press it
-function ENT:FindButton()
-    local find = self:FindInSphere( self:GetPos(), 1000, function( ent ) if IsValid( ent ) and ( ent:GetClass() == "func_button" or ent:GetClass() == "gmod_button" or ent:GetClass() == "gmod_wire_button" ) and self:CanSee( ent ) then return true end end )
-    local button = find[ random( #find ) ]
-    if !IsValid( button ) then self:SetState( "Idle" ) return end
-    local pos = button:GetPos()
+function ENT:PushButton()
+    if !IsValid( self.l_buttonentity ) then self:SetState( "Idle" ) return end
+    local pos = self.l_buttonentity:GetPos() + self:GetNormalTo( self.l_buttonentity:GetPos() ) * - 60
 
-    self:CancelMovement()
-
-    self:LookTo( button, 1 )
+    self:LookTo( self.l_buttonentity, 1 )
     coroutine.wait( 1 )
     
     self:MoveToPos( pos )
 
-    if !IsValid( button ) then self:SetState( "Idle" ) return end
+    if !IsValid( self.l_buttonentity ) then self:SetState( "Idle" ) return end
 
-    if button:GetClass() == "func_button" then
-        button:Fire("Press")
-    elseif button:GetClass() == "gmod_button" then
-        button:Toggle( !button:GetOn(), self )
-    elseif button:GetClass() == "gmod_wire_button" then
-        button:Switch( !button:GetOn() )
+    if self.l_buttonentity:GetClass() == "func_button" then
+        self.l_buttonentity:Fire("Press")
+    elseif self.l_buttonentity:GetClass() == "gmod_button" then
+        self.l_buttonentity:Toggle( !self.l_buttonentity:GetOn(), self )
+    elseif self.l_buttonentity:GetClass() == "gmod_wire_button" then
+        self.l_buttonentity:Switch( !self.l_buttonentity:GetOn() )
     end
-    button:EmitSound( "HL2Player.Use", 80 )
+    self.l_buttonentity:EmitSound( "HL2Player.Use", 80 )
 
     self:SetState( "Idle" )
 end
