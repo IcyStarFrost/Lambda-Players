@@ -19,6 +19,8 @@ function CreateLambdaConvar( name, val, shouldsave, isclient, userinfo, desc, mi
     shouldsave = shouldsave == nil and true or shouldsave
     local convar
 
+    _LAMBDAPLAYERSCONVARS[ name ] = tostring( val )
+
     if isclient and SERVER then return end
 
 
@@ -28,7 +30,7 @@ function CreateLambdaConvar( name, val, shouldsave, isclient, userinfo, desc, mi
         convar = CreateConVar( name, tostring( val ), shouldsave and FCVAR_ARCHIVE or FCVAR_NONE, desc, min, max )
     end
 
-    _LAMBDAPLAYERSCONVARS[ name ] = tostring( val )
+    
 
     if CLIENT and settingstbl then
         settingstbl.convar = name

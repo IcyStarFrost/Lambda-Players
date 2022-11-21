@@ -274,8 +274,10 @@ if CLIENT then
         return panel
     end
 
+    file.CreateDir( "lambdaplayers/presets" )
     -- Creates a panel that will handle convar presets. Cause Gmod's preset system is kinda garbage in my opinion
     function LAMBDAPANELS:CreateCVarPresetPanel( name, convars, presetcategory )
+        
         local frame = LAMBDAPANELS:CreateFrame( name, 300, 200 )
 
         local presetlist = vgui.Create( "DListView", frame )
@@ -285,21 +287,23 @@ if CLIENT then
         local line = presetlist:AddLine( "[ Default ]" )
         line:SetSortValue( 1, convars )
 
-        LAMBDAFS:UpdateKeyValueFile( "lambdaplayers/presets.dat", { [ presetcategory ] = {} }, "compressed" ) 
-
+        local presetfiledata = LAMBDAFS:ReadFile( "lambdaplayers/presets/" .. presetcategory .. ".json", "json" )
+        if presetfiledata then
+            for k, v in SortedPairs( presetfiledata ) do
+                local line = presetlist:AddLine( k )
+                line:SetSortValue( 1, v )
+            end
+        end
 
         function presetlist:OnRowRightClick( id, line )
             
-            local menu = DermaMenu( false )
-            menu:SetPos( input.GetCursorPos() )
+            local menu = DermaMenu( false, presetlist )
+            --menu:SetPos( input.GetCursorPos() )
 
 
             if line:GetColumnText( 1 ) != "[ Default ]" then 
                 menu:AddOption( "Delete " .. line:GetColumnText( 1 ), function()
-                    local presetdata = LAMBDAFS:ReadFile( "lambdaplayers/presets.dat", "compressed" )
-                    local category = presetdata[ presetcategory ]
-                    category[ line:GetColumnText( 1 ) ] = nil
-                    LAMBDAFS:UpdateKeyValueFile( "lambdaplayers/presets.dat", { [ presetcategory ] = category }, "compressed" ) 
+                    LAMBDAFS:RemoveVarFromKVFile( "lambdaplayers/presets/" .. presetcategory .. ".json", line:GetColumnText( 1 ), "json" )
                     presetlist:RemoveLine( id )
                 end )
             end
@@ -319,6 +323,20 @@ if CLIENT then
                     net.SendToServer()
                 end
             end )
+
+            menu:AddOption( "View " .. line:GetColumnText( 1 ) .. " Preset", function()
+                local viewframe = LAMBDAPANELS:CreateFrame( line:GetColumnText( 1 ) .. " ConVar List", 300, 200 )
+
+                local convarlist = vgui.Create( "DListView", viewframe )
+                convarlist:Dock( FILL )
+                convarlist:AddColumn( "ConVar", 1 )
+                convarlist:AddColumn( "Value", 2 )
+
+                for k, v in SortedPairs( line:GetSortValue( 1 ) ) do
+                    convarlist:AddLine( k, v )
+                end
+                
+            end )
             
         end
 
@@ -334,16 +352,12 @@ if CLIENT then
                 end
 
                 surface.PlaySound( "buttons/button15.wav" )
-                chat.AddText( "Saved Preset" .. str )
+                chat.AddText( "Saved Preset " .. str )
 
                 local line = presetlist:AddLine( str )
                 line:SetSortValue( 1, newpreset )
 
-                local presetdata = LAMBDAFS:ReadFile( "lambdaplayers/presets.dat", "compressed" )
-                local category = presetdata[ presetcategory ]
-                category[ str ] = newpreset 
-            
-                LAMBDAFS:UpdateKeyValueFile( "lambdaplayers/presets.dat", { [ presetcategory ] = category }, "compressed" ) 
+                LAMBDAFS:UpdateKeyValueFile( "lambdaplayers/presets/" .. presetcategory .. ".json", { [ str ] = newpreset }, "json" ) 
             end, nil, "Confirm", "Cancel" )
 
 

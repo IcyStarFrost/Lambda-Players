@@ -22,7 +22,7 @@ function LAMBDAFS:WriteFile( filename, content, type )
         content = TableToJSON( content, true )
     elseif type == "compressed" then
         content = TableToJSON( content )
-        content = Compress( content, #content )
+        content = Compress( content )
     end
 
 	f:Write( content )
@@ -67,6 +67,13 @@ function LAMBDAFS:FileHasValue( filename, value, type )
     return table_HasValue( contents, value )
 end
 
+-- Returns if the specified key's value is valid
+function LAMBDAFS:FileKeyIsValid( filename, key, type ) 
+    if !file.Exists( filename, "DATA" ) then return false end
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
+    return contents[ key ] != nil
+end
+
 -- SQ short for Sequential
 -- Removes a value from the specified file containing a sequential table
 function LAMBDAFS:RemoveVarFromSQFile( filename, var, type )
@@ -99,7 +106,7 @@ function LAMBDAFS:ReadFile( filename, type, path )
     if str != "" and type == "json" then 
         str = JSONToTable( str )
     elseif str != "" and type == "compressed" then
-        str = Decompress( str, #str )
+        str = Decompress( str )
         str = JSONToTable( str )
     end
 
