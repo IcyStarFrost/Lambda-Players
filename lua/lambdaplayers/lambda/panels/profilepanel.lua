@@ -85,8 +85,8 @@ local function OpenProfilePanel( ply )
     end
 
     function profilelist:OnRowRightClick( id, line )
-        local conmenu = DermaMenu( false, profilelist )
-        local x, y = line:GetPos()
+        local conmenu = DermaMenu( false )
+        local x, y = input.GetCursorPos()
         conmenu:SetPos( x, y + 10)
         local info = line:GetSortValue( 1 )
 

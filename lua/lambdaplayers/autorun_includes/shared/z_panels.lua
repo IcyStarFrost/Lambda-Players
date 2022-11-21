@@ -3,6 +3,8 @@ local pairs = pairs
 local table_insert = table.insert
 local TableToJSON = util.TableToJSON
 local NiceSize = string.NiceSize
+local compress = util.Compress
+local decompress = util.Decompress
 local JSONToTable = util.JSONToTable
 local table_ClearKeys = table.ClearKeys
 local table_Empty = table.Empty
@@ -272,6 +274,84 @@ if CLIENT then
         return panel
     end
 
+    -- Creates a panel that will handle convar presets. Cause Gmod's preset system is kinda garbage in my opinion
+    function LAMBDAPANELS:CreateCVarPresetPanel( name, convars, presetcategory )
+        local frame = LAMBDAPANELS:CreateFrame( name, 300, 200 )
+
+        local presetlist = vgui.Create( "DListView", frame )
+        presetlist:Dock( FILL )
+        presetlist:AddColumn( "Presets", 1 )
+
+        local line = presetlist:AddLine( "[ Default ]" )
+        line:SetSortValue( 1, convars )
+
+        LAMBDAFS:UpdateKeyValueFile( "lambdaplayers/presets.dat", { [ presetcategory ] = {} }, "compressed" ) 
+
+
+        function presetlist:OnRowRightClick( id, line )
+            
+            local menu = DermaMenu( false )
+            menu:SetPos( input.GetCursorPos() )
+
+
+            if line:GetColumnText( 1 ) != "[ Default ]" then 
+                menu:AddOption( "Delete " .. line:GetColumnText( 1 ), function()
+                    local presetdata = LAMBDAFS:ReadFile( "lambdaplayers/presets.dat", "compressed" )
+                    local category = presetdata[ presetcategory ]
+                    category[ line:GetColumnText( 1 ) ] = nil
+                    LAMBDAFS:UpdateKeyValueFile( "lambdaplayers/presets.dat", { [ presetcategory ] = category }, "compressed" ) 
+                    presetlist:RemoveLine( id )
+                end )
+            end
+
+            menu:AddOption( "Apply " .. line:GetColumnText( 1 ) .. " Preset", function()
+                for k, v in pairs( line:GetSortValue( 1 ) ) do
+                    GetConVar( k ):SetString( v )
+                end
+
+                local json = TableToJSON( line:GetSortValue( 1 ) )
+                local compressed = compress( json )
+
+                if LocalPlayer():IsSuperAdmin() then
+                    net.Start( "lambdaplayers_setconvarpreset" )
+                    net.WriteUInt( #compressed, 32 )
+                    net.WriteData( compressed )
+                    net.SendToServer()
+                end
+            end )
+            
+        end
+
+        LAMBDAPANELS:CreateButton( frame, BOTTOM, "Save Current Settings", function()
+
+            Derma_StringRequest( "Save Preset", "Enter the name of this preset", "", function( str )
+                if str == "[ Default ]" then chat.AddText( "You can not name a preset named the same as the default!" ) return end
+                if str == "" then chat.AddText( "No text was inputted!" ) return end
+                local newpreset = {}
+
+                for k, v in pairs( convars ) do
+                    newpreset[ k ] = GetConVar( k ):GetString()
+                end
+
+                surface.PlaySound( "buttons/button15.wav" )
+                chat.AddText( "Saved Preset" .. str )
+
+                local line = presetlist:AddLine( str )
+                line:SetSortValue( 1, newpreset )
+
+                local presetdata = LAMBDAFS:ReadFile( "lambdaplayers/presets.dat", "compressed" )
+                local category = presetdata[ presetcategory ]
+                category[ str ] = newpreset 
+            
+                LAMBDAFS:UpdateKeyValueFile( "lambdaplayers/presets.dat", { [ presetcategory ] = category }, "compressed" ) 
+            end, nil, "Confirm", "Cancel" )
+
+
+
+        end )
+
+    end
+
 
     local panelgetvalues = {
         [ "DTextEntry" ] = function( self ) return self:GetText() != "" and self:GetText() or nil end,
@@ -466,6 +546,21 @@ elseif SERVER then
 
             print( "Lambda Players Net: Sent " .. NiceSize( bytes ) .. " to " .. ply:Name() .. " | " .. ply:SteamID() )
         end )
+    end )
+
+
+    net.Receive( "lambdaplayers_setconvarpreset", function( len, ply )
+        if !ply:IsSuperAdmin() then return end
+        local bytes = net.ReadUInt( 32 )
+        local data = net.ReadData( bytes )
+        local decompressed = decompress( data )
+        local convars = JSONToTable( decompressed)
+
+        for k, v in pairs( convars ) do
+            GetConVar( k ):SetString( v )
+        end
+    
+        print( "Lambda Players: " .. ply:Name() .. " | " .. ply:SteamID() .. " Applied a preset on the server ")
     end )
 
 end
