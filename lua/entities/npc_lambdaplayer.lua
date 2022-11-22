@@ -179,7 +179,7 @@ function ENT:Initialize()
 
         SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
-        self.loco:SetJumpHeight( 60 )
+        self.loco:SetJumpHeight( 50 )
         self.loco:SetAcceleration( 1000 )
         self.loco:SetDeceleration( 1000 )
         self.loco:SetStepHeight( 30 )
@@ -341,7 +341,12 @@ function ENT:Think()
 
         if CurTime() > self.l_nextphysicsupdate then
             local phys = self:GetPhysicsObject()
-            phys:UpdateShadow( self:GetPos(), self:GetAngles(), 0 )
+            if self:WaterLevel() == 0 then
+                phys:SetPos( self:GetPos() )
+                phys:SetAngles( self:GetAngles() )
+            else
+                phys:UpdateShadow( self:GetPos(), self:GetAngles(), 0 )
+            end
             self.l_nextphysicsupdate = CurTime() + 0.5
         end
 

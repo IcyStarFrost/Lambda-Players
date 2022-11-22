@@ -16,6 +16,15 @@ local tracetable = {}
 local upvector = Vector( 0, 0, 1 )
 local unstucktable = {}
 local ents_FindByName = ents.FindByName
+local GetGroundHeight = navmesh.GetGroundHeight
+
+-- Finds "simple" ground height, treating the provided nav area as part of the floor
+local function GetSimpleGroundHeightWithFloor( navArea, pos )
+    local height, normal = GetGroundHeight( pos )
+    if !height or !normal then return end
+    if IsValid( navArea ) and navArea:IsOverlapping( pos ) then height = math_max( height, navArea:GetZ( pos ) ) end
+    return height, normal
+end
 
 -- Start off simple
 -- Pos arg can be a vector or a entity.
@@ -42,6 +51,8 @@ function ENT:MoveToPos( pos, options )
 
     self.l_CurrentPath = path
     self.IsMoving = true
+
+    local stepH = self.loco:GetStepHeight()
 
 	while ( path:IsValid() ) do
         if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end
@@ -84,7 +95,12 @@ function ENT:MoveToPos( pos, options )
 			if path:GetAge() > updateTime then path:Compute( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), self:PathGenerator() ) end
 		end
 
-		coroutine.yield()
+        -- Close up jumping
+        local aheadNormal = ( goal.pos - self:GetPos() ):GetNormalized(); aheadNormal.z = 0
+        local grHeight = GetSimpleGroundHeightWithFloor( self.l_currentnavarea, self:WorldSpaceCenter() + aheadNormal * 40 )
+        if grHeight and ( grHeight - self:GetPos().z ) > stepH then self.loco:Jump()  end
+
+        coroutine.yield()
 
 	end
 
@@ -202,9 +218,10 @@ function ENT:PathGenerator()
     local stepHeight = self.loco:GetStepHeight()
     local jumpHeight = self.loco:GetJumpHeight()
     local deathHeight = -self.loco:GetDeathDropHeight()
+    local jumpPenalty = 10
 
     return function( area, fromArea, ladder, elevator, length )
-        if !IsValid(fromArea) then return 0 end
+        if !IsValid( fromArea ) then return 0 end
         if !self.loco:IsAreaTraversable( area ) then return -1 end
 
         local dist = 0
@@ -216,16 +233,11 @@ function ENT:PathGenerator()
             dist = fromArea:GetCenter():DistToSqr( area:GetCenter() )
         end
 
-        local cost = (dist + fromArea:GetCostSoFar())
-        if !IsValid(ladder) then
+        local cost = ( dist + fromArea:GetCostSoFar() )
+        if !IsValid( ladder ) then
             local deltaZ = fromArea:ComputeAdjacentConnectionHeightChange( area )
-            if deltaZ > stepHeight then
-                if deltaZ > jumpHeight then return -1 end
-                local jumpPenalty = 10
-                cost = cost + jumpPenalty * dist
-            elseif deltaZ < deathHeight then
-                return -1
-            end
+            if deltaZ > jumpHeight or deltaZ < deathHeight then return -1 end
+            if deltaZ > stepHeight then cost = cost + ( dist * jumpPenalty) end
         end
 
         return cost

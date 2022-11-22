@@ -45,13 +45,15 @@ local isbutton = {
 -- Look for and press a button
 AddUActionToLambdaUA( function( self )
     if self:GetState() != "Idle" then return end
-    local find = self:FindInSphere( self:GetPos(), 2000, function( ent ) if IsValid( ent ) and isbutton[ ent:GetClass() ] and self:CanSee( ent ) then return true end end )
-    local button = find[ random( #find ) ]
-    if IsValid( button ) then
-        self.l_buttonentity = button
-        self:CancelMovement()
-        self:SetState( "PushButton" )
-    end
+    
+    local find = self:FindInSphere( self:GetPos(), 2000, function( ent ) 
+        return ( isbutton[ ent:GetClass() ] and self:CanSee( ent ) )
+    end )
+    if #find == 0 then return end
+
+    self.l_buttonentity = find[ random( #find ) ]
+    self:CancelMovement()
+    self:SetState( "PushButton" )
 end )
 
 -- Crouch

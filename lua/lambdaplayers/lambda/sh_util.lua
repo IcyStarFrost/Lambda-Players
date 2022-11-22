@@ -372,17 +372,27 @@ if SERVER then
         self:SetState( "Laughing" )
     end
 
-    function ENT:PlayGestureAndWait( name, speed )
+    function ENT:PlayGestureAndWait( id, speed )
+
+        local layer = self:AddGesture( id )
+        if !self:IsValidLayer( layer ) then return end
 
         self.l_UpdateAnimations = false
-        local len = self:GetLayerDuration( self:AddGesture( name ) )
+
+        local len = self:GetLayerDuration( layer )
         speed = speed or 1
     
         self:SetPlaybackRate( speed )
-    
+
         -- wait for it to finish
-        coroutine.wait( len / speed )
-        
+        local endTime = CurTime() + ( len / speed )
+        while ( true ) do
+            if !IsValid( self ) then return end
+            if CurTime() >= endTime then break end
+            if self:GetIsDead() then self:RemoveGesture( id ) break end
+            coroutine.yield()
+        end
+
         self.l_UpdateAnimations = true
     
     end
