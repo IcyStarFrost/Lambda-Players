@@ -60,7 +60,7 @@ end
     local ents_Create = ents and ents.Create or nil
     local navmesh_GetNavArea = navmesh and navmesh.GetNavArea or nil
     local voiceprofilechance = GetConVar( "lambdaplayers_lambda_voiceprofileusechance" )
-    local thinkrate = GetConVar( "lambdaplayers_lambda_singleplayerthinkrate" )
+    local thinkrate = GetConVar( "lambdaplayers_lambda_singleplayerthinkdelay" )
     local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
     local CurTime = CurTime
     local Clamp = math.Clamp
