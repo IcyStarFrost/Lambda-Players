@@ -6,6 +6,7 @@
 local RandomPairs = RandomPairs
 local random = math.random
 local IsValid = IsValid
+local IsInWorld = util.IsInWorld
 
 
 function ENT:Idle()
@@ -26,15 +27,17 @@ function ENT:Combat()
     self:Hook( "Tick", "CombatTick", function()
         if !LambdaIsValid( self:GetEnemy() ) or self:GetState() != "Combat" then return "end" end -- Returns and removes this hook because we returned "end". See sh_util.lua for source
 
-        self.Face = self:GetEnemy()
-        self.l_Faceend = CurTime() + 1
+
 
         if self:GetRangeSquaredTo( self:GetEnemy() ) <= ( self.l_CombatAttackRange * self.l_CombatAttackRange ) and self:CanSee( self:GetEnemy() ) then
             self:UseWeapon( self:GetEnemy() )
+            self.Face = self:GetEnemy()
+            self.l_Faceend = CurTime() + 1
         end
 
         if self.l_CombatKeepDistance and LambdaIsValid( self:GetEnemy() ) and self:GetRangeSquaredTo( self:GetEnemy() ) < ( self.l_CombatKeepDistance * self.l_CombatKeepDistance ) and self:CanSee( self:GetEnemy() ) then
-            self.l_movepos = self:GetPos() + ( self:GetPos() - self:GetEnemy():GetPos() ):GetNormalized() * 200 + VectorRand( -700, 700 )
+            local potentialpos = ( self:GetPos() + ( self:GetPos() - self:GetEnemy():GetPos() ):GetNormalized() * 200 ) + VectorRand( -1000, 1000 )
+            self.l_movepos = IsInWorld( potentialpos ) and potentialpos or self:Trace( potentialpos ).HitPos
         elseif self.l_CombatKeepDistance and LambdaIsValid( self:GetEnemy() ) and self:GetRangeSquaredTo( self:GetEnemy() ) > ( self.l_CombatKeepDistance * self.l_CombatKeepDistance ) or LambdaIsValid( ent ) and !self:CanSee( self:GetEnemy() ) then
             self.l_movepos = self:GetEnemy()
         end
