@@ -477,6 +477,12 @@ if SERVER then
         return self:GetNoClip()
     end
 
+    -- Enter or exit Noclip. Calls a hook to be able to block the event
+    function ENT:NoClipState( bool )
+        local result = hook.Run( "LambdaOnNoclip", self, bool )
+        if !result then self:SetNoClip( bool ) end
+    end
+
     -- Returns the walk speed
     function ENT:GetWalkSpeed()
         return 200
