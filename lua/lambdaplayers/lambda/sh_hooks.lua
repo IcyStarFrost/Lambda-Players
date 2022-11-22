@@ -219,9 +219,9 @@ if SERVER then
             for k, v in ipairs( LambdaPersonalityConVars ) do
                 tbl[ v[ 1 ] ] = 0
             end
-            tbl[ "Build" ] = 10
-            tbl[ "Combat" ] = 70
-            tbl[ "Tool" ] = 10
+            tbl[ "Build" ] = 5
+            tbl[ "Combat" ] = 80
+            tbl[ "Tool" ] = 5
             self:SetVoiceChance( 30 )
             return tbl
         end,
@@ -230,9 +230,9 @@ if SERVER then
             for k, v in ipairs( LambdaPersonalityConVars ) do
                 tbl[ v[ 1 ] ] = random( 1, 100 )
             end
-            tbl[ "Build" ] = 70
-            tbl[ "Combat" ] = 10
-            tbl[ "Tool" ] = 70
+            tbl[ "Build" ] = 80
+            tbl[ "Combat" ] = 5
+            tbl[ "Tool" ] = 80
             self:SetVoiceChance( 30 )
             return tbl
         end
