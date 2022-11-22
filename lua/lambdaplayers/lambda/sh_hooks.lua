@@ -129,7 +129,7 @@ if SERVER then
             self:CancelMovement()
         end
 
-        if random( 1, 10 ) == 1 and self:GetRangeSquaredTo( victim ) <= ( 2000 * 2000 ) and !self:Trace( victim ).Hit then self:LaughAt( victim ) end
+        if self:GetState() != "Combat" and random( 1, 10 ) == 1 and self:GetRangeSquaredTo( victim ) <= ( 2000 * 2000 ) and !self:Trace( victim ).Hit then self:LaughAt( victim ) end
 
         hook.Run( "LambdaOnOtherKilled", self, victim, info )
 
