@@ -183,7 +183,11 @@ function LAMBDAFS:GetMaterialTable()
 end
 
 function LAMBDAFS:GetVoiceLinesTable()
-    LambdaVoiceLinesTable = { taunt = {}, idle = {}, death = {}, kill = {}, laugh = {} }
+    LambdaVoiceLinesTable = {}
+
+    for k, v in ipairs( LambdaValidVoiceTypes ) do
+        LambdaVoiceLinesTable[ v[ 1 ] ] = {}
+    end
 
     local function MergeDirectory( dir, tbl )
         dir = dir .. "/"
@@ -192,19 +196,15 @@ function LAMBDAFS:GetVoiceLinesTable()
         for k, v in ipairs( dirs ) do MergeDirectory( dir .. v, tbl ) end
     end
     
-    MergeDirectory( GetConVar( "lambdaplayers_voice_deathdir" ):GetString(), LambdaVoiceLinesTable.death )
-    MergeDirectory( GetConVar( "lambdaplayers_voice_tauntdir" ):GetString(), LambdaVoiceLinesTable.taunt )
-    MergeDirectory( GetConVar( "lambdaplayers_voice_idledir" ):GetString(), LambdaVoiceLinesTable.idle )
-    MergeDirectory( GetConVar( "lambdaplayers_voice_killdir" ):GetString(), LambdaVoiceLinesTable.kill )
-    MergeDirectory( GetConVar( "lambdaplayers_voice_laughdir" ):GetString(), LambdaVoiceLinesTable.laugh )
+    for k, v in ipairs( LambdaValidVoiceTypes ) do
+        MergeDirectory( v[ 2 ]:GetString(), LambdaVoiceLinesTable[ v[ 1 ] ] )
+    end
 
     -- This allows the ability to make addons that add voice lines
     if mergevoicelines:GetBool() then
-        MergeDirectory( "lambdaplayers/vo/custom/death", LambdaVoiceLinesTable.death )
-        MergeDirectory( "lambdaplayers/vo/custom/taunt", LambdaVoiceLinesTable.taunt )
-        MergeDirectory( "lambdaplayers/vo/custom/idle", LambdaVoiceLinesTable.idle )
-        MergeDirectory( "lambdaplayers/vo/custom/kill", LambdaVoiceLinesTable.kill )
-        MergeDirectory( "lambdaplayers/vo/custom/laugh", LambdaVoiceLinesTable.laugh )
+        for k, v in ipairs( LambdaValidVoiceTypes ) do
+            MergeDirectory( "lambdaplayers/vo/custom/" .. v[ 1 ], LambdaVoiceLinesTable[ v[ 1 ] ] )
+        end
     end
     
     return LambdaVoiceLinesTable
@@ -226,7 +226,6 @@ function LAMBDAFS:GetProfilePictures()
 end
 
 
-local validvoicetypes = { "death", "kill", "idle", "taunt", "laugh" }
 function LAMBDAFS:GetVoiceProfiles()
     local LambdaVoiceProfiles = {}
 
@@ -235,16 +234,16 @@ function LAMBDAFS:GetVoiceProfiles()
     for i, profile in ipairs( voiceprofiles ) do
         LambdaVoiceProfiles[ profile ] = {} 
 
-        for k, v in ipairs( validvoicetypes ) do 
-            local voicelines,_  = file.Find( "sound/lambdaplayers/voiceprofiles/" .. profile .. "/" .. v .. "/*", "GAME", "nameasc" )
+        for k, v in ipairs( LambdaValidVoiceTypes ) do 
+            local voicelines,_  = file.Find( "sound/lambdaplayers/voiceprofiles/" .. profile .. "/" .. v[ 1 ] .. "/*", "GAME", "nameasc" )
 
             if voicelines and #voicelines > 0 then
-                LambdaVoiceProfiles[ profile ][ v ] = {}
+                LambdaVoiceProfiles[ profile ][ v[ 1 ] ] = {}
                 for index, voiceline in ipairs( voicelines ) do
-                    table_insert( LambdaVoiceProfiles[ profile ][ v ], "lambdaplayers/voiceprofiles/" .. profile .. "/" .. v .. "/" .. voiceline )
+                    table_insert( LambdaVoiceProfiles[ profile ][ v[ 1 ] ], "lambdaplayers/voiceprofiles/" .. profile .. "/" .. v[ 1 ] .. "/" .. voiceline )
                 end
             else
-                LambdaVoiceProfiles[ profile ][ v ] = LambdaVoiceLinesTable[ v ]
+                LambdaVoiceProfiles[ profile ][ v[ 1 ] ] = LambdaVoiceLinesTable[ v[ 1 ] ]
             end
 
         end
