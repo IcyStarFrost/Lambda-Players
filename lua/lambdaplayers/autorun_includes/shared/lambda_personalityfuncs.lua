@@ -16,7 +16,6 @@ local presettbl = {
 
 local convar = CreateLambdaConvar( "lambdaplayers_personality_preset", "random", true, true, true, "The preset Lambda Personalities should use. Set this to Custom to make use of the chance sliders", nil, nil, { type = "Combo", options = presettbl, name = "Personality Preset", category = "Lambda Player Settings" } )
 
--- Later, I will make convars and whatever to allow override of certain personality chances or so. Not sure what that will look like just yet
 function LambdaCreatePersonalityType( personalityname, func )
     local convar = CreateLambdaConvar( "lambdaplayers_personality_" .. personalityname .. "chance", 30, true, true, true, "The chance " .. personalityname .. " will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = personalityname .. " Chance", category = "Lambda Player Settings" } )
     table_insert( LambdaPersonalities, { personalityname, func } )
