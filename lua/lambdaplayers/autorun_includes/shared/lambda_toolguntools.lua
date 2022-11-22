@@ -235,6 +235,43 @@ AddToolFunctionToLambdaTools( "Color", UseColorTool )
 
 
 
+local function UseCreatorTool( self, target )
+
+    local pos = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
+    pos = pos.HitPos
+
+    self:LookTo( pos, 2 )
+
+    coroutine.wait( 1 )
+
+    self:UseWeapon( pos )
+
+    local mdl = LambdaPlayerProps[ random( #LambdaPlayerProps ) ]
+
+    local prop = ents_Create( "prop_physics" )
+    prop:SetPos( pos )
+    prop:SetAngles( Angle( 0, self:GetAngles()[ 2 ], 0 ) )
+    prop:SetModel( mdl )
+    prop.LambdaOwner = self
+    prop.IsLambdaSpawned = true
+    prop:Spawn()
+    DoPropSpawnedEffect( prop )
+
+    local mins, maxs = prop:GetModelBounds()
+    local proppos = prop:GetPos()
+    proppos[ 3 ] = proppos[ 3 ] - mins[ 3 ]
+    prop:SetPos( proppos )
+
+    self:DebugPrint( "spawned a prop ", prop )
+
+    self:ContributeEntToLimit( prop, "Prop" )
+    table_insert( self.l_SpawnedEntities, 1, prop )
+
+    return true
+end
+AddToolFunctionToLambdaTools( "Creator", UseCreatorTool )
+
+
 
 
 local dynamitemodels = { "models/dav0r/tnt/tnt.mdl", "models/dav0r/tnt/tnttimed.mdl", "models/dynamite/dynamite.mdl" }
