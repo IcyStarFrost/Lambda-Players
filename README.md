@@ -195,6 +195,15 @@ Called when a Lambda Player wants to know if they can attack someone. Return tru
 
 Called when all default pickup functions have been loaded. Use this hook if you want to add pickup support for a specific entity using `LambdaPlayers_AddItemPickup()` See lambdaplayers/autorun_includes/server/globals.lua
 
+
+
+### `LambdaOnVoiceTypesRegistered`
+### Must be Shared!
+
+Called when all default voice types ( idle, kill, death, ect ) have been registered and before the file system has loaded them. Use this hook if you want to create custom voice types using  `LambdaRegisterVoiceType()`. See lambdaplayers/autorun_includes/shared/d_registervoicetypes.lua
+
+
+
 # Lambda Player Addon Hooks
 
 *The hooks below can be used to add onto certain features of the lambdas*
