@@ -102,3 +102,19 @@ function ENT:UsingAct()
     self:PlayGestureAndWait( acts[ random( #acts ) ] )
     self:SetState( "Idle" )
 end
+
+local t_options = { run = true }
+function ENT:TBaggingPosition()
+
+    self:MoveToPos( self.l_tbagpos, t_options )
+
+    for i=1, random( 2, 8 ) do
+        if self:GetState() != "TBaggingPosition" then return end
+        self:SetCrouch( true )
+        coroutine.wait( 0.2 )
+        self:SetCrouch( false )
+        coroutine.wait( 0.2 )
+    end
+
+    self:SetState( "Idle" )
+end

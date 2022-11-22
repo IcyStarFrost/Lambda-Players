@@ -140,6 +140,7 @@ if SERVER then
             self:SetFrags( self:GetFrags() + 1 )
 
             if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "kill" ) ) end 
+            if random( 1, 10 ) == 1 then self.l_tbagpos = victim:GetPos() self:SetState( "TBaggingPosition" ) end
 
             if !victim.IsLambdaPlayer then LambdaKillFeedAdd( victim, info:GetAttacker(), info:GetInflictor() ) end
 
