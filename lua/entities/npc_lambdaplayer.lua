@@ -65,6 +65,9 @@ end
     local CurTime = CurTime
     local Clamp = math.Clamp
     local min = math.min
+    local LerpVector = LerpVector
+    local IsInWorld = util.IsInWorld
+    local isvector = isvector
     local color_white = color_white
     local RandomPairs = RandomPairs
     local TraceHull = util.TraceHull
@@ -72,8 +75,10 @@ end
     local FrameTime = FrameTime
     local unstucktable = {}
     local sub = string.sub
+    local zerovector = Vector()
     local RealTime = RealTime
     local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
+    local tracetable = {}
     
 --
 
@@ -118,15 +123,18 @@ function ENT:Initialize()
         self.l_nextdoorcheck = 0 -- The next time we will check for doors to open
         self.l_nextphysicsupdate = 0 -- The next time we will update our Physics Shadow
         self.l_WeaponUseCooldown = 0 -- The time before we can use our weapon again
+        self.l_noclipheight = 0 -- The height we will float off the ground from
         self.l_FallVelocity = 0 -- How fast we are falling
         self.debuginitstart = SysTime() -- Debug time from initialize to ENT:RunBehaviour()
         self.l_nextidlesound = CurTime() + 5 -- The next time we will play a idle sound
+        self.l_nextnoclipheightchange = 0 -- The next time we will change our height while in noclip
         self.l_nextUA = CurTime() + rand( 1, 15 ) -- The next time we will run a UAction. See lambda/sv_x_universalactions.lua
         self.l_NextPickupCheck = 0 -- The next time we will check for nearby items to pickup
 
 
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
         self.l_movepos = nil -- The position or entity we are going to
+        self.l_noclippos = self:GetPos() -- The position we want to noclip to
         self.l_currentnavarea = navmesh_GetNavArea( self:WorldSpaceCenter(), 400 ) -- The current nav area we are in
 
 
@@ -278,6 +286,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", 3, "HasCustomDrawFunction" )
     self:NetworkVar( "Bool", 4, "IsReloading" )
     self:NetworkVar( "Bool", 5, "Run" )
+    self:NetworkVar( "Bool", 6, "NoClip" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )
@@ -394,6 +403,43 @@ function ENT:Think()
             self.l_FallVelocity = -self.loco:GetVelocity().z
         end
 
+        -- Handle noclip
+        if self:IsInNoClip() and !self.l_ispickedupbyphysgun then
+            self:SetCrouch( false )
+            self.loco:SetVelocity( zerovector )
+
+            if !self:IsPlayingGesture( ACT_GMOD_NOCLIP_LAYER ) then
+                self:AddGesture( ACT_GMOD_NOCLIP_LAYER, false )
+            end
+
+            if CurTime() > self.l_nextnoclipheightchange then
+                self.l_noclipheight = random( 0, 500 )
+                self.l_nextnoclipheightchange = CurTime() + random( 1, 20 )
+            end
+
+            if self.l_CurrentPath then
+
+                if isvector( self.l_CurrentPath ) then
+                    local endpos = self.l_CurrentPath + Vector( 0, 0, self.l_noclipheight )
+                    if self:GetState() == "Combat" then endpos[ 3 ] = self:GetEnemy():GetPos()[ 3 ] + ( self.l_HasMelee and 0 or 50 ) end
+
+                    if self:GetRangeSquaredTo( copy ) <= ( 20 * 20 ) then self:CancelMovement() else self.loco:FaceTowards( endpos ) self.l_noclippos = self.l_noclippos + ( endpos - self.l_noclippos ):GetNormalized() * 20 end
+                else
+                    local endpos = self.l_CurrentPath:GetEnd() + Vector( 0, 0, self.l_noclipheight )
+                    if self:GetState() == "Combat" then endpos[ 3 ] = self:GetEnemy():GetPos()[ 3 ] + ( self.l_HasMelee and 0 or 50 ) end
+                    local copy = Vector( endpos[ 1 ], endpos[ 2 ], self:GetPos()[ 3 ] )
+
+                    if self:GetRangeSquaredTo( copy ) <= ( 20 * 20 ) then self:CancelMovement() else self.loco:FaceTowards( endpos ) self.l_noclippos = self.l_noclippos + ( endpos - self.l_noclippos ):GetNormalized() * 20 end
+                end
+            end
+
+            self:SetPos( self.l_noclippos )
+        else
+            self.l_noclipheight = 0
+            self:RemoveGesture( ACT_GMOD_NOCLIP_LAYER )
+            self.l_noclippos = self:GetPos()
+        end
+
         -- Animations --
         if self.l_UpdateAnimations then
             local anims = _LAMBDAPLAYERSHoldTypeAnimations[ self.l_HoldType ]
@@ -405,6 +451,8 @@ function ENT:Think()
                     local moveAnim = ( self:GetCrouch() and anims.crouchWalk or anims.run )
                     if self:GetActivity() != moveAnim then self:StartActivity( moveAnim ) end
                 end
+            elseif self:IsInNoClip() then
+                self:StartActivity( anims.idle )
             elseif self:GetActivity() != anims.jump then
                 self:StartActivity( anims.jump )
             end

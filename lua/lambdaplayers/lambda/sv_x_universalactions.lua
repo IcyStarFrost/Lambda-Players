@@ -71,6 +71,22 @@ AddUActionToLambdaUA( function( self )
     end )
 end )
 
+
+local noclip = GetConVar( "lambdaplayers_lambda_allownoclip" )
+-- NoClip
+AddUActionToLambdaUA( function( self )
+    if random( 1, 2 ) != 1 or !noclip:GetBool() then return end
+    self:SetNoClip( true )
+
+    local Nocliptime = curTime() + rand( 1, 120 )
+    self:NamedTimer( "UnNoclip", 1, 0, function() 
+        if curTime() >= Nocliptime or !noclip:GetBool() then
+            self:SetNoClip( false )
+            return true
+        end
+    end )
+end )
+
 -- Jump around
 AddUActionToLambdaUA( function( self )
     if random( 1, 2 ) != 1 or self:GetState() != "Idle" then return end

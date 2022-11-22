@@ -265,6 +265,7 @@ if SERVER then
     local realisticfalldamage = GetConVar( "lambdaplayers_lambda_realisticfalldamage" )
     
     function ENT:OnLandOnGround( ent )
+        if self:IsInNoClip() then return end
         -- Play land animation
         self:AddGesture( ACT_LAND )
 

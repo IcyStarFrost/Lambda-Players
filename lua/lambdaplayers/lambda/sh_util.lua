@@ -25,6 +25,7 @@ local coroutine = coroutine
 local Trace = util.TraceLine
 local table_add = table.Add
 local EndsWith = string.EndsWith
+local math_Approach = math.Approach
 local string_Replace = string.Replace
 local table_insert = table.insert
 local tostring = tostring
@@ -469,6 +470,11 @@ if SERVER then
     -- If we have a lethal weapon
     function ENT:HasLethalWeapon()
         return self.l_HasLethal or false
+    end
+
+    -- Returns if we are in noclip
+    function ENT:IsInNoClip()
+        return self:GetNoClip()
     end
 
     -- Returns the walk speed
