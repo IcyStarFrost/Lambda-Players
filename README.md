@@ -287,3 +287,14 @@ Called when a Lambda Player initializes. This hook can be used to add onto the E
 *stucktimes is a variable that holds how many times the Lambda Player got stuck within the last 10 seconds + now*
 
 Called when a Lambda Player gets stuck. This hook can be used to make a custom unstuck function. Return "stop" to make the Lambda Player give up in their path or return "continue" to make the Lambda Player continue down their path
+
+
+
+
+### `LambdaOnNoclip( Entity lambda, Bool DesiredState )`
+### Server-Side
+
+Called when a Lambda Player wants to change their NoClip state. If DesiredState = true, the Lambda Player wants to noclip. If false, the Lambda Player wants to exit noclip. Return true to completely block the event
+
+
+
