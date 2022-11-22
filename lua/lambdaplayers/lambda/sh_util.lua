@@ -61,6 +61,12 @@ function ENT:Hook( hookname, uniquename, func, preserve, cooldown )
     end )
 end
 
+-- Returns if the hook exists
+function ENT:HookExists( hookname, uniquename )
+    local hooks = hook.GetTable()
+    return hooks[ hookname ] != nil and hooks[ hookname ][ uniquename ] != nil
+end
+
 -- Removes a hook created by the function above
 function ENT:RemoveHook( hookname, uniquename )
     self:DebugPrint( "Removed a hook: " .. hookname .. " | " .. uniquename )

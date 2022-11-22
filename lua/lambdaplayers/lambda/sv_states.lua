@@ -24,25 +24,27 @@ function ENT:Combat()
 
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
 
-    self:Hook( "Tick", "CombatTick", function()
-        if !LambdaIsValid( self:GetEnemy() ) or self:GetState() != "Combat" then return "end" end -- Returns and removes this hook because we returned "end". See sh_util.lua for source
+    if !self:HookExists( "Tick", "CombatTick" ) then
+        self:Hook( "Tick", "CombatTick", function()
+            if !LambdaIsValid( self:GetEnemy() ) or self:GetState() != "Combat" then return "end" end -- Returns and removes this hook because we returned "end". See sh_util.lua for source
 
 
 
-        if self:GetRangeSquaredTo( self:GetEnemy() ) <= ( self.l_CombatAttackRange * self.l_CombatAttackRange ) and self:CanSee( self:GetEnemy() ) then
-            self:UseWeapon( self:GetEnemy() )
-            self.Face = self:GetEnemy()
-            self.l_Faceend = CurTime() + 1
-        end
+            if self:GetRangeSquaredTo( self:GetEnemy() ) <= ( self.l_CombatAttackRange * self.l_CombatAttackRange ) and self:CanSee( self:GetEnemy() ) then
+                self:UseWeapon( self:GetEnemy() )
+                self.Face = self:GetEnemy()
+                self.l_Faceend = CurTime() + 1
+            end
 
-        if self.l_CombatKeepDistance and LambdaIsValid( self:GetEnemy() ) and self:GetRangeSquaredTo( self:GetEnemy() ) < ( self.l_CombatKeepDistance * self.l_CombatKeepDistance ) and self:CanSee( self:GetEnemy() ) then
-            local potentialpos = ( self:GetPos() + ( self:GetPos() - self:GetEnemy():GetPos() ):GetNormalized() * 200 ) + VectorRand( -1000, 1000 )
-            self.l_movepos = IsInWorld( potentialpos ) and potentialpos or self:Trace( potentialpos ).HitPos
-        elseif self.l_CombatKeepDistance and LambdaIsValid( self:GetEnemy() ) and self:GetRangeSquaredTo( self:GetEnemy() ) > ( self.l_CombatKeepDistance * self.l_CombatKeepDistance ) or LambdaIsValid( ent ) and !self:CanSee( self:GetEnemy() ) then
-            self.l_movepos = self:GetEnemy()
-        end
-    
-    end )
+            if self.l_CombatKeepDistance and LambdaIsValid( self:GetEnemy() ) and self:GetRangeSquaredTo( self:GetEnemy() ) < ( self.l_CombatKeepDistance * self.l_CombatKeepDistance ) and self:CanSee( self:GetEnemy() ) then
+                local potentialpos = ( self:GetPos() + ( self:GetPos() - self:GetEnemy():GetPos() ):GetNormalized() * 200 ) + VectorRand( -1000, 1000 )
+                self.l_movepos = IsInWorld( potentialpos ) and potentialpos or self:Trace( potentialpos ).HitPos
+            elseif self.l_CombatKeepDistance and LambdaIsValid( self:GetEnemy() ) and self:GetRangeSquaredTo( self:GetEnemy() ) > ( self.l_CombatKeepDistance * self.l_CombatKeepDistance ) or LambdaIsValid( ent ) and !self:CanSee( self:GetEnemy() ) then
+                self.l_movepos = self:GetEnemy()
+            end
+        
+        end )
+    end
 
     self:MoveToPos( self:GetEnemy(), combattbl )
 end
