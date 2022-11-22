@@ -34,7 +34,7 @@ function ENT:Combat()
         end
 
         if self.l_CombatKeepDistance and LambdaIsValid( self:GetEnemy() ) and self:GetRangeSquaredTo( self:GetEnemy() ) < ( self.l_CombatKeepDistance * self.l_CombatKeepDistance ) and self:CanSee( self:GetEnemy() ) then
-            self.l_movepos = self:GetPos() + ( self:GetPos() - self:GetEnemy():GetPos() ):GetNormalized() * 200
+            self.l_movepos = self:GetPos() + ( self:GetPos() - self:GetEnemy():GetPos() ):GetNormalized() * 200 + VectorRand( -700, 700 )
         elseif self.l_CombatKeepDistance and LambdaIsValid( self:GetEnemy() ) and self:GetRangeSquaredTo( self:GetEnemy() ) > ( self.l_CombatKeepDistance * self.l_CombatKeepDistance ) or LambdaIsValid( ent ) and !self:CanSee( self:GetEnemy() ) then
             self.l_movepos = self:GetEnemy()
         end
