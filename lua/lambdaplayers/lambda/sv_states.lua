@@ -108,6 +108,8 @@ function ENT:UsingAct()
     self:SetState( "Idle" )
 end
 
+
+-- MW2/Halo lives in us forever
 local t_options = { run = true }
 function ENT:TBaggingPosition()
 
