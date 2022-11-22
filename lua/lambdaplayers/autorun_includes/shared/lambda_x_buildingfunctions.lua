@@ -20,20 +20,8 @@ end
 
 local function SpawnAProp( self )
     if !self:IsUnderLimit( "Prop" ) then return end
-    
-    self.Face = self:GetPos() + VectorRand( -100, 100 )
-    coroutine.wait( rand( 0.2, 1 ) )
-    self:SpawnProp()
-    coroutine.wait( rand( 0.2, 1 ) )
-    self.Face = nil
 
-    return true -- Just like for toolguns, we return true to let the for loop know we completed what we wanted to do and it can break
-end
-
-local function SpawnMultipleProps( self )
-    if !self:IsUnderLimit( "Prop" ) then return end
-    
-    for i=1, random( 2, 5 ) do
+    for i=1, random( 1, 4 ) do
         if !self:IsUnderLimit( "Prop" ) then return end
 
         self.Face = self:GetPos() + VectorRand( -100, 100 )
@@ -77,7 +65,6 @@ end
 
 
 AddBuildFunctionToLambdaBuildingFunctions( "prop", "Allow Prop Spawning", "If Lambda Players are allowed to spawn props", SpawnAProp )
-AddBuildFunctionToLambdaBuildingFunctions( "prop", "Allow Prop Spawning", "If Lambda Players are allowed to spawn props", SpawnMultipleProps )
 AddBuildFunctionToLambdaBuildingFunctions( "npc", "Allow NPC Spawning", "If Lambda Players are allowed to spawn NPCs", SpawnNPC )
 AddBuildFunctionToLambdaBuildingFunctions( "entity", "Allow Entity Spawning", "If Lambda Players are allowed to spawn Entities", SpawnEntity )
 
