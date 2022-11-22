@@ -1,10 +1,12 @@
 local IsValid = IsValid
 local CurTime = CurTime
+local VectorRand = VectorRand
 local ignorePlayers = GetConVar( "ai_ignoreplayers" )
 local EmitEffect = util.Effect
 local EmitExplosion = util.BlastDamage
 local SimpleTimer = timer.Simple
 local RandomInt = math.random
+local RandomFloat = math.Rand
 local EntityCreate = ents.Create
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
@@ -15,21 +17,21 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         holdtype = "slam",
         killicon = "npc_satchel",
         bonemerge = true,
-        keepdistance = 200,
-        attackrange = 500,
+        keepdistance = 300,
+        attackrange = 400,
 
         OnEquip = function( self, wepent )
-            self:Hook( "Think", "LambdaSLAM_ThrowRandomly", function( )
-                if self:GetState() != "Idle" or RandomInt( 5 ) != 1 then return end
-                
-                local randPos = self:WorldSpaceCenter() + VectorRand( -300, 300 )
-                self:LookTo( randPos, 2 )
+            self:Hook( "Think", "LambdaSLAM_ThrowRandomly", function()
+                if CurTime() < self.l_WeaponUseCooldown or self:GetState() == "Combat" or RandomInt( 1, 6 ) != 1 then return end
+
+                local randPos = self:GetRandomPosition( self:WorldSpaceCenter(), 400 )
+                self:LookTo( randPos, 1.5 )
                 
                 self:SimpleTimer( 1, function()
                     if self.l_Weapon != "slam" or !IsValid( wepent ) then return end
                     self:UseWeapon( randPos )
                 end )
-            end, false, 1)
+            end, false, 1 )
         end,
 
         callback = function( self, wepent, target )
@@ -58,20 +60,22 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 if !IsValid( satchel ) then hook.Remove( "Think", hookID ) return end
                 if !LambdaIsValid( self ) then satchel:Remove(); hook.Remove( "Think", hookID ) return end
 
-                for _, v in ipairs( ents.FindInSphere( satchel:GetPos(), 150 ) ) do
+                for _, v in ipairs( ents.FindInSphere( satchel:GetPos() - ( satchel:GetVelocity() * 0.25 ), RandomInt( 125, 175 ) ) ) do
                     if v == self or v == satchel or !LambdaIsValid( v ) or !v:IsNPC() and !v:IsNextBot() and ( !v:IsPlayer() or !v:Alive() or ignorePlayers:GetBool() ) or !satchel:Visible( v ) then continue end
-                    
-                    wepent:EmitSound( "ui/buttonclick.wav", 80 )
-                    SimpleTimer( 0.3, function() 
+
+                    wepent:EmitSound( "Weapon_SLAM.SatchelDetonate" )
+                    satchel:EmitSound( "Weapon_SLAM.TripMineMode" )
+                    SimpleTimer( RandomFloat( 0.25, 0.5 ), function() 
                         if !IsValid( satchel ) then return end
 
                         local effData = EffectData()
                         effData:SetOrigin( satchel:GetPos() )
                         EmitEffect( "Explosion", effData, true, true )
 
-                        EmitExplosion( satchel, self or satchel, satchel:GetPos(), 200, 150 )
+                        satchel:Remove()
+                        EmitExplosion( satchel, ( IsValid( self ) and self or satchel ), satchel:WorldSpaceCenter(), 200, 150 )
                     end )
-                    
+
                     thinkTime = CurTime() + 1.0
                     return
                 end
