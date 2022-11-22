@@ -307,6 +307,8 @@ if CLIENT then
                 menu:AddOption( "Delete " .. line:GetColumnText( 1 ), function()
                     LAMBDAFS:RemoveVarFromKVFile( "lambdaplayers/presets/" .. presetcategory .. ".json", line:GetColumnText( 1 ), "json" )
                     presetlist:RemoveLine( id )
+                    surface.PlaySound( "buttons/button15.wav" )
+                    chat.AddText( "Deleted Preset " .. line:GetColumnText( 1 ) )
                 end )
             end
 
@@ -317,6 +319,9 @@ if CLIENT then
 
                 local json = TableToJSON( line:GetSortValue( 1 ) )
                 local compressed = compress( json )
+                
+                surface.PlaySound( "buttons/button15.wav" )
+                chat.AddText( "Applied Preset " .. line:GetColumnText( 1 ) )
 
                 if !isclientonly and LocalPlayer():IsSuperAdmin() then
                     net.Start( "lambdaplayers_setconvarpreset" )
