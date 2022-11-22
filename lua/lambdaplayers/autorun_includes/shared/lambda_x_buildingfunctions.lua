@@ -33,7 +33,7 @@ end
 local function SpawnMultipleProps( self )
     if !self:IsUnderLimit( "Prop" ) then return end
     
-    for i=1, random( 2, 12 ) do
+    for i=1, random( 2, 5 ) do
         if !self:IsUnderLimit( "Prop" ) then return end
 
         self.Face = self:GetPos() + VectorRand( -100, 100 )
