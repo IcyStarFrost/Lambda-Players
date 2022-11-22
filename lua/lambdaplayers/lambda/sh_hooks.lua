@@ -14,6 +14,7 @@ local ceil = math.ceil
 local deathdir = GetConVar( "lambdaplayers_voice_deathdir" )
 local killdir = GetConVar( "lambdaplayers_voice_killdir" )
 local debugvar = GetConVar( "lambdaplayers_debug" )
+local voicevar = GetConVar( "lambdaplayers_personality_voicechance" )
 local callnpchook = GetConVar( "lambdaplayers_lambda_callonnpckilledhook" )
 
 if SERVER then
@@ -203,16 +204,55 @@ if SERVER then
         end
     end
 
+    -- Apparently this took me a few hours to come up with this solution to personality presets like this
+    local personalitypresets = {
+        [ "custom" ] = function( ply, self )
+            local tbl = {}
+            for k, v in ipairs( LambdaPersonalityConVars ) do
+                tbl[ v[ 1 ] ] = ply:GetInfoNum( "lambdaplayers_personality_" .. v[ 1 ] .. "chance", 30 )
+            end
+            self:SetVoiceChance( ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) )
+            return  tbl
+        end,
+        [ "fighter" ] = function( ply, self )
+            local tbl = {}
+            for k, v in ipairs( LambdaPersonalityConVars ) do
+                tbl[ v[ 1 ] ] = 0
+            end
+            tbl[ "Build" ] = 10
+            tbl[ "Combat" ] = 70
+            tbl[ "Tool" ] = 10
+            self:SetVoiceChance( 30 )
+            return tbl
+        end,
+        [ "builder" ] = function( ply, self )
+            local tbl = {}
+            for k, v in ipairs( LambdaPersonalityConVars ) do
+                tbl[ v[ 1 ] ] = random( 1, 100 )
+            end
+            tbl[ "Build" ] = 70
+            tbl[ "Combat" ] = 10
+            tbl[ "Tool" ] = 70
+            self:SetVoiceChance( 30 )
+            return tbl
+        end
+    } 
+
     local allowrespawn = GetConVar( "lambdaplayers_lambda_allownonadminrespawn" )
     function ENT:OnSpawnedByPlayer( ply )
         local respawn = tobool( ply:GetInfoNum( "lambdaplayers_lambda_shouldrespawn", 0 ) )
         local weapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )
         local voiceprofile = ply:GetInfo( "lambdaplayers_lambda_voiceprofile" )
+        local personality = ply:GetInfo( "lambdaplayers_personality_preset" )
 
         self:SetRespawn( !ply:IsAdmin() and allowrespawn:GetBool() and respawn or ply:IsAdmin() and respawn )
         self:SwitchWeapon( weapon )
         self.l_SpawnWeapon = weapon
         self.l_VoiceProfile = voiceprofile != "" and voiceprofile or self.l_VoiceProfile
+
+        if personality != "random" then
+            self:BuildPersonalityTable( personalitypresets[ personality ]( ply, self ) )
+        end
         
 
         self:DebugPrint( "Applied client settings from ", ply )

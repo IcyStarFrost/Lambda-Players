@@ -276,9 +276,11 @@ if CLIENT then
 
     file.CreateDir( "lambdaplayers/presets" )
     -- Creates a panel that will handle convar presets. Cause Gmod's preset system is kinda garbage in my opinion
-    function LAMBDAPANELS:CreateCVarPresetPanel( name, convars, presetcategory )
+    function LAMBDAPANELS:CreateCVarPresetPanel( name, convars, presetcategory, isclientonly )
         
         local frame = LAMBDAPANELS:CreateFrame( name, 300, 200 )
+
+        LAMBDAPANELS:CreateLabel( "Right Click on a line for options", frame, TOP )
 
         local presetlist = vgui.Create( "DListView", frame )
         presetlist:Dock( FILL )
@@ -316,7 +318,7 @@ if CLIENT then
                 local json = TableToJSON( line:GetSortValue( 1 ) )
                 local compressed = compress( json )
 
-                if LocalPlayer():IsSuperAdmin() then
+                if !isclientonly and LocalPlayer():IsSuperAdmin() then
                     net.Start( "lambdaplayers_setconvarpreset" )
                     net.WriteUInt( #compressed, 32 )
                     net.WriteData( compressed )
