@@ -67,7 +67,7 @@ local CreateLambdaConvar = CreateLambdaConvar
 -- name | String | Pretty name
 -- decimals | Number | Slider only! How much decimals the slider should have
 -- category | String | The Lambda Settings category to place the convar into. Will create one if one doesn't exist already
--- options | Table | Combo only! A table with its keys being the data and values being the text
+-- options | Table | Combo only! A table with its keys being the text and values being the data
 
 -- Other Convars. Client-side only
 CreateLambdaConvar( "lambdaplayers_corpsecleanuptime", 15, true, true, false, "The amount of time before a corpse is removed. Set to zero to disable this", 0, 190, { type = "Slider", name = "Corpse Cleanup Time", decimals = 0, category = "Utilities" } )
