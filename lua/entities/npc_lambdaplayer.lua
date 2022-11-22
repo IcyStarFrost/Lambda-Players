@@ -314,6 +314,7 @@ function ENT:Think()
     if SERVER then
         if self.l_ispickedupbyphysgun then self.loco:SetVelocity( Vector() ) end
 
+        -- Footstep sounds
         if CurTime() > self.NextFootstepTime and self:IsOnGround() and !self.loco:GetVelocity():IsZero() then
             local desSpeed = self.loco:GetDesiredSpeed()
             local result = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32600, self )
@@ -322,23 +323,27 @@ function ENT:Think()
             self.NextFootstepTime = CurTime() + min(0.25 * (self:GetRunSpeed() / desSpeed), 0.35)
         end
         
+        -- Play random Idle Voice lines
         if CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 1, 100 ) <= self:GetVoiceChance() then
             
             self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
             self.l_nextidlesound = CurTime() + 5
         end
 
+        -- Update our speed after some time
         if CurTime() > self.l_nextspeedupdate then
             local speed = ( self:GetCrouch() and self:GetCrouchSpeed() or self:GetRun() and self:GetRunSpeed() or self:GetWalkSpeed() ) +  self.l_CombatSpeedAdd
             self.loco:SetDesiredSpeed( speed )
             self.l_nextspeedupdate = CurTime() + 0.5
         end
         
+        -- Update our networked health
         if CurTime() > self.l_NexthealthUpdate then
             self:UpdateHealthDisplay()
             self.l_NexthealthUpdate = CurTime() + 0.1
         end
 
+        -- Update our physics object
         if CurTime() > self.l_nextphysicsupdate then
             local phys = self:GetPhysicsObject()
             if self:WaterLevel() == 0 then
@@ -350,6 +355,7 @@ function ENT:Think()
             self.l_nextphysicsupdate = CurTime() + 0.5
         end
 
+        -- Handle picking up entities
         if CurTime() > self.l_NextPickupCheck then
             for _, v in ipairs( self:FindInSphere( self:WorldSpaceCenter(), 48 ) ) do
                 local pickFunc = _LAMBDAPLAYERSItemPickupFunctions[ v:GetClass() ]
@@ -358,11 +364,12 @@ function ENT:Think()
             self.l_NextPickupCheck = CurTime() + 0.1
         end
 
+        -- Handle our ping rising or dropping
         if random( 125 ) == 1 then
             self:SetPing( Clamp( self:GetPing() + random( -20, ( 24 - ( self:GetPing() / self:GetAbsPing() ) ) ), self:GetAbsPing(), 999 ) )
         end
 
-
+        -- Reload randomly when we aren't shooting
         if self.l_Clip < self.l_MaxClip and random( 100 ) == 1 and CurTime() > self.l_WeaponUseCooldown + 1 then
             self:ReloadWeapon()
         end
@@ -376,11 +383,13 @@ function ENT:Think()
             self.l_nextUA = CurTime() + rand( 1, 15 )
         end
 
+        -- Eye tracing
         if developer:GetBool() then
             local attach = self:GetAttachmentPoint( "eyes" )
             debugoverlay.Line( attach.Pos, self:GetEyeTrace().HitPos, 0.1, color_white, true  )
         end
 
+        -- How fast we are falling
         if !self:IsOnGround() then
             self.l_FallVelocity = -self.loco:GetVelocity().z
         end
@@ -403,7 +412,7 @@ function ENT:Think()
         --
 
 
-
+        -- Handles facing positions or entities
         if self.Face then
             if self.l_Faceend and CurTime() > self.l_Faceend then self.Face = nil return end
             if isentity( self.Face ) and !IsValid( self.Face ) then self.Face = nil return end
@@ -469,6 +478,7 @@ function ENT:Think()
 
     elseif CLIENT then
         
+        -- Update our flashlight
         if CurTime() > self.l_lightupdate then
             local lightvec = render.GetLightColor( self:WorldSpaceCenter() )
 
@@ -499,11 +509,12 @@ function ENT:Think()
         end
 
     end
+
+    -- Think Delay
     if game.SinglePlayer() then
         self:NextThink( CurTime() + thinkrate:GetFloat() )
         return true
     end
-
 end
 
 function ENT:BodyUpdate()
