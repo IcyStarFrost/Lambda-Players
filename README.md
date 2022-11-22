@@ -148,7 +148,7 @@ I will now press `Save Profile` and there it is! It is now saved
 
 ![image](https://user-images.githubusercontent.com/109770359/202869845-f0691422-129c-4a86-b15d-c05bf6ea043a.png)
 
-###Now this is important! You must Update Lambda Data for any changes to take effect!
+### Now this is important! You must Update Lambda Data for any changes to take effect!
 
 ![image](https://user-images.githubusercontent.com/109770359/202869883-cb336e9e-64e5-4c0b-8fbb-238adb896af0.png)
 
