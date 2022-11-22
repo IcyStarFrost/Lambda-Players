@@ -54,6 +54,7 @@ if SERVER then
         self:PlaySoundFile( deathdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "death" ) )
 
         self:SetIsDead( true )
+        self:SetNoClip( false )
         self:SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE )
 
         self:ClientSideNoDraw( self, true )
