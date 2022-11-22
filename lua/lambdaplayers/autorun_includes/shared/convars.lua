@@ -91,6 +91,10 @@ CreateLambdaConvar( "lambdaplayers_lambda_callonnpckilledhook", 0, true, false, 
 CreateLambdaConvar( "lambdaplayers_lambda_singleplayerthinkrate", 0, true, false, false, "The amount of seconds Lambda Players will execute their next Think. 0.1 is a good value. Increasing this will increase performance at the cost of delays and decreasing this may decrease performance but have less delays. This only applies to singleplayer since multiplayer automatically adjusts think time", 0, 0.24, { type = "Slider", decimals = 2, name = "Think Rate", category = "Lambda Server Settings" } )
 --
 
+-- Combat Convars 
+CreateLambdaConvar( "lambdaplayers_combat_allowtargetyou", 1, true, true, true, "If Lambda Players are allowed to attack you", 0, 1, { type = "Bool", name = "Target You", category = "Combat" } )
+--
+
 -- Lambda Player Convars
 CreateLambdaConvar( "lambdaplayers_lambda_shouldrespawn", 0, true, true, true, "If Lambda Players should respawn when they die. Note: Changing this will only apply to newly spawned Lambda Players AND only if the server allows the respawn option for non admins", 0, 1, { type = "Bool", name = "Respawn", category = "Lambda Player Settings" } )
 ---- lambdaplayers_lambda_voiceprofile Located in shared/voiceprofiles.lua
