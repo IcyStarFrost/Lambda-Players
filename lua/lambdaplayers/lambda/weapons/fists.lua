@@ -50,12 +50,12 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 local attackDmg = random( 8, 12 )
                 local attackAng = ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):Angle()
                 local attackForce = ( attackAng:Up() * 4912 + attackAng:Forward() * 9989 )
-                if wepent.FistCombo >= 2 then
+                if wepent.FistCombo and wepent.FistCombo >= 2 then
                     attackDmg = random( 12, 24 )
                     attackForce = ( attackAng:Up() * 5158 + attackAng:Forward() * 10012 )
                     wepent.FistCombo = 0
                 else
-                    wepent.FistCombo = wepent.FistCombo + 1
+                    wepent.FistCombo = wepent.FistCombo and wepent.FistCombo + 1 or 0
                     if random( 2 ) == 1 then attackForce = ( attackAng:Up() * -4912 + attackAng:Forward() * 9989 ) end
                 end
                 dmginfo:SetDamage( attackDmg )
