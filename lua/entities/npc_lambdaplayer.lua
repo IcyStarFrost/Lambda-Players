@@ -615,7 +615,8 @@ function ENT:RunBehaviour()
 
         end
 
-        coroutine.wait( 0.1 )
+        local time = game.SinglePlayer() and thinkrate:GetFloat() or 0.2
+        coroutine.wait( time )
     end
 
 end
