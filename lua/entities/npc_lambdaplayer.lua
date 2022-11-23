@@ -64,6 +64,7 @@ end
     local thinkrate = GetConVar( "lambdaplayers_lambda_singleplayerthinkdelay" )
     local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
     local CurTime = CurTime
+    local InSinglePlayer = game.SinglePlayer
     local Clamp = math.Clamp
     local min = math.min
     local LerpVector = LerpVector
@@ -577,7 +578,7 @@ function ENT:Think()
     end
 
     -- Think Delay
-    if game.SinglePlayer() then
+    if InSinglePlayer() then
         self:NextThink( CurTime() + thinkrate:GetFloat() )
         return true
     end
@@ -616,7 +617,7 @@ function ENT:RunBehaviour()
 
         end
 
-        local time = game.SinglePlayer() and thinkrate:GetFloat() or 0.2
+        local time = InSinglePlayer() and thinkrate:GetFloat() or 0.2
         coroutine.wait( time )
     end
 
