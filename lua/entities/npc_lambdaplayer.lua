@@ -420,12 +420,12 @@ function ENT:Think()
             if self.l_CurrentPath then
 
                 if isvector( self.l_CurrentPath ) then
-                    local endpos = self.l_CurrentPath + Vector( 0, 0, self.l_noclipheight )
+                    local endpos = self.l_CurrentPath + Vector( 0, 0, self.l_noclipheight ) -- TODO: I need to figure out a good way to trace this out
                     if self:GetState() == "Combat" then endpos[ 3 ] = self:GetEnemy():GetPos()[ 3 ] + ( self.l_HasMelee and 0 or 50 ) end
 
                     if self:GetRangeSquaredTo( copy ) <= ( 20 * 20 ) then self:CancelMovement() else self.loco:FaceTowards( endpos ) self.l_noclippos = self.l_noclippos + ( endpos - self.l_noclippos ):GetNormalized() * 20 end
                 else
-                    local endpos = self.l_CurrentPath:GetEnd() + Vector( 0, 0, self.l_noclipheight )
+                    local endpos = self.l_CurrentPath:GetEnd() + Vector( 0, 0, self.l_noclipheight ) -- TODO: I need to figure out a good way to trace this out
                     if self:GetState() == "Combat" then endpos[ 3 ] = self:GetEnemy():GetPos()[ 3 ] + ( self.l_HasMelee and 0 or 50 ) end
                     local copy = Vector( endpos[ 1 ], endpos[ 2 ], self:GetPos()[ 3 ] )
 
