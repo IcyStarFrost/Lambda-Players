@@ -197,7 +197,7 @@ function LAMBDAFS:GetVoiceLinesTable()
     end
     
     for k, v in ipairs( LambdaValidVoiceTypes ) do
-        MergeDirectory( v[ 2 ]:GetString(), LambdaVoiceLinesTable[ v[ 1 ] ] )
+        MergeDirectory( GetConVar( v[ 2 ] ):GetString(), LambdaVoiceLinesTable[ v[ 1 ] ] )
     end
 
     -- This allows the ability to make addons that add voice lines
