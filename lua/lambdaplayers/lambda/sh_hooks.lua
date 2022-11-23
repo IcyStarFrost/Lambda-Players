@@ -122,17 +122,14 @@ if SERVER then
     end
 
     function ENT:OnOtherKilled( victim, info )
+        hook.Run( "LambdaOnOtherKilled", self, victim, info )
+
         local attacker = info:GetAttacker()
 
-        if victim == self:GetEnemy() then
-            self:DebugPrint( "Enemy was killed by", attacker )
-            self:SetEnemy( nil )
-            self:CancelMovement()
+        local laughChance = ( ( IsValid( attacker ) and ( victim == attacker or attacker:IsPlayer() and !attacker:Alive() or attacker.IsLambdaPlayer and attacker:GetIsDead() ) ) and 4 or 10 )
+        if self:GetState() != "Combat" and random( 1, laughChance ) == 1 and self:IsInRange( victim, 2000 ) and self:CanSee( victim ) then 
+            self:LaughAt( victim ) 
         end
-
-        if self:GetState() != "Combat" and random( 1, 10 ) == 1 and self:GetRangeSquaredTo( victim ) <= ( 2000 * 2000 ) and !self:Trace( victim ).Hit then self:LaughAt( victim ) end
-
-        hook.Run( "LambdaOnOtherKilled", self, victim, info )
 
         -- If we killed the victim
         if attacker == self then
@@ -140,16 +137,21 @@ if SERVER then
             self:DebugPrint( "killed ", victim )
             self:SetFrags( self:GetFrags() + 1 )
 
-            if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "kill" ) ) end 
-            if random( 1, 10 ) == 1 then self.l_tbagpos = victim:GetPos() self:SetState( "TBaggingPosition" ) end
+            if victim == self:GetEnemy() then
+                if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "kill" ) ) end 
+                if random( 1, 10 ) == 1 then self.l_tbagpos = victim:GetPos(); self:SetState( "TBaggingPosition" ) end
+            end
 
             if !victim.IsLambdaPlayer then LambdaKillFeedAdd( victim, info:GetAttacker(), info:GetInflictor() ) end
-
         else -- Someone else killed the victim
-
 
         end
 
+        if victim == self:GetEnemy() then
+            self:DebugPrint( "Enemy was killed by", attacker )
+            self:SetEnemy( nil )
+            self:CancelMovement()
+        end
     end
 
     -- Part of Duplicator Support. See shared/globals.lua for the other part of the duplicator support
