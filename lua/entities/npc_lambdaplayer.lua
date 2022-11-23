@@ -444,7 +444,7 @@ function ENT:Think()
                     if self:GetState() == "Combat" then endpos[ 3 ] = self:GetEnemy():GetPos()[ 3 ] + ( self.l_HasMelee and 0 or 50 ) end
                     if self:GetRangeSquaredTo( copy ) <= ( 20 * 20 ) then self:CancelMovement() else self.loco:FaceTowards( endpos ) self.l_noclippos = self.l_noclippos + ( endpos - self.l_noclippos ):GetNormalized() * 20 end
                 end
-                
+
             end
 
             self:SetPos( self.l_noclippos )
@@ -615,7 +615,7 @@ function ENT:RunBehaviour()
 
         end
 
-        coroutine.wait( 2 )
+        coroutine.wait( 0.1 )
     end
 
 end
