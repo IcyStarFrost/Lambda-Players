@@ -438,6 +438,9 @@ function ENT:Think()
             self.l_noclipheight = 0
             self:RemoveGesture( ACT_GMOD_NOCLIP_LAYER )
             self.l_noclippos = self:GetPos()
+        else
+            self.l_noclipheight = 0
+            self.l_noclippos = self:GetPos()
         end
 
         -- Animations --
