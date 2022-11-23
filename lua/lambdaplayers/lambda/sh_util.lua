@@ -28,6 +28,7 @@ local EndsWith = string.EndsWith
 local math_Approach = math.Approach
 local string_Replace = string.Replace
 local table_insert = table.insert
+local isfunction = isfunction
 local tostring = tostring
 local visibilitytrace = {}
 local tracetable = {}
@@ -365,6 +366,8 @@ if SERVER then
 
     -- Attacks the specified entity
     function ENT:AttackTarget( ent )
+        if !IsValid( ent ) then return end
+        
         local tauntsounds = LambdaVoiceLinesTable.taunt
         if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( tauntdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "taunt" ), true ) end
         self:SetEnemy( ent )
@@ -679,6 +682,15 @@ if SERVER then
     function ENT:HandleAllValidNPCRelations()
         for k, v in ipairs( ents_GetAll() ) do 
             if IsValid( v ) and v:IsNPC() then self:HandleNPCRelations( v ) end
+        end
+    end
+
+    function ENT:ShouldAttackNPC( ent )
+        if isfunction( ent.GetEnemy ) or isfunction( ent.GetTarget ) then
+            local getfunc = ent.GetEnemy or ent.GetTarget
+            return getfunc( ent ) == self
+        else
+            return true
         end
     end
 

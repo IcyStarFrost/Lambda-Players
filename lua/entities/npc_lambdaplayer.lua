@@ -127,6 +127,7 @@ function ENT:Initialize()
         self.l_FallVelocity = 0 -- How fast we are falling
         self.debuginitstart = SysTime() -- Debug time from initialize to ENT:RunBehaviour()
         self.l_nextidlesound = CurTime() + 5 -- The next time we will play a idle sound
+        self.l_nextnpccheck = CurTime() + 1 -- The next time we will check for surrounding NPCs
         self.l_nextnoclipheightchange = 0 -- The next time we will change our height while in noclip
         self.l_nextUA = CurTime() + rand( 1, 15 ) -- The next time we will run a UAction. See lambda/sv_x_universalactions.lua
         self.l_NextPickupCheck = 0 -- The next time we will check for nearby items to pickup
@@ -350,6 +351,12 @@ function ENT:Think()
         if CurTime() > self.l_NexthealthUpdate then
             self:UpdateHealthDisplay()
             self.l_NexthealthUpdate = CurTime() + 0.1
+        end
+
+        if CurTime() > self.l_nextnpccheck and self:GetState() != "Combat" then
+            local npcs = self:FindInSphere( nil, 2000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() and !self:ShouldTreatAsLPlayer( ent ) ) and self:ShouldAttackNPC( ent ) and self:CanSee( ent ) end )
+            self:AttackTarget( npcs[ random( #npcs ) ] )
+            self.l_nextnpccheck = CurTime() + 1
         end
 
         -- Update our physics object
