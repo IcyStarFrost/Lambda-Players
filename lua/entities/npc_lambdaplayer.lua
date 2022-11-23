@@ -64,6 +64,7 @@ end
     local thinkrate = GetConVar( "lambdaplayers_lambda_singleplayerthinkdelay" )
     local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
     local CurTime = CurTime
+    local SysTime = SysTime
     local InSinglePlayer = game.SinglePlayer
     local Clamp = math.Clamp
     local min = math.min
