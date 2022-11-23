@@ -264,6 +264,14 @@ function ENT:ExportLambdaInfo()
 end
 
 
+-- Performs a Trace from ourselves or the overridestart to the postion
+function ENT:Trace( pos, overridestart )
+    tracetable.start = overridestart or self:WorldSpaceCenter()
+    tracetable.endpos = ( isentity( pos ) and IsValid( pos ) and pos:GetPos() or pos )
+    tracetable.filter = self 
+    return Trace( tracetable )
+end
+
 if SERVER then
 
     local GetAllNavAreas = navmesh.GetAllNavAreas
@@ -504,14 +512,6 @@ if SERVER then
     -- Returns whether the given position or entity is at a given range
     function ENT:IsInRange( target, range )
         return ( self:GetRangeSquaredTo( target ) <= ( range * range ) )
-    end
-
-    -- Performs a Trace from ourselves or the overridestart to the postion
-    function ENT:Trace( pos, overridestart )
-        tracetable.start = overridestart or self:WorldSpaceCenter()
-        tracetable.endpos = ( isentity( pos ) and IsValid( pos ) and pos:GetPos() or pos )
-        tracetable.filter = self 
-        return Trace( tracetable )
     end
 
     -- Prevents the Lambda Player from switching weapons when this is true
