@@ -501,9 +501,9 @@ if SERVER then
         return 400
     end
 
-    -- Performs a Trace from ourselves to the postion
-    function ENT:Trace( pos )
-        tracetable.start = self:WorldSpaceCenter()
+    -- Performs a Trace from ourselves or the overridestart to the postion
+    function ENT:Trace( pos, overridestart )
+        tracetable.start = overridestart or self:WorldSpaceCenter()
         tracetable.endpos = ( isentity( pos ) and IsValid( pos ) and pos:GetPos() or pos )
         tracetable.filter = self 
         return Trace( tracetable )

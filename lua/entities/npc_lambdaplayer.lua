@@ -415,10 +415,12 @@ function ENT:Think()
             self:SetCrouch( false )
             self.loco:SetVelocity( zerovector )
 
+             -- Play the "floating" gesture
             if !self:IsPlayingGesture( ACT_GMOD_NOCLIP_LAYER ) then
                 self:AddGesture( ACT_GMOD_NOCLIP_LAYER, false )
             end
 
+            -- Randomly change height
             if CurTime() > self.l_nextnoclipheightchange then
                 self.l_noclipheight = random( 0, 500 )
                 self.l_nextnoclipheightchange = CurTime() + random( 1, 20 )
@@ -426,26 +428,31 @@ function ENT:Think()
 
             if self.l_CurrentPath then
 
+                -- If we are off Navigation Mesh
                 if isvector( self.l_CurrentPath ) then
-                    local endpos = self.l_CurrentPath + Vector( 0, 0, self.l_noclipheight ) -- TODO: I need to figure out a good way to trace this out
-                    if self:GetState() == "Combat" then endpos[ 3 ] = self:GetEnemy():GetPos()[ 3 ] + ( self.l_HasMelee and 0 or 50 ) end
+                    local trace = self:Trace( self.l_CurrentPath + Vector( 0, 0, self.l_noclipheight ), self.l_CurrentPath + Vector( 0, 0, 3 ) ) -- Trace the height
+                    local endpos = trace.HitPos + trace.HitNormal * 70 -- Subtract the normal so we are hovering below a ceiling by 70 Source Units
+                    local copy = Vector( endpos[ 1 ], endpos[ 2 ], self:GetPos()[ 3 ] ) -- Vector used if we are close to our goal
 
+                    if self:GetState() == "Combat" then endpos[ 3 ] = self:GetEnemy():GetPos()[ 3 ] + ( self.l_HasMelee and 0 or 50 ) end
                     if self:GetRangeSquaredTo( copy ) <= ( 20 * 20 ) then self:CancelMovement() else self.loco:FaceTowards( endpos ) self.l_noclippos = self.l_noclippos + ( endpos - self.l_noclippos ):GetNormalized() * 20 end
-                else
-                    local endpos = self.l_CurrentPath:GetEnd() + Vector( 0, 0, self.l_noclipheight ) -- TODO: I need to figure out a good way to trace this out
-                    if self:GetState() == "Combat" then endpos[ 3 ] = self:GetEnemy():GetPos()[ 3 ] + ( self.l_HasMelee and 0 or 50 ) end
-                    local copy = Vector( endpos[ 1 ], endpos[ 2 ], self:GetPos()[ 3 ] )
+                else -- If we are on Navigation Mesh
+                    local trace = self:Trace( self.l_CurrentPath:GetEnd() + Vector( 0, 0, self.l_noclipheight ), self.l_CurrentPath:GetEnd() + Vector( 0, 0, 3 ) ) -- Trace the height
+                    local endpos = trace.HitPos + trace.HitNormal * 70 -- Subtract the normal so we are hovering below a ceiling by 70 Source Units
+                    local copy = Vector( endpos[ 1 ], endpos[ 2 ], self:GetPos()[ 3 ] ) -- Vector used if we are close to our goal
 
+                    if self:GetState() == "Combat" then endpos[ 3 ] = self:GetEnemy():GetPos()[ 3 ] + ( self.l_HasMelee and 0 or 50 ) end
                     if self:GetRangeSquaredTo( copy ) <= ( 20 * 20 ) then self:CancelMovement() else self.loco:FaceTowards( endpos ) self.l_noclippos = self.l_noclippos + ( endpos - self.l_noclippos ):GetNormalized() * 20 end
                 end
+                
             end
 
             self:SetPos( self.l_noclippos )
-        elseif !self:IsInNoClip() then
+        elseif !self:IsInNoClip() then -- If we aren't in no clip then do this stuff
             self.l_noclipheight = 0
             self:RemoveGesture( ACT_GMOD_NOCLIP_LAYER )
             self.l_noclippos = self:GetPos()
-        else
+        else -- If we are in noclip but are being physgunned then do this
             self.l_noclipheight = 0
             self.l_noclippos = self:GetPos()
         end
@@ -608,7 +615,7 @@ function ENT:RunBehaviour()
 
         end
 
-        coroutine.wait( 0.3 )
+        coroutine.wait( 2 )
     end
 
 end
