@@ -47,6 +47,7 @@ end
     local isentity = isentity
     local VectorRand = VectorRand
     local Vector = Vector
+    local IsValid = IsValid
     local coroutine = coroutine
     local debugoverlay = debugoverlay
     local table_Random = table.Random
