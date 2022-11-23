@@ -54,6 +54,7 @@ if SERVER then
         self:PlaySoundFile( deathdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "death" ) )
 
         self:SetIsDead( true )
+        self:SetNoClip( false )
         self:SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE )
 
         self:ClientSideNoDraw( self, true )
@@ -267,6 +268,7 @@ if SERVER then
     local realisticfalldamage = GetConVar( "lambdaplayers_lambda_realisticfalldamage" )
     
     function ENT:OnLandOnGround( ent )
+        if self:IsInNoClip() then return end
         -- Play land animation
         self:AddGesture( ACT_LAND )
 

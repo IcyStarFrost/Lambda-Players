@@ -195,6 +195,15 @@ Called when a Lambda Player wants to know if they can attack someone. Return tru
 
 Called when all default pickup functions have been loaded. Use this hook if you want to add pickup support for a specific entity using `LambdaPlayers_AddItemPickup()` See lambdaplayers/autorun_includes/server/globals.lua
 
+
+
+### `LambdaOnVoiceTypesRegistered`
+### Must be Shared!
+
+Called when all default voice types ( idle, kill, death, ect ) have been registered and before the file system has loaded them. Use this hook if you want to create custom voice types using  `LambdaRegisterVoiceType()`. See lambdaplayers/autorun_includes/shared/d_registervoicetypes.lua
+
+
+
 # Lambda Player Addon Hooks
 
 *The hooks below can be used to add onto certain features of the lambdas*
@@ -287,3 +296,14 @@ Called when a Lambda Player initializes. This hook can be used to add onto the E
 *stucktimes is a variable that holds how many times the Lambda Player got stuck within the last 10 seconds + now*
 
 Called when a Lambda Player gets stuck. This hook can be used to make a custom unstuck function. Return "stop" to make the Lambda Player give up in their path or return "continue" to make the Lambda Player continue down their path
+
+
+
+
+### `LambdaOnNoclip( Entity lambda, Bool DesiredState )`
+### Server-Side
+
+Called when a Lambda Player wants to change their NoClip state. If DesiredState = true, the Lambda Player wants to noclip. If false, the Lambda Player wants to exit noclip. Return true to completely block the event
+
+
+
