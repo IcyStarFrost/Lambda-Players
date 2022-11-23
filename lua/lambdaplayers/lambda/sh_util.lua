@@ -501,6 +501,11 @@ if SERVER then
         return 400
     end
 
+    -- Returns whether the given position or entity is at a given range
+    function ENT:IsInRange( target, range )
+        return ( self:GetRangeSquaredTo( target ) <= ( range * range ) )
+    end
+
     -- Performs a Trace from ourselves to the postion
     function ENT:Trace( pos )
         tracetable.start = self:WorldSpaceCenter()
@@ -522,7 +527,7 @@ if SERVER then
         visibilitytrace.endpos = ent:WorldSpaceCenter()
         visibilitytrace.filter = self
         local result = Trace( visibilitytrace )
-        return result.Entity == ent
+        return ( result.Fraction == 1.0 or result.Entity == ent )
     end
 
     -- Respawns the Lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time

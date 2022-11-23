@@ -3,11 +3,14 @@
 -- For example self.l_State = "Idle" will make the Lambda Player to call the Idle() function
 -- Definitely a lot more cleaner this way
 
+local CurTime = CurTime
 local RandomPairs = RandomPairs
 local random = math.random
+local Rand = math.Rand
 local IsValid = IsValid
 local IsInWorld = util.IsInWorld
-
+local VectorRand = VectorRand
+local coroutine_wait = coroutine.wait
 
 function ENT:Idle()
     if random( 1, 100 ) < 70 then
@@ -26,23 +29,27 @@ function ENT:Combat()
 
     if !self:HookExists( "Tick", "CombatTick" ) then
         self:Hook( "Tick", "CombatTick", function()
-            if !LambdaIsValid( self:GetEnemy() ) or self:GetState() != "Combat" then return "end" end -- Returns and removes this hook because we returned "end". See sh_util.lua for source
+            if self:GetState() != "Combat" then return "end" end -- Returns and removes this hook because we returned "end". See sh_util.lua for source
 
+            local ene = self:GetEnemy()
+            if !LambdaIsValid( ene ) then return "end" end
 
-
-            if self:GetRangeSquaredTo( self:GetEnemy() ) <= ( self.l_CombatAttackRange * self.l_CombatAttackRange ) and self:CanSee( self:GetEnemy() ) then
-                self:UseWeapon( self:GetEnemy() )
-                self.Face = self:GetEnemy()
+            local canSee = self:CanSee( ene )
+            local attackDist = self.l_CombatAttackRange
+            if attackDist and canSee and self:IsInRange( ene, attackDist ) then
+                self.Face = ene
                 self.l_Faceend = CurTime() + 1
+                self:UseWeapon( ene )
             end
 
-            if self.l_CombatKeepDistance and LambdaIsValid( self:GetEnemy() ) and self:GetRangeSquaredTo( self:GetEnemy() ) < ( self.l_CombatKeepDistance * self.l_CombatKeepDistance ) and self:CanSee( self:GetEnemy() ) then
-                local potentialpos = ( self:GetPos() + ( self:GetPos() - self:GetEnemy():GetPos() ):GetNormalized() * 200 ) + VectorRand( -1000, 1000 )
-                self.l_movepos = IsInWorld( potentialpos ) and potentialpos or self:Trace( potentialpos ).HitPos
-            elseif self.l_CombatKeepDistance and LambdaIsValid( self:GetEnemy() ) and self:GetRangeSquaredTo( self:GetEnemy() ) > ( self.l_CombatKeepDistance * self.l_CombatKeepDistance ) or LambdaIsValid( ent ) and !self:CanSee( self:GetEnemy() ) then
-                self.l_movepos = self:GetEnemy()
+            local keepDist = self.l_CombatKeepDistance
+            if keepDist and canSee and self:IsInRange( ene, keepDist ) then
+                local myOrigin = self:GetPos()
+                local potentialPos = ( myOrigin + ( myOrigin - ene:GetPos() ):GetNormalized() * 200 ) + VectorRand( -1000, 1000 )
+                self.l_movepos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )
+            else
+                self.l_movepos = ene
             end
-        
         end )
     end
 
@@ -77,7 +84,7 @@ function ENT:PushButton()
     local pos = ( button:GetPos() + self:GetNormalTo( button:GetPos() ) * -60 )
 
     self:LookTo( button, 1 )
-    coroutine.wait( 1 )
+    coroutine_wait( 1 )
     if !IsValid( button ) then self:SetState( "Idle" ) return end
 
     self:MoveToPos( pos )
@@ -118,9 +125,9 @@ function ENT:TBaggingPosition()
     for i=1, random( 2, 8 ) do
         if self:GetState() != "TBaggingPosition" then return end
         self:SetCrouch( true )
-        coroutine.wait( 0.2 )
+        coroutine_wait( 0.2 )
         self:SetCrouch( false )
-        coroutine.wait( 0.2 )
+        coroutine_wait( 0.2 )
     end
 
     self:SetState( "Idle" )

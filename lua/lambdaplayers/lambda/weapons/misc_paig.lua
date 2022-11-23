@@ -1,8 +1,8 @@
 local CurTime = CurTime
-local Rand = math.Rand
 local IsValid = IsValid
 local Effect = util.Effect
 local BlastDamage = util.BlastDamage
+--local Rand = math.Rand
 --local convar = CreateLambdaConvar( "lambdaplayers_weapons_paigsentrybuster", 0, true, false, true, "If Lambda that spawn with the PAIG have the ability to act like the Sentry Buster from TF2.", 0, 1, { type = "Bool", name = "PAIG - Enable Sentry Buster Mode", category = "Weapon Utilities" } )
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
@@ -37,20 +37,28 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     end)
                 end
             end]]
-            
+
             self:SimpleTimer( 0.3, function()
-                if !IsValid( self ) or !IsValid( wepent ) then return end
-                
-                local effect = EffectData()
-                effect:SetOrigin( wepent:GetPos() )
-                Effect( "Explosion", effect, true, true )
-                
-                BlastDamage( self, self, wepent:GetPos(), 400, 1000 )
+                if !IsValid( wepent ) then return end
+
+                local blowPos = self:GetAttachmentPoint( "hand" ).Pos
+
+                local effectData = EffectData()
+                effectData:SetOrigin( blowPos )
+                Effect( "Explosion", effectData, true, true )
+
+                BlastDamage( self, self, blowPos, 400, 1000 )
+
+                local selfDmg = DamageInfo()
+                selfDmg:SetDamage( 1000 )
+                selfDmg:SetDamageType( DMG_BLAST )
+                selfDmg:SetAttacker( self )
+                selfDmg:SetInflictor( self )
+                self:TakeDamageInfo( selfDmg )
 
                 wepent:EmitSound( "BaseExplosionEffect.Sound" , 90 )
-
             end)
-            
+
             return true
         end,
 
