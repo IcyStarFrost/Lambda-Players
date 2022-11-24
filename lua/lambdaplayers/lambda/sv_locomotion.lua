@@ -192,7 +192,7 @@ function ENT:HandleStuck()
     local result = hook.Run( "LambdaOnStuck", self, self.l_stucktimes )
     if result == "stop" then return false elseif result == "continue" then return true end
 
-    if self.l_stucktimes > 2 then self.l_stucktimes = 0 self.loco:ClearStuck() return false end
+    if self.l_stucktimes > 2 then self.l_unstuck = true return true end
 
     unstucktable.start = self:GetPos() + upvector 
     unstucktable.endpos = self:GetPos() + upvector * 4
