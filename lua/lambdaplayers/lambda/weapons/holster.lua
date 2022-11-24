@@ -24,6 +24,8 @@
     attackrange     | Number |      The range the Lambda can attack from
     damage          | Number |      The amount of damage the weapon can deal
     rateoffire      | Number |      How fast the weapon is fired/used
+    attacksnd       | String |      The sound that will play when the weapon is used
+    hitsnd          | String |      The sound that will play when the weapon hits our enemy
     attackanim      | Number |      The ACT Gesture to play when used
 
     OnDamage        | Function |    A function that will be called when the Lambda Player is hurt while holding this weapon | OPTIONAL
@@ -57,6 +59,7 @@
     rateoffire      | Number |      How fast the weapon is fired/used
     attackanim      | Number |      The ACT Gesture to play when used
     bulletcount     | Number |      The amount of bullets to fire when used
+    attacksnd       | String |      The sound that will play when the weapon is fired
     tracername      | String |      Tracer name. Valid entries are Tracer, AR2Tracer, LaserTracer, AirboatGunHeavyTracer, and ToolTracer
     clip            | Number |      The amount of times the weapon can be shot before reloading.
 
