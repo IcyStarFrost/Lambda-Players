@@ -466,7 +466,6 @@ AddToolFunctionToLambdaTools( "Faceposer", UseFaceposerTool )
 
 
 
-
 local hoverballmodels = { "models/dav0r/hoverball.mdl", "models/maxofs2d/hover_basic.mdl", "models/maxofs2d/hover_classic.mdl", "models/maxofs2d/hover_plate.mdl", "models/maxofs2d/hover_propeller.mdl", "models/maxofs2d/hover_rings.mdl" }
 local function UseHoverballTool( self, target )
     if !self:IsUnderLimit( "Hoverball" ) then return end

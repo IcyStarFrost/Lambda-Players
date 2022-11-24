@@ -227,7 +227,7 @@ local function OpenProfilePanel( ply )
     LAMBDAPANELS:CreateLabel( "materials/lambdaplayers/custom_profilepictures", mainscroll, TOP )
     LAMBDAPANELS:CreateLabel( "Leave Blank for random", mainscroll, TOP )
     LAMBDAPANELS:CreateURLLabel( "Click here to learn about Profile Pictures", "https://github.com/IcyStarFrost/Lambda-Players#profile-pictures", mainscroll, TOP )
-    local profilepicture = LAMBDAPANELS:CreateTextEntry( mainscroll, TOP, "Enter a model path" )
+    local profilepicture = LAMBDAPANELS:CreateTextEntry( mainscroll, TOP, "Enter a file path" )
 
     local pfppreview = vgui.Create( "DImage", mainscroll )
     pfppreview:SetSize( 100, 150 )
