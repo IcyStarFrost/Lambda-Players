@@ -78,16 +78,6 @@ end, false, "Removes all entities that were spawned by Lambda Players", { name =
 AddConsoleCommandToLambdaSettings( "r_cleardecals", true, "Removes all decals in the map for yourself. This does not remove decals premade in the map", { name = "Clean Decals", category = "Utilities" } )
 
 
-CreateLambdaConsoleCommand( "lambdaplayers_cmd_reloadluafiles", function( ply ) 
-    if IsValid( ply ) and !ply:IsSuperAdmin() then return end
-
-    LambdaReloadLuaFiles()
-
-    ply:ConCommand( "spawnmenu_reload" )
-
-    LambdaPlayers_Notify( ply, "Reloaded all Lua Files!", 4, "buttons/button15.wav" )
-end, false, "Reloads all of Lambda's Lua files. You must be a Super Admin to use this! You should only use this if you are developing weapons or whatever that requires the files to be reloaded", { name = "Reload Lua Files", category = "Utilities" } )
-
 
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply ) 
