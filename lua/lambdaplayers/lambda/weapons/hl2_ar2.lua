@@ -23,7 +23,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         spread = 0.1,
         rateoffire = 0.10,
         muzzleflash = 5,
-        shelleject = "none",
         attackanim = ACT_HL2MP_GESTURE_RANGE_ATTACK_AR2,
         attacksnd = "Weapon_AR2.Single",
 
