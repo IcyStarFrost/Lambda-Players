@@ -1,4 +1,4 @@
-
+local net = net
 _LAMBDAPLAYERSDEFAULTMDLS = {
     'models/player/alyx.mdl',
     'models/player/arctic.mdl',
@@ -415,5 +415,15 @@ function LambdaKillFeedAdd( victim, attacker, inflictor )
         net.WriteString( victimname )
         net.WriteInt( victimteam, 8 )
         net.WriteString( inflictorname )
+    net.Broadcast()
+end
+
+
+function LambdaPlayers_Spray( path, tracehitpos, tracehitnormal, index )
+    net.Start( "lambdaplayers_spray" )
+        net.WriteString( path )
+        net.WriteVector( tracehitpos )
+        net.WriteNormal( tracehitnormal )
+        net.WriteUInt( index, 32 )
     net.Broadcast()
 end
