@@ -416,8 +416,10 @@ if SERVER then
     end
 
     -- Updates our networked health
+    -- We use both NW2 and NW because in multiplayer NW2 sometimes fails so we use NW as a backup
     function ENT:UpdateHealthDisplay()
         self:SetNW2Float( "lambda_health", self:Health() )
+        self:SetNWFloat( "lambda_health", self:Health() )
     end
 
     -- Gets a name that is currently not being used.

@@ -309,6 +309,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 8, "MaxArmor" )
     
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
+    self:NetworkVar( "Float", 1, "VoiceLevel" )
 end
 
 function ENT:Draw()
