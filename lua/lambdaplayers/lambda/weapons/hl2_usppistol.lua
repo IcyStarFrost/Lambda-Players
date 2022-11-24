@@ -2,7 +2,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     pistol = {
         model = "models/weapons/w_pistol.mdl",
-        origin = "Half Life: 2",
+        origin = "Half-Life 2",
         prettyname = "Pistol",
         holdtype = "pistol",
         killicon = "weapon_pistol",

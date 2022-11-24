@@ -7,7 +7,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     stunstick = {
         model = "models/weapons/w_stunbaton.mdl",
-        origin = "Half Life: 2",
+        origin = "Half-Life 2",
         prettyname = "Stunstick",
         holdtype = "melee",
         killicon = "weapon_stunstick",

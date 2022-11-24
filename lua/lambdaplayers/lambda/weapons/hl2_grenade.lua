@@ -7,7 +7,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     grenade = {
         model = "models/weapons/w_grenade.mdl",
-        origin = "Half Life: 2",
+        origin = "Half-Life 2",
         prettyname = "Grenade",
         holdtype = "grenade",
         killicon = "npc_grenade_frag",

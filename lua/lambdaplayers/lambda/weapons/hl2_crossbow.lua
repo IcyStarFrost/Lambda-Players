@@ -5,7 +5,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     crossbow = {
         model = "models/weapons/w_crossbow.mdl",
-        origin = "Half Life: 2",
+        origin = "Half-Life 2",
         prettyname = "Crossbow",
         holdtype = "crossbow",
         killicon = "crossbow_bolt",
