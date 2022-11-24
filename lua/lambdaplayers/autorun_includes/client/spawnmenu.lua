@@ -45,14 +45,8 @@ local function AddLambdaPlayersoptions()
 
         CreateUrlLabel( "Lambda Players GitHub", "https://github.com/IcyStarFrost/Lambda-Players", panel, TOP ) -- GitHub
         CreateUrlLabel( "StarFrost's YouTube Channel", "https://www.youtube.com/channel/UCu_7jXrDackiI85ABzd0CKA", panel, TOP ) -- Star's Youtube
-        
-        panel:Help( "\n-- Custom Content Guides --" )
-        CreateUrlLabel( "Learn how to add Profile Pictures to Lambda Players", "https://github.com/IcyStarFrost/Lambda-Players#profile-pictures", panel, TOP ) -- Profile Picture Guide
-        CreateUrlLabel( "Learn how to add Names to Lambda Players", "https://github.com/IcyStarFrost/Lambda-Players#names", panel, TOP ) -- Name Guide
-        CreateUrlLabel( "Learn how to add Custom VoiceLines to Lambda Players", "https://github.com/IcyStarFrost/Lambda-Players#custom-voice-lines", panel, TOP ) -- Voiceline Guide
-        CreateUrlLabel( "Learn how to add Voice Profiles to Lambda Players", "https://github.com/IcyStarFrost/Lambda-Players#voice-profiles", panel, TOP ) -- Voice Profile Guide
-        CreateUrlLabel( "Learn how to add Lambda Profiles to Lambda Players", "https://github.com/IcyStarFrost/Lambda-Players#lambda-profiles", panel, TOP ) -- Profile Guide
-        CreateUrlLabel( "Learn how to add Sprays to Lambda Players", "https://github.com/IcyStarFrost/Lambda-Players#sprays", panel, TOP ) -- Spray Guide
+        CreateUrlLabel( "Learn how to add Custom Content to Lambda Players and develop for Lambda Players", "https://github.com/IcyStarFrost/Lambda-Players/wiki", panel, TOP ) -- Wiki
+
 
     end )
 
