@@ -25,12 +25,12 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
 
     self.l_Weapon = weaponname
     self.l_HasLethal = weapondata.islethal
-    self.l_HasMelee = weapondata.ismelee
-    self.l_HoldType = weapondata.holdtype
+    self.l_HasMelee = weapondata.ismelee 
+    self.l_HoldType = weapondata.holdtype or "normal"
     self.l_CombatKeepDistance = weapondata.keepdistance
     self.l_CombatAttackRange = weapondata.attackrange
     self.l_OnDamagefunction = weapondata.OnDamage
-    self.l_WeaponNoDraw = weapondata.nodraw
+    self.l_WeaponNoDraw = weapondata.nodraw or false
     self.l_CombatSpeedAdd = weapondata.addspeed or 0
     self.l_Clip = weapondata.clip or 0
     self.l_MaxClip = weapondata.clip or 0
