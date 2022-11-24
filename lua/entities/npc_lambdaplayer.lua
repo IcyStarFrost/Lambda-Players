@@ -60,6 +60,7 @@ end
     local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
     local ents_Create = ents and ents.Create or nil
     local navmesh_GetNavArea = navmesh and navmesh.GetNavArea or nil
+    local navmesh_Find = navmesh and navmesh.Find or nil 
     local voiceprofilechance = GetConVar( "lambdaplayers_lambda_voiceprofileusechance" )
     local thinkrate = GetConVar( "lambdaplayers_lambda_singleplayerthinkdelay" )
     local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
@@ -523,23 +524,34 @@ function ENT:Think()
 
 
         if self.l_unstuck then
-            local mins, maxs = self:GetModelBounds()
-            local randompoint = self:GetPos() + VectorRand( -self.l_UnstuckBounds, self.l_UnstuckBounds )
+            local mins, maxs = self:GetCollisionBounds()
+            local testpoint = self:GetPos() + VectorRand( -self.l_UnstuckBounds, self.l_UnstuckBounds )
+            local navareas = navmesh_Find( self:GetPos(), self.l_UnstuckBounds, self.loco:GetDeathDropHeight(), self.loco:GetJumpHeight() )
+            local randompoint
 
-            unstucktable.start = randompoint
-            unstucktable.endpos = randompoint
-            unstucktable.mins = mins
-            unstucktable.maxs = maxs
-            local result = TraceHull( unstucktable )
+            for k, v in RandomPairs( navareas ) do if IsValid( v ) then randompoint = v:GetClosestPointOnArea( testpoint ) break end end
 
-            if result.Hit then
-                self.l_UnstuckBounds = self.l_UnstuckBounds + 5
+            if randompoint then
+
+                unstucktable.start = randompoint
+                unstucktable.endpos = randompoint
+                unstucktable.mins = mins
+                unstucktable.maxs = maxs
+                local result = TraceHull( unstucktable )
+                
+                if result.Hit then
+                    self.l_UnstuckBounds = self.l_UnstuckBounds + 5
+                else
+                    self:SetPos( randompoint )
+                    self.loco:ClearStuck()
+                    self.l_unstuck = false
+                    self.l_UnstuckBounds = 50
+                end
+
             else
-                self:SetPos( randompoint )
-                self.loco:ClearStuck()
-                self.l_unstuck = false
-                self.l_UnstuckBounds = 50
+                self.l_UnstuckBounds = self.l_UnstuckBounds + 5
             end
+
 
         end
         -- -- -- -- --

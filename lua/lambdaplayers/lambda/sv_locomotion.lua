@@ -183,7 +183,7 @@ end
 function ENT:HandleStuck()
     if self:GetIsDead() then self.loco:ClearStuck() return false end -- Who knows just in case
 
-    local mins, maxs = self:GetModelBounds()
+    local mins, maxs = self:GetCollisionBounds()
 
     self.l_stucktimes = self.l_stucktimes + 1
     self.l_stucktimereset = CurTime() + 10
@@ -225,7 +225,7 @@ function ENT:PathGenerator()
         if !self.loco:IsAreaTraversable( area ) then return -1 end
 
         local dist = 0
-        if IsValid(ladder) then
+        if IsValid( ladder ) then
             dist = ladder:GetBottom():DistToSqr( ladder:GetTop() )
         elseif length > 0 then
             dist = length
@@ -237,7 +237,7 @@ function ENT:PathGenerator()
         if !IsValid( ladder ) then
             local deltaZ = fromArea:ComputeAdjacentConnectionHeightChange( area )
             if deltaZ > jumpHeight or deltaZ < deathHeight then return -1 end
-            if deltaZ > stepHeight then cost = cost + ( dist * jumpPenalty) end
+            if deltaZ > stepHeight then cost = cost + ( dist * jumpPenalty ) end
         end
 
         return cost
