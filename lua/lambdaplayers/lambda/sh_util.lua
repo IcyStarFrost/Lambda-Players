@@ -446,8 +446,10 @@ if SERVER then
 
     -- Checks if our name has a profile. If so, apply the profile info
     function ENT:ProfileCheck()
-        if LambdaPersonalProfiles and LambdaPersonalProfiles[ self:GetLambdaName() ] then
-            self:ApplyLambdaInfo( LambdaPersonalProfiles[ self:GetLambdaName() ] )
+        local info = LambdaPersonalProfiles and LambdaPersonalProfiles[ self:GetLambdaName() ] or nil
+        if info then
+            self:ApplyLambdaInfo( info )
+            hook.Run( "LambdaOnProfileApplied", self, info )
         end
     end
 
