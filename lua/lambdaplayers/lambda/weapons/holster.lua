@@ -67,7 +67,7 @@
     muzzleoffpos    | Vector |      The offset postion of the muzzleflash local to the weapon   | OPTIONAL
     muzzleoffang    | Angle |       The offset angle of the muzzleflash local to the weapon | OPTIONAL
 
-    shelleject      | String |      Shell type valid types are ShellEject, RifleShellEject, ShotgunShellEject. you can input none for no shell eject as well    | OPTIONAL
+    shelleject      | String |      Shell type valid types are ShellEject, RifleShellEject, ShotgunShellEject    | OPTIONAL
     shelloffpos     | Vector |      The offset postion of the shell eject local to the weapon   | OPTIONAL
     shelloffang     | Angle |       The offset angles of the shell eject local to the weapon    | OPTIONAL
 
