@@ -212,6 +212,8 @@ end
 -- 5 = Combine
 -- 7 Regular but bigger
 function ENT:HandleMuzzleFlash( type, offpos, offang )
+    if !type then return end
+    
     local wepent = self:GetWeaponENT()
     local attach = wepent:GetAttachment( 1 )
     if !attach and offpos and offang then attach = { Pos = offpos, Ang = offang } elseif !attach and ( !offpos or !offang ) then return end
