@@ -272,6 +272,17 @@ function ENT:Trace( pos, overridestart )
     return Trace( tracetable )
 end
 
+    -- Returns if we can see the ent in question.
+    -- Simple trace 
+    function ENT:CanSee( ent )
+        if !IsValid( ent ) then return end
+        visibilitytrace.start = self:GetAttachmentPoint( "eyes" ).Pos
+        visibilitytrace.endpos = ent:WorldSpaceCenter()
+        visibilitytrace.filter = self
+        local result = Trace( visibilitytrace )
+        return ( result.Fraction == 1.0 or result.Entity == ent )
+    end
+
 if SERVER then
 
     local GetAllNavAreas = navmesh.GetAllNavAreas
@@ -521,17 +532,6 @@ if SERVER then
     -- Prevents the Lambda Player from switching weapons when this is true
     function ENT:PreventWeaponSwitch( bool )
         self.l_NoWeaponSwitch = bool
-    end
-
-    -- Returns if we can see the ent in question.
-    -- Simple trace 
-    function ENT:CanSee( ent )
-        if !IsValid( ent ) then return end
-        visibilitytrace.start = self:GetAttachmentPoint( "eyes" ).Pos
-        visibilitytrace.endpos = ent:WorldSpaceCenter()
-        visibilitytrace.filter = self
-        local result = Trace( visibilitytrace )
-        return ( result.Fraction == 1.0 or result.Entity == ent )
     end
 
     -- Respawns the Lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time
