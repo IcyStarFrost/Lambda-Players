@@ -254,7 +254,7 @@ end
 
 function ENT:SwitchToRandomWeapon()
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if self:CanEquipWeapon( k ) and k != self.l_Weapon then
+        if self:CanEquipWeapon( k ) and k != self.l_Weapon and !hook.Run( "LambdaCanSwitchWeapon", self, k ) then
             self:SwitchWeapon( k )
             return
         end
@@ -264,7 +264,7 @@ end
 
 function ENT:SwitchToLethalWeapon()
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if v.islethal and self:CanEquipWeapon( k ) and k != self.l_Weapon then
+        if v.islethal and self:CanEquipWeapon( k ) and k != self.l_Weapon and !hook.Run( "LambdaCanSwitchWeapon", self, k ) then
             self:SwitchWeapon( k )
             return
         end
