@@ -235,7 +235,11 @@ AddToolFunctionToLambdaTools( "Color", UseColorTool )
 
 
 
+
+
 local function UseCreatorTool( self, target )
+    local allowpropCvar = GetConVar( "lambdaplayers_building_allowprop" ):GetBool()
+    if !self:IsUnderLimit( "Prop" ) or !allowpropCvar then return end
 
     local pos = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
     pos = pos.HitPos
