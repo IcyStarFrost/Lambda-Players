@@ -303,6 +303,7 @@ end
 ------ SHARED ------
 
 function ENT:OnRemove()
+    hook.Run( "LambdaOnRemove", self )
     if SERVER then
         self:RemoveTimers()
         self:CleanSpawnedEntities()
