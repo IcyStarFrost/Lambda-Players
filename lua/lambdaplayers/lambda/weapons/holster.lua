@@ -60,11 +60,11 @@
     tracername      | String |      Tracer name. Valid entries are Tracer, AR2Tracer, LaserTracer, AirboatGunHeavyTracer, and ToolTracer
     clip            | Number |      The amount of times the weapon can be shot before reloading.
 
-    muzzleflash     | Number |      The muzzle flash type. 1 = Regular 5 = Combine 7 = Regular but bigger
+    muzzleflash     | Number |      The muzzle flash type. 1 = Regular 5 = Combine 7 = Regular but bigger   | OPTIONAL
     muzzleoffpos    | Vector |      The offset postion of the muzzleflash local to the weapon   | OPTIONAL
     muzzleoffang    | Angle |       The offset angle of the muzzleflash local to the weapon | OPTIONAL
 
-    shelleject      | String |      Shell type valid types are ShellEject, RifleShellEject, ShotgunShellEject. you can input none for no shell eject as well
+    shelleject      | String |      Shell type valid types are ShellEject, RifleShellEject, ShotgunShellEject. you can input none for no shell eject as well    | OPTIONAL
     shelloffpos     | Vector |      The offset postion of the shell eject local to the weapon   | OPTIONAL
     shelloffang     | Angle |       The offset angles of the shell eject local to the weapon    | OPTIONAL
 

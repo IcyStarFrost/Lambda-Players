@@ -213,7 +213,7 @@ end
 -- 7 Regular but bigger
 function ENT:HandleMuzzleFlash( type, offpos, offang )
     if !type then return end
-    
+
     local wepent = self:GetWeaponENT()
     local attach = wepent:GetAttachment( 1 )
     if !attach and offpos and offang then attach = { Pos = offpos, Ang = offang } elseif !attach and ( !offpos or !offang ) then return end
@@ -228,6 +228,8 @@ function ENT:HandleMuzzleFlash( type, offpos, offang )
 end
 
 function ENT:HandleShellEject( name, offpos, offang )
+    if !name then return end
+
     local wepent = self:GetWeaponENT()
     if !IsValid( wepent ) or name == "none" then return end
     offpos = offpos or Vector()
