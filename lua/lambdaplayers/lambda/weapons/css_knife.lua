@@ -6,7 +6,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     knife = {
         model = "models/weapons/w_knife_t.mdl",
-        origin = "Counter Strike: Source",
+        origin = "Counter-Strike: Source",
         prettyname = "Knife",
         holdtype = "knife",
         ismelee = true,

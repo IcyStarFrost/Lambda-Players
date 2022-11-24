@@ -16,7 +16,7 @@ local epiccontributors = [[
 Special thanks to the following Contributors
 
 :- CombineSlayer24
-:- Floofers
+:- Fluffiest Floofers
 :- YerMash
 
 Your contributions are appreciated!

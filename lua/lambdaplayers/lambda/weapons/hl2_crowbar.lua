@@ -2,7 +2,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     crowbar = {
         model = "models/weapons/w_crowbar.mdl",
-        origin = "Half Life: 2",
+        origin = "Half-Life 2",
         prettyname = "Crowbar",
         holdtype = "melee",
         killicon = "weapon_crowbar",

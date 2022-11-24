@@ -8,7 +8,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     rpg = {
         model = "models/weapons/w_rocket_launcher.mdl",
-        origin = "Half Life: 2",
+        origin = "Half-Life 2",
         prettyname = "RPG",
         holdtype = "rpg",
         killicon = "rpg_missile",

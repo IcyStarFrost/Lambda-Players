@@ -12,7 +12,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     shotgun = {
         model = "models/weapons/w_shotgun.mdl",
-        origin = "Half Life: 2",
+        origin = "Half-Life 2",
         prettyname = "SPAS 12",
         holdtype = "shotgun",
         killicon = "weapon_shotgun",

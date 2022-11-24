@@ -12,7 +12,7 @@ local EntityCreate = ents.Create
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
     slam = {
         model = "models/weapons/w_slam.mdl",
-        origin = "Half Life: 2",
+        origin = "Half-Life 2",
         prettyname = "S.L.A.M",
         holdtype = "slam",
         killicon = "npc_satchel",
