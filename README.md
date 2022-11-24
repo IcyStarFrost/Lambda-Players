@@ -157,6 +157,12 @@ My Profile Chance is to 100% so this means profiles will always spawn as long as
 ![image](https://user-images.githubusercontent.com/109770359/202869913-39279f39-fd5a-4e38-a1b5-b172ae1b88b5.png)
 
 
+## Sprays
+
+Sprays make a return from Zeta Players with minor changes to how they are loaded. .VTFs, .PNGs, and .JPGs are put in this folder: `C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\sourceengine\materials\lambdaplayers\sprays`. Remember you have to create the folders as they are not automatically created for you. Note you can add sub folders in the `sprays` folder if you want to organize your sprays
+
+Addons that add sprays should have this file path: `ADDONNAME/materials/lambdaplayers/sprays/(Any .VTF, .PNG, .JPG image files here)`
+
 ### Remember to Update Lambda Data after any changes!
 
 # Hooks
