@@ -169,6 +169,8 @@ Addons that add sprays should have this file path: `ADDONNAME/materials/lambdapl
 
 # Hooks
 
+*These are all the hooks you can use in `hook.Add()` to extend upon Lambda's features*
+
 ### `LambdaOnConvarsCreated`
 ### Must be Shared!
 
