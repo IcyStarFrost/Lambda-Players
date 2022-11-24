@@ -323,3 +323,10 @@ Called when a Lambda Player wants to change their NoClip state. If DesiredState 
 
 
 
+
+### `LambdaOnRemove( Entity lambda )`
+### Server and Client
+
+Called when a Lambda Player is removed from the game.
+
+
