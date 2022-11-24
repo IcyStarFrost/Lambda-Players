@@ -83,6 +83,7 @@ _LAMBDAPLAYERSDEFAULTMDLS = {
     "models/player/zombie_fast.mdl"
 }
 
+-- Precache every default model
 for k, v in ipairs( _LAMBDAPLAYERSDEFAULTMDLS ) do
     util.PrecacheModel( v )
 end
@@ -358,6 +359,7 @@ end
 -- This hook can be used to use LambdaPlayers_AddItemPickup() as it'll ensure that the function exists
 hook.Run( "LambdaOnLoadPickupFuncs" )
 
+-- Sends a notification to the player
 function LambdaPlayers_Notify( ply, text, notifynum, snd )
     if !IsValid( ply ) then return end
     net.Start( "lambdaplayers_notification" )
@@ -368,6 +370,8 @@ function LambdaPlayers_Notify( ply, text, notifynum, snd )
 end
 
 local TableToJSON = util.TableToJSON
+
+-- Sends a text message to a player or every player
 function LambdaPlayers_ChatAdd( ply, ... )
     net.Start( "lambdaplayers_chatadd" )
     net.WriteString( TableToJSON( { ... } ) )
@@ -376,6 +380,8 @@ end
 
 local FindByClass = ents.FindByClass
 local table_Add = table.Add
+
+-- Gets every possible spawn points 
 function LambdaGetPossibleSpawns()
     local info_player_starts = FindByClass( "info_player_start" )
     local info_player_teamspawns = FindByClass( "info_player_teamspawn" )
@@ -387,21 +393,23 @@ function LambdaGetPossibleSpawns()
     local info_player_axis = FindByClass( "info_player_axis" )
     local info_coop_spawn = FindByClass( "info_coop_spawn" )
     local info_survivor_position = FindByClass( "info_survivor_position" )
-    table_Add(info_player_starts,info_player_teamspawns)
-    table_Add(info_player_starts,info_player_terrorist)
-    table_Add(info_player_starts,info_player_counterterrorist)
-    table_Add(info_player_starts,info_player_combine)
-    table_Add(info_player_starts,info_player_rebel)
-    table_Add(info_player_starts,info_player_allies)
-    table_Add(info_player_starts,info_player_axis)
-    table_Add(info_player_starts,info_coop_spawn)
-    table_Add(info_player_starts,info_survivor_position)
+
+
+    table_Add( info_player_starts, info_player_teamspawns )
+    table_Add( info_player_starts, info_player_terrorist )
+    table_Add( info_player_starts, info_player_counterterrorist )
+    table_Add( info_player_starts, info_player_combine )
+    table_Add( info_player_starts, info_player_rebel )
+    table_Add( info_player_starts, info_player_allies )
+    table_Add( info_player_starts, info_player_axis )
+    table_Add( info_player_starts, info_coop_spawn )
+    table_Add( info_player_starts, info_survivor_position )
     return info_player_starts
 end
 
 hook.Add( "InitPostEntity", "lambdaplayersgetspawns", function() LambdaSpawnPoints = LambdaGetPossibleSpawns() end )
 
-
+-- Adds to the default killfeed
 function LambdaKillFeedAdd( victim, attacker, inflictor )
     local attackername = attacker.IsLambdaPlayer and attacker:GetLambdaName() or attacker.IsZetaPlayer and attacker.zetaname or attacker:IsPlayer() and attacker:Name() or "#" .. attacker:GetClass()
     local victimname = victim.IsLambdaPlayer and victim:GetLambdaName() or victim.IsZetaPlayer and victim.zetaname or victim:IsPlayer() and victim:Name() or "#" .. victim:GetClass()
@@ -418,7 +426,7 @@ function LambdaKillFeedAdd( victim, attacker, inflictor )
     net.Broadcast()
 end
 
-
+-- Sprays the path relative to the materials folder to the position.
 function LambdaPlayers_Spray( path, tracehitpos, tracehitnormal, index )
     net.Start( "lambdaplayers_spray" )
         net.WriteString( path )
