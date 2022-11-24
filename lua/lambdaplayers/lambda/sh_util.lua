@@ -264,6 +264,14 @@ function ENT:ExportLambdaInfo()
 end
 
 
+-- Performs a Trace from ourselves or the overridestart to the postion
+function ENT:Trace( pos, overridestart )
+    tracetable.start = overridestart or self:WorldSpaceCenter()
+    tracetable.endpos = ( isentity( pos ) and IsValid( pos ) and pos:GetPos() or pos )
+    tracetable.filter = self 
+    return Trace( tracetable )
+end
+
 if SERVER then
 
     local GetAllNavAreas = navmesh.GetAllNavAreas
@@ -408,8 +416,10 @@ if SERVER then
     end
 
     -- Updates our networked health
+    -- We use both NW2 and NW because in multiplayer NW2 sometimes fails so we use NW as a backup
     function ENT:UpdateHealthDisplay()
         self:SetNW2Float( "lambda_health", self:Health() )
+        self:SetNWFloat( "lambda_health", self:Health() )
     end
 
     -- Gets a name that is currently not being used.
@@ -436,8 +446,10 @@ if SERVER then
 
     -- Checks if our name has a profile. If so, apply the profile info
     function ENT:ProfileCheck()
-        if LambdaPersonalProfiles and LambdaPersonalProfiles[ self:GetLambdaName() ] then
-            self:ApplyLambdaInfo( LambdaPersonalProfiles[ self:GetLambdaName() ] )
+        local info = LambdaPersonalProfiles and LambdaPersonalProfiles[ self:GetLambdaName() ] or nil
+        if info then
+            self:ApplyLambdaInfo( info )
+            hook.Run( "LambdaOnProfileApplied", self, info )
         end
     end
 
@@ -504,14 +516,6 @@ if SERVER then
     -- Returns whether the given position or entity is at a given range
     function ENT:IsInRange( target, range )
         return ( self:GetRangeSquaredTo( target ) <= ( range * range ) )
-    end
-
-    -- Performs a Trace from ourselves to the postion
-    function ENT:Trace( pos )
-        tracetable.start = self:WorldSpaceCenter()
-        tracetable.endpos = ( isentity( pos ) and IsValid( pos ) and pos:GetPos() or pos )
-        tracetable.filter = self 
-        return Trace( tracetable )
     end
 
     -- Prevents the Lambda Player from switching weapons when this is true

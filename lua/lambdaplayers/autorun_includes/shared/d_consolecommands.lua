@@ -28,6 +28,14 @@ function CreateLambdaConsoleCommand( name, func, isclient, helptext, settingstbl
 
 end
 
+function AddConsoleCommandToLambdaSettings( cmd, isclient, helptext, settingstbl )
+    if SERVER then return end
+    settingstbl.concmd = cmd
+    settingstbl.isclient = isclient
+    settingstbl.type = "Button"
+    settingstbl.desc = ( isclient and "Client-Side | " or "Server-Side | " ) .. helptext .. "\nConsole Command: " .. cmd
+    table_insert( _LAMBDAConVarSettings, settingstbl )
+end
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedata", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
@@ -39,11 +47,12 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedata", function( ply )
     Lambdaprofilepictures = LAMBDAFS:GetProfilePictures()
     LambdaVoiceLinesTable = LAMBDAFS:GetVoiceLinesTable()
     LambdaVoiceProfiles = LAMBDAFS:GetVoiceProfiles()
+    LambdaPlayerSprays = LAMBDAFS:GetSprays()
     LambdaPersonalProfiles = file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
 
     LambdaPlayers_Notify( ply, "Updated Lambda Data", 3, "buttons/button15.wav" )
 
-end, false, "Updates data such as names, props, ect. ", { name = "Update Lambda Data", category = "Utilities" } )
+end, false, "Updates data such as names, props, ect. You must use this after any changes to custom content for changes to take effect!", { name = "Update Lambda Data", category = "Utilities" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_cleanupclientsideents", function( ply ) 
 
@@ -65,6 +74,8 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cleanuplambdaents", function( ply
 
     LambdaPlayers_Notify( ply, "Cleaned up all Lambda entities!", 4, "buttons/button15.wav" )
 end, false, "Removes all entities that were spawned by Lambda Players", { name = "Cleanup Lambda Entities", category = "Utilities" } )
+
+AddConsoleCommandToLambdaSettings( "r_cleardecals", true, "Removes all decals in the map for yourself. This does not remove decals premade in the map", { name = "Clean Decals", category = "Utilities" } )
 
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply ) 

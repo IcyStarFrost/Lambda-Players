@@ -47,6 +47,7 @@ end
     local isentity = isentity
     local VectorRand = VectorRand
     local Vector = Vector
+    local IsValid = IsValid
     local coroutine = coroutine
     local debugoverlay = debugoverlay
     local table_Random = table.Random
@@ -59,10 +60,13 @@ end
     local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
     local ents_Create = ents and ents.Create or nil
     local navmesh_GetNavArea = navmesh and navmesh.GetNavArea or nil
+    local navmesh_Find = navmesh and navmesh.Find or nil 
     local voiceprofilechance = GetConVar( "lambdaplayers_lambda_voiceprofileusechance" )
     local thinkrate = GetConVar( "lambdaplayers_lambda_singleplayerthinkdelay" )
     local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
     local CurTime = CurTime
+    local SysTime = SysTime
+    local InSinglePlayer = game.SinglePlayer
     local Clamp = math.Clamp
     local min = math.min
     local LerpVector = LerpVector
@@ -306,6 +310,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 8, "MaxArmor" )
     
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
+    self:NetworkVar( "Float", 1, "VoiceLevel" )
 end
 
 function ENT:Draw()
@@ -415,10 +420,12 @@ function ENT:Think()
             self:SetCrouch( false )
             self.loco:SetVelocity( zerovector )
 
+             -- Play the "floating" gesture
             if !self:IsPlayingGesture( ACT_GMOD_NOCLIP_LAYER ) then
                 self:AddGesture( ACT_GMOD_NOCLIP_LAYER, false )
             end
 
+            -- Randomly change height
             if CurTime() > self.l_nextnoclipheightchange then
                 self.l_noclipheight = random( 0, 500 )
                 self.l_nextnoclipheightchange = CurTime() + random( 1, 20 )
@@ -426,26 +433,31 @@ function ENT:Think()
 
             if self.l_CurrentPath then
 
+                -- If we are off Navigation Mesh
                 if isvector( self.l_CurrentPath ) then
-                    local endpos = self.l_CurrentPath + Vector( 0, 0, self.l_noclipheight ) -- TODO: I need to figure out a good way to trace this out
-                    if self:GetState() == "Combat" then endpos[ 3 ] = self:GetEnemy():GetPos()[ 3 ] + ( self.l_HasMelee and 0 or 50 ) end
+                    local trace = self:Trace( self.l_CurrentPath + Vector( 0, 0, self.l_noclipheight ), self.l_CurrentPath + Vector( 0, 0, 3 ) ) -- Trace the height
+                    local endpos = trace.HitPos + trace.HitNormal * 70 -- Subtract the normal so we are hovering below a ceiling by 70 Source Units
+                    local copy = Vector( endpos[ 1 ], endpos[ 2 ], self:GetPos()[ 3 ] ) -- Vector used if we are close to our goal
 
+                    if self:GetState() == "Combat" then endpos[ 3 ] = self:GetEnemy():GetPos()[ 3 ] + ( self.l_HasMelee and 0 or 50 ) end
                     if self:GetRangeSquaredTo( copy ) <= ( 20 * 20 ) then self:CancelMovement() else self.loco:FaceTowards( endpos ) self.l_noclippos = self.l_noclippos + ( endpos - self.l_noclippos ):GetNormalized() * 20 end
-                else
-                    local endpos = self.l_CurrentPath:GetEnd() + Vector( 0, 0, self.l_noclipheight ) -- TODO: I need to figure out a good way to trace this out
-                    if self:GetState() == "Combat" then endpos[ 3 ] = self:GetEnemy():GetPos()[ 3 ] + ( self.l_HasMelee and 0 or 50 ) end
-                    local copy = Vector( endpos[ 1 ], endpos[ 2 ], self:GetPos()[ 3 ] )
+                else -- If we are on Navigation Mesh
+                    local trace = self:Trace( self.l_CurrentPath:GetEnd() + Vector( 0, 0, self.l_noclipheight ), self.l_CurrentPath:GetEnd() + Vector( 0, 0, 3 ) ) -- Trace the height
+                    local endpos = trace.HitPos + trace.HitNormal * 70 -- Subtract the normal so we are hovering below a ceiling by 70 Source Units
+                    local copy = Vector( endpos[ 1 ], endpos[ 2 ], self:GetPos()[ 3 ] ) -- Vector used if we are close to our goal
 
+                    if self:GetState() == "Combat" then endpos[ 3 ] = self:GetEnemy():GetPos()[ 3 ] + ( self.l_HasMelee and 0 or 50 ) end
                     if self:GetRangeSquaredTo( copy ) <= ( 20 * 20 ) then self:CancelMovement() else self.loco:FaceTowards( endpos ) self.l_noclippos = self.l_noclippos + ( endpos - self.l_noclippos ):GetNormalized() * 20 end
                 end
+
             end
 
             self:SetPos( self.l_noclippos )
-        elseif !self:IsInNoClip() then
+        elseif !self:IsInNoClip() then -- If we aren't in no clip then do this stuff
             self.l_noclipheight = 0
             self:RemoveGesture( ACT_GMOD_NOCLIP_LAYER )
             self.l_noclippos = self:GetPos()
-        else
+        else -- If we are in noclip but are being physgunned then do this
             self.l_noclipheight = 0
             self.l_noclippos = self:GetPos()
         end
@@ -512,23 +524,34 @@ function ENT:Think()
 
 
         if self.l_unstuck then
-            local mins, maxs = self:GetModelBounds()
-            local randompoint = self:GetPos() + VectorRand( -self.l_UnstuckBounds, self.l_UnstuckBounds )
+            local mins, maxs = self:GetCollisionBounds()
+            local testpoint = self:GetPos() + VectorRand( -self.l_UnstuckBounds, self.l_UnstuckBounds )
+            local navareas = navmesh_Find( self:GetPos(), self.l_UnstuckBounds, self.loco:GetDeathDropHeight(), self.loco:GetJumpHeight() )
+            local randompoint
 
-            unstucktable.start = randompoint
-            unstucktable.endpos = randompoint
-            unstucktable.mins = mins
-            unstucktable.maxs = maxs
-            local result = TraceHull( unstucktable )
+            for k, v in RandomPairs( navareas ) do if IsValid( v ) then randompoint = v:GetClosestPointOnArea( testpoint ) break end end
 
-            if result.Hit then
-                self.l_UnstuckBounds = self.l_UnstuckBounds + 5
+            if randompoint then
+
+                unstucktable.start = randompoint
+                unstucktable.endpos = randompoint
+                unstucktable.mins = mins
+                unstucktable.maxs = maxs
+                local result = TraceHull( unstucktable )
+                
+                if result.Hit then
+                    self.l_UnstuckBounds = self.l_UnstuckBounds + 5
+                else
+                    self:SetPos( randompoint )
+                    self.loco:ClearStuck()
+                    self.l_unstuck = false
+                    self.l_UnstuckBounds = 50
+                end
+
             else
-                self:SetPos( randompoint )
-                self.loco:ClearStuck()
-                self.l_unstuck = false
-                self.l_UnstuckBounds = 50
+                self.l_UnstuckBounds = self.l_UnstuckBounds + 5
             end
+
 
         end
         -- -- -- -- --
@@ -569,7 +592,7 @@ function ENT:Think()
     end
 
     -- Think Delay
-    if game.SinglePlayer() then
+    if InSinglePlayer() then
         self:NextThink( CurTime() + thinkrate:GetFloat() )
         return true
     end
@@ -608,7 +631,8 @@ function ENT:RunBehaviour()
 
         end
 
-        coroutine.wait( 0.3 )
+        local time = InSinglePlayer() and thinkrate:GetFloat() or 0.2
+        coroutine.wait( time )
     end
 
 end

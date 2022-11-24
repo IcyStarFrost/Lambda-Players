@@ -4,6 +4,7 @@ local rand = math.Rand
 local random = math.random
 local VectorRand = VectorRand
 local coroutine = coroutine
+local Trace = util.TraceLine
 
 LambdaBuildingFunctions = {}
 
@@ -26,7 +27,9 @@ local function SpawnAProp( self )
 
         self.Face = self:GetPos() + VectorRand( -100, 100 )
         coroutine.wait( rand( 0.2, 1 ) )
+
         self:SpawnProp()
+
         coroutine.wait( rand( 0.2, 1 ) )
         self.Face = nil
 
@@ -41,8 +44,10 @@ local function SpawnNPC( self )
     
     self.Face = self:WorldSpaceCenter() + VectorRand( -200, 200 )
     coroutine.wait( rand( 0.2, 1 ) )
+
     local npc = self:SpawnNPC()
     if !IsValid( npc ) then return end
+
     coroutine.wait( rand( 0.2, 1 ) )
     self.Face = nil
 
@@ -54,19 +59,47 @@ local function SpawnEntity( self )
     if !self:IsUnderLimit( "Entity" ) then return end
     
     self.Face = self:WorldSpaceCenter() + VectorRand( -200, 200 )
+
     coroutine.wait( rand( 0.2, 1 ) )
+
     local entity = self:SpawnEntity()
     if !IsValid( entity ) then return end
+
     coroutine.wait( rand( 0.2, 1 ) )
+
     self.Face = nil
 
     return true
 end
 
+local spraytbl = {}
+local function Spray( self )
+    if #LambdaPlayerSprays == 0 then return end
+
+    local targetpos = self:WorldSpaceCenter() + VectorRand( -200, 200 )
+    self.Face = targetpos
+    coroutine.wait( rand( 0.2, 0.6 ) )
+
+    spraytbl.start = self:WorldSpaceCenter()
+    spraytbl.endpos = targetpos
+    spraytbl.filter = self
+    spraytbl.collisiongroup = COLLISION_GROUP_WORLD
+    local trace = Trace( spraytbl )
+    if !trace.Hit then return end
+
+    LambdaPlayers_Spray( LambdaPlayerSprays[ random( #LambdaPlayerSprays ) ], trace.HitPos, trace.HitNormal, self:GetCreationID() )
+    self:EmitSound( "player/sprayer.wav", 65 )
+
+    coroutine.wait( rand( 0.2, 0.6 ) )
+    self.Face = nil
+
+    return true
+end
 
 AddBuildFunctionToLambdaBuildingFunctions( "prop", "Allow Prop Spawning", "If Lambda Players are allowed to spawn props", SpawnAProp )
 AddBuildFunctionToLambdaBuildingFunctions( "npc", "Allow NPC Spawning", "If Lambda Players are allowed to spawn NPCs", SpawnNPC )
 AddBuildFunctionToLambdaBuildingFunctions( "entity", "Allow Entity Spawning", "If Lambda Players are allowed to spawn Entities", SpawnEntity )
+AddBuildFunctionToLambdaBuildingFunctions( "spray", "Allow Sprays", "If Lambda Players are allowed to place Sprays", Spray )
 
 -- Called when all default building functions above have been loaded.
 -- This hook can be used to add more building functions with AddBuildFunctionToLambdaBuildingFunctions()

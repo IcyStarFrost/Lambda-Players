@@ -90,6 +90,10 @@ if CLIENT then
         return false
     end
 
+    function ENT:VoiceVolume()
+        return self:GetVoiceLevel()
+    end
+
     function ENT:SetMuted()
     end
 

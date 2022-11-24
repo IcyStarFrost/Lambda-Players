@@ -7,6 +7,7 @@ local math_Clamp = math.Clamp
 local sub = string.sub
 local Left = string.Left
 local cam = cam
+local net = net
 local hook = hook
 local surface = surface
 local LocalPlayer = LocalPlayer
@@ -17,6 +18,7 @@ local speaklimit = GetConVar( "lambdaplayers_voice_talklimit" )
 local globalvoice = GetConVar(  "lambdaplayers_voice_globalvoice" )
 local stereowarn = GetConVar( "lambdaplayers_voice_warnvoicestereo" )
 local voicevolume = GetConVar( "lambdaplayers_voice_voicevolume" )
+local usegmodpopups = GetConVar( "lambdaplayers_voice_usegmodvoicepopups" )
 
 -- Net sent from ENT:OnKilled()
 net.Receive( "lambdaplayers_becomeragdoll", function() 
@@ -31,6 +33,7 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
     ragdoll:DrawShadow( true )
     ragdoll.GetPlayerColor = function() return colvec end
 
+    ragdoll.LambdaOwner = ent
     ent.ragdoll = ragdoll
 
     local time = cleanuptime:GetInt()
@@ -117,7 +120,7 @@ end
 local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
     if speaklimit:GetInt() > 0 and #_LAMBDAPLAYERS_Voicechannels >= speaklimit:GetInt() then return end
 
-    if IsValid( ent.l_VoiceSnd ) then ent.l_VoiceSnd:Stop() end
+    if IsValid( ent.l_VoiceSnd ) then if usegmodpopups:GetBool() then hook.Run( "PlayerEndVoice", ent ) end ent.l_VoiceSnd:Stop() end
 
     local flag = ( is3d and "3d mono noplay" or "mono noplay" )
 
@@ -150,6 +153,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
             snd:SetVolume( volume )
             snd:Play()
+            if usegmodpopups:GetBool() then hook.Run( "PlayerStartVoice", ent ) end
 
             -- Render the voice icon
             hook.Add( "PreDrawEffects", "lambdavoiceicon" .. id,function()
@@ -213,9 +217,9 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             -- Right now this code seems to work just as I think I want it to. Unsure if it could be optimized better but to me it looks as good as it is gonna get
 
             hook.Add( "Tick", "lambdaplayersvoicetick" .. index, function()
-                if !LambdaIsValid( ent ) and shouldstoponremove then snd:Stop() return end
-                if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
-                if RealTime() > RealTime() + length then hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
+                if !LambdaIsValid( ent ) and shouldstoponremove then if usegmodpopups:GetBool() then hook.Run( "PlayerEndVoice", ent ) end snd:Stop() return end
+                if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then if usegmodpopups:GetBool() then hook.Run( "PlayerEndVoice", ent ) end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
+                if RealTime() > RealTime() + length then if usegmodpopups:GetBool() then hook.Run( "PlayerEndVoice", ent ) end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
 
                 tickent = LambdaIsValid( ent ) and ent or IsValid( ent.ragdoll ) and ent.ragdoll or tickent
                 snd:Set3DEnabled( ( !globalvoice:GetBool() and is3d ) )
@@ -243,6 +247,9 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
                     local leftC, rightC = snd:GetLevel()
                     local voiceLvl = ((leftC + rightC) / 2)
+
+                    local voicelvlent = tickent.IsLambdaPlayer and tickent or IsValid( tickent.LambdaOwner ) and tickent.LambdaOwner
+                    if IsValid( voicelvlent ) then voicelvlent:SetVoiceLevel( voiceLvl ) end
 
                     snd:SetPos( tickent:GetPos() ) 
 
@@ -326,4 +333,62 @@ net.Receive( "lambdaplayers_addtokillfeed", function()
     local inflictorname = net.ReadString()
 
     GAMEMODE:AddDeathNotice( attackername, attackerteam, inflictorname, victimname, victimteam )
+end )
+
+
+local EndsWith = string.EndsWith
+local CreateMaterial = CreateMaterial
+local Material = Material
+local color_white = color_white
+local DecalEx = util.DecalEx
+
+
+local function Spray( spraypath, tracehitpos, tracehitnormal, index, attemptedfallback )
+    local isVTF = EndsWith( spraypath, ".vtf" ) -- If the file is a VTF
+    local material
+
+    -- The file is a Valve Texture Format ( VTF )
+    if isVTF then
+        material = CreateMaterial( "lambdasprayVTFmaterial" .. index, "LightmappedGeneric", {
+            [ "$basetexture" ] = spraypath,
+            [ "$translucent" ] = 1, -- Some VTFs are translucent
+            [ "Proxies" ] = {
+                [ "AnimatedTexture" ] = { -- Support for Animated VTFs
+                    [ "animatedTextureVar" ] = "$basetexture",
+                    [ "animatedTextureFrameNumVar" ] = "$frame",
+                    [ "animatedTextureFrameRate" ] = 10
+                }
+            }
+        })
+    else -- The file is a PNG or JPG
+        material = Material( spraypath )
+    end
+
+    -- If we failed to load the Server's spray, try one of our own sprays and hope it works. If it does not work, give up and don't spray anything.
+    if material:IsError() and !attemptedfallback then Spray( LambdaPlayerSprays[ random( #LambdaPlayerSprays ) ], tracehitpos, tracehitnormal, index, true ) return elseif material:IsError() and attemptedfallback then return end
+
+--[[     local texWidth = material:Width()
+    local texHeight = material:Height()
+    local widthPower = 256
+    local heightPower = 256
+
+    -- Sizing the Spray
+    if texWidth > texHeight then heightPower = 128 elseif texHeight > texWidth then widthPower = 128 end
+    if texWidth < 256 then texWidth = ( texWidth / 256 ) else texWidth = ( widthPower / ( texWidth * 4 ) ) end
+    if texHeight < 256 then texHeight = ( texHeight / 256 ) else texHeight = ( heightPower / ( texHeight * 4) ) end ]]
+
+    local texWidth = (material:Width() * 0.15) / material:Width()
+    local texHeight = (material:Height() * 0.15) / material:Height() 
+
+    -- Place the spray
+    DecalEx( material, Entity( 0 ), tracehitpos, tracehitnormal, color_white, texWidth, texHeight)
+
+end
+
+net.Receive( "lambdaplayers_spray", function() 
+    local spraypath = net.ReadString()
+    local tracehitpos = net.ReadVector()
+    local tracehitnormal = net.ReadNormal()
+    local index = net.ReadUInt( 32 )
+    Spray( spraypath, tracehitpos, tracehitnormal, index )
 end )

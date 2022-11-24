@@ -10,7 +10,51 @@ for k, v in ipairs( _LAMBDAConVarSettings ) do -- See convars.lua
     categories[ v.category ] = v.category
 end
 
+local epiccontributors = [[
+
+-- Contributors On GitHub --
+Special thanks to the following Contributors
+
+:- CombineSlayer24
+:- Floofers
+:- YerMash
+
+Your contributions are appreciated!
+]]
+
+local function CreateUrlLabel( text, url, parent, dock )
+    local panel = vgui.Create( "DLabelURL", parent )
+    panel:SetText( text )
+    panel:SetURL( url )
+    panel:Dock( dock )
+    return panel
+end
+
 local function AddLambdaPlayersoptions()
+
+    -- Credits and Infooooo
+    spawnmenu.AddToolMenuOption( "Lambda Player", "Lambda Player", "lambdaplayer_credits" , "About, Credits, info", "", "", function( panel ) 
+        local lambdaplayers = panel:Help( "   -- Lambda Players --" ) lambdaplayers:SetColor( clientcolor ) 
+        local starrrrr = panel:Help( "-- Created By StarFrost --" ) starrrrr:SetColor( servercolor )
+
+
+        -- Contributor thanks!
+        local contributors = panel:Help( epiccontributors ) contributors:SetColor( servercolor )
+
+        panel:Help( "\n-- Links --" )
+
+        CreateUrlLabel( "Lambda Players GitHub", "https://github.com/IcyStarFrost/Lambda-Players", panel, TOP ) -- GitHub
+        CreateUrlLabel( "StarFrost's YouTube Channel", "https://www.youtube.com/channel/UCu_7jXrDackiI85ABzd0CKA", panel, TOP ) -- Star's Youtube
+        
+        panel:Help( "\n-- Custom Content Guides --" )
+        CreateUrlLabel( "Learn how to add Profile Pictures to Lambda Players", "https://github.com/IcyStarFrost/Lambda-Players#profile-pictures", panel, TOP ) -- Profile Picture Guide
+        CreateUrlLabel( "Learn how to add Names to Lambda Players", "https://github.com/IcyStarFrost/Lambda-Players#names", panel, TOP ) -- Name Guide
+        CreateUrlLabel( "Learn how to add Custom VoiceLines to Lambda Players", "https://github.com/IcyStarFrost/Lambda-Players#custom-voice-lines", panel, TOP ) -- Voiceline Guide
+        CreateUrlLabel( "Learn how to add Voice Profiles to Lambda Players", "https://github.com/IcyStarFrost/Lambda-Players#voice-profiles", panel, TOP ) -- Voice Profile Guide
+        CreateUrlLabel( "Learn how to add Lambda Profiles to Lambda Players", "https://github.com/IcyStarFrost/Lambda-Players#lambda-profiles", panel, TOP ) -- Profile Guide
+        CreateUrlLabel( "Learn how to add Sprays to Lambda Players", "https://github.com/IcyStarFrost/Lambda-Players#sprays", panel, TOP ) -- Spray Guide
+
+    end )
 
     spawnmenu.AddToolMenuOption( "Lambda Player", "Lambda Player", "lambdaplayer_weaponpermissions" , "Weapon Permissions", "", "", function( panel ) 
         panel:Help( "All weapon convars start with lambdaplayers_weapons" )

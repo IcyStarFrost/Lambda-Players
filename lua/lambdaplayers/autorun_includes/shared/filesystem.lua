@@ -225,6 +225,21 @@ function LAMBDAFS:GetProfilePictures()
     return Lambdaprofilepictures
 end
 
+function LAMBDAFS:GetSprays()
+    LambdaPlayerSprays = {}
+
+    local function MergeDirectory( dir )
+        dir = dir .. "/"
+        local files, dirs = file.Find( "materials/" .. dir .. "*", "GAME", "nameasc" )
+        for k, v in ipairs( files ) do table_insert( LambdaPlayerSprays, dir .. v ) end
+        for k, v in ipairs( dirs ) do MergeDirectory( dir .. v ) end
+    end
+
+    MergeDirectory( "lambdaplayers/sprays" )
+    
+    return LambdaPlayerSprays
+end
+
 
 function LAMBDAFS:GetVoiceProfiles()
     local LambdaVoiceProfiles = {}
@@ -262,3 +277,4 @@ LambdaPlayerMaterials = LambdaPlayerMaterials or LAMBDAFS:GetMaterialTable()
 Lambdaprofilepictures = Lambdaprofilepictures or LAMBDAFS:GetProfilePictures()
 LambdaVoiceLinesTable = LambdaVoiceLinesTable or LAMBDAFS:GetVoiceLinesTable()
 LambdaVoiceProfiles = LambdaVoiceProfiles or LAMBDAFS:GetVoiceProfiles()
+LambdaPlayerSprays = LambdaPlayerSprays or LAMBDAFS:GetSprays()

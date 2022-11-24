@@ -6,6 +6,7 @@ local RealTime = RealTime
 local ScreenScale = ScreenScale
 local LambdaScreenScale = LambdaScreenScale
 local Left = string.Left
+local usegmodpopups = GetConVar( "lambdaplayers_voice_usegmodvoicepopups" )
 local placeholdercolor = Color( 255,136,0)
 
 if SERVER then
@@ -58,7 +59,7 @@ elseif CLIENT then
             local name = traceent:GetLambdaName()
             local colvec = traceent:GetPlyColor()
             local hp = traceent:GetNW2Float( "lambda_health", "NAN" )
-            
+            hp = hp == "NAN" and traceent:GetNWFloat( "lambda_health", "NAN" ) or hp
             local hpW = 2
             local armor = traceent:GetArmor()
             if armor > 0 and displayArmor:GetBool() then
@@ -106,7 +107,7 @@ elseif CLIENT then
     end
 
     hook.Add( "HUDPaint", "lambdaplayervoicepopup", function()
-        if !allowpopups:GetBool() then return end
+        if !allowpopups:GetBool() or usegmodpopups:GetBool() then return end
 
         for k, v in ipairs( _LAMBDAPLAYERS_Voicechannels ) do
             local w, h = ScrW(), ScrH()

@@ -1,11 +1,13 @@
 # Lambda-Players
 
-A project to rewrite Zeta Players with the goal to be as clean and optimized as possible.
+A project to rewrite Zeta Players with the goal to be, clean, optimized, multiplayer friendly, and modular as possible.
 
 Currently the project will only be located here on Github and will be seen on the workshop when the addon is in a decent state
 
 
 # Custom Content 
+
+*Note for those who want to create addons for Lambda Players, it is prefered you add [LambdaPlayers] as the first thing in your addon name just so it's easy to search for addons that add stuff to Lambda Players.*
 
 ## Profile Pictures
 Custom Profile Pictures can be added by putting .png and .jpg images in this folder, `DRIVE:\Program Files (x86)\Steam\steamapps\common\GarrysMod\garrysmod\materials\lambdaplayers\custom_profilepictures` or `DRIVE:\Program Files (x86)\Steam\steamapps\common\GarrysMod\sourceengine\materials\lambdaplayers\custom_profilepictures` Note that you can create sub folders in custom_profilepictures containing images to be able to organize your image files.
@@ -157,9 +159,17 @@ My Profile Chance is to 100% so this means profiles will always spawn as long as
 ![image](https://user-images.githubusercontent.com/109770359/202869913-39279f39-fd5a-4e38-a1b5-b172ae1b88b5.png)
 
 
+## Sprays
+
+Sprays make a return from Zeta Players with minor changes to how they are loaded. .VTFs, .PNGs, and .JPGs are put in this folder: `C:\Program Files (x86)\Steam\steamapps\common\GarrysMod\sourceengine\materials\lambdaplayers\sprays`. Remember you have to create the folders as they are not automatically created for you. Note you can add sub folders in the `sprays` folder if you want to organize your sprays
+
+Addons that add sprays should have this file path: `ADDONNAME/materials/lambdaplayers/sprays/(Any .VTF, .PNG, .JPG image files here)`
+
 ### Remember to Update Lambda Data after any changes!
 
 # Hooks
+
+*These are all the hooks you can use in `hook.Add()` to extend upon Lambda's features*
 
 ### `LambdaOnConvarsCreated`
 ### Must be Shared!
@@ -202,6 +212,12 @@ Called when all default pickup functions have been loaded. Use this hook if you 
 
 Called when all default voice types ( idle, kill, death, ect ) have been registered and before the file system has loaded them. Use this hook if you want to create custom voice types using  `LambdaRegisterVoiceType()`. See lambdaplayers/autorun_includes/shared/d_registervoicetypes.lua
 
+
+
+### `LambdaOnProfileApplied( Entity lambda, Table profileinfo )`
+### Server-Side
+
+Called when a Lambda Profile is applied onto a Lambda Player. See function `:ExportLambdaInfo()` for profileinfo table structure
 
 
 # Lambda Player Addon Hooks
