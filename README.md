@@ -210,6 +210,12 @@ Called when all default voice types ( idle, kill, death, ect ) have been registe
 
 
 
+### `LambdaOnProfileApplied( Entity lambda, Table profileinfo )`
+### Server-Side
+
+Called when a Lambda Profile is applied onto a Lambda Player. See function `:ExportLambdaInfo()` for profileinfo table structure
+
+
 # Lambda Player Addon Hooks
 
 *The hooks below can be used to add onto certain features of the lambdas*
