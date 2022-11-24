@@ -231,7 +231,7 @@ function ENT:HandleShellEject( name, offpos, offang )
     if !name then return end
 
     local wepent = self:GetWeaponENT()
-    if !IsValid( wepent ) or name == "none" then return end
+    if !IsValid( wepent ) then return end
     offpos = offpos or Vector()
     offang = offang or Angle()
 
