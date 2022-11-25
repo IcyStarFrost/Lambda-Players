@@ -54,6 +54,8 @@ function ENT:MoveToPos( pos, options )
 
     local stepH = self.loco:GetStepHeight()
 
+    hook.Run( "LambdaOnBeginMove", self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), true )
+
 	while ( path:IsValid() ) do
         if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end
         if self:GetIsDead() then return "dead" end
@@ -128,6 +130,8 @@ function ENT:MoveToPosOFFNAV( pos, options )
     local tolerance = options.tol or 20
     self:SetRun( options.run or false )
     self.IsMoving = true
+
+    hook.Run( "LambdaOnBeginMove", self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), false )
 
     while IsValid( self ) do 
         if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end
