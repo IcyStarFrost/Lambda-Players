@@ -14,6 +14,7 @@ local max = math.max
 local render = render or nil
 local trace = {}
 
+local aidisable = GetConVar( "ai_disabled" )
 local allowphysgunuse = GetConVar( "lambdaplayers_lambda_allowphysgunpickup" )
 
 --[[ local function CreatePhysgunBeam( owner )
@@ -104,7 +105,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 lambda:Thread( function()
 
                     while true do 
-                        if lambda:GetState() == "Idle" and !physgunactive and random( 1, 3 ) == 1 then
+                        if lambda:GetState() == "Idle" and !physgunactive and random( 1, 3 ) == 1 and !aidisable:GetBool() then
                             local possibleents = lambda:FindInSphere( nil, 1500, function( ent ) return !ignoreentclasses[ ent:GetClass() ] and lambda:HasVPhysics( ent ) and lambda:HasPermissionToEdit( ent ) and lambda:CanSee( ent ) end )
                             local ent = possibleents[ random( #possibleents ) ]
 

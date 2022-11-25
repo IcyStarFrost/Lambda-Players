@@ -62,10 +62,15 @@ function ENT:MoveToPos( pos, options )
         local goal = path:GetCurrentGoal()
         
 
-        if !aidisable:GetBool() then
+        if !aidisable:GetBool() and CurTime() > self.l_moveWaitTime then
             if callback and isfunction( callback ) then callback( goal ) end 
             path:Update( self )
             self:DoorCheck()
+
+            -- Close up jumping
+            local aheadNormal = ( goal.pos - self:GetPos() ):GetNormalized(); aheadNormal.z = 0
+            local grHeight = GetSimpleGroundHeightWithFloor( self.l_currentnavarea, self:WorldSpaceCenter() + aheadNormal * 40 )
+            if grHeight and ( grHeight - self:GetPos().z ) > stepH then self.loco:Jump()  end
         end
 
 
@@ -94,11 +99,6 @@ function ENT:MoveToPos( pos, options )
             local updateTime = math_max( update, update * ( path:GetLength() / 400 ) )
 			if path:GetAge() > updateTime then path:Compute( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), self:PathGenerator() ) end
 		end
-
-        -- Close up jumping
-        local aheadNormal = ( goal.pos - self:GetPos() ):GetNormalized(); aheadNormal.z = 0
-        local grHeight = GetSimpleGroundHeightWithFloor( self.l_currentnavarea, self:WorldSpaceCenter() + aheadNormal * 40 )
-        if grHeight and ( grHeight - self:GetPos().z ) > stepH then self.loco:Jump()  end
 
         coroutine.yield()
 
@@ -135,7 +135,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
         if self.AbortMovement then self.AbortMovement = false self.IsMoving = false self.l_CurrentPath = nil return "aborted" end
         if self:GetRangeSquaredTo( ReplaceZ( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ) ) ) <= ( tolerance * tolerance ) then break end
 
-        if !aidisable:GetBool() then
+        if !aidisable:GetBool() and CurTime() > self.l_moveWaitTime then
             if callback and isfunction( callback ) then callback() end 
             local approchpos = ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos )
             self.loco:FaceTowards( approchpos )
@@ -174,6 +174,12 @@ end
 -- Stops movement from :MoveToPos() and :MoveToPosOFFNAV()
 function ENT:CancelMovement()
     self.AbortMovement = self.IsMoving
+end
+
+-- Makes lambda wait and stop while moving for a given amount of time
+function ENT:WaitWhileMoving( time )
+    if !self.IsMoving then return end
+    self.l_moveWaitTime = CurTime() + time
 end
 
 -- This function will either return true or false
@@ -244,31 +250,32 @@ function ENT:PathGenerator()
     end
 end
 
+
 local doorClasses = {
     ["prop_door_rotating"] = true,
     ["func_door"] = true,
     ["func_door_rotating"] = true
 }
 
-
 -- Fires a trace in front of the player that will open doors if it hits a door
 function ENT:DoorCheck()
     if CurTime() < self.l_nextdoorcheck then return end
 
     tracetable.start = self:WorldSpaceCenter()
-    tracetable.endpos = self:WorldSpaceCenter() + self:GetForward() * 50
+    tracetable.endpos = ( tracetable.start + self:GetForward() * 50 )
     tracetable.filter = self
-    local trace = Trace( tracetable )
-    local ent = trace.Entity
+    
+    local ent = Trace( tracetable ).Entity
     if IsValid( ent ) then
         local class = ent:GetClass()
         if doorClasses[ class ] and ent.Fire then
-            ent:Fire( "Open" )
+            ent:Fire( "OpenAwayFrom", "!activator", 0, self )
             if class == "prop_door_rotating" then
                 local keys = ent:GetKeyValues()
                 local slaveDoor = ents_FindByName( keys.slavename )
-                if IsValid( slaveDoor ) then slaveDoor:Fire( "Open" ) end
+                if IsValid( slaveDoor ) then slaveDoor:Fire( "OpenAwayFrom", "!activator", 0, self ) end
             end
+            self:WaitWhileMoving( 1.0 )
         end
     end
 

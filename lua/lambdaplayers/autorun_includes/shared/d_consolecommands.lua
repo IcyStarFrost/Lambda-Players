@@ -78,6 +78,8 @@ end, false, "Removes all entities that were spawned by Lambda Players", { name =
 AddConsoleCommandToLambdaSettings( "r_cleardecals", true, "Removes all decals in the map for yourself. This does not remove decals premade in the map", { name = "Clean Decals", category = "Utilities" } )
 
 
+
+
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
@@ -178,4 +180,6 @@ end, false, "Toggles God Mode, preventing any further damage to you", { name = "
 
 -- Calls this hook when all default console commands have been created.
 -- This hook can be used to ensure the CreateLambdaConsoleCommand() function exists so custom console commands can be made
-hook.Run( "LambdaOnConCommandsCreated" )
+hook.Add( "PreGamemodeLoaded", "lambdaconcommandinit", function()
+    hook.Run( "LambdaOnConCommandsCreated" )
+end )

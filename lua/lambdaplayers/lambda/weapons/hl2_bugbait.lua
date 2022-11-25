@@ -12,7 +12,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     bugbait = {
         model = "models/weapons/w_bugbait.mdl",
-        origin = "Half Life: 2",
+        origin = "Half-Life 2",
         prettyname = "Bug Bait",
         holdtype = "grenade",
         bonemerge = true,

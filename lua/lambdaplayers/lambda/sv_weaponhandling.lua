@@ -25,12 +25,12 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
 
     self.l_Weapon = weaponname
     self.l_HasLethal = weapondata.islethal
-    self.l_HasMelee = weapondata.ismelee
-    self.l_HoldType = weapondata.holdtype
+    self.l_HasMelee = weapondata.ismelee 
+    self.l_HoldType = weapondata.holdtype or "normal"
     self.l_CombatKeepDistance = weapondata.keepdistance
     self.l_CombatAttackRange = weapondata.attackrange
     self.l_OnDamagefunction = weapondata.OnDamage
-    self.l_WeaponNoDraw = weapondata.nodraw
+    self.l_WeaponNoDraw = weapondata.nodraw or false
     self.l_CombatSpeedAdd = weapondata.addspeed or 0
     self.l_Clip = weapondata.clip or 0
     self.l_MaxClip = weapondata.clip or 0
@@ -212,6 +212,8 @@ end
 -- 5 = Combine
 -- 7 Regular but bigger
 function ENT:HandleMuzzleFlash( type, offpos, offang )
+    if !type then return end
+
     local wepent = self:GetWeaponENT()
     local attach = wepent:GetAttachment( 1 )
     if !attach and offpos and offang then attach = { Pos = offpos, Ang = offang } elseif !attach and ( !offpos or !offang ) then return end
@@ -226,8 +228,10 @@ function ENT:HandleMuzzleFlash( type, offpos, offang )
 end
 
 function ENT:HandleShellEject( name, offpos, offang )
+    if !name then return end
+
     local wepent = self:GetWeaponENT()
-    if !IsValid( wepent ) or name == "none" then return end
+    if !IsValid( wepent ) then return end
     offpos = offpos or Vector()
     offang = offang or Angle()
 
@@ -250,7 +254,7 @@ end
 
 function ENT:SwitchToRandomWeapon()
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if self:CanEquipWeapon( k ) and k != self.l_Weapon then
+        if self:CanEquipWeapon( k ) and k != self.l_Weapon and !hook.Run( "LambdaCanSwitchWeapon", self, k, v ) then
             self:SwitchWeapon( k )
             return
         end
@@ -260,7 +264,7 @@ end
 
 function ENT:SwitchToLethalWeapon()
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if v.islethal and self:CanEquipWeapon( k ) and k != self.l_Weapon then
+        if v.islethal and self:CanEquipWeapon( k ) and k != self.l_Weapon and !hook.Run( "LambdaCanSwitchWeapon", self, k, v ) then
             self:SwitchWeapon( k )
             return
         end

@@ -20,7 +20,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     gravgun = {
         model = "models/weapons/w_physics.mdl",
-        origin = "Half Life: 2",
+        origin = "Half-Life 2",
         prettyname = "Gravity Gun",
         killicon = "weapon_physcannon", -- No idea if this is needed but why not
         bonemerge = true,

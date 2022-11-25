@@ -134,6 +134,8 @@ AddSourceConVarToSettings( "developer", "Enables Source's Developer mode", { typ
 
 -- Calls this hook when all default convars have been created.
 -- This hook can be used to ensure the CreateLambdaConvar() function exists so custom convars can be made
-hook.Run( "LambdaOnConvarsCreated" )
+hook.Add( "PreGamemodeLoaded", "lambdaconvarinit", function()
+    hook.Run( "LambdaOnConvarsCreated" )
+end )
 
 -- Note, Weapon allowing convars are located in the shared/globals.lua
