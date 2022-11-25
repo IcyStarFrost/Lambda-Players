@@ -112,8 +112,6 @@ if SERVER then
     function ENT:OnInjured( info )
         local attacker = info:GetAttacker()
 
-        hook.Run( "LambdaOnInjured", self, info )
-
         if ( self:ShouldTreatAsLPlayer( attacker ) and random( 1, 3 ) == 1 or !self:ShouldTreatAsLPlayer( attacker ) and true ) and self:CanTarget( attacker ) and self:GetEnemy() != attacker and attacker != self  then
             if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
             self:AttackTarget( attacker )
@@ -325,6 +323,9 @@ function ENT:InitializeMiniHooks()
         -- To get around that we basically predict if the Lambda is gonna die and completely block the damage so we don't actually die. This of course is exclusive to Respawning
         self:Hook( "EntityTakeDamage", "DamageHandling", function( target, info )
             if target != self then return end
+
+            local result = hook.Run( "LambdaOnInjured", self, info )
+            if result then return true end
 
             -- Armor Damage Reduction
             local curArmor = self:GetArmor()
