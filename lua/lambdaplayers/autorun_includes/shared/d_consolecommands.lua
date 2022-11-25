@@ -180,4 +180,6 @@ end, false, "Toggles God Mode, preventing any further damage to you", { name = "
 
 -- Calls this hook when all default console commands have been created.
 -- This hook can be used to ensure the CreateLambdaConsoleCommand() function exists so custom console commands can be made
-hook.Run( "LambdaOnConCommandsCreated" )
+hook.Add( "PreGamemodeLoaded", "lambdaconcommandinit", function()
+    hook.Run( "LambdaOnConCommandsCreated" )
+end )

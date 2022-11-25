@@ -4,11 +4,7 @@ local ipairs = ipairs
 local table_insert = table.insert
 local clientcolor = Color( 255, 145, 0 )
 local servercolor = Color( 0, 174, 255 )
-local categories = {}
 
-for k, v in ipairs( _LAMBDAConVarSettings ) do -- See convars.lua 
-    categories[ v.category ] = v.category
-end
 
 local epiccontributors = [[
 
@@ -31,6 +27,12 @@ local function CreateUrlLabel( text, url, parent, dock )
 end
 
 local function AddLambdaPlayersoptions()
+
+    local categories = {}
+
+    for k, v in ipairs( _LAMBDAConVarSettings ) do -- See convars.lua 
+        categories[ v.category ] = v.category
+    end
 
     -- Credits and Infooooo
     spawnmenu.AddToolMenuOption( "Lambda Player", "Lambda Player", "lambdaplayer_credits" , "About, Credits, info", "", "", function( panel ) 
