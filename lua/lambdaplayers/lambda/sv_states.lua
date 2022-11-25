@@ -18,6 +18,7 @@ function ENT:Idle()
     else
         local pos = self:GetRandomPosition()
         self:MoveToPos( pos )
+        hook.Run( "LambdaOnWander", self, pos )
     end
 end
 
