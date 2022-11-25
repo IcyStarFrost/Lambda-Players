@@ -33,7 +33,7 @@ local function OpenProfilePanel( ply )
     local frame = LAMBDAPANELS:CreateFrame( "Profile Editor", 700, 350 )
 
     
-    LAMBDAPANELS:CreateURLLabel( "Click here to learn on how to use this panel!", "https://github.com/IcyStarFrost/Lambda-Players/blob/master/README.md#lambda-profiles", frame, TOP )
+    LAMBDAPANELS:CreateURLLabel( "Click here to learn on how to use this panel!", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#lambda-profiles", frame, TOP )
 
     -- Profile Listing and buttons --
     local rightpanel = LAMBDAPANELS:CreateBasicPanel( frame )
@@ -236,7 +236,7 @@ local function OpenProfilePanel( ply )
     LAMBDAPANELS:CreateLabel( "Enter a file path relative to", mainscroll, TOP )
     LAMBDAPANELS:CreateLabel( "materials/lambdaplayers/custom_profilepictures", mainscroll, TOP )
     LAMBDAPANELS:CreateLabel( "Leave Blank for random", mainscroll, TOP )
-    LAMBDAPANELS:CreateURLLabel( "Click here to learn about Profile Pictures", "https://github.com/IcyStarFrost/Lambda-Players#profile-pictures", mainscroll, TOP )
+    LAMBDAPANELS:CreateURLLabel( "Click here to learn about Profile Pictures", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#profile-pictures", mainscroll, TOP )
     local profilepicture = LAMBDAPANELS:CreateTextEntry( mainscroll, TOP, "Enter a file path" )
 
     local pfppreview = vgui.Create( "DImage", mainscroll )
@@ -249,7 +249,7 @@ local function OpenProfilePanel( ply )
     end
 
     LAMBDAPANELS:CreateLabel( "Voice Profile", mainscroll, TOP )
-    LAMBDAPANELS:CreateURLLabel( "Click here to learn about Voice Profiles", "https://github.com/IcyStarFrost/Lambda-Players#voice-profiles", mainscroll, TOP )
+    LAMBDAPANELS:CreateURLLabel( "Click here to learn about Voice Profiles", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#voice-profiles", mainscroll, TOP )
     local combotable = {}
     for k, v in pairs( LAMBDAFS:GetVoiceProfiles() ) do
         combotable[ k ] = k
