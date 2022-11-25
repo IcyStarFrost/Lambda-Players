@@ -21,4 +21,10 @@ LambdaRegisterVoiceType( "laugh", "lambdaplayers/vo/laugh", "These are voice lin
 -- Called when all default voice types have been registered and before the file system has loaded the voice types
 
 -- This hook allows the usage of LambdaRegisterVoiceType() 
-hook.Run( "LambdaOnVoiceTypesRegistered" )
+if !LambdaFilesReloaded then -- This is so when the game is loading, the hook is created and if we are already in-game and reload the lua files, the hook will be forced to run
+    hook.Add( "PreGamemodeLoaded", "lambdavoicetypesinit", function()
+        hook.Run( "LambdaOnVoiceTypesRegistered" )
+    end )
+else
+    hook.Run( "LambdaOnVoiceTypesRegistered" )
+end

@@ -152,6 +152,16 @@ local function OpenProfilePanel( ply )
 
         end )
 
+        LAMBDAPANELS:CreateButton( rightpanel, BOTTOM, "Validate Profiles", function()
+
+            for k, v in pairs( profiles ) do
+                
+                if !file.Exists( v.model, "GAME" ) then print("Lambda Profile Validate: " .. k .. " has a error playermodel! ( " .. v.model .. " )" ) end
+
+            end
+
+        end )
+
 
     end )
 
