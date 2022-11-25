@@ -149,21 +149,25 @@ local function OpenProfilePanel( ply )
                 line.l_isprofilelocal = false
                 line:SetSortValue( 1, v )
             end
-
         end )
-
-        LAMBDAPANELS:CreateButton( rightpanel, BOTTOM, "Validate Profiles", function()
-
-            for k, v in pairs( profiles ) do
-                
-                if !file.Exists( v.model, "GAME" ) then print("Lambda Profile Validate: " .. k .. " has a error playermodel! ( " .. v.model .. " )" ) end
-
-            end
-
-        end )
-
-
     end )
+
+
+    LAMBDAPANELS:CreateButton( rightpanel, BOTTOM, "Validate Profiles", function()
+
+        local hasissue = false
+        for k, v in pairs( profiles ) do
+            
+            if v.model and !file.Exists( v.model, "GAME" ) then hasissue = true print("Lambda Profile Validate: " .. k .. " has a error playermodel! ( " .. v.model .. " )" ) end
+            if v.voiceprofile and !file.Exists( "sound/lambdaplayers/voiceprofiles/" .. v.voiceprofile, "GAME" ) then hasissue = true print("Lambda Profile Validate: " .. k .. " has a non existent Voice Profile! ( " .. v.voiceprofile .. " )" ) end
+            if v.spawnwep and !_LAMBDAPLAYERSWEAPONS[ v.spawnwep] then hasissue = true print("Lambda Profile Validate: " .. k .. " has a non existent Spawn Weapon! ( " .. v.spawnwep .. " )" ) end
+            if v.profilepicture and !file.Exists( "materials/" .. v.profilepicture, "GAME" ) then hasissue = true print("Lambda Profile Validate: " .. k .. " has a non existent Profile Picture! ( " .. v.profilepicture .. " )" ) end
+
+        end
+
+        chat.AddText( "Validation complete." .. ( hasissue and " Some issues were found. Check Console" or " No issues were found" ) )
+    end )
+
 
 
 --[[     LAMBDAPANELS:CreateButton( rightpanel, BOTTOM, "Import Zeta Profiles", function()
