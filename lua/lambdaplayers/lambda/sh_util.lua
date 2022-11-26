@@ -508,22 +508,7 @@ if SERVER then
         local result = hook.Run( "LambdaOnNoclip", self, bool )
         if !result then self:SetNoClip( bool ) end
     end
-
-    -- Returns the walk speed
-    function ENT:GetWalkSpeed()
-        return 200
-    end
-
-    -- Returns the crouch speed
-    function ENT:GetCrouchSpeed()
-        return 60
-    end
-
-    -- Returns the run speed
-    function ENT:GetRunSpeed()
-        return 400
-    end
-
+    
     -- Returns whether the given position or entity is at a given range
     function ENT:IsInRange( target, range )
         return ( self:GetRangeSquaredTo( target ) <= ( range * range ) )
