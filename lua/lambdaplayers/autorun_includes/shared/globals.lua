@@ -247,3 +247,10 @@ function LambdaCreateThread( func )
         end
     end )
 end
+
+local meta = FindMetaTable( "Entity" )
+local oldgetname = meta.GetName 
+
+function meta:GetName()
+    if self.IsLambdaPlayer then return self:GetLambdaName() else oldgetname( self ) end
+end

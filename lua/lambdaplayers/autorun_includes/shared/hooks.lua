@@ -22,6 +22,7 @@ if SERVER then
     }
     hook.Add("ScalePlayerDamage", "LambdaPlayers_DmgScale", function( ply,hit,dmginfo )
         if !ply.IsLambdaPlayer or !dmginfo:IsBulletDamage() then return end
+        ply.l_lasthitgroup = hit
         if hit == HITGROUP_HEAD then
             dmginfo:ScaleDamage( 0.5 )
         elseif hit == HITGROUP_LEFTARM or hit == HITGROUP_RIGHTARM or hit == HITGROUP_LEFTLEG or hit == HITGROUP_RIGHTLEG then

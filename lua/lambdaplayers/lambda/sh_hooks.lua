@@ -91,6 +91,7 @@ if SERVER then
         end
 
         hook.Run( "LambdaOnKilled", self, info )
+        --hook.Run( "PlayerDeath", self, info:GetInflictor(), info:GetAttacker() )
 
         if self:GetRespawn() then
             self:SimpleTimer( 2, function() self:LambdaRespawn() end, true )
@@ -270,6 +271,8 @@ if SERVER then
         -- Play land animation
         self:AddGesture( ACT_LAND )
 
+        --hook.Run( "OnPlayerHitGround", self, self:GetPos():IsUnderwater(), false, self.l_FallVelocity )
+
         if !self:GetPos():IsUnderwater() then
             local damage = 0
             local maxsafefallspeed = 526.5 -- sqrt( 2 * gravity * 20 * 12 )
@@ -291,6 +294,7 @@ if SERVER then
                 self:TakeDamageInfo( info )
 
                 self:EmitSound( "Player.FallDamage" )
+                --hook.Run( "GetFallDamage", self, self.l_FallVelocity )
             end
         end
     end

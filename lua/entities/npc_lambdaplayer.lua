@@ -164,6 +164,10 @@ function ENT:Initialize()
         local rndpingrange = random( 1, 120 )
         self:SetAbsPing( rndpingrange )  -- The lowest point our fake ping can get
         self:SetPing( rndpingrange ) -- Our actual fake ping
+        self:SetSteamID64( 90071996842377216 + random( 1, 10000000 ) )
+        self:SetNW2String( "lambda_steamid", "STEAM_0:0:" .. random( 1, 200000000 ) )
+        self:SetNW2String( "lambda_ip", "192." .. random( 10, 200 ) .. "." .. random( 10 ).. "." .. random( 10, 200 ) .. ":27005" )
+        
         
         self.l_BodyGroupData = {}
         if rndBodyGroups:GetBool() then
@@ -199,6 +203,10 @@ function ENT:Initialize()
         self.loco:SetDeceleration( 1000 )
         self.loco:SetStepHeight( 30 )
         self.loco:SetGravity( -physenv.GetGravity().z ) -- Makes us fall at the same speed as the real players do
+
+        self:SetRunSpeed( 400 )
+        self:SetCrouchSpeed( 60 )
+        self:SetWalkSpeed( 200 )
 
         self:SetCollisionBounds( Vector( -10, -10, 0 ), Vector( 10, 10, 72 ) )
         self:PhysicsInitShadow()
@@ -294,6 +302,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", 4, "IsReloading" )
     self:NetworkVar( "Bool", 5, "Run" )
     self:NetworkVar( "Bool", 6, "NoClip" )
+    self:NetworkVar( "Bool", 7, "FlashlightOn" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )
@@ -310,7 +319,12 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 6, "AbsPing" )
     self:NetworkVar( "Int", 7, "Armor" )
     self:NetworkVar( "Int", 8, "MaxArmor" )
-    
+    self:NetworkVar( "Int", 9, "SteamID64" )
+    self:NetworkVar( "Int", 10, "WalkSpeed" )
+    self:NetworkVar( "Int", 11, "RunSpeed" )
+    self:NetworkVar( "Int", 12, "CrouchSpeed" )
+    self:NetworkVar( "Int", 13, "Team" )
+
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
     self:NetworkVar( "Float", 1, "VoiceLevel" )
 end
@@ -336,7 +350,9 @@ function ENT:Think()
             local desSpeed = self.loco:GetDesiredSpeed()
             local result = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32600, self )
             local stepsounds = _LAMBDAPLAYERSFootstepMaterials[ result.MatType ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ]
-            self:EmitSound( stepsounds[ random( #stepsounds ) ], 75, 100, 0.5 )
+            local snd = stepsounds[ random( #stepsounds ) ]
+            --hook.Run( "PlayerFootstep", self, self:GetPos(), random( 0, 1 ), snd, 0.5, RecipientFilter() )
+            self:EmitSound( snd, 75, 100, 0.5 )
             self.NextFootstepTime = CurTime() + min(0.25 * (self:GetRunSpeed() / desSpeed), 0.35)
         end
         
@@ -569,6 +585,7 @@ function ENT:Think()
 
             if lightvec:Length() < 0.02 and !self:GetIsDead() and drawflashlight:GetBool() and self:IsBeingDrawn() then
                 if !IsValid( self.l_flashlight ) then
+                    self:SetFlashlightOn( true )
                     self.l_flashlight = ProjectedTexture() 
                     self.l_flashlight:SetTexture( "effects/flashlight001" ) 
                     self.l_flashlight:SetFarZ( 600 ) 
@@ -580,6 +597,7 @@ function ENT:Think()
                     self:EmitSound( "items/flashlight1.wav", 60 )
                 end
             elseif IsValid( self.l_flashlight ) then
+                self:SetFlashlightOn( false )
                 self.l_flashlight:Remove()
                 self:EmitSound( "items/flashlight1.wav", 60 )
             end
