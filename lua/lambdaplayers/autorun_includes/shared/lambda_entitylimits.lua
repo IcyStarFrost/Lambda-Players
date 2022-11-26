@@ -24,4 +24,11 @@ CreateLambdaEntLimit( "Wheel", 5, 200 )
 
 -- Called when all default entity limits are created.
 -- This hook can be used to create entity limits with CreateLambdaEntLimit()
-hook.Run( "LambdaOnEntLimitsCreated" )
+
+if !LambdaFilesReloaded then -- This is so when the game is loading, the hook is created and if we are already in-game and reload the lua files, the hook will be forced to run
+    hook.Add( "PreGamemodeLoaded", "lambdaentitylimitinit", function()
+        hook.Run( "LambdaOnEntLimitsCreated" )
+    end )
+else
+    hook.Run( "LambdaOnEntLimitsCreated" )
+end

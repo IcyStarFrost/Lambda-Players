@@ -41,4 +41,6 @@ for k, luafile in ipairs( clientsidefiles ) do
         print( "Lambda Players: Included Client Side Lua File [ " .. luafile .. " ]" )
     end
 end
+
+LambdaFilesReloaded = LambdaFilesReloaded or true
 ---

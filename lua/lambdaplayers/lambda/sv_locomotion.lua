@@ -54,6 +54,8 @@ function ENT:MoveToPos( pos, options )
 
     local stepH = self.loco:GetStepHeight()
 
+    hook.Run( "LambdaOnBeginMove", self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), true )
+
 	while ( path:IsValid() ) do
         if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end
         if self:GetIsDead() then return "dead" end
@@ -95,6 +97,11 @@ function ENT:MoveToPos( pos, options )
 			if path:GetAge() > timeout then self.IsMoving = false return "timeout" end
 		end
 
+        if self.l_recomputepath then
+            path:Compute( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), self:PathGenerator() )
+            self.l_recomputepath = nil
+        end
+
 		if update then
             local updateTime = math_max( update, update * ( path:GetLength() / 400 ) )
 			if path:GetAge() > updateTime then path:Compute( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), self:PathGenerator() ) end
@@ -109,6 +116,14 @@ function ENT:MoveToPos( pos, options )
 
 	return "ok"
 
+end
+
+-- If we are moving while this function is called, recompute our current path or change the goal position and recompute
+function ENT:RecomputePath( pos )
+    if self.IsMoving then
+        self.l_movepos = pos or self.l_movepos
+        self.l_recomputepath = true
+    end
 end
 
 -- Replaces the Z in the provided Vector with self's Z
@@ -128,6 +143,8 @@ function ENT:MoveToPosOFFNAV( pos, options )
     local tolerance = options.tol or 20
     self:SetRun( options.run or false )
     self.IsMoving = true
+
+    hook.Run( "LambdaOnBeginMove", self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), false )
 
     while IsValid( self ) do 
         if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end

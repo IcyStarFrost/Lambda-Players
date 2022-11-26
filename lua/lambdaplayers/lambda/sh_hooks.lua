@@ -91,6 +91,7 @@ if SERVER then
         end
 
         hook.Run( "LambdaOnKilled", self, info )
+        --hook.Run( "PlayerDeath", self, info:GetInflictor(), info:GetAttacker() )
 
         if self:GetRespawn() then
             self:SimpleTimer( 2, function() self:LambdaRespawn() end, true )
@@ -111,8 +112,6 @@ if SERVER then
 
     function ENT:OnInjured( info )
         local attacker = info:GetAttacker()
-
-        hook.Run( "LambdaOnInjured", self, info )
 
         if ( self:ShouldTreatAsLPlayer( attacker ) and random( 1, 3 ) == 1 or !self:ShouldTreatAsLPlayer( attacker ) and true ) and self:CanTarget( attacker ) and self:GetEnemy() != attacker and attacker != self  then
             if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
@@ -149,7 +148,7 @@ if SERVER then
 
         if victim == self:GetEnemy() then
             self:DebugPrint( "Enemy was killed by", attacker )
-            self:SetEnemy( nil )
+            self:SetEnemy( NULL )
             self:CancelMovement()
         end
     end
@@ -272,6 +271,8 @@ if SERVER then
         -- Play land animation
         self:AddGesture( ACT_LAND )
 
+        --hook.Run( "OnPlayerHitGround", self, self:GetPos():IsUnderwater(), false, self.l_FallVelocity )
+
         if !self:GetPos():IsUnderwater() then
             local damage = 0
             local maxsafefallspeed = 526.5 -- sqrt( 2 * gravity * 20 * 12 )
@@ -293,6 +294,7 @@ if SERVER then
                 self:TakeDamageInfo( info )
 
                 self:EmitSound( "Player.FallDamage" )
+                --hook.Run( "GetFallDamage", self, self.l_FallVelocity )
             end
         end
     end
@@ -321,10 +323,18 @@ function ENT:InitializeMiniHooks()
 
     if SERVER then
 
+        self:Hook( "PostEntityTakeDamage", "OnOtherInjured", function( target, info, tookdamage )
+            if target == self or ( !target:IsNPC() and !target:IsNextBot() and !target:IsPlayer() ) then return end
+            hook.Run( "LambdaOnOtherInjured", self, target, info, tookdamage )
+        end, true )
+
         -- Hoookay so interesting stuff here. When a nextbot actually dies by reaching 0 or below hp, no matter how high you set their health after the fact, they will no longer take damage.
         -- To get around that we basically predict if the Lambda is gonna die and completely block the damage so we don't actually die. This of course is exclusive to Respawning
         self:Hook( "EntityTakeDamage", "DamageHandling", function( target, info )
             if target != self then return end
+
+            local result = hook.Run( "LambdaOnInjured", self, info )
+            if result then return true end
 
             -- Armor Damage Reduction
             local curArmor = self:GetArmor()

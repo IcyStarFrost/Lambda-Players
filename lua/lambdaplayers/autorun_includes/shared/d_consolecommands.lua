@@ -4,7 +4,7 @@ local ents_FindInSphere = ents.FindInSphere
 local ipairs = ipairs
 local random = math.random
 local IsValid = IsValid
-local distance = GetConVar('lambdaplayers_force_radius'):GetInt() or 750
+local distance = GetConVar('lambdaplayers_force_radius')
 local spawnatplayerpoints = GetConVar( "lambdaplayers_lambda_spawnatplayerspawns" )
 
 -- The reason this lua file has a d_ in its filename is because of the order on how lua files are loaded.
@@ -147,7 +147,7 @@ end, false, "Spawns a random Lambda Player at a random Navmesh area", { name = "
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombat", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
-    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance ) ) do
+    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance:GetInt() ) ) do
         if IsValid( v ) and v.IsLambdaPlayer then v:AttackTarget( ply ) end
     end
 
@@ -156,7 +156,7 @@ end, false, "Forces all Lambda Players to attack you", { name = "Lambda Players 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcekill", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
-    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance ) ) do
+    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance:GetInt() ) ) do
         if v.IsLambdaPlayer then
             local dmginfo = DamageInfo()
             dmginfo:SetDamage( 1000 )
@@ -180,6 +180,10 @@ end, false, "Toggles God Mode, preventing any further damage to you", { name = "
 
 -- Calls this hook when all default console commands have been created.
 -- This hook can be used to ensure the CreateLambdaConsoleCommand() function exists so custom console commands can be made
-hook.Add( "PreGamemodeLoaded", "lambdaconcommandinit", function()
+if !LambdaFilesReloaded then
+    hook.Add( "PreGamemodeLoaded", "lambdaconcommandinit", function()
+        hook.Run( "LambdaOnConCommandsCreated" )
+    end )
+else
     hook.Run( "LambdaOnConCommandsCreated" )
-end )
+end

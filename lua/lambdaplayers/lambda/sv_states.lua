@@ -18,13 +18,12 @@ function ENT:Idle()
     else
         local pos = self:GetRandomPosition()
         self:MoveToPos( pos )
-        hook.Run( "LambdaOnWander", self, pos )
     end
 end
 
 local combattbl = { update = 0.2, run = true }
 function ENT:Combat()
-    if !LambdaIsValid( self:GetEnemy() ) then self:SetState( "Idle" ) return end
+    if !LambdaIsValid( self:GetEnemy() ) then self:SetEnemy( NULL ) self:SetState( "Idle" ) return end
 
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
 
@@ -33,7 +32,7 @@ function ENT:Combat()
             if self:GetState() != "Combat" then return "end" end -- Returns and removes this hook because we returned "end". See sh_util.lua for source
 
             local ene = self:GetEnemy()
-            if !LambdaIsValid( ene ) then return "end" end
+            if !LambdaIsValid( ene ) then self:SetEnemy( NULL ) return "end" end
 
             local canSee = self:CanSee( ene )
             local attackDist = self.l_CombatAttackRange

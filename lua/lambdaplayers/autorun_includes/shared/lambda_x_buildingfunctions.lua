@@ -103,4 +103,10 @@ AddBuildFunctionToLambdaBuildingFunctions( "spray", "Allow Sprays", "If Lambda P
 
 -- Called when all default building functions above have been loaded.
 -- This hook can be used to add more building functions with AddBuildFunctionToLambdaBuildingFunctions()
-hook.Run( "LambdaOnBuildFunctionsLoaded" )
+if !LambdaFilesReloaded then -- This is so when the game is loading, the hook is created and if we are already in-game and reload the lua files, the hook will be forced to run
+    hook.Add( "PreGamemodeLoaded", "lambdabuildingfuncsinit", function()
+        hook.Run( "LambdaOnBuildFunctionsLoaded" )
+    end )
+else
+    hook.Run( "LambdaOnBuildFunctionsLoaded" )
+end

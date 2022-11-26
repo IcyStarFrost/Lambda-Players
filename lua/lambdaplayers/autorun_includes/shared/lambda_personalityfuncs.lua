@@ -90,4 +90,10 @@ CreateLambdaConvar( "lambdaplayers_personality_voicechance", 30, true, true, tru
 
 -- Called when all default personality types are loaded
 -- This hook can be used to create custom personality types using LambdaCreatePersonalityType()
-hook.Run( "LambdaOnPersonalitiesLoaded" )
+if !LambdaFilesReloaded then -- This is so when the game is loading, the hook is created and if we are already in-game and reload the lua files, the hook will be forced to run
+    hook.Add( "PreGamemodeLoaded", "lambdapersonalityinit", function()
+        hook.Run( "LambdaOnPersonalitiesLoaded" )
+    end )
+else
+    hook.Run( "LambdaOnPersonalitiesLoaded" )
+end

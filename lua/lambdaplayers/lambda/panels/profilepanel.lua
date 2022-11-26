@@ -33,7 +33,7 @@ local function OpenProfilePanel( ply )
     local frame = LAMBDAPANELS:CreateFrame( "Profile Editor", 700, 350 )
 
     
-    LAMBDAPANELS:CreateURLLabel( "Click here to learn on how to use this panel!", "https://github.com/IcyStarFrost/Lambda-Players/blob/master/README.md#lambda-profiles", frame, TOP )
+    LAMBDAPANELS:CreateURLLabel( "Click here to learn on how to use this panel!", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#lambda-profiles", frame, TOP )
 
     -- Profile Listing and buttons --
     local rightpanel = LAMBDAPANELS:CreateBasicPanel( frame )
@@ -149,11 +149,25 @@ local function OpenProfilePanel( ply )
                 line.l_isprofilelocal = false
                 line:SetSortValue( 1, v )
             end
-
         end )
-
-
     end )
+
+
+    LAMBDAPANELS:CreateButton( rightpanel, BOTTOM, "Validate Profiles", function()
+
+        local hasissue = false
+        for k, v in pairs( profiles ) do
+            
+            if v.model and !file.Exists( v.model, "GAME" ) then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a error playermodel! ( " .. v.model .. " )" ) end
+            if v.voiceprofile and !file.Exists( "sound/lambdaplayers/voiceprofiles/" .. v.voiceprofile, "GAME" ) then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a non existent Voice Profile! ( " .. v.voiceprofile .. " )" ) end
+            if v.spawnwep and !_LAMBDAPLAYERSWEAPONS[ v.spawnwep ] then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a non existent Spawn Weapon! ( " .. v.spawnwep .. " )" ) end
+            if v.profilepicture and !file.Exists( "materials/" .. v.profilepicture, "GAME" ) then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a non existent Profile Picture! ( " .. v.profilepicture .. " )" ) end
+
+        end
+
+        chat.AddText( "Validation complete." .. ( hasissue and " Some issues were found. Check Console" or " No issues were found" ) )
+    end )
+
 
 
 --[[     LAMBDAPANELS:CreateButton( rightpanel, BOTTOM, "Import Zeta Profiles", function()
@@ -226,7 +240,7 @@ local function OpenProfilePanel( ply )
     LAMBDAPANELS:CreateLabel( "Enter a file path relative to", mainscroll, TOP )
     LAMBDAPANELS:CreateLabel( "materials/lambdaplayers/custom_profilepictures", mainscroll, TOP )
     LAMBDAPANELS:CreateLabel( "Leave Blank for random", mainscroll, TOP )
-    LAMBDAPANELS:CreateURLLabel( "Click here to learn about Profile Pictures", "https://github.com/IcyStarFrost/Lambda-Players#profile-pictures", mainscroll, TOP )
+    LAMBDAPANELS:CreateURLLabel( "Click here to learn about Profile Pictures", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#profile-pictures", mainscroll, TOP )
     local profilepicture = LAMBDAPANELS:CreateTextEntry( mainscroll, TOP, "Enter a file path" )
 
     local pfppreview = vgui.Create( "DImage", mainscroll )
@@ -239,7 +253,7 @@ local function OpenProfilePanel( ply )
     end
 
     LAMBDAPANELS:CreateLabel( "Voice Profile", mainscroll, TOP )
-    LAMBDAPANELS:CreateURLLabel( "Click here to learn about Voice Profiles", "https://github.com/IcyStarFrost/Lambda-Players#voice-profiles", mainscroll, TOP )
+    LAMBDAPANELS:CreateURLLabel( "Click here to learn about Voice Profiles", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#voice-profiles", mainscroll, TOP )
     local combotable = {}
     for k, v in pairs( LAMBDAFS:GetVoiceProfiles() ) do
         combotable[ k ] = k
