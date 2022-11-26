@@ -147,7 +147,7 @@ if SERVER then
 
         if victim == self:GetEnemy() then
             self:DebugPrint( "Enemy was killed by", attacker )
-            self:SetEnemy( nil )
+            self:SetEnemy( NULL )
             self:CancelMovement()
         end
     end
