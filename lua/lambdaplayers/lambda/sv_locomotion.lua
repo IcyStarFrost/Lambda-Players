@@ -64,7 +64,7 @@ function ENT:MoveToPos( pos, options )
         local goal = path:GetCurrentGoal()
         
 
-        if !aidisable:GetBool() and CurTime() > self.l_moveWaitTime then
+        if self:IsDisabled() and CurTime() > self.l_moveWaitTime then
             if callback and isfunction( callback ) then callback( goal ) end 
             path:Update( self )
             self:DoorCheck()
@@ -152,7 +152,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
         if self.AbortMovement then self.AbortMovement = false self.IsMoving = false self.l_CurrentPath = nil return "aborted" end
         if self:GetRangeSquaredTo( ReplaceZ( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ) ) ) <= ( tolerance * tolerance ) then break end
 
-        if !aidisable:GetBool() and CurTime() > self.l_moveWaitTime then
+        if self:IsDisabled() and CurTime() > self.l_moveWaitTime then
             if callback and isfunction( callback ) then callback() end 
             local approchpos = ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos )
             self.loco:FaceTowards( approchpos )

@@ -344,7 +344,7 @@ function ENT:IsDrivingEntity()
 end
 
 function ENT:IsFrozen()
-    return false
+    return self.l_isfrozen
 end
 
 function ENT:LocalEyeAngles()
@@ -735,6 +735,7 @@ if SERVER then
     end
 
     function ENT:GodEnable()
+        self.l_godmode = true
     end
 
     function ENT:GetPreferredCarryAngles( carryEnt )
@@ -746,7 +747,8 @@ if SERVER then
         end
     end
 
-    function ENT:Freeze()
+    function ENT:Freeze( freeze )
+        self.l_isfrozen = freeze
     end
 
     function ENT:GiveAmmo()
@@ -757,6 +759,7 @@ if SERVER then
     end
 
     function ENT:GodDisable()
+        self.l_godmode = false
     end
 
     function ENT:IsTimingOut()
@@ -790,6 +793,13 @@ if SERVER then
     end
 
     function ENT:Lock()
+        self.l_isfrozen = true
+        self.l_godmode = true
+    end
+
+    function ENT:UnLock()
+        self.l_isfrozen = false
+        self.l_godmode = false
     end
 
     -- Lambda players ip leak!!!!!!!!!
@@ -862,9 +872,11 @@ if SERVER then
     end
 
     function ENT:StripWeapon()
+        self:SwitchWeapon( "none" )
     end
 
     function ENT:SprintEnable()
+        self:SetRun( true )
     end
 
     function ENT:SetAllowWeaponsInVehicle( allow )
@@ -917,6 +929,7 @@ if SERVER then
     end
 
     function ENT:SprintDisable()
+        self:SetRun( false )
     end
 
     function ENT:ShouldDropWeapon( drop )

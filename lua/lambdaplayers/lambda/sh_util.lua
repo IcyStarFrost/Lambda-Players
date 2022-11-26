@@ -34,6 +34,7 @@ local visibilitytrace = {}
 local tracetable = {}
 local GetLambdaPlayers = GetLambdaPlayers
 local tauntdir = GetConVar( "lambdaplayers_voice_tauntdir" )
+local aidisable = GetConVar( "ai_disabled" )
 local debugcvar = GetConVar( "lambdaplayers_debug" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
 
@@ -486,6 +487,11 @@ if SERVER then
     -- Returns the last state we were in
     function ENT:GetLastState()
         return self.l_LastState
+    end
+
+    -- Returns if our ai is disabled
+    function ENT:IsDisabled()
+        return self.l_isfrozen or aidisable:GetBool()
     end
 
     -- Returns if we are currently speaking

@@ -32,7 +32,7 @@ if SERVER then
     end)
 
     hook.Add( "EntityTakeDamage", "LambdaMainDamageHook", function( ent, info )
-        if ent.l_debuggodmode then return true end
+        if ent.l_godmode then return true end
     end )
 
     hook.Add( "PostCleanupMap", "LambdaResetSpawnPoints", function()

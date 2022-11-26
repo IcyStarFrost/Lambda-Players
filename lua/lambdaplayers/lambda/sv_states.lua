@@ -29,6 +29,7 @@ function ENT:Combat()
 
     if !self:HookExists( "Tick", "CombatTick" ) then
         self:Hook( "Tick", "CombatTick", function()
+            if self:IsDisabled() then return end
             if self:GetState() != "Combat" then return "end" end -- Returns and removes this hook because we returned "end". See sh_util.lua for source
 
             local ene = self:GetEnemy()

@@ -115,6 +115,7 @@ function ENT:Initialize()
         self.l_Weapon = "" -- The weapon we currently have
 
         self.IsMoving = false -- If we are moving
+        self.l_isfrozen = false -- If set true, stop moving as if ai_disable is on
         self.l_unstuck = false -- If true, runs our unstuck process
         self.l_recomputepath = nil -- If set to true, recompute the current path. After that this will reset to nil
         self.l_UpdateAnimations = true -- If we can update our animations. Used for the purpose of playing sequences
@@ -646,7 +647,7 @@ function ENT:RunBehaviour()
     while true do
 
 
-        if !self:GetIsDead() and !aidisable:GetBool() then
+        if !self:GetIsDead() and self:IsDisabled() then
 
             local statefunc = self[ self:GetState() ] -- I forgot this was possible. See sv_states.lua
 
