@@ -255,6 +255,7 @@ function ENT:Initialize()
 
         self.l_lastdraw = 0 -- The time since we were "last" drawn. Used with ENT:IsBeingDrawn() to test if we are in a client's PVS
         self.l_lightupdate = 0 -- The next time to check if we need to turn on our flashlight or off
+        self.l_ismuted = false -- If we are muted by the Local Player
 
         self:InitializeMiniHooks()
 

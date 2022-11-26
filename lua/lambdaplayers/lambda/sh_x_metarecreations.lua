@@ -949,7 +949,7 @@ elseif CLIENT then
     end
 
     function ENT:IsMuted() 
-        return false
+        return self.l_ismuted
     end
 
     function ENT:VoiceVolume()
@@ -965,6 +965,7 @@ elseif CLIENT then
     end
 
     function ENT:SetMuted()
+        self.l_ismuted = true
     end
 
     function ENT:SetVoiceVolumeScale()
