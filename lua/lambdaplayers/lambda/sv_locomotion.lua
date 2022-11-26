@@ -97,6 +97,11 @@ function ENT:MoveToPos( pos, options )
 			if path:GetAge() > timeout then self.IsMoving = false return "timeout" end
 		end
 
+        if self.l_recomputepath then
+            path:Compute( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), self:PathGenerator() )
+            self.l_recomputepath = nil
+        end
+
 		if update then
             local updateTime = math_max( update, update * ( path:GetLength() / 400 ) )
 			if path:GetAge() > updateTime then path:Compute( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), self:PathGenerator() ) end
@@ -111,6 +116,14 @@ function ENT:MoveToPos( pos, options )
 
 	return "ok"
 
+end
+
+-- If we are moving while this function is called, recompute our current path or change the goal position and recompute
+function ENT:RecomputePath( pos )
+    if self.IsMoving then
+        self.l_movepos = pos or self.l_movepos
+        self.l_recomputepath = true
+    end
 end
 
 -- Replaces the Z in the provided Vector with self's Z
