@@ -47,7 +47,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             rocket:SetMoveType( MOVETYPE_FLYGRAVITY )
             rocket:SetAbsVelocity( self:GetForward() * 300 + Vector( 0, 0, 128 ) )
             rocket:SetCollisionGroup( COLLISION_GROUP_DEBRIS ) -- SetOwner should prevent collision but it doesn't
-            rocket:SetSaveValue( "m_flDamage", 200 )
+            rocket:SetSaveValue( "m_flDamage", 150 ) -- Gmod RPG only does 150 damage
             rocket:Spawn()
 
             self:SimpleTimer( 0.4, function() -- Grace period to avoid collision with the shooter
