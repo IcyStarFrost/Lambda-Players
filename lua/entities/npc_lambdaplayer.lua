@@ -118,6 +118,8 @@ function ENT:Initialize()
         self.l_unstuck = false -- If true, runs our unstuck process
         self.l_recomputepath = nil -- If set to true, recompute the current path. After that this will reset to nil
         self.l_UpdateAnimations = true -- If we can update our animations. Used for the purpose of playing sequences
+        self.l_ClimbingLadder = false -- If we are currenly climbing a ladder
+        self.VJ_AddEntityToSNPCAttackList = true -- Makes creature-based VJ SNPCs able to damages us with melee and leap attacks
 
         self.l_UnstuckBounds = 50 -- The distance the unstuck process will use to check. This value increments during the process and set back to 50 when done
         self.l_nextspeedupdate = 0 -- The next time we update our speed

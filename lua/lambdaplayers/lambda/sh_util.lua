@@ -665,12 +665,29 @@ if SERVER then
 
     function ENT:Relations( ent )
         if _LAMBDAPLAYERSEnemyRelations[ ent:GetClass() ] then return D_HT end
+        
+        if ent.IsVJBaseSNPC then
+            if ent.PlayerFriendly then return D_LI end
+            for _, v in ipairs( ent.VJ_NPC_Class ) do if v == "CLASS_PLAYER_ALLY" then return D_LI end end
+            if ent.Behavior == VJ_BEHAVIOR_AGGRESSIVE then return D_HT end
+        end
+
         return D_NU
     end
 
     function ENT:HandleNPCRelations( ent )
         self:DebugPrint( "handling relationship with ", ent )
-        ent:AddEntityRelationship( self , self:Relations( ent ), 1 )
+
+        local relations = self:Relations( ent )
+        ent:AddEntityRelationship( self, relations, 1 )
+
+        if ent.IsVJBaseSNPC and relations == D_HT then
+            self:SimpleTimer( 0.1, function() 
+                if !IsValid( ent ) then return end
+                ent.VJ_AddCertainEntityAsEnemy[ #ent.VJ_AddCertainEntityAsEnemy + 1 ] = self
+                ent.CurrentPossibleEnemies[ #ent.CurrentPossibleEnemies + 1 ] = self
+            end, true )
+        end
     end
 
     function ENT:HandleAllValidNPCRelations()

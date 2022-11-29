@@ -42,10 +42,11 @@ function ENT:Combat()
                 self:UseWeapon( ene )
             end
 
+            local myOrigin = self:GetPos()
             local keepDist = self.l_CombatKeepDistance
-            if keepDist and canSee and self:IsInRange( ene, keepDist ) then
-                local myOrigin = self:GetPos()
-                local potentialPos = ( myOrigin + ( myOrigin - ene:GetPos() ):GetNormalized() * 200 ) + VectorRand( -1000, 1000 )
+            local posCopy = ene:GetPos(); posCopy.z = myOrigin.z
+            if keepDist and canSee and self:IsInRange( posCopy, keepDist ) then
+                local potentialPos = ( myOrigin + ( myOrigin - posCopy ):GetNormalized() * 200 ) + VectorRand( -1000, 1000 )
                 self.l_movepos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )
             else
                 self.l_movepos = ene

@@ -544,7 +544,7 @@ function ENT:GetJumpPower()
 end
 
 function ENT:GetLadderClimbSpeed()
-    return self:GetWalkSpeed()
+    return 200
 end
 
 function ENT:GetLaggedMovementValue()
