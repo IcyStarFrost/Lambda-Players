@@ -53,6 +53,7 @@ if SERVER then
         
         self:PlaySoundFile( deathdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "death" ) )
 
+        self:SetHealth( -1 ) -- SNPCs will think that we are still alive without doing this.
         self:SetIsDead( true )
         self:SetNoClip( false )
         self:SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE )
@@ -191,6 +192,20 @@ if SERVER then
             self:TakeDamageInfo( dmginfo )  
     
             collider:EmitSound( "NPC_CombineBall.KillImpact" )
+        elseif collider.CustomOnDoDamage_Direct then -- Makes VJ projectiles able to do direct damages to us.
+            local owner = collider:GetOwner()
+            local dmgPos = ( data and data.HitPos or collider:GetPos() )
+
+            collider:CustomOnDoDamage_Direct( data, data.HitObject, self )
+            
+            local damagecode = DamageInfo()
+            damagecode:SetDamage( collider.DirectDamage)
+            damagecode:SetDamageType( collider.DirectDamageType)
+            damagecode:SetDamagePosition(dmgPos)
+            damagecode:SetAttacker( ( IsValid( owner ) and owner or collider ) )
+            damagecode:SetInflictor( ( IsValid( owner ) and owner or collider ) )
+            
+            self:TakeDamageInfo( damagecode, collider )
         else
             local mass = data.HitObject:GetMass() or 500
             local impactdmg = ( ( data.TheirOldVelocity:Length() * mass ) / 1000 )
@@ -273,7 +288,7 @@ if SERVER then
     local realisticfalldamage = GetConVar( "lambdaplayers_lambda_realisticfalldamage" )
     
     function ENT:OnLandOnGround( ent )
-        if self:IsInNoClip() then return end
+        if self.l_ClimbingLadder or self:IsInNoClip() then return end
         -- Play land animation
         self:AddGesture( ACT_LAND )
 

@@ -58,7 +58,23 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             hook.Add( "Think", hookID, function()
                 if CurTime() < thinkTime then return end
                 if !IsValid( satchel ) then hook.Remove( "Think", hookID ) return end
-                if !LambdaIsValid( self ) then satchel:Remove(); hook.Remove( "Think", hookID ) return end
+                
+                if !LambdaIsValid( self ) then 
+                    satchel:EmitSound( "Weapon_SLAM.TripMineMode" )
+                    SimpleTimer( RandomFloat( 0.25, 0.5 ), function() 
+                        if !IsValid( satchel ) then return end
+
+                        local effData = EffectData()
+                        effData:SetOrigin( satchel:GetPos() )
+                        EmitEffect( "Explosion", effData, true, true )
+
+                        satchel:Remove()
+                        EmitExplosion( satchel, ( IsValid( self ) and self or satchel ), satchel:WorldSpaceCenter(), 200, 150 )
+                    end )
+
+                    hook.Remove( "Think", hookID ) 
+                    return 
+                end
 
                 for _, v in ipairs( ents.FindInSphere( satchel:GetPos() - ( satchel:GetVelocity() * 0.25 ), RandomInt( 125, 175 ) ) ) do
                     if v == self or v == satchel or !LambdaIsValid( v ) or !v:IsNPC() and !v:IsNextBot() and ( !v:IsPlayer() or !v:Alive() or ignorePlayers:GetBool() ) or !satchel:Visible( v ) then continue end
@@ -76,7 +92,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                         EmitExplosion( satchel, ( IsValid( self ) and self or satchel ), satchel:WorldSpaceCenter(), 200, 150 )
                     end )
 
-                    thinkTime = CurTime() + 1.0
+                    hook.Remove( "Think", hookID ) 
                     return
                 end
 

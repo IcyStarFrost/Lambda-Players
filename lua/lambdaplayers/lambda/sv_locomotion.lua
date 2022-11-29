@@ -17,6 +17,7 @@ local upvector = Vector( 0, 0, 1 )
 local unstucktable = {}
 local ents_FindByName = ents.FindByName
 local GetGroundHeight = navmesh.GetGroundHeight
+local random = math.random
 
 -- Finds "simple" ground height, treating the provided nav area as part of the floor
 local function GetSimpleGroundHeightWithFloor( navArea, pos )
@@ -107,8 +108,18 @@ function ENT:MoveToPos( pos, options )
 			if path:GetAge() > updateTime then path:Compute( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), self:PathGenerator() ) end
 		end
 
+        -- Checks if we need to climb ladder to traverse
+        local moveType = goal.type
+        if moveType == 4 or moveType == 5 then
+            local ladder = goal.ladder
+            if IsValid( ladder ) and self:IsInRange( ( moveType == 4 and ladder:GetBottom() or ladder:GetTop() ), 64 ) then
+                self.l_ClimbingLadder = true
+                self:ClimbLadder( ladder, ( moveType == 5 ) )
+                self.l_ClimbingLadder = false
+            end
+        end
+        
         coroutine.yield()
-
 	end
 
     self.l_CurrentPath = nil
@@ -116,6 +127,71 @@ function ENT:MoveToPos( pos, options )
 
 	return "ok"
 
+end
+
+-- Start climbing the provided ladder
+function ENT:ClimbLadder( ladder, isDown )
+    if !IsValid( ladder ) then return end
+
+    local startPos, goalPos, finishPos
+    if isDown then
+        startPos = ladder:GetTop()
+        goalPos = ladder:GetBottom()
+        finishPos = ladder:GetBottomArea():GetClosestPointOnArea( goalPos )
+    else
+        startPos = ladder:GetBottom()
+        goalPos = ladder:GetTop()
+
+        local possibleAreas = {}
+        local ladderArea = ladder:GetTopForwardArea()
+        if IsValid( ladderArea ) then possibleAreas[ #possibleAreas + 1 ] = ladderArea end
+        ladderArea = ladder:GetTopBehindArea()
+        if IsValid( ladderArea ) then possibleAreas[ #possibleAreas + 1 ] = ladderArea end
+        ladderArea = ladder:GetTopLeftArea()
+        if IsValid( ladderArea ) then possibleAreas[ #possibleAreas + 1 ] = ladderArea end
+        ladderArea = ladder:GetTopRightArea()
+        if IsValid( ladderArea ) then possibleAreas[ #possibleAreas + 1 ] = ladderArea end
+
+        finishPos = possibleAreas[ random( #possibleAreas ) ]:GetClosestPointOnArea( goalPos )
+    end
+
+    local climbFract = 0
+    local climbState = 1
+    local nextSndTime = 0
+
+    local climbStart = self:GetPos()
+    local climbEnd = ( startPos + ( ladder:GetNormal() * 20 ) )
+    local climbNormal = ( climbEnd - climbStart ):GetNormalized()
+
+    while ( true ) do
+        if !LambdaIsValid( self ) or self:IsInNoClip() then return end
+
+        climbFract = climbFract + ( self:GetLadderClimbSpeed() * FrameTime() )
+        self:SetPos( climbStart + climbNormal * climbFract )
+
+        if climbFract >= climbStart:Distance( climbEnd ) then
+            if climbState == 1 then
+                climbEnd = goalPos + ( ladder:GetNormal() * 20 )
+            elseif climbState == 2 then
+                climbEnd = finishPos
+            else
+                return
+            end
+
+            climbState = climbState + 1
+            climbFract = 0
+            climbStart = self:GetPos()
+            climbNormal = ( climbEnd - climbStart ):GetNormalized()
+        end
+
+        if CurTime() > nextSndTime then
+            self:EmitSound( "player/footsteps/ladder" .. random( 4 ) .. ".wav" )
+            nextSndTime = CurTime() + 0.466
+        end
+        self.loco:FaceTowards( self:GetPos() - ladder:GetNormal() )
+
+        coroutine.yield()
+    end
 end
 
 -- If we are moving while this function is called, recompute our current path or change the goal position and recompute
@@ -238,26 +314,25 @@ end
 
 -- Returns a pathfinding function for the :Compute() function
 function ENT:PathGenerator()
+    local jumpPenalty = 10
+    local isInNoClip = self:IsInNoClip()
     local stepHeight = self.loco:GetStepHeight()
     local jumpHeight = self.loco:GetJumpHeight()
     local deathHeight = -self.loco:GetDeathDropHeight()
-    local jumpPenalty = 10
 
     return function( area, fromArea, ladder, elevator, length )
         if !IsValid( fromArea ) then return 0 end
         if !self.loco:IsAreaTraversable( area ) then return -1 end
 
         local dist = 0
-        if IsValid( ladder ) then
-            dist = ladder:GetBottom():DistToSqr( ladder:GetTop() )
-        elseif length > 0 then
-            dist = length
+        if !isInNoClip and IsValid( ladder ) then
+            dist = ladder:GetBottom():Distance( ladder:GetTop() )
         else
-            dist = fromArea:GetCenter():DistToSqr( area:GetCenter() )
+            dist = ( length > 0 and length or fromArea:GetCenter():Distance( area:GetCenter() ) )
         end
+        local cost = ( fromArea:GetCostSoFar() + dist )
 
-        local cost = ( dist + fromArea:GetCostSoFar() )
-        if !IsValid( ladder ) then
+        if !isInNoClip and !IsValid( ladder ) then
             local deltaZ = fromArea:ComputeAdjacentConnectionHeightChange( area )
             if deltaZ > jumpHeight or deltaZ < deathHeight then return -1 end
             if deltaZ > stepHeight then cost = cost + ( dist * jumpPenalty ) end
