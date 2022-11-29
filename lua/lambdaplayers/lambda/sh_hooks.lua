@@ -239,6 +239,14 @@ if SERVER then
             self:SetVoiceChance( ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) )
             return  tbl
         end,
+        [ "customrandom" ] = function( ply, self )
+            local tbl = {}
+            for k, v in ipairs( LambdaPersonalityConVars ) do
+                tbl[ v[ 1 ] ] = random( ply:GetInfoNum( "lambdaplayers_personality_" .. v[ 1 ] .. "chance", 30 ) )
+            end
+            self:SetVoiceChance( random( ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) ) )
+            return  tbl
+        end,
         [ "fighter" ] = function( ply, self )
             local tbl = {}
             for k, v in ipairs( LambdaPersonalityConVars ) do
@@ -270,7 +278,7 @@ if SERVER then
         local voiceprofile = ply:GetInfo( "lambdaplayers_lambda_voiceprofile" )
         local personality = ply:GetInfo( "lambdaplayers_personality_preset" )
 
-        self:SetRespawn( !ply:IsAdmin() and allowrespawn:GetBool() and respawn or ply:IsAdmin() and respawn )
+        self:SetRespawn( respawn )
         if self:WeaponDataExists( weapon ) then self:SwitchWeapon( weapon ) self.l_SpawnWeapon = weapon end
         self.l_VoiceProfile = voiceprofile != "" and voiceprofile or self.l_VoiceProfile
 

@@ -79,7 +79,6 @@ CreateLambdaConvar( "lambdaplayers_displayarmor", 0, true, true, false, "If Lamb
 --
 
 -- Lambda Player Server Convars
-CreateLambdaConvar( "lambdaplayers_lambda_allownonadminrespawn", 0, true, false, false, "If Non Admins are allowed to spawn respawning Lambda Players. If off, only admins can spawn respawning Lambda Players", 0, 1, { type = "Bool", name = "Allow Non Admin Respawn", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_allownoclip", 1, true, false, false, "If Lambda Players are allowed to Noclip", 0, 1, { type = "Bool", name = "Allow Noclip", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_allowkillbind", 0, true, false, false, "If Lambda Players are allowed to randomly use their Killbind", 0, 1, { type = "Bool", name = "Allow Killbind", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_fakeisplayer", 0, true, false, false, "If the addon should make Lua think Lambda Players are real players. This is required for SWEP support! This will make addons think Lambdas are real players. WARNING!!!! THIS MAY OR MAY NOT WORK AS INTENDED AND THIS MAY CAUSE ISSUES WITH OTHER ADDONS. IF YOU ENCOUNTER ISSUES WITH THIS, DO NOT BE SURPRISED. THIS IS DOING THE BEST IT CAN!", 0, 1, { type = "Bool", name = "Fake IsPlayer", category = "Lambda Server Settings" } )
@@ -114,7 +113,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_allowphysgunpickup", 1, true, false, f
 
 -- Voice Related Convars
 CreateLambdaConvar( "lambdaplayers_voice_globalvoice", 0, true, true, false, "If the Lambda Player voices should be heard globally", 0, 1, { type = "Bool", name = "Global Voices", category = "Voice Options" } )
-CreateLambdaConvar( "lambdaplayers_voice_voicepopups", 1, true, true, false, "If Lambda Players who are speaking should have a Voice Popup", 0, 1, { type = "Bool", name = "Allow Voice Popups", category = "Voice Options" } )
+CreateLambdaConvar( "lambdaplayers_voice_voicepopups", 1, true, true, false, "If Lambda Players who are speaking should have a Voice Popup", 0, 1, { type = "Bool", name = "Draw Voice Popups", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_usegmodvoicepopups", 0, true, false, false, "If Lambda Players should use Garry's Mod's Voice Pop up system instead of their own system. This requires Gamemode override setting to be turned on! Go to Lambda Server Settings and the Override Gamemode Hooks option and read the info on that", 0, 1, { type = "Bool", name = "Use Gmod Voice Popups", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_talklimit", 0, true, true, false, "The amount of Lambda Players that can speak at a time. 0 for infinite", 0, 20, { type = "Slider", decimals = 0, name = "Speak Limit", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_voicevolume", 1, true, true, false, "The volume of the Lambda Player voices", 0, 10, { type = "Slider", name = "Voice Volume", decimals = 2, category = "Voice Options" } )

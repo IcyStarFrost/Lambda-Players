@@ -363,7 +363,7 @@ end
 
 -- If we can equip the specified weapon name
 function ENT:CanEquipWeapon( weaponname )
-    return weaponname != self.l_Weapon and ( _LAMBDAWEAPONALLOWCONVARS[ weaponname ] and _LAMBDAWEAPONALLOWCONVARS[ weaponname ]:GetBool() )
+    return weaponname != self.l_Weapon and ( IsSWEP( weaponname ) and isplayerfaked:GetBool() or !IsSWEP( weaponname ) ) and ( _LAMBDAWEAPONALLOWCONVARS[ weaponname ] and _LAMBDAWEAPONALLOWCONVARS[ weaponname ]:GetBool() )
 end
 
 function ENT:SwitchToRandomWeapon()

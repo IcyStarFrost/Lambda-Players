@@ -11,7 +11,8 @@ local presettbl = {
     [ "Random" ] = "random",
     [ "Builder" ] = "builder",
     [ "Fighter" ] = "fighter",
-    [ "Custom" ] = "custom"
+    [ "Custom" ] = "custom",
+    [ "Custom Random" ] = "customrandom"
 }
 
 local convar = CreateLambdaConvar( "lambdaplayers_personality_preset", "random", true, true, true, "The preset Lambda Personalities should use. Set this to Custom to make use of the chance sliders", nil, nil, { type = "Combo", options = presettbl, name = "Personality Preset", category = "Lambda Player Settings" } )
