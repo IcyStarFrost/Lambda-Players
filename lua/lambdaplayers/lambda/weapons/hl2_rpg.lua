@@ -1,6 +1,5 @@
 local IsValid = IsValid
 local CurTime = CurTime
-local util_BlastDamage = util.BlastDamage
 local ents_Create = ents.Create
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
@@ -48,6 +47,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             rocket:SetMoveType( MOVETYPE_FLYGRAVITY )
             rocket:SetAbsVelocity( self:GetForward() * 300 + Vector( 0, 0, 128 ) )
             rocket:SetCollisionGroup( COLLISION_GROUP_DEBRIS ) -- SetOwner should prevent collision but it doesn't
+            rocket:SetSaveValue( "m_flDamage", 150 ) -- Gmod RPG only does 150 damage
             rocket:Spawn()
 
             self:SimpleTimer( 0.4, function() -- Grace period to avoid collision with the shooter
@@ -57,7 +57,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             rocket:CallOnRemove( "LambdaPlayer_RPGRocket_" .. rocket:EntIndex(), function()
                 rocket:StopSound( "weapons/rpg/rocket1.wav" ) -- Trying to prevent source being dumb
-                util_BlastDamage( rocket, ( IsValid( self ) and self or rocket ), rocket:GetPos(), 260, 210)
             end)
 
             wepent.CurrentRocket = rocket
