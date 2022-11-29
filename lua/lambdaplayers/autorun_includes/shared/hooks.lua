@@ -32,7 +32,11 @@ if SERVER then
     end)
 
     hook.Add( "EntityTakeDamage", "LambdaMainDamageHook", function( ent, info )
-        if ent.l_debuggodmode then return true end
+        if ent.l_godmode then return true end
+    end )
+
+    hook.Add("PlayerCanPickupWeapon", "Lambdacanpickupwep", function( ply, wep )
+        return !wep.IsLambdaWeapon
     end )
 
     hook.Add( "PostCleanupMap", "LambdaResetSpawnPoints", function()
@@ -73,6 +77,7 @@ elseif CLIENT then
         end
     
     end )
+
 
     -- Zeta's old voice pop up
 --[[     local function LegacyVoicePopUp( x, y, name, icon, volume, alpha )

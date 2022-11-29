@@ -118,7 +118,7 @@ end
 
 -- Voice icons, voice positioning, all that stuff will be handled in here.
 local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
-    if speaklimit:GetInt() > 0 and #_LAMBDAPLAYERS_Voicechannels >= speaklimit:GetInt() then return end
+    if speaklimit:GetInt() > 0 and #_LAMBDAPLAYERS_Voicechannels >= speaklimit:GetInt() or ent.l_ismuted then return end
 
     if IsValid( ent.l_VoiceSnd ) then if usegmodpopups:GetBool() then hook.Run( "PlayerEndVoice", ent ) end ent.l_VoiceSnd:Stop() end
 

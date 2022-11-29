@@ -34,6 +34,7 @@ local visibilitytrace = {}
 local tracetable = {}
 local GetLambdaPlayers = GetLambdaPlayers
 local tauntdir = GetConVar( "lambdaplayers_voice_tauntdir" )
+local aidisable = GetConVar( "ai_disabled" )
 local debugcvar = GetConVar( "lambdaplayers_debug" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
 
@@ -328,8 +329,9 @@ if SERVER then
             self.l_VoiceProfile = info.voiceprofile or self.l_VoiceProfile
             self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
             -- Non Personal Data --
-            local spawnwep = info.spawnwep or self.l_SpawnWeapon
+            local spawnwep = self:WeaponDataExists( info.spawnwep ) and info.spawnwep or self.l_SpawnWeapon
             self:SetRespawn( info.respawn or self:GetRespawn() )
+
             self:SwitchWeapon( spawnwep )
             
             self:SetNW2String( "lambda_spawnweapon", spawnwep )
@@ -488,6 +490,11 @@ if SERVER then
         return self.l_LastState
     end
 
+    -- Returns if our ai is disabled
+    function ENT:IsDisabled()
+        return self.l_isfrozen or aidisable:GetBool()
+    end
+
     -- Returns if we are currently speaking
     function ENT:IsSpeaking() 
         return CurTime() < self:GetLastSpeakingTime()
@@ -528,12 +535,24 @@ if SERVER then
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
         self:GetPhysicsObject():EnableCollisions( true )
 
-        self:ClientSideNoDraw( self.WeaponEnt, self:IsWeaponMarkedNodraw() )
+
         self:ClientSideNoDraw( self, false )
         self:SetNoDraw( false )
         self:DrawShadow( true )
-        self.WeaponEnt:SetNoDraw( self:IsWeaponMarkedNodraw() )
-        self.WeaponEnt:DrawShadow( !self:IsWeaponMarkedNodraw() )
+
+
+
+        local swep = self:GetSWEPWeaponEnt()
+
+        if IsValid( swep ) then
+            self:ClientSideNoDraw( swep, false )
+            swep:SetNoDraw( false )
+            swep:DrawShadow( true )
+        else
+            self:ClientSideNoDraw( self.WeaponEnt, self:IsWeaponMarkedNodraw() )
+            self.WeaponEnt:SetNoDraw( self:IsWeaponMarkedNodraw() )
+            self.WeaponEnt:DrawShadow( !self:IsWeaponMarkedNodraw() )
+        end
 
         self:SetHealth( self:GetMaxHealth() )
         self:SetArmor( 0 )

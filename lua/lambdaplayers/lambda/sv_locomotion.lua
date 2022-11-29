@@ -50,7 +50,7 @@ function ENT:MoveToPos( pos, options )
 	if ( !path:IsValid() ) then return "failed" end
 
     self.l_CurrentPath = path
-    self.IsMoving = true
+    self.l_issmoving = true
 
     local stepH = self.loco:GetStepHeight()
 
@@ -59,12 +59,12 @@ function ENT:MoveToPos( pos, options )
 	while ( path:IsValid() ) do
         if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end
         if self:GetIsDead() then return "dead" end
-        if self.AbortMovement then self.AbortMovement = false self.IsMoving = false self.l_CurrentPath = nil return "aborted" end
+        if self.AbortMovement then self.AbortMovement = false self.l_issmoving = false self.l_CurrentPath = nil return "aborted" end
 
         local goal = path:GetCurrentGoal()
         
 
-        if !aidisable:GetBool() and CurTime() > self.l_moveWaitTime then
+        if !self:IsDisabled() and CurTime() > self.l_moveWaitTime then
             if callback and isfunction( callback ) then callback( goal ) end 
             path:Update( self )
             self:DoorCheck()
@@ -86,7 +86,7 @@ function ENT:MoveToPos( pos, options )
             -- This prevents the stuck handling from running if we are right next to the entity we are going to
             if !isvector( self.l_movepos ) and self:GetRangeSquaredTo( pos ) >= ( 100 * 100 ) or isvector( self.l_movepos ) then 
                 local result = self:HandleStuck()
-                if !result then self.IsMoving = false self.l_CurrentPath = nil return "stuck" end
+                if !result then self.l_issmoving = false self.l_CurrentPath = nil return "stuck" end
             else
                 self.loco:ClearStuck()
             end
@@ -94,7 +94,7 @@ function ENT:MoveToPos( pos, options )
 		end
 
 		if timeout then
-			if path:GetAge() > timeout then self.IsMoving = false return "timeout" end
+			if path:GetAge() > timeout then self.l_issmoving = false return "timeout" end
 		end
 
         if self.l_recomputepath then
@@ -112,7 +112,7 @@ function ENT:MoveToPos( pos, options )
 	end
 
     self.l_CurrentPath = nil
-    self.IsMoving = false
+    self.l_issmoving = false
 
 	return "ok"
 
@@ -120,7 +120,7 @@ end
 
 -- If we are moving while this function is called, recompute our current path or change the goal position and recompute
 function ENT:RecomputePath( pos )
-    if self.IsMoving then
+    if self.l_issmoving then
         self.l_movepos = pos or self.l_movepos
         self.l_recomputepath = true
     end
@@ -142,17 +142,17 @@ function ENT:MoveToPosOFFNAV( pos, options )
     local callback = options.callback
     local tolerance = options.tol or 20
     self:SetRun( options.run or false )
-    self.IsMoving = true
+    self.l_issmoving = true
 
     hook.Run( "LambdaOnBeginMove", self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), false )
 
     while IsValid( self ) do 
         if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end
         if self:GetIsDead() then return "dead" end
-        if self.AbortMovement then self.AbortMovement = false self.IsMoving = false self.l_CurrentPath = nil return "aborted" end
+        if self.AbortMovement then self.AbortMovement = false self.l_issmoving = false self.l_CurrentPath = nil return "aborted" end
         if self:GetRangeSquaredTo( ReplaceZ( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ) ) ) <= ( tolerance * tolerance ) then break end
 
-        if !aidisable:GetBool() and CurTime() > self.l_moveWaitTime then
+        if !self:IsDisabled() and CurTime() > self.l_moveWaitTime then
             if callback and isfunction( callback ) then callback() end 
             local approchpos = ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos )
             self.loco:FaceTowards( approchpos )
@@ -170,32 +170,32 @@ function ENT:MoveToPosOFFNAV( pos, options )
             -- This prevents the stuck handling from running if we are right next to the entity we are going to
             if !isvector( self.l_movepos ) and self:GetRangeSquaredTo( pos ) >= ( 100 * 100 ) or isvector( self.l_movepos ) then 
                 local result = self:HandleStuck()
-                if !result then self.IsMoving = false self.l_CurrentPath = nil return "stuck" end
+                if !result then self.l_issmoving = false self.l_CurrentPath = nil return "stuck" end
             else
                 self.loco:ClearStuck()
             end
 		end
 
         if timeout then
-			if CurTime() > CurTime() + timeout then self.IsMoving = false return "timeout" end
+			if CurTime() > CurTime() + timeout then self.l_issmoving = false return "timeout" end
 		end
         coroutine.yield()
     end
 
     self.l_CurrentPath = nil
-    self.IsMoving = false
+    self.l_issmoving = false
 
     return "ok"
 end
 
 -- Stops movement from :MoveToPos() and :MoveToPosOFFNAV()
 function ENT:CancelMovement()
-    self.AbortMovement = self.IsMoving
+    self.AbortMovement = self.l_issmoving
 end
 
 -- Makes lambda wait and stop while moving for a given amount of time
 function ENT:WaitWhileMoving( time )
-    if !self.IsMoving then return end
+    if !self.l_issmoving then return end
     self.l_moveWaitTime = CurTime() + time
 end
 
