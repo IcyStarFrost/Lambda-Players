@@ -64,6 +64,13 @@ if SERVER then
         self.WeaponEnt:SetNoDraw( true )
         self.WeaponEnt:DrawShadow( false )
 
+        if IsValid( self:GetSWEPWeaponEnt() ) then
+            local swep = self:GetSWEPWeaponEnt()
+            self:ClientSideNoDraw( swep, true )
+            swep:SetNoDraw( true )
+            swep:DrawShadow( false )
+        end
+
         self:GetPhysicsObject():EnableCollisions( false )
 
         LambdaKillFeedAdd( self, info:GetAttacker(), info:GetInflictor() )
@@ -83,7 +90,7 @@ if SERVER then
 
         if !self:IsWeaponMarkedNodraw() then
             net.Start( "lambdaplayers_createclientsidedroppedweapon" )
-                net.WriteEntity( self.WeaponEnt )
+                net.WriteEntity( ( IsValid( self:GetSWEPWeaponEnt() ) and self:GetSWEPWeaponEnt() or self.WeaponEnt ) )
                 net.WriteVector( info:GetDamageForce() )
                 net.WriteVector( info:GetDamagePosition() )
                 net.WriteVector( self:GetPhysColor() )
@@ -249,8 +256,7 @@ if SERVER then
         local personality = ply:GetInfo( "lambdaplayers_personality_preset" )
 
         self:SetRespawn( !ply:IsAdmin() and allowrespawn:GetBool() and respawn or ply:IsAdmin() and respawn )
-        self:SwitchWeapon( weapon )
-        self.l_SpawnWeapon = weapon
+        if self:WeaponDataExists( weapon ) then self:SwitchWeapon( weapon ) self.l_SpawnWeapon = weapon end
         self.l_VoiceProfile = voiceprofile != "" and voiceprofile or self.l_VoiceProfile
 
         if personality != "random" then

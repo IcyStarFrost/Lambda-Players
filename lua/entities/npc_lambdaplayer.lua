@@ -114,7 +114,7 @@ function ENT:Initialize()
         self.l_State = "Idle" -- The state we are in. See sv_states.lua
         self.l_Weapon = "" -- The weapon we currently have
 
-        self.IsMoving = false -- If we are moving
+        self.l_issmoving = false -- If we are moving
         self.l_isfrozen = false -- If set true, stop moving as if ai_disable is on
         self.l_unstuck = false -- If true, runs our unstuck process
         self.l_recomputepath = nil -- If set to true, recompute the current path. After that this will reset to nil
@@ -305,9 +305,12 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", 5, "Run" )
     self:NetworkVar( "Bool", 6, "NoClip" )
     self:NetworkVar( "Bool", 7, "FlashlightOn" )
+    self:NetworkVar( "Bool", 8, "UsingSWEP" )
+    self:NetworkVar( "Bool", 9, "IsFiring" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )
+    self:NetworkVar( "Entity", 2, "SWEPWeaponEnt" )
 
     self:NetworkVar( "Vector", 0, "PlyColor" )
     self:NetworkVar( "Vector", 1, "PhysColor" )
@@ -411,8 +414,15 @@ function ENT:Think()
         end
 
         -- Reload randomly when we aren't shooting
-        if self.l_Clip < self.l_MaxClip and random( 100 ) == 1 and CurTime() > self.l_WeaponUseCooldown + 1 then
-            self:ReloadWeapon()
+        if !self:GetUsingSWEP() then
+            if self.l_Clip < self.l_MaxClip and random( 100 ) == 1 and CurTime() > self.l_WeaponUseCooldown + 1 then
+                self:ReloadWeapon()
+            end
+        else
+            local swep = self:GetSWEPWeaponEnt()
+            if swep:Clip1() < swep:GetMaxClip1() and random( 100 ) == 1 and CurTime() > swep:GetNextPrimaryFire() + 1 then
+                self:ReloadWeapon()
+            end
         end
         
 
@@ -508,7 +518,7 @@ function ENT:Think()
         if self.Face then
             if self.l_Faceend and CurTime() > self.l_Faceend then self.Face = nil return end
             if isentity( self.Face ) and !IsValid( self.Face ) then self.Face = nil return end
-            local pos = ( isentity( self.Face ) and self.Face:WorldSpaceCenter() or self.Face )
+            local pos = ( isentity( self.Face ) and ( isfunction( self.Face.EyePos ) and self.Face:EyePos() or self.Face:WorldSpaceCenter() ) or self.Face )
             self.loco:FaceTowards( pos )
             self.loco:FaceTowards( pos )
 
@@ -646,8 +656,7 @@ function ENT:RunBehaviour()
 
     while true do
 
-
-        if !self:GetIsDead() and self:IsDisabled() then
+        if !self:GetIsDead() and !self:IsDisabled() then
 
             local statefunc = self[ self:GetState() ] -- I forgot this was possible. See sv_states.lua
 
