@@ -25,13 +25,12 @@ local function SpawnAProp( self )
     for i=1, random( 1, 4 ) do
         if !self:IsUnderLimit( "Prop" ) then return end
 
-        self.Face = self:GetPos() + VectorRand( -100, 100 )
+        self:LookTo( self:GetPos() + VectorRand( -100, 100 ), 2 )
         coroutine.wait( rand( 0.2, 1 ) )
 
         self:SpawnProp()
 
         coroutine.wait( rand( 0.2, 1 ) )
-        self.Face = nil
 
     end
 
@@ -42,14 +41,12 @@ end
 local function SpawnNPC( self )
     if !self:IsUnderLimit( "NPC" ) then return end
     
-    self.Face = self:WorldSpaceCenter() + VectorRand( -200, 200 )
-    coroutine.wait( rand( 0.2, 1 ) )
+    self:LookTo( self:WorldSpaceCenter() + VectorRand( -200, 200 ), 2 )
 
     local npc = self:SpawnNPC()
     if !IsValid( npc ) then return end
 
     coroutine.wait( rand( 0.2, 1 ) )
-    self.Face = nil
 
     return true
 end
@@ -58,7 +55,7 @@ end
 local function SpawnEntity( self )
     if !self:IsUnderLimit( "Entity" ) then return end
     
-    self.Face = self:WorldSpaceCenter() + VectorRand( -200, 200 )
+    self:LookTo( self:WorldSpaceCenter() + VectorRand( -200, 200 ), 2 )
 
     coroutine.wait( rand( 0.2, 1 ) )
 
@@ -66,8 +63,6 @@ local function SpawnEntity( self )
     if !IsValid( entity ) then return end
 
     coroutine.wait( rand( 0.2, 1 ) )
-
-    self.Face = nil
 
     return true
 end
@@ -77,7 +72,7 @@ local function Spray( self )
     if #LambdaPlayerSprays == 0 then return end
 
     local targetpos = self:WorldSpaceCenter() + VectorRand( -200, 200 )
-    self.Face = targetpos
+    self:LookTo( targetpos, 1 )
     coroutine.wait( rand( 0.2, 0.6 ) )
 
     spraytbl.start = self:WorldSpaceCenter()
@@ -91,8 +86,6 @@ local function Spray( self )
     self:EmitSound( "player/sprayer.wav", 65 )
 
     coroutine.wait( rand( 0.2, 0.6 ) )
-    self.Face = nil
-
     return true
 end
 

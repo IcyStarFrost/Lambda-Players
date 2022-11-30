@@ -36,6 +36,7 @@ local GetLambdaPlayers = GetLambdaPlayers
 local tauntdir = GetConVar( "lambdaplayers_voice_tauntdir" )
 local aidisable = GetConVar( "ai_disabled" )
 local debugcvar = GetConVar( "lambdaplayers_debug" )
+local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
 
 ---- Anything Shared can go here ----
@@ -577,11 +578,17 @@ if SERVER then
         local areas = GetAllNavAreas()
         local neartbl = {}
 
-        local squared = dist * dist
+        if !unlimiteddistance:GetBool() then
+            local squared = dist * dist
 
-        for k, v in ipairs( areas ) do
-            if LambdaIsValid( v ) and v:GetSizeX() > 75 and v:GetSizeY() > 75 and !v:IsUnderwater() and v:GetClosestPointOnArea( pos ):DistToSqr( pos ) <= squared then
-                neartbl[ #neartbl + 1 ] = v
+            for k, v in ipairs( areas ) do
+                if IsValid( v ) and v:GetSizeX() > 75 and v:GetSizeY() > 75 and !v:IsUnderwater() and v:GetClosestPointOnArea( pos ):DistToSqr( pos ) <= squared then
+                    neartbl[ #neartbl + 1 ] = v
+                end
+            end
+        else
+            for k, v in ipairs( areas ) do
+                if IsValid( v ) and v:GetSizeX() > 75 and v:GetSizeY() > 75 and !v:IsUnderwater() then neartbl[ #neartbl + 1 ] = v end
             end
         end
 
