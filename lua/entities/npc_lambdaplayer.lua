@@ -566,6 +566,7 @@ function ENT:Think()
             if #self.l_typedtext == #self.l_queuedtext or self:GetState() != self.l_starttypestate then 
                 self.l_queuedtext = nil
                 self:Say( self.l_typedtext )
+                self:OnEndMessage( self.l_typedtext )
             else
                 self.l_typedtext = self.l_typedtext .. sub( self.l_queuedtext, #self.l_typedtext + 1, #self.l_typedtext + 1 )
                 self.l_nexttext = CurTime() + 1 / ( self:GetTextPerMinute() / 60 )

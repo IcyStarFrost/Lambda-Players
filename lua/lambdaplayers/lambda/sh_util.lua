@@ -685,10 +685,11 @@ if SERVER then
     -- recipients is optional 
     function ENT:Say( text, teamOnly, recipients )
         LambdaPlayers_ChatAdd( recipients, lambdacolor, self:GetLambdaName(), color_white, ": " .. text )
-        self:OnSendMessage( text )
     end
 
     function ENT:TypeMessage( text )
+        if self:GetIsTyping() then self:Say( self.l_typedtext ) end
+
         self.l_starttypestate = self:GetState()
         self.l_typedtext = ""
         self.l_nexttext = 0

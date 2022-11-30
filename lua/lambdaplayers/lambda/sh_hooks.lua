@@ -333,7 +333,7 @@ if SERVER then
         self:AddGesture( ACT_GMOD_IN_CHAT, false )
     end
 
-    function ENT:OnSendMessage( text )
+    function ENT:OnEndMessage( text )
         self:RemoveGesture( ACT_GMOD_IN_CHAT )
     end
 
