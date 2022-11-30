@@ -53,6 +53,7 @@ if SERVER then
         
         self:PlaySoundFile( deathdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "death" ) )
 
+        self:SetHealth( -1 ) -- SNPCs will think that we are still alive without doing this.
         self:SetIsDead( true )
         self:SetNoClip( false )
         self:SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE )
@@ -63,6 +64,13 @@ if SERVER then
         self:DrawShadow( false )
         self.WeaponEnt:SetNoDraw( true )
         self.WeaponEnt:DrawShadow( false )
+
+        if IsValid( self:GetSWEPWeaponEnt() ) then
+            local swep = self:GetSWEPWeaponEnt()
+            self:ClientSideNoDraw( swep, true )
+            swep:SetNoDraw( true )
+            swep:DrawShadow( false )
+        end
 
         self:GetPhysicsObject():EnableCollisions( false )
 
@@ -83,7 +91,7 @@ if SERVER then
 
         if !self:IsWeaponMarkedNodraw() then
             net.Start( "lambdaplayers_createclientsidedroppedweapon" )
-                net.WriteEntity( self.WeaponEnt )
+                net.WriteEntity( ( IsValid( self:GetSWEPWeaponEnt() ) and self:GetSWEPWeaponEnt() or self.WeaponEnt ) )
                 net.WriteVector( info:GetDamageForce() )
                 net.WriteVector( info:GetDamagePosition() )
                 net.WriteVector( self:GetPhysColor() )
@@ -184,6 +192,20 @@ if SERVER then
             self:TakeDamageInfo( dmginfo )  
     
             collider:EmitSound( "NPC_CombineBall.KillImpact" )
+        elseif collider.CustomOnDoDamage_Direct then -- Makes VJ projectiles able to do direct damages to us.
+            local owner = collider:GetOwner()
+            local dmgPos = ( data and data.HitPos or collider:GetPos() )
+
+            collider:CustomOnDoDamage_Direct( data, data.HitObject, self )
+            
+            local damagecode = DamageInfo()
+            damagecode:SetDamage( collider.DirectDamage)
+            damagecode:SetDamageType( collider.DirectDamageType)
+            damagecode:SetDamagePosition(dmgPos)
+            damagecode:SetAttacker( ( IsValid( owner ) and owner or collider ) )
+            damagecode:SetInflictor( ( IsValid( owner ) and owner or collider ) )
+            
+            self:TakeDamageInfo( damagecode, collider )
         else
             local mass = data.HitObject:GetMass() or 500
             local impactdmg = ( ( data.TheirOldVelocity:Length() * mass ) / 1000 )
@@ -209,7 +231,7 @@ if SERVER then
 
     -- Apparently this took me a few hours to come up with this solution to personality presets like this
     local personalitypresets = {
-        [ "custom" ] = function( ply, self )
+        [ "custom" ] = function( ply, self ) -- Custom Personality set by Sliders
             local tbl = {}
             for k, v in ipairs( LambdaPersonalityConVars ) do
                 tbl[ v[ 1 ] ] = ply:GetInfoNum( "lambdaplayers_personality_" .. v[ 1 ] .. "chance", 30 )
@@ -217,7 +239,15 @@ if SERVER then
             self:SetVoiceChance( ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) )
             return  tbl
         end,
-        [ "fighter" ] = function( ply, self )
+        [ "customrandom" ] = function( ply, self ) -- Same thing as Custom except the values from Sliders are used in RNG
+            local tbl = {}
+            for k, v in ipairs( LambdaPersonalityConVars ) do
+                tbl[ v[ 1 ] ] = random( ply:GetInfoNum( "lambdaplayers_personality_" .. v[ 1 ] .. "chance", 30 ) )
+            end
+            self:SetVoiceChance( random( ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) ) )
+            return  tbl
+        end,
+        [ "fighter" ] = function( ply, self ) -- Focused on Combat
             local tbl = {}
             for k, v in ipairs( LambdaPersonalityConVars ) do
                 tbl[ v[ 1 ] ] = 0
@@ -228,7 +258,7 @@ if SERVER then
             self:SetVoiceChance( 30 )
             return tbl
         end,
-        [ "builder" ] = function( ply, self )
+        [ "builder" ] = function( ply, self ) -- Focused on Building
             local tbl = {}
             for k, v in ipairs( LambdaPersonalityConVars ) do
                 tbl[ v[ 1 ] ] = random( 1, 100 )
@@ -248,9 +278,8 @@ if SERVER then
         local voiceprofile = ply:GetInfo( "lambdaplayers_lambda_voiceprofile" )
         local personality = ply:GetInfo( "lambdaplayers_personality_preset" )
 
-        self:SetRespawn( !ply:IsAdmin() and allowrespawn:GetBool() and respawn or ply:IsAdmin() and respawn )
-        self:SwitchWeapon( weapon )
-        self.l_SpawnWeapon = weapon
+        self:SetRespawn( respawn )
+        if self:WeaponDataExists( weapon ) then self:SwitchWeapon( weapon ) self.l_SpawnWeapon = weapon end
         self.l_VoiceProfile = voiceprofile != "" and voiceprofile or self.l_VoiceProfile
 
         if personality != "random" then
@@ -267,7 +296,7 @@ if SERVER then
     local realisticfalldamage = GetConVar( "lambdaplayers_lambda_realisticfalldamage" )
     
     function ENT:OnLandOnGround( ent )
-        if self:IsInNoClip() then return end
+        if self.l_ClimbingLadder or self:IsInNoClip() then return end
         -- Play land animation
         self:AddGesture( ACT_LAND )
 

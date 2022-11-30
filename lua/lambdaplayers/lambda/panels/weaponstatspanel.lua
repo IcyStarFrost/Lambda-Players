@@ -1,4 +1,4 @@
-local table_insert = table.insert
+--[[ local table_insert = table.insert
 local ipairs = ipairs
 local SortedPairs = SortedPairs
 
@@ -48,4 +48,4 @@ local function OpenWeaponStatViewer( ply )
 end
 
 
-RegisterLambdaPanel( "WeaponStat", "Opens a panel that allows you to view a weapon's stats", OpenWeaponStatViewer )
+RegisterLambdaPanel( "WeaponStat", "Opens a panel that allows you to view a weapon's stats", OpenWeaponStatViewer ) ]]

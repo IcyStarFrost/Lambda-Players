@@ -1,7 +1,3 @@
-local include = include
-local print = print
-local AddCSLuaFile = AddCSLuaFile
-
 --- Include files in the corresponding folders
 -- Autorun files are seperated in folders unlike the ENT include lua files
 

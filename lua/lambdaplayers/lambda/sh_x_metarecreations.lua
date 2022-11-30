@@ -19,18 +19,23 @@ function ENT:Team()
     return TEAM_UNASSIGNED
 end
 
--- Returns our eye angles
-function ENT:EyeAngles()
-    return self:GetAttachmentPoint( "eyes" ).Ang
-end
 
 -- If we are alive
 function ENT:Alive()
     return !self:GetIsDead() 
 end
 
+function ENT:IsPlayer()
+    return true
+end
+
 -- Returns the direction we are looking to
 function ENT:GetAimVector()
+    if IsValid( self:GetEnemy() ) and self:GetUsingSWEP() then
+        return ( ( ( isfunction( self:GetEnemy().EyePos ) and self:GetEnemy():EyePos() or self:GetEnemy():WorldSpaceCenter() ) - self:GetAttachmentPoint( "eyes" ).Pos ):Angle() + AngleRand( -self.l_swepspread, self.l_swepspread ) ):Forward()
+    elseif IsValid( self:GetEnemy() ) then
+        return ( ( isfunction( self:GetEnemy().EyePos ) and self:GetEnemy():EyePos() or self:GetEnemy():WorldSpaceCenter() ) - self:GetAttachmentPoint( "eyes" ).Pos ):GetNormalized()
+    end 
     return self:GetAttachmentPoint( "eyes" ).Ang:Forward()
 end
 
@@ -40,7 +45,7 @@ function ENT:Armor()
 end
 
 function ENT:GetActiveWeapon()
-    return self:GetWeaponENT()
+    return IsValid( self:GetSWEPWeaponEnt() ) and self:GetSWEPWeaponEnt() or self:GetWeaponENT()
 end
 
 local keydownsmove = {
@@ -51,6 +56,7 @@ local keydownsmove = {
 }
 function ENT:KeyDown( key )
     if !self.loco:GetVelocity():IsZero() and keydownsmove[ key ] then return true end
+    if self:GetIsFiring() and key == IN_ATTACK then return true end
     return false
 end
 
@@ -64,6 +70,7 @@ end
 
 function ENT:KeyReleased( key )
     if self.loco:GetVelocity():IsZero() and keydownsmove[ key ] then return true end
+    if !self:GetIsFiring() and key == IN_ATTACK then return true end
     return false
 end
 
@@ -344,7 +351,7 @@ function ENT:IsDrivingEntity()
 end
 
 function ENT:IsFrozen()
-    return false
+    return self.l_isfrozen
 end
 
 function ENT:LocalEyeAngles()
@@ -387,6 +394,7 @@ function ENT:GetUserGroup()
 end
 
 function ENT:GetViewModel()
+    return self:GetSWEPWeaponEnt()
 end
 
 function ENT:GetViewOffset()
@@ -483,7 +491,7 @@ function ENT:GetAmmo()
 end
 
 function ENT:GetAmmoCount()
-    return self.l_Clip or 0
+    return 500
 end
 
 function ENT:GetAvoidPlayers()
@@ -544,7 +552,7 @@ function ENT:GetJumpPower()
 end
 
 function ENT:GetLadderClimbSpeed()
-    return self:GetWalkSpeed()
+    return 200
 end
 
 function ENT:GetLaggedMovementValue()
@@ -735,18 +743,18 @@ if SERVER then
     end
 
     function ENT:GodEnable()
+        self.l_godmode = true
     end
 
     function ENT:GetPreferredCarryAngles( carryEnt )
     end
 
     function ENT:Give( weaponClassName )
-        if _LAMBDAPLAYERSWEAPONS[ weaponClassName ] then
-            self:SwitchWeapon( weaponClassName )
-        end
+        self:SwitchWeapon( weaponClassName )
     end
 
-    function ENT:Freeze()
+    function ENT:Freeze( freeze )
+        self.l_isfrozen = freeze
     end
 
     function ENT:GiveAmmo()
@@ -757,6 +765,7 @@ if SERVER then
     end
 
     function ENT:GodDisable()
+        self.l_godmode = false
     end
 
     function ENT:IsTimingOut()
@@ -790,6 +799,13 @@ if SERVER then
     end
 
     function ENT:Lock()
+        self.l_isfrozen = true
+        self.l_godmode = true
+    end
+
+    function ENT:UnLock()
+        self.l_isfrozen = false
+        self.l_godmode = false
     end
 
     -- Lambda players ip leak!!!!!!!!!
@@ -862,9 +878,11 @@ if SERVER then
     end
 
     function ENT:StripWeapon()
+        self:SwitchWeapon( "none" )
     end
 
     function ENT:SprintEnable()
+        self:SetRun( true )
     end
 
     function ENT:SetAllowWeaponsInVehicle( allow )
@@ -917,6 +935,7 @@ if SERVER then
     end
 
     function ENT:SprintDisable()
+        self:SetRun( false )
     end
 
     function ENT:ShouldDropWeapon( drop )
@@ -949,7 +968,7 @@ elseif CLIENT then
     end
 
     function ENT:IsMuted() 
-        return false
+        return self.l_ismuted
     end
 
     function ENT:VoiceVolume()
@@ -965,6 +984,7 @@ elseif CLIENT then
     end
 
     function ENT:SetMuted()
+        self.l_ismuted = true
     end
 
     function ENT:SetVoiceVolumeScale()

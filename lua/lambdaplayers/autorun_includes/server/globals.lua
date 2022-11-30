@@ -125,7 +125,8 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_PISTOL,
         jump = ACT_HL2MP_JUMP_PISTOL,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_PISTOL,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_PISTOL
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_PISTOL,
+        reload = ACT_HL2MP_GESTURE_RELOAD_PISTOL,
     },
     ["smg"] = {
         idle = ACT_HL2MP_IDLE_SMG1,
@@ -133,7 +134,8 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_SMG1,
         jump = ACT_HL2MP_JUMP_SMG1,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_SMG1,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_SMG1
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_SMG1,
+        reload = ACT_HL2MP_GESTURE_RELOAD_SMG1,
     },
     ["ar2"] = {
         idle = ACT_HL2MP_IDLE_AR2,
@@ -141,7 +143,8 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_AR2,
         jump = ACT_HL2MP_JUMP_AR2,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_AR2,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_AR2
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_AR2,
+        reload = ACT_HL2MP_GESTURE_RELOAD_AR2,
     },
     ["shotgun"] = {
         idle = ACT_HL2MP_IDLE_SHOTGUN,
@@ -149,7 +152,8 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_SHOTGUN,
         jump = ACT_HL2MP_JUMP_SHOTGUN,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_SHOTGUN,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_SHOTGUN
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_SHOTGUN,
+        reload = ACT_HL2MP_GESTURE_RELOAD_SHOTGUN,
     },
     ["revolver"] = {
         idle = ACT_HL2MP_IDLE_REVOLVER,
@@ -157,7 +161,8 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_REVOLVER,
         jump = ACT_HL2MP_JUMP_REVOLVER,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_REVOLVER,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_REVOLVER
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_REVOLVER,
+        reload = ACT_HL2MP_GESTURE_RELOAD_REVOLVER,
     },
     ["melee"] = {
         idle = ACT_HL2MP_IDLE_MELEE,
@@ -165,7 +170,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_MELEE,
         jump = ACT_HL2MP_JUMP_MELEE,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_MELEE,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_MELEE
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_MELEE,
     },
     ["melee2"] = {
         idle = ACT_HL2MP_IDLE_MELEE2,
@@ -229,7 +234,8 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_DUEL,
         jump = ACT_HL2MP_JUMP_DUEL,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_DUEL,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_DUEL
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_DUEL,
+        reload = ACT_HL2MP_GESTURE_RELOAD_DUEL,
     },
     ["magic"] = {
         idle = ACT_HL2MP_IDLE_MAGIC,
@@ -269,7 +275,8 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         walk = ACT_HL2MP_WALK_CROSSBOW,
         jump = ACT_HL2MP_JUMP_CROSSBOW,
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_CROSSBOW,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_CROSSBOW
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_CROSSBOW,
+        reload = ACT_HL2MP_GESTURE_RELOAD_CROSSBOW,
     }
 }
 

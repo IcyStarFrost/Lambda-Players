@@ -8,15 +8,40 @@ local CurTime = CurTime
 local string_find = string.find
 local origin = Vector()
 local angle_zero = Angle()
+local isplayerfaked = GetConVar( "lambdaplayers_lambda_fakeisplayer" )
+
+
+local function IsSWEP( weaponname )
+    return weapons.Get( weaponname ) != nil
+end
+
+function ENT:WeaponDataExists( weaponname )
+    return !IsSWEP( weaponname ) and _LAMBDAPLAYERSWEAPONS[ weaponname ] != nil or isplayerfaked:GetBool() and LambdaSupportedSweps[ weaponname ] != nil
+end
 
 -- Switch to a weapon with the provided name.
 -- See the lambda/weapons folder for weapons. Check out the holster.lua file to see the current valid weapon settings
 function ENT:SwitchWeapon( weaponname, forceswitch )
     if !self:CanEquipWeapon( weaponname ) and !forceswitch or self.l_NoWeaponSwitch then return end
+
+    if !self:WeaponDataExists( weaponname ) then return end
     local weapondata = _LAMBDAPLAYERSWEAPONS[ weaponname ]
-    if !weapondata or weaponname == self.l_Weapon then return end
+
+    if IsValid( self:GetSWEPWeaponEnt() ) then self:GetSWEPWeaponEnt():Remove() end
 
     local wepent = self.WeaponEnt
+    local swep = weapons.Get( weaponname )
+    if swep then
+
+        local oldwepdata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
+        if oldwepdata and isfunction( oldwepdata.OnUnequip ) then oldwepdata.OnUnequip( self, wepent ) end
+
+        self:SwitchWeaponSWEP( weaponname ) 
+        return 
+    end
+
+
+    
 
     local oldwepdata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
     if oldwepdata and isfunction( oldwepdata.OnUnequip ) then oldwepdata.OnUnequip( self, wepent ) end
@@ -50,6 +75,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     
     self:ClientSideNoDraw( self.WeaponEnt, weapondata.nodraw )
     self:SetHasCustomDrawFunction( isfunction( weapondata.Draw ) )
+    self:SetUsingSWEP( false )
     self:SetWeaponName( weaponname )
     self.WeaponEnt:SetNoDraw( weapondata.nodraw )
     self.WeaponEnt:DrawShadow( !weapondata.nodraw )
@@ -61,6 +87,53 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     
     
     if isfunction( weapondata.OnEquip ) then weapondata.OnEquip( self, wepent ) end
+
+end
+
+
+
+function ENT:SwitchWeaponSWEP( classname )
+
+    self:ClientSideNoDraw( self.WeaponEnt, true )
+    self.WeaponEnt:SetNoDraw( true )
+    self.WeaponEnt:DrawShadow( false )
+
+    local ap = self:LookupAttachment( "anim_attachment_RH" )
+    local attachpoint = self:GetAttachmentPoint( "hand" )
+
+    local wep = ents.Create( classname )
+    wep:SetPos( attachpoint.Pos )
+    wep:SetAngles( attachpoint.Ang )
+    wep:SetParent( self, ap )
+    wep.IsLambdaWeapon = true
+    wep:SetOwner( self )
+    wep:SetMoveType( MOVETYPE_NONE )
+    wep:Spawn()
+    
+    --wep:SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE )
+
+    self:SetSWEPWeaponEnt( wep )
+    self:SetUsingSWEP( true )
+    self:SetHasCustomDrawFunction( false )
+    self:SetWeaponName( wep:GetClass() )
+    self.l_Weapon = wep:GetClass()
+    self.l_HoldType = wep:GetHoldType()
+    self.l_Clip = wep:Clip1()
+    self.l_MaxClip = wep:GetMaxClip1()
+    self.l_OnDamagefunction = nil
+    self.l_WeaponNoDraw = false
+    self:RemoveEffects( EF_BONEMERGE )
+
+    -- Run the Equip function
+    if wep.Equip then
+        wep:Equip( self )
+    end
+
+    if wep.Deploy then
+        wep:Deploy()
+    end
+
+    if LambdaSupportedSweps[ classname ] then LambdaSupportedSweps[ classname ][ 1 ]( self, wep ) end
 
 end
 
@@ -151,26 +224,67 @@ end
 
 
 function ENT:UseWeapon( target )
-    if self:GetIsReloading() then return end
-    if CurTime() < self.l_WeaponUseCooldown then return end
-    local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
+    if !self:GetUsingSWEP() then
+
+        if self:GetIsReloading() then return end
+        if CurTime() < self.l_WeaponUseCooldown then return end
+        local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
 
 
-    local ismelee = weapondata.ismelee or false
-    local wepent = self:GetWeaponENT()
-    local callback = weapondata.callback
-    local result
-    
-    if callback then result = callback( self, wepent, target ) end
-    
-    if result != true then
-        local defaultfunc = ismelee and DefaultMeleeWeaponUse or DefaultRangedWeaponFire
-        defaultfunc( self, wepent, target, weapondata, result )
+        local ismelee = weapondata.ismelee or false
+        local wepent = self:GetWeaponENT()
+        local callback = weapondata.callback
+        local result
+        
+        if callback then result = callback( self, wepent, target ) end
+        
+        if result != true then
+            local defaultfunc = ismelee and DefaultMeleeWeaponUse or DefaultRangedWeaponFire
+            defaultfunc( self, wepent, target, weapondata, result )
+        end
+
+    else
+        local swep = self:GetSWEPWeaponEnt()
+        if CurTime() < swep:GetNextPrimaryFire() then return end
+        if swep:Clip1() <= 0 then self:ReloadSWEP() return end
+
+        if random( 1, 30 ) == 1 and isfunction( swep.SecondaryAttack ) and swep:Clip2() > 0 then
+            swep:SecondaryAttack()
+            return
+        end
+        
+        self.l_WeaponUseCooldown = swep:GetNextPrimaryFire()
+        swep:PrimaryAttack()
+        --LambdaSupportedSweps[ self:GetWeaponName() ][ 2 ]( self, swep )
     end
 end
 
+-- Reloads our SWEP 
+function ENT:ReloadSWEP()
+    local swep = self:GetSWEPWeaponEnt()
+
+    if self:GetIsReloading() or swep:Clip1() == swep:GetMaxClip1() or self.l_HasMelee then return end
+    local anim = _LAMBDAPLAYERSHoldTypeAnimations[ swep:GetHoldType() ].reload
+
+    self:SetIsReloading( true )
+
+    if anim then
+        self:AddGesture( anim )
+    end
+
+    self:NamedTimer( "Reload", self.l_swepreloadtime, 1, function()
+        if !self:GetIsReloading() or !IsValid( swep ) then return end
+
+        swep:SetClip1( swep:GetMaxClip1() )
+        swep:SetClip2( swep:GetMaxClip2() )
+
+        self:SetIsReloading( false )
+    end )
+
+end
 
 function ENT:ReloadWeapon()
+    if self:GetUsingSWEP() then self:ReloadSWEP() return end -- Detour to SWEP function
     if self.l_HasMelee or self.l_Clip == self.l_MaxClip or self:GetIsReloading() then return end
     local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
 
@@ -249,7 +363,7 @@ end
 
 -- If we can equip the specified weapon name
 function ENT:CanEquipWeapon( weaponname )
-    return _LAMBDAWEAPONALLOWCONVARS[ weaponname ]:GetBool()
+    return weaponname != self.l_Weapon and ( IsSWEP( weaponname ) and isplayerfaked:GetBool() or !IsSWEP( weaponname ) ) and ( _LAMBDAWEAPONALLOWCONVARS[ weaponname ] and _LAMBDAWEAPONALLOWCONVARS[ weaponname ]:GetBool() )
 end
 
 function ENT:SwitchToRandomWeapon()

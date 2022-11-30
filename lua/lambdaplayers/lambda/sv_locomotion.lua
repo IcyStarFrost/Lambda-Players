@@ -17,6 +17,7 @@ local upvector = Vector( 0, 0, 1 )
 local unstucktable = {}
 local ents_FindByName = ents.FindByName
 local GetGroundHeight = navmesh.GetGroundHeight
+local random = math.random
 
 -- Finds "simple" ground height, treating the provided nav area as part of the floor
 local function GetSimpleGroundHeightWithFloor( navArea, pos )
@@ -50,7 +51,7 @@ function ENT:MoveToPos( pos, options )
 	if ( !path:IsValid() ) then return "failed" end
 
     self.l_CurrentPath = path
-    self.IsMoving = true
+    self.l_issmoving = true
 
     local stepH = self.loco:GetStepHeight()
 
@@ -59,12 +60,12 @@ function ENT:MoveToPos( pos, options )
 	while ( path:IsValid() ) do
         if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end
         if self:GetIsDead() then return "dead" end
-        if self.AbortMovement then self.AbortMovement = false self.IsMoving = false self.l_CurrentPath = nil return "aborted" end
+        if self.AbortMovement then self.AbortMovement = false self.l_issmoving = false self.l_CurrentPath = nil return "aborted" end
 
         local goal = path:GetCurrentGoal()
         
 
-        if !aidisable:GetBool() and CurTime() > self.l_moveWaitTime then
+        if !self:IsDisabled() and CurTime() > self.l_moveWaitTime then
             if callback and isfunction( callback ) then callback( goal ) end 
             path:Update( self )
             self:DoorCheck()
@@ -86,7 +87,7 @@ function ENT:MoveToPos( pos, options )
             -- This prevents the stuck handling from running if we are right next to the entity we are going to
             if !isvector( self.l_movepos ) and self:GetRangeSquaredTo( pos ) >= ( 100 * 100 ) or isvector( self.l_movepos ) then 
                 local result = self:HandleStuck()
-                if !result then self.IsMoving = false self.l_CurrentPath = nil return "stuck" end
+                if !result then self.l_issmoving = false self.l_CurrentPath = nil return "stuck" end
             else
                 self.loco:ClearStuck()
             end
@@ -94,7 +95,7 @@ function ENT:MoveToPos( pos, options )
 		end
 
 		if timeout then
-			if path:GetAge() > timeout then self.IsMoving = false return "timeout" end
+			if path:GetAge() > timeout then self.l_issmoving = false return "timeout" end
 		end
 
         if self.l_recomputepath then
@@ -107,20 +108,95 @@ function ENT:MoveToPos( pos, options )
 			if path:GetAge() > updateTime then path:Compute( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), self:PathGenerator() ) end
 		end
 
+        -- Checks if we need to climb ladder to traverse
+        local moveType = goal.type
+        if moveType == 4 or moveType == 5 then
+            local ladder = goal.ladder
+            if IsValid( ladder ) and self:IsInRange( ( moveType == 4 and ladder:GetBottom() or ladder:GetTop() ), 64 ) then
+                self.l_ClimbingLadder = true
+                self:ClimbLadder( ladder, ( moveType == 5 ) )
+                self.l_ClimbingLadder = false
+            end
+        end
+        
         coroutine.yield()
-
 	end
 
     self.l_CurrentPath = nil
-    self.IsMoving = false
+    self.l_issmoving = false
 
 	return "ok"
 
 end
 
+-- Start climbing the provided ladder
+function ENT:ClimbLadder( ladder, isDown )
+    if !IsValid( ladder ) then return end
+
+    local startPos, goalPos, finishPos
+    if isDown then
+        startPos = ladder:GetTop()
+        goalPos = ladder:GetBottom()
+        finishPos = ladder:GetBottomArea():GetClosestPointOnArea( goalPos )
+    else
+        startPos = ladder:GetBottom()
+        goalPos = ladder:GetTop()
+
+        local possibleAreas = {}
+        local ladderArea = ladder:GetTopForwardArea()
+        if IsValid( ladderArea ) then possibleAreas[ #possibleAreas + 1 ] = ladderArea end
+        ladderArea = ladder:GetTopBehindArea()
+        if IsValid( ladderArea ) then possibleAreas[ #possibleAreas + 1 ] = ladderArea end
+        ladderArea = ladder:GetTopLeftArea()
+        if IsValid( ladderArea ) then possibleAreas[ #possibleAreas + 1 ] = ladderArea end
+        ladderArea = ladder:GetTopRightArea()
+        if IsValid( ladderArea ) then possibleAreas[ #possibleAreas + 1 ] = ladderArea end
+
+        finishPos = possibleAreas[ random( #possibleAreas ) ]:GetClosestPointOnArea( goalPos )
+    end
+
+    local climbFract = 0
+    local climbState = 1
+    local nextSndTime = 0
+
+    local climbStart = self:GetPos()
+    local climbEnd = ( startPos + ( ladder:GetNormal() * 20 ) )
+    local climbNormal = ( climbEnd - climbStart ):GetNormalized()
+
+    while ( true ) do
+        if !LambdaIsValid( self ) or self:IsInNoClip() then return end
+
+        climbFract = climbFract + ( self:GetLadderClimbSpeed() * FrameTime() )
+        self:SetPos( climbStart + climbNormal * climbFract )
+
+        if climbFract >= climbStart:Distance( climbEnd ) then
+            if climbState == 1 then
+                climbEnd = goalPos + ( ladder:GetNormal() * 20 )
+            elseif climbState == 2 then
+                climbEnd = finishPos
+            else
+                return
+            end
+
+            climbState = climbState + 1
+            climbFract = 0
+            climbStart = self:GetPos()
+            climbNormal = ( climbEnd - climbStart ):GetNormalized()
+        end
+
+        if CurTime() > nextSndTime then
+            self:EmitSound( "player/footsteps/ladder" .. random( 4 ) .. ".wav" )
+            nextSndTime = CurTime() + 0.466
+        end
+        self.loco:FaceTowards( self:GetPos() - ladder:GetNormal() )
+
+        coroutine.yield()
+    end
+end
+
 -- If we are moving while this function is called, recompute our current path or change the goal position and recompute
 function ENT:RecomputePath( pos )
-    if self.IsMoving then
+    if self.l_issmoving then
         self.l_movepos = pos or self.l_movepos
         self.l_recomputepath = true
     end
@@ -142,17 +218,17 @@ function ENT:MoveToPosOFFNAV( pos, options )
     local callback = options.callback
     local tolerance = options.tol or 20
     self:SetRun( options.run or false )
-    self.IsMoving = true
+    self.l_issmoving = true
 
     hook.Run( "LambdaOnBeginMove", self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), false )
 
     while IsValid( self ) do 
         if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end
         if self:GetIsDead() then return "dead" end
-        if self.AbortMovement then self.AbortMovement = false self.IsMoving = false self.l_CurrentPath = nil return "aborted" end
+        if self.AbortMovement then self.AbortMovement = false self.l_issmoving = false self.l_CurrentPath = nil return "aborted" end
         if self:GetRangeSquaredTo( ReplaceZ( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ) ) ) <= ( tolerance * tolerance ) then break end
 
-        if !aidisable:GetBool() and CurTime() > self.l_moveWaitTime then
+        if !self:IsDisabled() and CurTime() > self.l_moveWaitTime then
             if callback and isfunction( callback ) then callback() end 
             local approchpos = ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos )
             self.loco:FaceTowards( approchpos )
@@ -170,32 +246,32 @@ function ENT:MoveToPosOFFNAV( pos, options )
             -- This prevents the stuck handling from running if we are right next to the entity we are going to
             if !isvector( self.l_movepos ) and self:GetRangeSquaredTo( pos ) >= ( 100 * 100 ) or isvector( self.l_movepos ) then 
                 local result = self:HandleStuck()
-                if !result then self.IsMoving = false self.l_CurrentPath = nil return "stuck" end
+                if !result then self.l_issmoving = false self.l_CurrentPath = nil return "stuck" end
             else
                 self.loco:ClearStuck()
             end
 		end
 
         if timeout then
-			if CurTime() > CurTime() + timeout then self.IsMoving = false return "timeout" end
+			if CurTime() > CurTime() + timeout then self.l_issmoving = false return "timeout" end
 		end
         coroutine.yield()
     end
 
     self.l_CurrentPath = nil
-    self.IsMoving = false
+    self.l_issmoving = false
 
     return "ok"
 end
 
 -- Stops movement from :MoveToPos() and :MoveToPosOFFNAV()
 function ENT:CancelMovement()
-    self.AbortMovement = self.IsMoving
+    self.AbortMovement = self.l_issmoving
 end
 
 -- Makes lambda wait and stop while moving for a given amount of time
 function ENT:WaitWhileMoving( time )
-    if !self.IsMoving then return end
+    if !self.l_issmoving then return end
     self.l_moveWaitTime = CurTime() + time
 end
 
@@ -238,26 +314,25 @@ end
 
 -- Returns a pathfinding function for the :Compute() function
 function ENT:PathGenerator()
+    local jumpPenalty = 10
+    local isInNoClip = self:IsInNoClip()
     local stepHeight = self.loco:GetStepHeight()
     local jumpHeight = self.loco:GetJumpHeight()
     local deathHeight = -self.loco:GetDeathDropHeight()
-    local jumpPenalty = 10
 
     return function( area, fromArea, ladder, elevator, length )
         if !IsValid( fromArea ) then return 0 end
         if !self.loco:IsAreaTraversable( area ) then return -1 end
 
         local dist = 0
-        if IsValid( ladder ) then
-            dist = ladder:GetBottom():DistToSqr( ladder:GetTop() )
-        elseif length > 0 then
-            dist = length
+        if !isInNoClip and IsValid( ladder ) then
+            dist = ladder:GetBottom():Distance( ladder:GetTop() )
         else
-            dist = fromArea:GetCenter():DistToSqr( area:GetCenter() )
+            dist = ( length > 0 and length or fromArea:GetCenter():Distance( area:GetCenter() ) )
         end
+        local cost = ( fromArea:GetCostSoFar() + dist )
 
-        local cost = ( dist + fromArea:GetCostSoFar() )
-        if !IsValid( ladder ) then
+        if !isInNoClip and !IsValid( ladder ) then
             local deltaZ = fromArea:ComputeAdjacentConnectionHeightChange( area )
             if deltaZ > jumpHeight or deltaZ < deathHeight then return -1 end
             if deltaZ > stepHeight then cost = cost + ( dist * jumpPenalty ) end

@@ -6,7 +6,6 @@ local RealTime = RealTime
 local ScreenScale = ScreenScale
 local LambdaScreenScale = LambdaScreenScale
 local Left = string.Left
-local usegmodpopups = GetConVar( "lambdaplayers_voice_usegmodvoicepopups" )
 local placeholdercolor = Color( 255,136,0)
 
 if SERVER then
@@ -32,7 +31,11 @@ if SERVER then
     end)
 
     hook.Add( "EntityTakeDamage", "LambdaMainDamageHook", function( ent, info )
-        if ent.l_debuggodmode then return true end
+        if ent.l_godmode then return true end
+    end )
+
+    hook.Add("PlayerCanPickupWeapon", "Lambdacanpickupwep", function( ply, wep )
+        return !wep.IsLambdaWeapon
     end )
 
     hook.Add( "PostCleanupMap", "LambdaResetSpawnPoints", function()
@@ -74,6 +77,7 @@ elseif CLIENT then
     
     end )
 
+
     -- Zeta's old voice pop up
 --[[     local function LegacyVoicePopUp( x, y, name, icon, volume, alpha )
         if #name > 17 then name = Left( name, 17 ) .. "..." end
@@ -94,6 +98,7 @@ elseif CLIENT then
     local allowpopups = GetConVar( "lambdaplayers_voice_voicepopups" )
     local voicepopupx = GetConVar( "lambdaplayers_voice_voicepopupxpos" )
     local voicepopupy = GetConVar( "lambdaplayers_voice_voicepopupypos" )
+    local usegmodpopups = GetConVar( "lambdaplayers_voice_usegmodvoicepopups" )
 
     -- Lambda's newer and accurate Voice Pop up
     local function LambdaVoicePopUp( x, y, name, icon, volume, alpha )

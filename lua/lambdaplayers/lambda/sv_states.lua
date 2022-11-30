@@ -29,7 +29,8 @@ function ENT:Combat()
 
     if !self:HookExists( "Tick", "CombatTick" ) then
         self:Hook( "Tick", "CombatTick", function()
-            if self:GetState() != "Combat" then return "end" end -- Returns and removes this hook because we returned "end". See sh_util.lua for source
+            if self:IsDisabled() then return end
+            if self:GetState() != "Combat" then self:SetIsFiring( false ) return "end" end -- Returns and removes this hook because we returned "end". See sh_util.lua for source
 
             local ene = self:GetEnemy()
             if !LambdaIsValid( ene ) then self:SetEnemy( NULL ) return "end" end
@@ -37,15 +38,19 @@ function ENT:Combat()
             local canSee = self:CanSee( ene )
             local attackDist = self.l_CombatAttackRange
             if attackDist and canSee and self:IsInRange( ene, attackDist ) then
+                self:SetIsFiring( true )
                 self.Face = ene
                 self.l_Faceend = CurTime() + 1
                 self:UseWeapon( ene )
+            else
+                self:SetIsFiring( false )
             end
 
+            local myOrigin = self:GetPos()
             local keepDist = self.l_CombatKeepDistance
-            if keepDist and canSee and self:IsInRange( ene, keepDist ) then
-                local myOrigin = self:GetPos()
-                local potentialPos = ( myOrigin + ( myOrigin - ene:GetPos() ):GetNormalized() * 200 ) + VectorRand( -1000, 1000 )
+            local posCopy = ene:GetPos(); posCopy.z = myOrigin.z
+            if keepDist and canSee and self:IsInRange( posCopy, keepDist ) then
+                local potentialPos = ( myOrigin + ( myOrigin - posCopy ):GetNormalized() * 200 ) + VectorRand( -1000, 1000 )
                 self.l_movepos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )
             else
                 self.l_movepos = ene

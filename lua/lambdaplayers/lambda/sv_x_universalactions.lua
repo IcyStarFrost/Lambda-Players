@@ -102,6 +102,19 @@ AddUActionToLambdaUA( function( self )
 end )
 
 
+local killbind = GetConVar( "lambdaplayers_lambda_allowkillbind" )
+-- Use Killbind
+AddUActionToLambdaUA( function( self )
+    if random( 100 ) != 1 or !killbind:GetBool() then return end
+
+    local dmginfo = DamageInfo()
+    dmginfo:SetDamage( 0 )
+    dmginfo:SetAttacker( self )
+    dmginfo:SetInflictor( self )
+    self:LambdaOnKilled( dmginfo )
+end )
+
+
 
 -- Called when all default UA actions have been made
 -- This hook can be used to add UActions with AddUActionToLambdaUA()

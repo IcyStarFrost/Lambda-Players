@@ -172,9 +172,9 @@ end, false, "Kill any Lambda Players in the radius set", { name = "Kill Nearby L
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_debugtogglegod", function( ply ) 
     if IsValid( ply ) and !ply:IsAdmin() then return end
 
-    ply.l_debuggodmode = !ply.l_debuggodmode
+    ply.l_godmode = !ply.l_godmode
 
-    LambdaPlayers_ChatAdd( ply, ply.l_debuggodmode and "Enabled God mode" or "Disabled God mode" )
+    LambdaPlayers_ChatAdd( ply, ply.l_godmode and "Enabled God mode" or "Disabled God mode" )
 end, false, "Toggles God Mode, preventing any further damage to you", { name = "Toggle God Mode", category = "Debugging" } )
 
 

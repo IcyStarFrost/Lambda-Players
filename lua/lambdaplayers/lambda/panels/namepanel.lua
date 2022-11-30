@@ -58,6 +58,7 @@ local function OpenNamePanel( ply )
             chat.AddText( "Imported " .. count .. " names to Server's Custom Names" )
         else
             local txtcontents = LAMBDAFS:ReadFile( path ) 
+
             txtcontents = string.Explode( "\n", txtcontents )
 
             for k, v in ipairs( txtcontents ) do
