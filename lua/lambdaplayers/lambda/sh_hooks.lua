@@ -328,6 +328,15 @@ if SERVER then
         end
     end
 
+
+    function ENT:OnBeginTyping( text )
+        self:AddGesture( ACT_GMOD_IN_CHAT, false )
+    end
+
+    function ENT:OnSendMessage( text )
+        self:RemoveGesture( ACT_GMOD_IN_CHAT )
+    end
+
 end
 
 

@@ -33,6 +33,8 @@ local tostring = tostring
 local visibilitytrace = {}
 local tracetable = {}
 local GetLambdaPlayers = GetLambdaPlayers
+local color_white = color_white
+local lambdacolor = Color( 255, 136, 0 )
 local tauntdir = GetConVar( "lambdaplayers_voice_tauntdir" )
 local aidisable = GetConVar( "ai_disabled" )
 local debugcvar = GetConVar( "lambdaplayers_debug" )
@@ -493,7 +495,7 @@ if SERVER then
 
     -- Returns if our ai is disabled
     function ENT:IsDisabled()
-        return self.l_isfrozen or aidisable:GetBool()
+        return self:GetIsTyping() or self.l_isfrozen or aidisable:GetBool()
     end
 
     -- Returns if we are currently speaking
@@ -675,6 +677,23 @@ if SERVER then
             net.WriteBool( stoponremove )
             net.WriteUInt( self:GetCreationID(), 32 )
         net.Broadcast()
+    end
+
+    -- Makes the Lambda say the provided text
+    -- if instant is true, the Lambda will say the text instantly.
+    -- teamOnly is just so this function is compatible with addons basically
+    -- recipients is optional 
+    function ENT:Say( text, teamOnly, recipients )
+        LambdaPlayers_ChatAdd( recipients, lambdacolor, self:GetLambdaName(), color_white, ": " .. text )
+        self:OnSendMessage( text )
+    end
+
+    function ENT:TypeMessage( text )
+        self.l_starttypestate = self:GetState()
+        self.l_typedtext = ""
+        self.l_nexttext = 0
+        self.l_queuedtext = text
+        self:OnBeginTyping( text )
     end
 
     -- Makes the entity no longer draw on the client if bool is set to true.

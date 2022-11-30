@@ -113,6 +113,10 @@ function ENT:Initialize()
 
         self.l_State = "Idle" -- The state we are in. See sv_states.lua
         self.l_Weapon = "" -- The weapon we currently have
+        self.l_queuedtext = nil -- The text that we want to send in chat
+        self.l_typedtext = nil -- The current text we have typed out so far
+        self.l_nexttext = 0 -- The next time we can type the next character
+        self.l_starttypestate = "" -- The state we started typing in
 
         self.l_issmoving = false -- If we are moving
         self.l_isfrozen = false -- If set true, stop moving as if ai_disable is on
@@ -168,6 +172,7 @@ function ENT:Initialize()
         self:SetAbsPing( rndpingrange )  -- The lowest point our fake ping can get
         self:SetPing( rndpingrange ) -- Our actual fake ping
         self:SetSteamID64( 90071996842377216 + random( 1, 10000000 ) )
+        self:SetTextPerMinute( 400 ) -- The amount of characters we can type within a minute
         self:SetNW2String( "lambda_steamid", "STEAM_0:0:" .. random( 1, 200000000 ) )
         self:SetNW2String( "lambda_ip", "192." .. random( 10, 200 ) .. "." .. random( 10 ).. "." .. random( 10, 200 ) .. ":27005" )
         
@@ -309,6 +314,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", 7, "FlashlightOn" )
     self:NetworkVar( "Bool", 8, "UsingSWEP" )
     self:NetworkVar( "Bool", 9, "IsFiring" )
+    self:NetworkVar( "Bool", 10, "IsTyping" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )
@@ -331,6 +337,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 11, "RunSpeed" )
     self:NetworkVar( "Int", 12, "CrouchSpeed" )
     self:NetworkVar( "Int", 13, "Team" )
+    self:NetworkVar( "Int", 14, "TextPerMinute" )
 
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
     self:NetworkVar( "Float", 1, "VoiceLevel" )
@@ -548,6 +555,26 @@ function ENT:Think()
             self:SetPoseParameter( 'aim_yaw', approachaimy )
             self:SetPoseParameter( 'aim_pitch', approachaimp )
         end
+
+
+        -- Text Chat --
+        -- Pretty simple stuff actually
+
+        self:SetIsTyping( self.l_queuedtext != nil )
+        if self.l_queuedtext and CurTime() > self.l_nexttext then
+
+            if #self.l_typedtext == #self.l_queuedtext or self:GetState() != self.l_starttypestate then 
+                self.l_queuedtext = nil
+                self:Say( self.l_typedtext )
+            else
+                self.l_typedtext = self.l_typedtext .. sub( self.l_queuedtext, #self.l_typedtext + 1, #self.l_typedtext + 1 )
+                self.l_nexttext = CurTime() + 1 / ( self:GetTextPerMinute() / 60 )
+            end
+
+        end
+
+
+        -- -- -- -- --
 
 
         -- UNSTUCK --

@@ -738,10 +738,6 @@ if SERVER then
     function ENT:EnterVehicle( vehicle )
     end
 
-    -- Text chat will be added sometime.
-    function ENT:Say()
-    end
-
     function ENT:GodEnable()
         self.l_godmode = true
     end
