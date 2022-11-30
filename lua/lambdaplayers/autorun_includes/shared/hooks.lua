@@ -6,7 +6,6 @@ local RealTime = RealTime
 local ScreenScale = ScreenScale
 local LambdaScreenScale = LambdaScreenScale
 local Left = string.Left
-local usegmodpopups = GetConVar( "lambdaplayers_voice_usegmodvoicepopups" )
 local placeholdercolor = Color( 255,136,0)
 
 if SERVER then
@@ -99,6 +98,7 @@ elseif CLIENT then
     local allowpopups = GetConVar( "lambdaplayers_voice_voicepopups" )
     local voicepopupx = GetConVar( "lambdaplayers_voice_voicepopupxpos" )
     local voicepopupy = GetConVar( "lambdaplayers_voice_voicepopupypos" )
+    local usegmodpopups = GetConVar( "lambdaplayers_voice_usegmodvoicepopups" )
 
     -- Lambda's newer and accurate Voice Pop up
     local function LambdaVoicePopUp( x, y, name, icon, volume, alpha )
