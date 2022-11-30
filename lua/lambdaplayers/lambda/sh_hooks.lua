@@ -231,7 +231,7 @@ if SERVER then
 
     -- Apparently this took me a few hours to come up with this solution to personality presets like this
     local personalitypresets = {
-        [ "custom" ] = function( ply, self )
+        [ "custom" ] = function( ply, self ) -- Custom Personality set by Sliders
             local tbl = {}
             for k, v in ipairs( LambdaPersonalityConVars ) do
                 tbl[ v[ 1 ] ] = ply:GetInfoNum( "lambdaplayers_personality_" .. v[ 1 ] .. "chance", 30 )
@@ -239,7 +239,7 @@ if SERVER then
             self:SetVoiceChance( ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) )
             return  tbl
         end,
-        [ "customrandom" ] = function( ply, self )
+        [ "customrandom" ] = function( ply, self ) -- Same thing as Custom except the values from Sliders are used in RNG
             local tbl = {}
             for k, v in ipairs( LambdaPersonalityConVars ) do
                 tbl[ v[ 1 ] ] = random( ply:GetInfoNum( "lambdaplayers_personality_" .. v[ 1 ] .. "chance", 30 ) )
@@ -247,7 +247,7 @@ if SERVER then
             self:SetVoiceChance( random( ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) ) )
             return  tbl
         end,
-        [ "fighter" ] = function( ply, self )
+        [ "fighter" ] = function( ply, self ) -- Focused on Combat
             local tbl = {}
             for k, v in ipairs( LambdaPersonalityConVars ) do
                 tbl[ v[ 1 ] ] = 0
@@ -258,7 +258,7 @@ if SERVER then
             self:SetVoiceChance( 30 )
             return tbl
         end,
-        [ "builder" ] = function( ply, self )
+        [ "builder" ] = function( ply, self ) -- Focused on Building
             local tbl = {}
             for k, v in ipairs( LambdaPersonalityConVars ) do
                 tbl[ v[ 1 ] ] = random( 1, 100 )
