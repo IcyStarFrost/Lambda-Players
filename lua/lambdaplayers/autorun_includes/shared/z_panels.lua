@@ -219,7 +219,7 @@ if CLIENT then
                     "Are you sure you want to import" .. line:GetSortValue( 1 ) .. "?",
                     "Confirmation:",
                     "Yes",
-                    function() importfunction( searchpath .. "/" .. line:GetSortValue( 1 ) ) end,
+                    function() importfunction( string.Replace( searchpath, "*", "" ) .. line:GetSortValue( 1 ) ) end,
                     "No"
                 )
 
