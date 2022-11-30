@@ -12,12 +12,13 @@ local IsInWorld = util.IsInWorld
 local VectorRand = VectorRand
 local coroutine_wait = coroutine.wait
 
+local wandertbl = { autorun = true }
 function ENT:Idle()
     if random( 1, 100 ) < 70 then
         self:ComputeChance()
     else
         local pos = self:GetRandomPosition()
-        self:MoveToPos( pos )
+        self:MoveToPos( pos, wandertbl )
     end
 end
 
