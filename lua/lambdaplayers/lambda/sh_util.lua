@@ -685,6 +685,7 @@ if SERVER then
     -- recipients is optional 
     function ENT:Say( text, teamOnly, recipients )
         LambdaPlayers_ChatAdd( recipients, lambdacolor, self:GetLambdaName(), color_white, ": " .. text )
+        hook.Run( "LambdaPlayerSay", self, text, ( teamOnly or false ) )
     end
 
     -- "Manually" type out a message and send it to text chat when we are finished
