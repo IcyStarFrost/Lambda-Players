@@ -687,6 +687,7 @@ if SERVER then
         LambdaPlayers_ChatAdd( recipients, lambdacolor, self:GetLambdaName(), color_white, ": " .. text )
     end
 
+    -- "Manually" type out a message and send it to text chat when we are finished
     function ENT:TypeMessage( text )
         if self:GetIsTyping() then self:Say( self.l_typedtext ) end
 
