@@ -37,7 +37,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 local nearby = self:FindInSphere( nil, 200, function( ent ) return IsCharacter( ent ) or self:HasVPhysics( ent ) end )
                 local rndent = nearby[ random( #nearby ) ]
                 local time = IsValid( rndent ) and 1 or 0
-                self:LookTo( IsValid( rndent ) and rndent or nil )
+                self:LookTo( IsValid( rndent ) and rndent or nil, 3 )
             
                 self:SimpleTimer( time, function()
 
