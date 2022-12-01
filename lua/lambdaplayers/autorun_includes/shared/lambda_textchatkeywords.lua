@@ -66,6 +66,7 @@ end
 -- Return a key entity's name
 local function Keyentity( self )
     local keyent = self.l_keyentity
+    if !IsValid( keyent ) then return end
 
     if keyent:IsPlayer() or keyent.IsLambdaPlayer then return keyent:Nick() end
     return keyent:GetClass()

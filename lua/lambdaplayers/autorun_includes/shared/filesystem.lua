@@ -10,6 +10,8 @@ local table_HasValue = table.HasValue
 local table_Add = table.Add
 local table_GetKeys = table.GetKeys
 local mergevoicelines = GetConVar( "lambdaplayers_voice_mergeaddonvoicelines" )
+local mergedefaulttextlines = GetConVar( "lambdaplayers_text_usedefaultlines" )
+local mergeaddontextlines = GetConVar( "lambdaplayers_text_useaddonlines" )
 
 file.CreateDir( "lambdaplayers" )
 -- Lambda File System
@@ -232,7 +234,7 @@ end
 function LAMBDAFS:GetTextTable()
     LambdaTextTable = {}
 
-    local function MergeDirectory( dir, path )
+    local function MergeDirectory( dir, path, allowed )
         dir = dir .. "/"
         local files, dirs = file.Find( path .. "/" .. dir .. "*", "GAME", "nameasc" )
 
@@ -247,7 +249,7 @@ function LAMBDAFS:GetTextTable()
 
             if content then
                 LambdaTextTable[ texttype ] = LambdaTextTable[ texttype ] or {}
-                table_Add( LambdaTextTable[ texttype ], content )
+                if allowed then table_Add( LambdaTextTable[ texttype ], content ) end
             end
         end
 
@@ -256,8 +258,9 @@ function LAMBDAFS:GetTextTable()
         end
     end
 
-    MergeDirectory( "lambdaplayers/data/texttypes", "materials" )
-    MergeDirectory( "lambdaplayers/texttypes", "materials" )
+    
+    MergeDirectory( "lambdaplayers/data/texttypes", "materials", mergedefaulttextlines:GetBool() )
+    MergeDirectory( "lambdaplayers/texttypes", "materials", mergeaddontextlines:GetBool() )
     MergeDirectory( "lambdaplayers/texttypes", "data" )
     
     return LambdaTextTable
@@ -321,7 +324,7 @@ function LAMBDAFS:GetTextProfiles()
         for k, texttype in ipairs( texttypes ) do 
             LambdaTextProfiles[ profile ][ string.StripExtension( texttype ) ] = {}
             local content = LAMBDAFS:ReadFile( "materials/lambdaplayers/textprofiles/" .. profile .. "/" .. texttype, "json", "GAME" )
-            
+
             if !content then
                 local txtcontents = LAMBDAFS:ReadFile( "materials/lambdaplayers/textprofiles/" .. profile .. "/" .. texttype, nil, "GAME" ) 
                 content = txtcontents and string.Explode( "\n", txtcontents ) or nil

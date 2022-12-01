@@ -1,11 +1,16 @@
 
 file.CreateDir( "lambdaplayers/texttypes")
 file.CreateDir( "lambdaplayers/exportedtexttypes")
+file.CreateDir( "lambdaplayers/importtexttypes")
 local function OpenTextPanel( ply )
     if !ply:IsSuperAdmin() then return end
     local ishost = ply:GetNW2Bool( "lambda_serverhost", false )
 
     local frame = LAMBDAPANELS:CreateFrame( "Text Line Editor", 500, 300 )
+
+    LAMBDAPANELS:CreateURLLabel( "Click here to learn about the default text types and keywords", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Text-Chat", frame, TOP )
+    LAMBDAPANELS:CreateLabel( "Right Click a line to remove it", frame, TOP )
+
     local framescroll = LAMBDAPANELS:CreateScrollPanel( frame, true, FILL )
 
     local function CreateTextEditingPanel( texttype )
@@ -25,6 +30,55 @@ local function OpenTextPanel( ply )
         local textentry = LAMBDAPANELS:CreateTextEntry( pnl, BOTTOM, "Enter text here" )
 
         LAMBDAPANELS:CreateExportPanel( "Text", pnl, BOTTOM, "Export " .. texttype .. " Lines", texttable, "json", "lambdaplayers/exportedtexttypes/" .. texttype .. ".vmt" )
+
+        local labels = {
+            "Place exported any texttype .vmt files or .txt files that are formatted like",
+            "A Text line 1",
+            "A Text line 2",
+            "A Text line 3",
+            "In the garrysmod/data/lambdaplayers/importtexttypes folder to be able to import them"
+        }
+
+        LAMBDAPANELS:CreateImportPanel( "Text", pnl, BOTTOM, "Import " .. texttype .. " Lines", labels, "lambdaplayers/importtexttypes/*", function( path )
+            local count = 0
+
+            local jsoncontents = LAMBDAFS:ReadFile( path, "json" )
+    
+            if jsoncontents then
+                
+                for k, v in ipairs( jsoncontents ) do
+                    if !table.HasValue( texttable, v ) then 
+                        count = count + 1 
+                        LAMBDAPANELS:UpdateSequentialFile( "lambdaplayers/texttypes/" .. texttype .. ".json", v, "json" )
+    
+                        local line = listview:AddLine( v )
+                        line:SetSortValue( 1, v )
+                
+                        table.insert( texttable, v )
+                    end
+                end
+    
+                chat.AddText( "Imported " .. count .. " text lines to " .. texttype )
+            else
+                local txtcontents = LAMBDAFS:ReadFile( path ) 
+    
+                txtcontents = string.Explode( "\n", txtcontents )
+    
+                for k, v in ipairs( txtcontents ) do
+                    if !table.HasValue( texttable, v ) then 
+                        count = count + 1 
+                        LAMBDAPANELS:UpdateSequentialFile( "lambdaplayers/texttypes/" .. texttype .. ".json", v, "json" )
+    
+                        local line = listview:AddLine( v )
+                        line:SetSortValue( 1, v )
+                
+                        table.insert( texttable, v )
+                    end
+                end
+    
+                chat.AddText( "Imported " .. count .. " text lines to " .. texttype )
+            end
+        end )
 
         local searchbar = LAMBDAPANELS:CreateSearchBar( listview, texttable, pnl )
         searchbar:Dock( TOP )
