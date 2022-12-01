@@ -502,6 +502,14 @@ if CLIENT then
         net.SendToServer() 
     end
 
+    function LAMBDAPANELS:WriteServerFile( filename, content, type ) 
+        net.Start( "lambdaplayers_writeserverfile" )
+        net.WriteString( filename )
+        net.WriteString( TableToJSON( { content } ) )
+        net.WriteString( type )
+        net.SendToServer() 
+    end
+
 
 
 --[[     LAMBDAFS:UpdateSequentialFile( filename, addcontent, type ) 
@@ -510,6 +518,7 @@ if CLIENT then
     LAMBDAFS:RemoveVarFromKVFile( filename, key, type ) ]]
 
 elseif SERVER then
+    util.AddNetworkString( "lambdaplayers_writeserverfile" )
     util.AddNetworkString( "lambdaplayers_requestdata" )
     util.AddNetworkString( "lambdaplayers_requestvariable" )
     util.AddNetworkString( "lambdaplayers_updatesequentialfile" )
@@ -518,6 +527,17 @@ elseif SERVER then
     util.AddNetworkString( "lambdaplayers_removevarfromkvfile" )
     util.AddNetworkString( "lambdaplayers_returndata" )
     util.AddNetworkString( "lambdaplayers_returnvariable" )
+
+
+    net.Receive( "lambdaplayers_writeserverfile", function( len, ply ) 
+        if !ply:IsSuperAdmin() then return end
+        local filename = net.ReadString()
+        local content = JSONToTable( net.ReadString() )[ 1 ]
+        local _type = net.ReadString()
+
+        LAMBDAFS:WriteFile( filename, content, _type )
+
+    end )
 
     net.Receive( "lambdaplayers_removevarfromkvfile", function( len, ply )
         if !ply:IsSuperAdmin() then return end
