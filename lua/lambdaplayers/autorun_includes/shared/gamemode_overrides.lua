@@ -472,7 +472,7 @@ local canoverride = GetConVar( "lambdaplayers_lambda_overridegamemodehooks" )
 
 hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function() 
 
-    if canoverride:GetBool() or true then
+    if canoverride:GetBool() then
 
         function GAMEMODE:PlayerDeath( ply, inflictor, attacker )
 
