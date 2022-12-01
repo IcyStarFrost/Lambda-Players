@@ -708,13 +708,14 @@ if SERVER then
         local replacement = hook.Run( "LambdaPlayerSay", self, text, ( teamOnly or false ) )
         text = isstring( replacement ) and replacement or text
         if text == "" then return end
-
+        text = LambdaKeyWordModify( self, text )
         LambdaPlayers_ChatAdd( recipients, lambdacolor, self:GetLambdaName(), color_white, ": " .. text )
     end
 
     -- "Manually" type out a message and send it to text chat when we are finished
     function ENT:TypeMessage( text )
         if self:GetIsTyping() then self:Say( self.l_typedtext ) end
+        text = LambdaKeyWordModify( self, text )
 
         self.l_starttypestate = self:GetState()
         self.l_typedtext = ""
