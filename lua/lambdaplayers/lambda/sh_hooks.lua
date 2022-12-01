@@ -120,11 +120,6 @@ if SERVER then
 
         end, "DeathThread", true )
 
---[[         if self:GetRespawn() then
-            self:SimpleTimer( 2, function() self:LambdaRespawn() end, true )
-        else
-            self:SimpleTimer( 0.1, function() self:Remove() end, true )
-        end ]]
 
         for k ,v in ipairs( ents_GetAll() ) do
             if IsValid( v ) and v != self and v:IsNextBot() then
