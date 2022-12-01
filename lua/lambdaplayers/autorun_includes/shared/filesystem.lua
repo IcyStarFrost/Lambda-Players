@@ -238,12 +238,9 @@ function LAMBDAFS:GetTextTable()
 
         for k, v in ipairs( files ) do 
             local texttype = string.StripExtension( v )
-            local isjson = string.EndsWith( v, ".json" )
-            local content
+            local content = LAMBDAFS:ReadFile( path .. "/" .. dir .. v, "json", "GAME" )
 
-            if isjson then
-                content = LAMBDAFS:ReadFile( path .. "/" .. dir .. v, "json", "GAME" )
-            else
+            if !content then
                 local txtcontents = LAMBDAFS:ReadFile( path .. "/" .. dir .. v, nil, "GAME" ) 
                 content = txtcontents and string.Explode( "\n", txtcontents ) or nil
             end
@@ -323,13 +320,9 @@ function LAMBDAFS:GetTextProfiles()
 
         for k, texttype in ipairs( texttypes ) do 
             LambdaTextProfiles[ profile ][ string.StripExtension( texttype ) ] = {}
-
-            local isjson = string.EndsWith( "materials/lambdaplayers/textprofiles/" .. profile .. "/" .. texttype, ".json" )
-            local content 
-
-            if isjson then
-                content = LAMBDAFS:ReadFile( "materials/lambdaplayers/textprofiles/" .. profile .. "/" .. texttype, "json", "GAME" )
-            else
+            local content = LAMBDAFS:ReadFile( "materials/lambdaplayers/textprofiles/" .. profile .. "/" .. texttype, "json", "GAME" )
+            
+            if !content then
                 local txtcontents = LAMBDAFS:ReadFile( "materials/lambdaplayers/textprofiles/" .. profile .. "/" .. texttype, nil, "GAME" ) 
                 content = txtcontents and string.Explode( "\n", txtcontents ) or nil
             end
