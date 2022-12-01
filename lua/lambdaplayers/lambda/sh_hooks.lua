@@ -237,6 +237,7 @@ if SERVER then
                 tbl[ v[ 1 ] ] = ply:GetInfoNum( "lambdaplayers_personality_" .. v[ 1 ] .. "chance", 30 )
             end
             self:SetVoiceChance( ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) )
+            self:SetTextChance( ply:GetInfoNum( "lambdaplayers_personality_textchance", 30 ) )
             return  tbl
         end,
         [ "customrandom" ] = function( ply, self ) -- Same thing as Custom except the values from Sliders are used in RNG
@@ -245,6 +246,7 @@ if SERVER then
                 tbl[ v[ 1 ] ] = random( ply:GetInfoNum( "lambdaplayers_personality_" .. v[ 1 ] .. "chance", 30 ) )
             end
             self:SetVoiceChance( random( ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) ) )
+            self:SetTextChance( random( ply:GetInfoNum( "lambdaplayers_personality_textchance", 30 ) ) )
             return  tbl
         end,
         [ "fighter" ] = function( ply, self ) -- Focused on Combat
@@ -256,6 +258,7 @@ if SERVER then
             tbl[ "Combat" ] = 80
             tbl[ "Tool" ] = 5
             self:SetVoiceChance( 30 )
+            self:SetTextChance( 30 )
             return tbl
         end,
         [ "builder" ] = function( ply, self ) -- Focused on Building
@@ -267,6 +270,7 @@ if SERVER then
             tbl[ "Combat" ] = 5
             tbl[ "Tool" ] = 80
             self:SetVoiceChance( 30 )
+            self:SetTextChance( 30 )
             return tbl
         end
     } 

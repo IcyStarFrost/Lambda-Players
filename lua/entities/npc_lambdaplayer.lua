@@ -344,6 +344,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 12, "CrouchSpeed" )
     self:NetworkVar( "Int", 13, "Team" )
     self:NetworkVar( "Int", 14, "TextPerMinute" )
+    self:NetworkVar( "Int", 15, "TextChance" )
 
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
     self:NetworkVar( "Float", 1, "VoiceLevel" )

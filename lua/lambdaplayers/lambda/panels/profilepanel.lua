@@ -356,6 +356,7 @@ local function OpenProfilePanel( ply )
     end
 
     local voicechance = LAMBDAPANELS:CreateNumSlider( personalityscroll, TOP, 30, "Voice", 0, 100, 0 )
+    local textchance = LAMBDAPANELS:CreateNumSlider( personalityscroll, TOP, 30, "Text", 0, 100, 0 )
     ---- ---- ---- ---- ---- ----
 
 
@@ -476,6 +477,7 @@ local function OpenProfilePanel( ply )
             
             voicepitch = round( voicepitch:GetValue(), 0 ),
             voice = usepersonality:GetChecked() and round( voicechance:GetValue(), 0 ) or nil,
+            text = usepersonality:GetChecked() and round( textchance:GetValue(), 0 ) or nil,
             voiceprofile = vp != "/NIL" and vp or nil,
             pingrange = round( pingrange:GetValue(), 0 ),
 
@@ -544,7 +546,8 @@ local function OpenProfilePanel( ply )
         end
 
         voicepitch:SetValue( infotable.voicepitch )
-        voicechance:SetValue( infotable.voice )
+        voicechance:SetValue( infotable.voice or 30 )
+        textchance:SetValue( infotable.text or 30 )
         if infotable.voiceprofile then voiceprofile:SelectOptionByKey( infotable.voiceprofile ) else voiceprofile:SelectOptionByKey( "/NIL" ) end
         
         pingrange:SetValue( infotable.pingrange )
