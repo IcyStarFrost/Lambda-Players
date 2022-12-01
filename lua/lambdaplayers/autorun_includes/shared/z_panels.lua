@@ -179,7 +179,7 @@ if CLIENT then
         button:Dock( dock )
 
         function button:DoClick() 
-            LAMBDAPANELS:WriteServerFile( exportpath, targettable, exporttype )
+            LAMBDAFS:WriteFile( exportpath, targettable, exporttype )
             Derma_Message( "Exported file to " .. "garrysmod/data/" .. exportpath, "Export", "Ok" )
         end
 
