@@ -244,6 +244,7 @@ function ENT:ExportLambdaInfo()
         voicepitch = self:GetVoicePitch(),
         voice = self:GetVoiceChance(),
         voiceprofile = self:GetNW2String( "lambda_vp", self.l_VoiceProfile ),
+        textprofile = self:GetNW2String( "lambda_tp", self.l_TextProfile ),
         pingrange = self:GetAbsPing(),
 
         -- Non personal data --
@@ -331,6 +332,9 @@ if SERVER then
             self:SetVoicePitch( info.voicepitch or self:GetVoicePitch() )
             self.l_VoiceProfile = info.voiceprofile or self.l_VoiceProfile
             self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
+
+            self.l_TextProfile = info.textprofile or self.l_TextProfile
+            self:SetNW2String( "lambda_tp", self.l_TextProfile )
             -- Non Personal Data --
             local spawnwep = self:WeaponDataExists( info.spawnwep ) and info.spawnwep or self.l_SpawnWeapon
             self:SetRespawn( info.respawn or self:GetRespawn() )
@@ -654,6 +658,23 @@ if SERVER then
         return tbl[ random( #tbl ) ] 
     end
 
+    -- Literally the same thing as :GetVoiceLine() but for Text Lines
+    function ENT:GetTextLine( texttype )
+        if self.l_TextProfile then
+            if LambdaTextProfiles[ self.l_TextProfile ] then
+                local texttable = LambdaTextProfiles[ self.l_TextProfile ][ texttype ]
+                if texttable and #texttable > 0 then
+                    return texttable[ random( #texttable ) ]
+                end
+            end
+        end
+        local tbl = LambdaTextTable[ texttype ]
+
+        if !tbl then return "" end
+
+        return tbl[ random( #tbl ) ] 
+    end
+
     -- Makes the Lambda say the specified file or file path.
     -- Random sound files for example, something/idle/*
     function ENT:PlaySoundFile( filepath, stoponremove )
@@ -687,7 +708,7 @@ if SERVER then
         local replacement = hook.Run( "LambdaPlayerSay", self, text, ( teamOnly or false ) )
         text = isstring( replacement ) and replacement or text
         if text == "" then return end
-        
+
         LambdaPlayers_ChatAdd( recipients, lambdacolor, self:GetLambdaName(), color_white, ": " .. text )
     end
 

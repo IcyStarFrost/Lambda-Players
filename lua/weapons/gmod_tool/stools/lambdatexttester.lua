@@ -33,11 +33,7 @@ function TOOL:LeftClick( tr )
     if !IsValid( ent ) or !ent.IsLambdaPlayer then return end
 
     if SERVER then
-        local texttable = LambdaTextTable[ self:GetClientInfo( "texttype" ) ]
-
-        if texttable then
-            ent:TypeMessage( texttable[ random( #texttable ) ] )
-        end
+        ent:TypeMessage( ent:GetTextLine( self:GetClientInfo( "texttype" ) ) )
     end
 
     return true

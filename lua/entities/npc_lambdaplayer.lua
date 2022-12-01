@@ -62,6 +62,7 @@ end
     local navmesh_GetNavArea = navmesh and navmesh.GetNavArea or nil
     local navmesh_Find = navmesh and navmesh.Find or nil 
     local voiceprofilechance = GetConVar( "lambdaplayers_lambda_voiceprofileusechance" )
+    local textprofilechance = GetConVar( "lambdaplayers_lambda_textprofileusechance" )
     local thinkrate = GetConVar( "lambdaplayers_lambda_singleplayerthinkdelay" )
     local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
     local CurTime = CurTime
@@ -202,6 +203,11 @@ function ENT:Initialize()
         local vpchance = voiceprofilechance:GetInt()
         if vpchance > 0 and random( 1, 100 ) < vpchance then local vps = table_GetKeys( LambdaVoiceProfiles ) self.l_VoiceProfile = vps[ random( #vps ) ] end
         self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
+
+        local tpchance = textprofilechance:GetInt()
+        if tpchance > 0 and random( 1, 100 ) < tpchance then local tps = table_GetKeys( LambdaTextProfiles ) self.l_TextProfile = tps[ random( #tps ) ] end
+        self:SetNW2String( "lambda_tp", self.l_TextProfile )
+
         ----
 
         SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
@@ -371,7 +377,7 @@ function ENT:Think()
         end
         
         -- Play random Idle Voice lines
-        if CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 1, 100 ) <= self:GetVoiceChance() then
+        if !self:GetIsTyping() and CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 1, 100 ) <= self:GetVoiceChance() then
             
             self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
             self.l_nextidlesound = CurTime() + 5
@@ -437,7 +443,7 @@ function ENT:Think()
 
         -- UA, Universal Actions
         -- See sv_x_universalactions.lua
-        if CurTime() > self.l_nextUA then
+        if CurTime() > self.l_nextUA and !self:IsDisabled() then
             local UAfunc = self.l_UniversalActions[ random( #self.l_UniversalActions ) ]
             UAfunc( self )
             self.l_nextUA = CurTime() + rand( 1, 15 )

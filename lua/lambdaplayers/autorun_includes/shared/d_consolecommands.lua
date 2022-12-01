@@ -49,6 +49,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedata", function( ply )
     LambdaVoiceProfiles = LAMBDAFS:GetVoiceProfiles()
     LambdaPlayerSprays = LAMBDAFS:GetSprays()
     LambdaTextTable = LAMBDAFS:GetTextTable()
+    LambdaTextProfiles = LAMBDAFS:GetTextProfiles()
     LambdaPersonalProfiles = file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
 
     LambdaPlayers_Notify( ply, "Updated Lambda Data", 3, "buttons/button15.wav" )
