@@ -1,5 +1,6 @@
 
 file.CreateDir( "lambdaplayers/texttypes")
+file.CreateDir( "lambdaplayers/exportedtexttypes")
 local function OpenTextPanel( ply )
     if !ply:IsSuperAdmin() then return end
     local ishost = ply:GetNW2Bool( "lambda_serverhost", false )
@@ -22,6 +23,8 @@ local function OpenTextPanel( ply )
         local isrequesting = true
 
         local textentry = LAMBDAPANELS:CreateTextEntry( pnl, BOTTOM, "Enter text here" )
+
+        LAMBDAPANELS:CreateExportPanel( "Text", pnl, BOTTOM, "Export " .. texttype .. " Lines", texttable, "json", "lambdaplayers/exportedtexttypes/" .. texttype .. ".vmt" )
 
         local searchbar = LAMBDAPANELS:CreateSearchBar( listview, texttable, pnl )
         searchbar:Dock( TOP )
