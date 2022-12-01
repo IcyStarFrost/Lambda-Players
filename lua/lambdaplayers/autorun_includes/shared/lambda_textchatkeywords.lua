@@ -63,6 +63,11 @@ local function Selfname( self )
     return self:GetLambdaName()
 end
 
+-- Return our weapon
+local function Selfweapon( self )
+    return self.l_WeaponPrettyName
+end
+
 -- Return a key entity's name
 local function Keyentity( self )
     local keyent = self.l_keyentity
@@ -76,6 +81,7 @@ end
 LambdaAddTextChatKeyWord( "/rndply/", RandomPlayerKeyword )
 LambdaAddTextChatKeyWord( "/keyent/", Keyentity )
 LambdaAddTextChatKeyWord( "/self/", Selfname )
+LambdaAddTextChatKeyWord( "/selfweapon/", Selfweapon )
 LambdaAddTextChatKeyWord( "/servername/", ServerName )
 LambdaAddTextChatKeyWord( "/map/", Map )
 
