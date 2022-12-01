@@ -12,18 +12,13 @@ local gsub = string.gsub
 
 LambdaValidTextChatKeyWords = {}
 
+-- keyword      | String |      The word that will be detected and replaced
+-- replacefunction( lambda )      | Function |      Return a string in the function to replace the keyword with
 function LambdaAddTextChatKeyWord( keyword, replacefunction )
     LambdaValidTextChatKeyWords[ keyword ] = replacefunction
 end
 
 
-local function GetOccurences( str, keyword )
-    local count = 0
-    for occurence in gmatch( str, keyword ) do
-        count = count + 1
-    end
-    return count
-end
 
 function LambdaKeyWordModify( self, str ) 
     for keyword, replacefunction in pairs( LambdaValidTextChatKeyWords ) do
@@ -44,7 +39,7 @@ function LambdaKeyWordModify( self, str )
 end
 
 
-
+-- Get a random Player's or Lambda's name
 local function RandomPlayerKeyword( self )
     local players = GetLambdaPlayers()
     table_Add( players, player_GetAll() )
@@ -53,14 +48,22 @@ local function RandomPlayerKeyword( self )
     end
 end
 
+-- Return the current map
 local function Map( self )
     return game.GetMap()
 end
 
+-- Return the Server's name
+local function ServerName( self )
+    return GetHostName()
+end
+
+-- Return our name
 local function Selfname( self )
     return self:GetLambdaName()
 end
 
+-- Return a key entity's name
 local function Keyentity( self )
     local keyent = self.l_keyentity
 
@@ -72,4 +75,15 @@ end
 LambdaAddTextChatKeyWord( "/rndply/", RandomPlayerKeyword )
 LambdaAddTextChatKeyWord( "/keyent/", Keyentity )
 LambdaAddTextChatKeyWord( "/self/", Selfname )
+LambdaAddTextChatKeyWord( "/servername/", ServerName )
 LambdaAddTextChatKeyWord( "/map/", Map )
+
+
+-- LambdaAddKeyWords hook allows you to use LambdaAddTextChatKeyWord() externally
+if !LambdaFilesReloaded then
+    hook.Add( "PreGamemodeLoaded", "lambdakeywordinit", function()
+        hook.Run( "LambdaAddKeyWords" )
+    end )
+else
+    hook.Run( "LambdaAddKeyWords" )
+end
