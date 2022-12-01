@@ -684,8 +684,11 @@ if SERVER then
     -- teamOnly is just so this function is compatible with addons basically
     -- recipients is optional 
     function ENT:Say( text, teamOnly, recipients )
+        local replacement = hook.Run( "LambdaPlayerSay", self, text, ( teamOnly or false ) )
+        text = isstring( replacement ) and replacement or text
+        if text == "" then return end
+        
         LambdaPlayers_ChatAdd( recipients, lambdacolor, self:GetLambdaName(), color_white, ": " .. text )
-        hook.Run( "LambdaPlayerSay", self, text, ( teamOnly or false ) )
     end
 
     -- "Manually" type out a message and send it to text chat when we are finished
