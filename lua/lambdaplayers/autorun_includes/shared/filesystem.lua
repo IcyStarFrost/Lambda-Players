@@ -182,6 +182,7 @@ function LAMBDAFS:GetMaterialTable()
     return mergedtable
 end
 
+
 function LAMBDAFS:GetVoiceLinesTable()
     LambdaVoiceLinesTable = {}
 
@@ -223,6 +224,43 @@ function LAMBDAFS:GetProfilePictures()
     MergeDirectory( "lambdaplayers/custom_profilepictures" )
     
     return Lambdaprofilepictures
+end
+
+function LAMBDAFS:GetTextTable()
+    LambdaTextTable = {}
+
+    local function MergeDirectory( dir, path )
+        dir = dir .. "/"
+        local files, dirs = file.Find( path .. "/" .. dir .. "*", "GAME", "nameasc" )
+
+        for k, v in ipairs( files ) do 
+            local texttype = string.StripExtension( v )
+            local isjson = string.EndsWith( v, ".json" )
+            local content
+
+            if isjson then
+                content = LAMBDAFS:ReadFile( path .. "/" .. dir .. v, "json", "GAME" )
+            else
+                local txtcontents = LAMBDAFS:ReadFile( path .. "/" .. dir .. v, nil, "GAME" ) 
+                content = string.Explode( "\n", txtcontents )
+            end
+
+            if content then
+                LambdaTextTable[ texttype ] = LambdaTextTable[ texttype ] or {}
+                table_Add( LambdaTextTable[ texttype ], content )
+            end
+        end
+
+        for k, v in ipairs( dirs ) do 
+            MergeDirectory( dir .. v ) 
+        end
+    end
+
+    MergeDirectory( "lambdaplayers/data/texttypes", "materials" )
+    MergeDirectory( "lambdaplayers/texttypes", "materials" )
+    MergeDirectory( "lambdaplayers/texttypes", "data" )
+    
+    return LambdaTextTable
 end
 
 function LAMBDAFS:GetSprays()
@@ -278,3 +316,4 @@ Lambdaprofilepictures = Lambdaprofilepictures or LAMBDAFS:GetProfilePictures()
 LambdaVoiceLinesTable = LambdaVoiceLinesTable or LAMBDAFS:GetVoiceLinesTable()
 LambdaVoiceProfiles = LambdaVoiceProfiles or LAMBDAFS:GetVoiceProfiles()
 LambdaPlayerSprays = LambdaPlayerSprays or LAMBDAFS:GetSprays()
+LambdaTextTable = LambdaTextTable or LAMBDAFS:GetTextTable()
