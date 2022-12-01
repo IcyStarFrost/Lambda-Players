@@ -419,6 +419,31 @@ if CLIENT then
         net.Receive( "lambdaplayers_returndata", function() 
             local chunkdata = net.ReadString()
             local isdone = net.ReadBool()
+
+            datastring = datastring .. chunkdata
+            bytes = bytes + #chunkdata
+
+            if isdone then
+                callback( datastring != "!!NIL" and JSONToTable( datastring ) or nil )
+                chat.AddText( "Received all data from server! " .. NiceSize( bytes ) .. " of data was received" )
+            end
+
+        end )
+
+    end
+
+
+    function LAMBDAPANELS:RequestVariableFromServer( var, callback )
+        net.Start( "lambdaplayers_requestvariable" )
+        net.WriteString( var )
+        net.SendToServer()
+
+        local datastring = ""
+        local bytes = 0
+
+        net.Receive( "lambdaplayers_returnvariable", function() 
+            local chunkdata = net.ReadString()
+            local isdone = net.ReadBool()
         
             datastring = datastring .. chunkdata
             bytes = bytes + #chunkdata
@@ -486,11 +511,13 @@ if CLIENT then
 
 elseif SERVER then
     util.AddNetworkString( "lambdaplayers_requestdata" )
+    util.AddNetworkString( "lambdaplayers_requestvariable" )
     util.AddNetworkString( "lambdaplayers_updatesequentialfile" )
     util.AddNetworkString( "lambdaplayers_updatekvfile" )
     util.AddNetworkString( "lambdaplayers_removevarfromsqfile" )
     util.AddNetworkString( "lambdaplayers_removevarfromkvfile" )
     util.AddNetworkString( "lambdaplayers_returndata" )
+    util.AddNetworkString( "lambdaplayers_returnvariable" )
 
     net.Receive( "lambdaplayers_removevarfromkvfile", function( len, ply )
         if !ply:IsSuperAdmin() then return end
@@ -569,6 +596,48 @@ elseif SERVER then
         end )
     end )
 
+
+    net.Receive( "lambdaplayers_requestvariable", function( len, ply )
+        if !ply:IsSuperAdmin() then return end
+
+        local variable = net.ReadString()
+        local content = _G[ variable ] or nil
+        local bytes = 0
+        local index = 0
+
+        LambdaCreateThread( function()
+
+            print( "Lambda Players Net: Preparing to send global variable " .. variable .. " to " .. ply:Name() .. " | " .. ply:SteamID() )
+
+            if !content then
+                net.Start( "lambdaplayers_returnvariable" )
+                net.WriteString( "!!NIL" ) -- JSON chunk
+                net.WriteBool( true ) -- Is done
+                net.Send( ply )
+            else
+                local json = TableToJSON( { content } )
+                local chunks = DataSplit( json )
+
+                local count = table_Count( chunks )
+
+                for key, chunk in ipairs( chunks ) do
+                    index = index + 1
+                
+                    net.Start( "lambdaplayers_returnvariable" )
+                    net.WriteString( chunk ) -- JSON chunk
+                    net.WriteBool( index == count ) -- Is done
+                    net.Send( ply )
+
+                    bytes = bytes + #chunk
+                    coroutine.wait( 0.5 )
+                end
+
+            end
+
+
+            print( "Lambda Players Net: Sent " .. NiceSize( bytes ) .. " to " .. ply:Name() .. " | " .. ply:SteamID() )
+        end )
+    end )
 
     net.Receive( "lambdaplayers_setconvarpreset", function( len, ply )
         if !ply:IsSuperAdmin() then return end
