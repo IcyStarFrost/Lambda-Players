@@ -39,6 +39,7 @@ local red = Color( 255, 0, 0 )
 local tauntdir = GetConVar( "lambdaplayers_voice_tauntdir" )
 local aidisable = GetConVar( "ai_disabled" )
 local debugcvar = GetConVar( "lambdaplayers_debug" )
+local chatlimit = GetConVar( "lambdaplayers_text_chatlimit" )
 local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
 
@@ -712,7 +713,7 @@ if SERVER then
         text = isstring( replacement ) and replacement or text
         if text == "" then return end
         text = LambdaKeyWordModify( self, text )
-        LambdaPlayers_ChatAdd( recipients, ( self:GetIsDead() and red or color_white ), ( self:GetIsDead() and "*DEAD*" or ""), lambdacolor, self:GetLambdaName(), color_white, ": " .. text )
+        LambdaPlayers_ChatAdd( recipients, ( self:GetIsDead() and red or color_white ), ( self:GetIsDead() and "*DEAD* " or ""), lambdacolor, self:GetLambdaName(), color_white, ": " .. text )
     end
 
     -- "Manually" type out a message and send it to text chat when we are finished
@@ -725,6 +726,16 @@ if SERVER then
         self.l_nexttext = 0
         self.l_queuedtext = text
         self:OnBeginTyping( text )
+    end
+
+    -- Returns if we can type a message
+    function ENT:CanType()
+        if chatlimit:GetInt() == 0 then return true end
+        local count = 0
+        for k, v in ipairs( GetLambdaPlayers() ) do
+            if IsValid( v ) and v:GetIsTyping() then count = count + 1 end 
+        end
+        return count < chatlimit:GetInt() 
     end
 
     -- Makes the entity no longer draw on the client if bool is set to true.

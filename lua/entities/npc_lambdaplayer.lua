@@ -358,6 +358,26 @@ end
 
 
 function ENT:Think()
+
+    -- Text Chat --
+    -- Pretty simple stuff actually
+
+    self:SetIsTyping( self.l_queuedtext != nil )
+    if self.l_queuedtext and CurTime() > self.l_nexttext then
+
+        if #self.l_typedtext == #self.l_queuedtext or self:GetState() != self.l_starttypestate then 
+            self.l_queuedtext = nil
+            self:Say( self.l_typedtext )
+            self:OnEndMessage( self.l_typedtext )
+        else
+            self.l_typedtext = self.l_typedtext .. sub( self.l_queuedtext, #self.l_typedtext + 1, #self.l_typedtext + 1 )
+            self.l_nexttext = CurTime() + 1 / ( self:GetTextPerMinute() / 60 )
+        end
+
+    end
+    -- -- -- -- --
+
+        
     if self:GetIsDead() then return end
 
     -- Allow addons to add stuff to Lambda's Think
@@ -378,9 +398,14 @@ function ENT:Think()
         end
         
         -- Play random Idle Voice lines
-        if !self:GetIsTyping() and CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 1, 100 ) <= self:GetVoiceChance() then
+        if !self:GetIsTyping() and CurTime() > self.l_nextidlesound then
             
-            self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
+            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() then
+                self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
+            elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
+                self:TypeMessage( self:GetTextLine( "idle" ) )
+            end
+
             self.l_nextidlesound = CurTime() + 5
         end
 
@@ -563,26 +588,6 @@ function ENT:Think()
             self:SetPoseParameter( 'aim_pitch', approachaimp )
         end
 
-
-        -- Text Chat --
-        -- Pretty simple stuff actually
-
-        self:SetIsTyping( self.l_queuedtext != nil )
-        if self.l_queuedtext and CurTime() > self.l_nexttext then
-
-            if #self.l_typedtext == #self.l_queuedtext or self:GetState() != self.l_starttypestate then 
-                self.l_queuedtext = nil
-                self:Say( self.l_typedtext )
-                self:OnEndMessage( self.l_typedtext )
-            else
-                self.l_typedtext = self.l_typedtext .. sub( self.l_queuedtext, #self.l_typedtext + 1, #self.l_typedtext + 1 )
-                self.l_nexttext = CurTime() + 1 / ( self:GetTextPerMinute() / 60 )
-            end
-
-        end
-
-
-        -- -- -- -- --
 
 
         -- UNSTUCK --

@@ -11,7 +11,7 @@ function ENT:BuildPersonalityTable( overridetable )
         self[ "Get" .. v[ 1 ] .. "Chance" ] = function( self ) return self:GetNW2Int( "lambda_chance_" .. v[ 1 ], 0 ) end -- Create Get Function
         self[ "Set" .. v[ 1 ] .. "Chance" ] = function( self, int ) self:SetNW2Int( "lambda_chance_" .. v[ 1 ], int ) end -- Create Set Function
 
-        self:SetNW2Int( "lambda_chance_" .. v[ 1 ], overridetable and overridetable[ v[ 1 ] ] or random( 1, 100 ) ) 
+        self:SetNW2Int( "lambda_chance_" .. v[ 1 ], overridetable and overridetable[ v[ 1 ] ] or random( 0, 100 ) ) 
 
         table_insert( self.l_Personality, { v[ 1 ], self:GetNW2Int( "lambda_chance_" .. v[ 1 ], 0 ) } )
     end

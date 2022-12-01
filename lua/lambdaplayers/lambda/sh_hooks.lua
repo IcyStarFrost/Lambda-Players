@@ -51,7 +51,9 @@ if SERVER then
 
         self:EmitSound( info:IsDamageType( DMG_FALL ) and "Player.FallGib" or "Player.Death" )
         
-        self:PlaySoundFile( deathdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "death" ) )
+        if random( 1, 100 ) <= self:GetVoiceChance() then
+            self:PlaySoundFile( deathdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "death" ) )
+        end
 
         self:SetHealth( -1 ) -- SNPCs will think that we are still alive without doing this.
         self:SetIsDead( true )
@@ -101,11 +103,28 @@ if SERVER then
         hook.Run( "LambdaOnKilled", self, info )
         --hook.Run( "PlayerDeath", self, info:GetInflictor(), info:GetAttacker() )
 
-        if self:GetRespawn() then
+
+        self:Thread( function()
+
+            local time = self:GetRespawn() and 2 or 0.1
+            
+            coroutine.wait( time )
+
+            while self:GetIsTyping() do coroutine.yield() end
+
+            if self:GetRespawn() then
+                self:LambdaRespawn()
+            else
+                self:Remove()
+            end
+
+        end, "DeathThread", true )
+
+--[[         if self:GetRespawn() then
             self:SimpleTimer( 2, function() self:LambdaRespawn() end, true )
         else
             self:SimpleTimer( 0.1, function() self:Remove() end, true )
-        end
+        end ]]
 
         for k ,v in ipairs( ents_GetAll() ) do
             if IsValid( v ) and v != self and v:IsNextBot() then
@@ -114,7 +133,14 @@ if SERVER then
         end
 
         local attacker = info:GetAttacker()
-        if IsValid( attacker ) and attacker:IsPlayer() then attacker:AddFrags( 1 ) end
+        if IsValid( attacker ) and attacker:IsPlayer() and attacker != self then 
+            attacker:AddFrags( 1 ) 
+            if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self:TypeMessage( self:GetTextLine( "deathbyplayer" ) ) end
+        elseif IsValid( attacker ) and attacker.IsLambdaPlayer and attacker != self then
+            if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self:TypeMessage( self:GetTextLine( "deathbyplayer" ) ) end
+        end
+
+
 
     end
 
@@ -245,8 +271,8 @@ if SERVER then
             for k, v in ipairs( LambdaPersonalityConVars ) do
                 tbl[ v[ 1 ] ] = random( ply:GetInfoNum( "lambdaplayers_personality_" .. v[ 1 ] .. "chance", 30 ) )
             end
-            self:SetVoiceChance( random( ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) ) )
-            self:SetTextChance( random( ply:GetInfoNum( "lambdaplayers_personality_textchance", 30 ) ) )
+            self:SetVoiceChance( random( 0, ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) ) )
+            self:SetTextChance( random( 0, ply:GetInfoNum( "lambdaplayers_personality_textchance", 30 ) ) )
             return  tbl
         end,
         [ "fighter" ] = function( ply, self ) -- Focused on Combat
