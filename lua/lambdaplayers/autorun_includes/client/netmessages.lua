@@ -317,12 +317,11 @@ end )
 
 local unpack = unpack
 local JSONToTable = util.JSONToTable
-local chat_AddText = chat.AddText
 net.Receive( "lambdaplayers_chatadd", function()
     local args = net.ReadString()
     args = JSONToTable( args )
 
-    chat_AddText( unpack( args ) )
+    chat.AddText( unpack( args ) )
 end )
 
 net.Receive( "lambdaplayers_addtokillfeed", function() 
