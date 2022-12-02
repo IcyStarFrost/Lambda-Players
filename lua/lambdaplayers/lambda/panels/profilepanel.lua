@@ -261,6 +261,17 @@ local function OpenProfilePanel( ply )
     combotable[ "No Voice Profile" ] = "/NIL"
     local voiceprofile = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, combotable )
 
+
+    LAMBDAPANELS:CreateLabel( "Text Profile", mainscroll, TOP )
+    LAMBDAPANELS:CreateURLLabel( "Click here to learn about Text Profiles", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#text-profiles", mainscroll, TOP )
+
+    local textcombotable = {}
+    for k, v in pairs( LAMBDAFS:GetTextProfiles() ) do
+        textcombotable[ k ] = k
+    end
+    textcombotable[ "No Text Profile" ] = "/NIL"
+    local textprofile = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, textcombotable )
+
     LAMBDAPANELS:CreateLabel( "Voice Pitch", mainscroll, TOP )
     local voicepitch = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 100, "Voice Pitch", 30, 255, 0 )
 
@@ -463,6 +474,8 @@ local function OpenProfilePanel( ply )
     CompileSettings = function()
         if name:GetText() == "" then chat.AddText( "No name is set!" ) return end
         local _, vp = voiceprofile:GetSelected()
+        local _, tp = textprofile:GetSelected()
+        
         local _, weapon = spawnweapon:GetSelected()
         local infotable = {
 
@@ -479,6 +492,7 @@ local function OpenProfilePanel( ply )
             voice = usepersonality:GetChecked() and round( voicechance:GetValue(), 0 ) or nil,
             text = usepersonality:GetChecked() and round( textchance:GetValue(), 0 ) or nil,
             voiceprofile = vp != "/NIL" and vp or nil,
+            textprofile = tp != "/NIL" and tp or nil,
             pingrange = round( pingrange:GetValue(), 0 ),
 
             externalvars = profileinfo and profileinfo.externalvars or nil,
@@ -549,6 +563,7 @@ local function OpenProfilePanel( ply )
         voicechance:SetValue( infotable.voice or 30 )
         textchance:SetValue( infotable.text or 30 )
         if infotable.voiceprofile then voiceprofile:SelectOptionByKey( infotable.voiceprofile ) else voiceprofile:SelectOptionByKey( "/NIL" ) end
+        if infotable.textprofile then textprofile:SelectOptionByKey( infotable.textprofile ) else voiceprofile:SelectOptionByKey( "/NIL" ) end
         
         pingrange:SetValue( infotable.pingrange )
 
