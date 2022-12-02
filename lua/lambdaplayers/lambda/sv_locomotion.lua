@@ -40,13 +40,14 @@ function ENT:MoveToPos( pos, options )
     local timeout = options.timeout
     local update = options.update
     local callback = options.callback
+    local autorun = options.autorun
 
 	local path = Path( "Follow" )
 	path:SetMinLookAheadDistance( options.lookahead or 300 )
 	path:SetGoalTolerance( options.tol or 20 )
 	path:Compute( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos), self:PathGenerator() )
 
-    self:SetRun( options.run or false )
+    self:SetRun( !autorun and ( options.run or false ) or autorun and ( path:GetLength() > 1500 and true or false ) )
 
 	if ( !path:IsValid() ) then return "failed" end
 

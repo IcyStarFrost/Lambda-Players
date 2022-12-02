@@ -518,7 +518,7 @@ function ENT:Think()
 
         -- Handles facing positions or entities
         if self.Face then
-            if self.l_Faceend and CurTime() > self.l_Faceend then self.Face = nil return end
+            if self.l_Faceend and CurTime() > self.l_Faceend then self.l_Faceend = nil self.Face = nil return end
             if isentity( self.Face ) and !IsValid( self.Face ) then self.Face = nil return end
             local pos = ( isentity( self.Face ) and ( isfunction( self.Face.EyePos ) and self.Face:EyePos() or self.Face:WorldSpaceCenter() ) or self.Face )
             self.loco:FaceTowards( pos )
