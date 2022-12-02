@@ -166,7 +166,13 @@ if SERVER then
             self:SetFrags( self:GetFrags() + 1 )
 
             if victim == self:GetEnemy() then
-                if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "kill" ) ) end 
+
+                if random( 1, 100 ) <= self:GetVoiceChance() then
+                    self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
+                elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
+                    self:TypeMessage( self:GetTextLine( "idle" ) )
+                end
+
                 if random( 1, 10 ) == 1 then self.l_tbagpos = victim:GetPos(); self:SetState( "TBaggingPosition" ) end
             end
 
