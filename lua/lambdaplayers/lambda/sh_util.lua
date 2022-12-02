@@ -165,6 +165,25 @@ function ENT:FindInSphere( pos, radius, filter )
     return enttbl
 end
 
+-- Returns the closest entity to us
+function ENT:GetClosestEntity( pos, radius, filter )
+    pos = pos or self:GetPos()
+    local closestent 
+    local dist
+    local find = self:FindInSphere( pos, radius, filter )
+
+    for k, v in ipairs( find ) do
+        if !closestent then closestent = v dist = pos:DistToSqr( v:GetPos() ) continue end
+        local newdist = pos:DistToSqr( v:GetPos() )
+        if newdist < dist then
+            closestent = v
+            dist = newdist
+        end
+    end
+
+    return closestent
+end
+
 -- Returns bone position and angles
 function ENT:GetBoneTransformation( bone )
     local pos, ang = self:GetBonePosition( bone )
