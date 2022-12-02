@@ -563,7 +563,7 @@ local function OpenProfilePanel( ply )
         voicechance:SetValue( infotable.voice or 30 )
         textchance:SetValue( infotable.text or 30 )
         if infotable.voiceprofile then voiceprofile:SelectOptionByKey( infotable.voiceprofile ) else voiceprofile:SelectOptionByKey( "/NIL" ) end
-        if infotable.textprofile then textprofile:SelectOptionByKey( infotable.textprofile ) else voiceprofile:SelectOptionByKey( "/NIL" ) end
+        if infotable.textprofile then textprofile:SelectOptionByKey( infotable.textprofile ) else textprofile:SelectOptionByKey( "/NIL" ) end
         
         pingrange:SetValue( infotable.pingrange )
 
