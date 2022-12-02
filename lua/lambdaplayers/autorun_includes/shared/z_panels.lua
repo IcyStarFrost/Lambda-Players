@@ -352,6 +352,31 @@ if CLIENT then
             Derma_StringRequest( "Save Preset", "Enter the name of this preset", "", function( str )
                 if str == "[ Default ]" then chat.AddText( "You can not name a preset named the same as the default!" ) return end
                 if str == "" then chat.AddText( "No text was inputted!" ) return end
+
+                for k, v in ipairs( presetlist:GetLines() ) do
+                    if v:GetColumnText( 1 ) == str then
+                        
+                        Derma_Query( str .. " already exists! Would you like to overwrite it with the new settings?", "File Overwrite", "Overwrite", function()
+                        
+                            local newpreset = {}
+
+                            for k, v in pairs( convars ) do
+                                newpreset[ k ] = GetConVar( k ):GetString()
+                            end
+            
+                            surface.PlaySound( "buttons/button15.wav" )
+                            chat.AddText( "Saved to Preset " .. str )
+            
+                            v:SetSortValue( 1, newpreset )
+            
+                            LAMBDAFS:UpdateKeyValueFile( "lambdaplayers/presets/" .. presetcategory .. ".json", { [ str ] = newpreset }, "json" ) 
+                        
+                        end, "Cancel", function() end )
+
+                        return
+                    end
+                end
+
                 local newpreset = {}
 
                 for k, v in pairs( convars ) do
