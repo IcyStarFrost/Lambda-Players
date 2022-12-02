@@ -198,6 +198,7 @@ function ENT:Initialize()
         -- Personality function was relocated to the start of the code since it needs to be shared so clients can have Get functions
         
         self:SetVoiceChance( random( 1, 100 ) )
+        self:SetTextChance( random( 1, 100 ))
         self:SetVoicePitch( random( voicepitchmin:GetInt(), voicepitchmax:GetInt() ) )
 
         local vpchance = voiceprofilechance:GetInt()

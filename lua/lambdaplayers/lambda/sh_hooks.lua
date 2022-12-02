@@ -51,7 +51,7 @@ if SERVER then
 
         self:EmitSound( info:IsDamageType( DMG_FALL ) and "Player.FallGib" or "Player.Death" )
         
-        if random( 1, 100 ) <= self:GetVoiceChance() then
+        if random( 1, 100 ) <= self:GetVoiceChance() and !self:GetIsTyping() then
             self:PlaySoundFile( deathdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "death" ) )
         end
 
