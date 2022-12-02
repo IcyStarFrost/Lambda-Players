@@ -455,6 +455,15 @@ function ENT:InitializeMiniHooks()
             if ent == self then self.l_ispickedupbyphysgun = false end
         end, true )
 
+        self:Hook( "LambdaPlayerSay", "lambdatextchat", function( ply, text )
+            if ply == self or self:IsDisabled() then return end
+
+            if random( 1, 200 ) < self:GetTextChance() and !self:GetIsTyping() and !self:IsSpeaking() and self:CanType() then
+                self.l_keyentity = ply
+                self:TypeMessage( self:GetTextLine( "response" ) )
+            end
+        end, true )
+
     elseif CLIENT then
 
         self:Hook( "PreDrawEffects", "CustomWeaponRenderEffects", function()
