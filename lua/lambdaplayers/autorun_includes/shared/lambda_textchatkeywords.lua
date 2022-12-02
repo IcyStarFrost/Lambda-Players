@@ -5,10 +5,16 @@ local pairs = pairs
 local string_find = string.find
 local RandomPairs = RandomPairs
 local gmatch = string.gmatch
+local IsValid = IsValid
 local table_Count = table.Count
 local unpack = unpack
+local ipairs = ipairs
+local string_Left = string.Left
+local string_find = string.find
+local string_Explode = string.Explode
 local gsub = string.gsub
-
+local StripExtension = string.StripExtension
+local string_Replace = string.Replace
 
 LambdaValidTextChatKeyWords = {}
 
@@ -72,11 +78,52 @@ local function Keyentity( self )
     return keyent:GetClass()
 end
 
+local props = {
+    [ "prop_physics" ] = true,
+    [ "prop_physics_multiplayer" ] = true,
+    [ "prop_dynamic" ] = true
+}
+
+
+local numbers = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" }
+local endings = { "a", "b", "c" }
+-- Basically returns the end of the filepath and removes the extension
+local function PrettyName( mdlpath )
+    local split = string_Explode( "/", mdlpath )
+    local basename = StripExtension( split[ #split ] )
+    basename = string_Replace( basename, "_", " " )
+    for k, number in ipairs( numbers ) do basename = string_Replace( basename, number, "" ) end
+    for k, ending in ipairs( endings ) do if string_find( basename, ending ) then basename = string_Left( basename, #basename - 1 ) end end
+    return basename
+end
+
+-- Returns the nearest prop's name
+local function nearProp( self ) 
+    local nearest = self:GetClosestEntity( nil, 1000, function( ent ) return props[ ent:GetClass() ] end )
+
+    if IsValid( nearest ) then
+        return PrettyName( nearest:GetModel() )
+    end
+    return "something"
+end
+
+-- Returns the nearest Lambda or player's name
+local function nearPly( self ) 
+    local nearest = self:GetClosestEntity( nil, 10000, function( ent ) return ent.IsLambdaPlayer or ent:IsPlayer() end )
+
+    if IsValid( nearest ) then
+        return nearest:Nick()
+    end
+    return "someone"
+end
+
 
 LambdaAddTextChatKeyWord( "/rndply/", RandomPlayerKeyword )
 LambdaAddTextChatKeyWord( "/keyent/", Keyentity )
 LambdaAddTextChatKeyWord( "/self/", Selfname )
 LambdaAddTextChatKeyWord( "/servername/", ServerName )
+LambdaAddTextChatKeyWord( "/nearprop/", nearProp )
+LambdaAddTextChatKeyWord( "/nearply/", nearPly )
 LambdaAddTextChatKeyWord( "/map/", Map )
 
 
