@@ -398,8 +398,8 @@ function ENT:Think()
             self.NextFootstepTime = CurTime() + min(0.25 * (self:GetRunSpeed() / desSpeed), 0.35)
         end
         
-        -- Play random Idle Voice lines
-        if !self:GetIsTyping() and CurTime() > self.l_nextidlesound then
+        -- Play random Idle lines
+        if !self:IsDisabled() and !self:GetIsTyping() and CurTime() > self.l_nextidlesound then
             
             if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() then
                 self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
