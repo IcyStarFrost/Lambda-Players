@@ -44,6 +44,7 @@ end
     local developer = GetConVar( "developer" )
     local isfunction = isfunction
     local Lerp = Lerp
+    local LerpVector = LerpVector
     local isentity = isentity
     local VectorRand = VectorRand
     local Vector = Vector
@@ -121,6 +122,7 @@ function ENT:Initialize()
         self.l_UpdateAnimations = true -- If we can update our animations. Used for the purpose of playing sequences
         self.l_ClimbingLadder = false -- If we are currenly climbing a ladder
         self.VJ_AddEntityToSNPCAttackList = true -- Makes creature-based VJ SNPCs able to damages us with melee and leap attacks
+        self.l_isswimming = false -- If we are currenly swimming (only used to recompute paths when enter & exitting swimming. Use self:GetIsUnderwater() instead)
 
         self.l_UnstuckBounds = 50 -- The distance the unstuck process will use to check. This value increments during the process and set back to 50 when done
         self.l_nextspeedupdate = 0 -- The next time we update our speed
@@ -140,11 +142,13 @@ function ENT:Initialize()
         self.l_nextUA = CurTime() + rand( 1, 15 ) -- The next time we will run a UAction. See lambda/sv_x_universalactions.lua
         self.l_NextPickupCheck = 0 -- The next time we will check for nearby items to pickup
         self.l_moveWaitTime = 0 -- The time we will wait until continuing moving through our path
+        self.l_nextswimposupdate = 0 -- the next time we will update our swimming position
 
 
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
         self.l_movepos = nil -- The position or entity we are going to
         self.l_noclippos = self:GetPos() -- The position we want to noclip to
+        self.l_swimpos = self:GetPos() -- The position we are currently swimming to
         self.l_currentnavarea = navmesh_GetNavArea( self:WorldSpaceCenter(), 400 ) -- The current nav area we are in
 
 
@@ -309,6 +313,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", 7, "FlashlightOn" )
     self:NetworkVar( "Bool", 8, "UsingSWEP" )
     self:NetworkVar( "Bool", 9, "IsFiring" )
+    self:NetworkVar( "Bool", 10, "IsUnderwater" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )
@@ -496,6 +501,63 @@ function ENT:Think()
             self.l_noclippos = self:GetPos()
         end
 
+         -- Handle swimming
+        if self:GetIsUnderwater() and !self:IsInNoClip() then -- Don't swim if we are noclipping
+            local ene = self:GetEnemy()
+
+            if CurTime() > self.l_nextswimposupdate then -- Update our swimming position over time instead of always
+                self.l_nextswimposupdate = CurTime() + 0.1
+
+                local newSwimPos = self.l_CurrentPath
+                if self:GetState() == "Combat" and LambdaIsValid( ene ) and ene:WaterLevel() != 0 and self:CanSee( ene ) then 
+                    local movePos = self.l_movepos
+                    newSwimPos = ( !isvector( movePos ) and movePos:GetPos() or movePos )
+                    if self.l_HasMelee then newSwimPos = newSwimPos + VectorRand( -50, 50 ) end -- Prevents not moving when enclose with enemy
+                    self.l_nextswimposupdate = self.l_nextswimposupdate + rand( 0.1, 0.2 ) -- Give me more time to update my swim position
+                elseif newSwimPos and !isvector( newSwimPos ) then 
+                    if IsValid( newSwimPos ) and newSwimPos:IsValid() then
+                        local curGoal = newSwimPos:GetCurrentGoal()
+                        if curGoal and istable( curGoal ) and curGoal.pos then 
+                            newSwimPos = curGoal.pos 
+                        else
+                            newSwimPos = newSwimPos:GetEnd()
+                        end
+                    else
+                        newSwimPos = nil
+                    end
+                end
+                
+                self.l_swimpos = newSwimPos
+            end
+
+            local swimPos = self.l_swimpos
+            if !self:IsOnGround() then
+                if !self.l_isswimming then
+                    self:RecomputePath()
+                    self.l_isswimming = true
+                end
+
+                local swimVel
+                if swimPos and self.l_issmoving then
+                    local swimTrace = self:Trace( swimPos + Vector( 0, 0, 72 ), swimPos )
+                    if swimTrace.HitPos:IsUnderwater() then swimPos = swimTrace.HitPos end
+
+                    self.loco:FaceTowards( swimPos )
+                    local swimSpeed = ( ( ( self:GetRun() and !self:GetCrouch() ) and 320 or 160 ) + self.l_CombatSpeedAdd )
+                    swimVel = LerpVector( 20 * FrameTime(), self.loco:GetVelocity(), ( swimPos - self:GetPos() ):GetNormalized() * swimSpeed )
+                else
+                    swimVel = LerpVector( 20 * FrameTime(), self.loco:GetVelocity(), zerovector )
+                end
+
+                self.loco:SetVelocity( swimVel )
+            elseif LambdaIsValid( ene ) or swimPos and ( swimPos.z - self:GetPos().z ) > self.loco:GetJumpHeight() then
+                self.loco:Jump() -- Jump and start swimming if there's a enemy or our move position height is higher than our jump height
+            end
+        elseif self.l_isswimming then
+            self:RecomputePath()
+            self.l_isswimming = false
+        end
+
         -- Animations --
         if self.l_UpdateAnimations then
             local anims = _LAMBDAPLAYERSHoldTypeAnimations[ self.l_HoldType ]
@@ -509,6 +571,9 @@ function ENT:Think()
                 end
             elseif self:IsInNoClip() then
                 self:StartActivity( anims.idle )
+            elseif self:GetIsUnderwater() then
+                local swimAnim = ( self.l_issmoving and anims.swimMove or anims.swimIdle )
+                if self:GetActivity() != swimAnim then self:StartActivity( swimAnim ) end
             elseif self:GetActivity() != anims.jump then
                 self:StartActivity( anims.jump )
             end
@@ -636,8 +701,26 @@ end
 
 function ENT:BodyUpdate()
     if !self.loco:GetVelocity():IsZero() then
-        self:BodyMoveXY()
-        return
+        -- Apparently NEXTBOT:BodyMoveXY() really don't likes swimming animations and sets their playback rate to crazy values, causing the game to crash
+        -- So instead I tried to recreate what that function does, but with clamped set playback rate
+        if self:GetIsUnderwater() then
+            local selfPos = self:GetPos()
+            local velocity = self.loco:GetVelocity()
+
+            -- Setup pose parameters (model's legs movement)
+            local moveDir = ( ( selfPos + velocity ) - selfPos ); moveDir.z = 0
+            local moveXY = ( self:GetAngles() - moveDir:Angle() ):Forward()
+            self:SetPoseParameter( "move_x", Lerp( 15 * FrameTime(), self:GetPoseParameter( "move_x" ), moveXY.x ) )
+            self:SetPoseParameter( "move_y", Lerp( 15 * FrameTime(), self:GetPoseParameter( "move_y" ), moveXY.y ) )
+
+            -- Setup swimming animation's clamped playback rate
+            local length = velocity:Length()
+            local groundSpeed = self:GetSequenceGroundSpeed( self:GetSequence() )
+            self:SetPlaybackRate( Clamp( ( length > 0.2 and ( length / groundSpeed ) or 1 ), 0.5, 2 ) )
+        else
+            self:BodyMoveXY()
+            return
+        end
     end
     
     self:FrameAdvance()
