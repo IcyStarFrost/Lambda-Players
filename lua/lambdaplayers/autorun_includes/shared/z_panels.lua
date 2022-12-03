@@ -143,7 +143,7 @@ if CLIENT then
         catlist:EnableVerticalScrollbar( true )
 
         category:SetContents( catlist )
-        return catlist
+        return catlist -- Return only list as it's where we put the info in
     end
 
     -- Creates a color mixer

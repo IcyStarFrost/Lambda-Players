@@ -253,7 +253,6 @@ local function OpenProfilePanel( ply )
     CCatProfilePicture:AddItem( LAMBDAPANELS:CreateLabel( "Enter a file path relative to", mainscroll, TOP ) )
     CCatProfilePicture:AddItem( LAMBDAPANELS:CreateLabel( "materials/lambdaplayers/custom_profilepictures", mainscroll, TOP ) )
     CCatProfilePicture:AddItem( LAMBDAPANELS:CreateLabel( "Leave Blank for random", mainscroll, TOP ) )
-    CCatProfilePicture:AddItem( LAMBDAPANELS:CreateURLLabel( "Click here to learn about Profile Pictures", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#profile-pictures", mainscroll, TOP ) )
 
     local pfppreview = vgui.Create( "DImage", mainscroll )
     pfppreview:SetSize( 100, 150 )
@@ -264,6 +263,7 @@ local function OpenProfilePanel( ply )
         local text = profilepicture:GetText()
         if file.Exists( "materials/lambdaplayers/custom_profilepictures/" .. text, "GAME" ) then pfppreview:SetMaterial( Material( "lambdaplayers/custom_profilepictures/" .. text ) ) end
     end
+    CCatProfilePicture:AddItem( LAMBDAPANELS:CreateURLLabel( "Click here to learn about Profile Pictures", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#profile-pictures", mainscroll, TOP ) )
 
     -- Voice Profile Category
     local CCatVoiceProfile = LAMBDAPANELS:CreateCategory( mainscroll, TOP, "Voice Profile", 1 )
