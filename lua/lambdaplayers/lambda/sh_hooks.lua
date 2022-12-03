@@ -133,11 +133,11 @@ if SERVER then
         local attacker = info:GetAttacker()
         if IsValid( attacker ) and attacker:IsPlayer() and attacker != self then 
             attacker:AddFrags( 1 ) 
-            if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self:TypeMessage( self:GetTextLine( "deathbyplayer" ) ) end
+            if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self.l_keyentity = attacker self:TypeMessage( self:GetTextLine( "deathbyplayer" ) ) end
         elseif IsValid( attacker ) and attacker.IsLambdaPlayer and attacker != self then
-            if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self:TypeMessage( self:GetTextLine( "deathbyplayer" ) ) end
+            if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self.l_keyentity = attacker self:TypeMessage( self:GetTextLine( "deathbyplayer" ) ) end
         elseif attacker != self then
-            if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self:TypeMessage( self:GetTextLine( "death" ) ) end
+            if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self.l_keyentity = attacker self:TypeMessage( self:GetTextLine( "death" ) ) end
         end
 
 
@@ -175,6 +175,7 @@ if SERVER then
                 if random( 1, 100 ) <= self:GetVoiceChance() then
                     self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
                 elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
+                    self.l_keyentity = victim
                     self:TypeMessage( self:GetTextLine( "kill" ) )
                 end
 
