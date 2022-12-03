@@ -44,6 +44,7 @@ local debugcvar = GetConVar( "lambdaplayers_debug" )
 local chatlimit = GetConVar( "lambdaplayers_text_chatlimit" )
 local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
+local player_GetAll = player.GetAll
 
 ---- Anything Shared can go here ----
 
@@ -753,7 +754,7 @@ if SERVER then
 
         -- This has changed so we can properly send each player a text chat message with their own custom display colors
         if !recipients then
-            for _, ply in ipairs( player.GetAll() ) do
+            for _, ply in ipairs( player_GetAll() ) do
                 LambdaPlayers_ChatAdd( ply, ( self:GetIsDead() and red or color_white ), ( self:GetIsDead() and "*DEAD* " or ""), GetClientDisplayColor( self, ply ), self:GetLambdaName(), color_white, ": " .. text )
             end
         elseif IsValid( recipients ) and recipients:IsPlayer() then
