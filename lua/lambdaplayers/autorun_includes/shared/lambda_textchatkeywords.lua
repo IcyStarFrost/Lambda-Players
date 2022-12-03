@@ -15,6 +15,7 @@ local string_Explode = string.Explode
 local gsub = string.gsub
 local StripExtension = string.StripExtension
 local string_Replace = string.Replace
+local string_EndsWith = string.EndsWith
 
 LambdaValidTextChatKeyWords = {}
 
@@ -94,7 +95,7 @@ local function PrettyName( mdlpath )
     local basename = StripExtension( split[ #split ] )
     basename = string_Replace( basename, "_", " " )
     for k, number in ipairs( numbers ) do basename = string_Replace( basename, number, "" ) end
-    for k, ending in ipairs( endings ) do if string_find( basename, ending ) then basename = string_Left( basename, #basename - 1 ) break end end
+    for k, ending in ipairs( endings ) do if string_EndsWith( basename, ending ) then basename = string_Left( basename, #basename - 1 ) break end end
     return basename
 end
 
