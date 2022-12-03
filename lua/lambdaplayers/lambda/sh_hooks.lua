@@ -9,8 +9,11 @@ local table_Merge = table.Merge
 local isfunction = isfunction
 local ipairs = ipairs
 local bor = bit.bor
+local CurTime = CurTime
 local max = math.max
 local ceil = math.ceil
+local band = bit.band
+local rand = math.Rand
 local deathdir = GetConVar( "lambdaplayers_voice_deathdir" )
 local killdir = GetConVar( "lambdaplayers_voice_killdir" )
 local debugvar = GetConVar( "lambdaplayers_debug" )
@@ -51,7 +54,9 @@ if SERVER then
 
         self:EmitSound( info:IsDamageType( DMG_FALL ) and "Player.FallGib" or "Player.Death" )
         
-        self:PlaySoundFile( deathdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "death" ) )
+        if random( 1, 100 ) <= self:GetVoiceChance() and !self:GetIsTyping() then
+            self:PlaySoundFile( deathdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "death" ) )
+        end
 
         self:SetHealth( -1 ) -- SNPCs will think that we are still alive without doing this.
         self:SetIsDead( true )
@@ -78,6 +83,7 @@ if SERVER then
         if callnpchook:GetBool() then hook.Run( "OnNPCKilled", self, info:GetAttacker(), info:GetInflictor() ) end
         self:SetDeaths( self:GetDeaths() + 1 )
 
+        for k, v in ipairs( self.l_Hooks ) do if !v[ 3 ] then self:RemoveHook( v[ 1 ], v[ 2 ] ) end end -- Remove all non preserved hooks
         self:RemoveTimers()
         self:TerminateNonIgnoredDeadTimers()
         self:RemoveFlags( FL_OBJECT )
@@ -101,11 +107,23 @@ if SERVER then
         hook.Run( "LambdaOnKilled", self, info )
         --hook.Run( "PlayerDeath", self, info:GetInflictor(), info:GetAttacker() )
 
-        if self:GetRespawn() then
-            self:SimpleTimer( 2, function() self:LambdaRespawn() end, true )
-        else
-            self:SimpleTimer( 0.1, function() self:Remove() end, true )
-        end
+
+        self:Thread( function()
+
+            local time = self:GetRespawn() and 2 or 0.1
+            
+            coroutine.wait( time )
+
+            while self:GetIsTyping() do coroutine.yield() end
+
+            if self:GetRespawn() then
+                self:LambdaRespawn()
+            else
+                self:Remove()
+            end
+
+        end, "DeathThread", true )
+
 
         for k ,v in ipairs( ents_GetAll() ) do
             if IsValid( v ) and v != self and v:IsNextBot() then
@@ -114,7 +132,16 @@ if SERVER then
         end
 
         local attacker = info:GetAttacker()
-        if IsValid( attacker ) and attacker:IsPlayer() then attacker:AddFrags( 1 ) end
+        if IsValid( attacker ) and attacker:IsPlayer() and attacker != self then 
+            attacker:AddFrags( 1 ) 
+            if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self.l_keyentity = attacker self:TypeMessage( self:GetTextLine( "deathbyplayer" ) ) end
+        elseif IsValid( attacker ) and attacker.IsLambdaPlayer and attacker != self then
+            if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self.l_keyentity = attacker self:TypeMessage( self:GetTextLine( "deathbyplayer" ) ) end
+        elseif attacker != self then
+            if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self.l_keyentity = attacker self:TypeMessage( self:GetTextLine( "death" ) ) end
+        end
+
+
 
     end
 
@@ -145,7 +172,14 @@ if SERVER then
             self:SetFrags( self:GetFrags() + 1 )
 
             if victim == self:GetEnemy() then
-                if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "kill" ) ) end 
+
+                if random( 1, 100 ) <= self:GetVoiceChance() then
+                    self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
+                elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
+                    self.l_keyentity = victim
+                    self:TypeMessage( self:GetTextLine( "kill" ) )
+                end
+
                 if random( 1, 10 ) == 1 then self.l_tbagpos = victim:GetPos(); self:SetState( "TBaggingPosition" ) end
             end
 
@@ -166,10 +200,35 @@ if SERVER then
         self.LambdaPlayerPersonalInfo = self:ExportLambdaInfo()
     end
 
+    local Navmeshfunctions = {
+
+        [ NAV_MESH_CROUCH ] = function( self ) 
+            self:SetCrouch( true )
+
+            local lastState = self:GetState()
+            local crouchTime = CurTime() + rand( 1, 30 )
+            self:NamedTimer( "UnCrouch", 1, 0, function() 
+                if self:GetState() != lastState or CurTime() >= crouchTime then
+                    self:SetCrouch( false )
+                    return true
+                end
+            end )
+        end,
+
+        [ NAV_MESH_RUN ] = function( self ) self:SetRun( true ) end,
+        [ NAV_MESH_WALK ] = function( self ) self:SetRun( false ) end,
+        [ NAV_MESH_JUMP ] = function( self ) self.loco:Jump() end
+    }
+
+    local attributes = NAV_MESH_CROUCH + NAV_MESH_WALK + NAV_MESH_RUN + NAV_MESH_JUMP
 
     -- Sets our current nav area
     function ENT:OnNavAreaChanged( old , new ) 
         self.l_currentnavarea = new
+
+
+        local navfunc = Navmeshfunctions[ band( new:GetAttributes(), attributes ) ]
+        if navfunc then navfunc( self ) end
     end
     
     -- Called when we collide with something
@@ -237,6 +296,7 @@ if SERVER then
                 tbl[ v[ 1 ] ] = ply:GetInfoNum( "lambdaplayers_personality_" .. v[ 1 ] .. "chance", 30 )
             end
             self:SetVoiceChance( ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) )
+            self:SetTextChance( ply:GetInfoNum( "lambdaplayers_personality_textchance", 30 ) )
             return  tbl
         end,
         [ "customrandom" ] = function( ply, self ) -- Same thing as Custom except the values from Sliders are used in RNG
@@ -244,7 +304,8 @@ if SERVER then
             for k, v in ipairs( LambdaPersonalityConVars ) do
                 tbl[ v[ 1 ] ] = random( ply:GetInfoNum( "lambdaplayers_personality_" .. v[ 1 ] .. "chance", 30 ) )
             end
-            self:SetVoiceChance( random( ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) ) )
+            self:SetVoiceChance( random( 0, ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) ) )
+            self:SetTextChance( random( 0, ply:GetInfoNum( "lambdaplayers_personality_textchance", 30 ) ) )
             return  tbl
         end,
         [ "fighter" ] = function( ply, self ) -- Focused on Combat
@@ -256,6 +317,7 @@ if SERVER then
             tbl[ "Combat" ] = 80
             tbl[ "Tool" ] = 5
             self:SetVoiceChance( 30 )
+            self:SetTextChance( 30 )
             return tbl
         end,
         [ "builder" ] = function( ply, self ) -- Focused on Building
@@ -267,6 +329,7 @@ if SERVER then
             tbl[ "Combat" ] = 5
             tbl[ "Tool" ] = 80
             self:SetVoiceChance( 30 )
+            self:SetTextChance( 30 )
             return tbl
         end
     } 
@@ -276,12 +339,17 @@ if SERVER then
         local respawn = tobool( ply:GetInfoNum( "lambdaplayers_lambda_shouldrespawn", 0 ) )
         local weapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )
         local voiceprofile = ply:GetInfo( "lambdaplayers_lambda_voiceprofile" )
+        local textprofile = ply:GetInfo( "lambdaplayers_lambda_textprofile" )
         local personality = ply:GetInfo( "lambdaplayers_personality_preset" )
 
         self:SetRespawn( respawn )
         if self:WeaponDataExists( weapon ) then self:SwitchWeapon( weapon ) self.l_SpawnWeapon = weapon end
         self.l_VoiceProfile = voiceprofile != "" and voiceprofile or self.l_VoiceProfile
-
+        self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
+        
+        self.l_TextProfile = textprofile != "" and textprofile or self.l_TextProfile
+        self:SetNW2String( "lambda_tp", self.l_TextProfile )
+        
         if personality != "random" then
             self:BuildPersonalityTable( personalitypresets[ personality ]( ply, self ) )
         end
@@ -326,6 +394,15 @@ if SERVER then
                 --hook.Run( "GetFallDamage", self, self.l_FallVelocity )
             end
         end
+    end
+
+
+    function ENT:OnBeginTyping( text )
+        self:AddGesture( ACT_GMOD_IN_CHAT, false )
+    end
+
+    function ENT:OnEndMessage( text )
+        self:RemoveGesture( ACT_GMOD_IN_CHAT )
     end
 
 end
@@ -413,6 +490,15 @@ function ENT:InitializeMiniHooks()
 
         self:Hook( "PhysgunDrop", "Physgundrop", function( ply, ent )
             if ent == self then self.l_ispickedupbyphysgun = false end
+        end, true )
+
+        self:Hook( "LambdaPlayerSay", "lambdatextchat", function( ply, text )
+            if ply == self or self:IsDisabled() then return end
+
+            if random( 1, 200 ) < self:GetTextChance() and !self:GetIsTyping() and !self:IsSpeaking() and self:CanType() then
+                self.l_keyentity = ply
+                self:TypeMessage( self:GetTextLine( "response" ) )
+            end
         end, true )
 
     elseif CLIENT then

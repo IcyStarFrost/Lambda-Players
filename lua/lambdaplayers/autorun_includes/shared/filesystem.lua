@@ -8,7 +8,10 @@ local table_RemoveByValue = table.RemoveByValue
 local ipairs = ipairs
 local table_HasValue = table.HasValue
 local table_Add = table.Add
+local table_GetKeys = table.GetKeys
 local mergevoicelines = GetConVar( "lambdaplayers_voice_mergeaddonvoicelines" )
+local mergedefaulttextlines = GetConVar( "lambdaplayers_text_usedefaultlines" )
+local mergeaddontextlines = GetConVar( "lambdaplayers_text_useaddonlines" )
 
 file.CreateDir( "lambdaplayers" )
 -- Lambda File System
@@ -129,11 +132,13 @@ local function HandleCustomNameFile( path, default )
 
     else
         local txtcontents = LAMBDAFS:ReadFile( path, nil, "GAME" ) 
-        txtcontents = string.Explode( "\n", txtcontents )
+        txtcontents = txtcontents and string.Explode( "\n", txtcontents ) or nil
 
-        for k, v in ipairs( txtcontents ) do
-            if !table.HasValue( default, v ) then 
-                table_insert( tbl, v )
+        if txtcontents then
+            for k, v in ipairs( txtcontents ) do
+                if !table.HasValue( default, v ) then 
+                    table_insert( tbl, v )
+                end
             end
         end
 
@@ -182,6 +187,7 @@ function LAMBDAFS:GetMaterialTable()
     return mergedtable
 end
 
+
 function LAMBDAFS:GetVoiceLinesTable()
     LambdaVoiceLinesTable = {}
 
@@ -223,6 +229,41 @@ function LAMBDAFS:GetProfilePictures()
     MergeDirectory( "lambdaplayers/custom_profilepictures" )
     
     return Lambdaprofilepictures
+end
+
+function LAMBDAFS:GetTextTable()
+    LambdaTextTable = {}
+
+    local function MergeDirectory( dir, path, allowed )
+        dir = dir .. "/"
+        local files, dirs = file.Find( path .. "/" .. dir .. "*", "GAME", "nameasc" )
+
+        for k, v in ipairs( files ) do 
+            local texttype = string.StripExtension( v )
+            local content = LAMBDAFS:ReadFile( path .. "/" .. dir .. v, "json", "GAME" )
+
+            if !content then
+                local txtcontents = LAMBDAFS:ReadFile( path .. "/" .. dir .. v, nil, "GAME" ) 
+                content = txtcontents and string.Explode( "\n", txtcontents ) or nil
+            end
+
+            if content then
+                LambdaTextTable[ texttype ] = LambdaTextTable[ texttype ] or {}
+                if allowed then table_Add( LambdaTextTable[ texttype ], content ) end
+            end
+        end
+
+        for k, v in ipairs( dirs ) do 
+            MergeDirectory( dir .. v ) 
+        end
+    end
+
+    
+    MergeDirectory( "lambdaplayers/data/texttypes", "materials", mergedefaulttextlines:GetBool() )
+    MergeDirectory( "lambdaplayers/texttypes", "materials", mergeaddontextlines:GetBool() )
+    MergeDirectory( "lambdaplayers/texttypes", "data" )
+    
+    return LambdaTextTable
 end
 
 function LAMBDAFS:GetSprays()
@@ -270,6 +311,35 @@ function LAMBDAFS:GetVoiceProfiles()
 end
 
 
+function LAMBDAFS:GetTextProfiles()
+    local LambdaTextProfiles = {}
+
+    local _, textprofiles  = file.Find( "materials/lambdaplayers/textprofiles/*", "GAME", "nameasc" )
+    
+    for i, profile in ipairs( textprofiles ) do
+        LambdaTextProfiles[ profile ] = {} 
+
+        local texttypes, _  = file.Find( "materials/lambdaplayers/textprofiles/" .. profile .. "/*", "GAME", "nameasc" )
+
+        for k, texttype in ipairs( texttypes ) do 
+            LambdaTextProfiles[ profile ][ string.StripExtension( texttype ) ] = {}
+            local content = LAMBDAFS:ReadFile( "materials/lambdaplayers/textprofiles/" .. profile .. "/" .. texttype, "json", "GAME" )
+
+            if !content then
+                local txtcontents = LAMBDAFS:ReadFile( "materials/lambdaplayers/textprofiles/" .. profile .. "/" .. texttype, nil, "GAME" ) 
+                content = txtcontents and string.Explode( "\n", txtcontents ) or nil
+            end
+
+            if content then table_Add( LambdaTextProfiles[ profile ][ string.StripExtension( texttype ) ], content ) end
+        end
+
+    end
+
+    
+    return LambdaTextProfiles
+end
+
+
 LambdaPersonalProfiles = LambdaPersonalProfiles or file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
 LambdaPlayerNames = LambdaPlayerNames or LAMBDAFS:GetNameTable()
 LambdaPlayerProps = LambdaPlayerProps or LAMBDAFS:GetPropTable()
@@ -278,3 +348,5 @@ Lambdaprofilepictures = Lambdaprofilepictures or LAMBDAFS:GetProfilePictures()
 LambdaVoiceLinesTable = LambdaVoiceLinesTable or LAMBDAFS:GetVoiceLinesTable()
 LambdaVoiceProfiles = LambdaVoiceProfiles or LAMBDAFS:GetVoiceProfiles()
 LambdaPlayerSprays = LambdaPlayerSprays or LAMBDAFS:GetSprays()
+LambdaTextTable = LambdaTextTable or LAMBDAFS:GetTextTable()
+LambdaTextProfiles = LambdaTextProfiles or LAMBDAFS:GetTextProfiles()

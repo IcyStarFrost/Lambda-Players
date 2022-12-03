@@ -26,22 +26,23 @@ local function OpenNamePanel( ply )
     searchbar:Dock( TOP )
 
     local labels = {
-        "Place exported customnames.jsons or .txt files that are formatted like",
+        "Place exported customnames.vmt files or .txt files that are formatted like",
         "Garry",
         "Spanish Skeleton",
         "Oliver",
         "In the garrysmod/data/lambdaplayers/nameimport folder to be able to import them"
     }
 
-    LAMBDAPANELS:CreateExportPanel( "Name", panel, BOTTOM, "Export Names to file", names, "json", "lambdaplayers/exportednames/nameexport.json" )
+    LAMBDAPANELS:CreateExportPanel( "Name", panel, BOTTOM, "Export Names to file", names, "json", "lambdaplayers/exportednames/nameexport.vmt" )
 
-    LAMBDAPANELS:CreateImportPanel( "Name", panel, BOTTOM, "Import .TXT/.JSON files", labels, "lambdaplayers/nameimport/*", function( path )
-        local isjson = string.EndsWith( path, ".json" )
+    LAMBDAPANELS:CreateImportPanel( "Name", panel, BOTTOM, "Import .TXT/.JSON/.VMT files", labels, "lambdaplayers/nameimport/*", function( path )
 
         local count = 0
 
-        if isjson then
-            local jsoncontents = LAMBDAFS:ReadFile( path, "json" )
+
+        local jsoncontents = LAMBDAFS:ReadFile( path, "json" )
+
+        if jsoncontents then
             
             for k, v in ipairs( jsoncontents ) do
                 if !table.HasValue( names, v ) then 

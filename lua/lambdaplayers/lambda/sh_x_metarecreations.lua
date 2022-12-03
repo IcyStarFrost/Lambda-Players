@@ -738,10 +738,6 @@ if SERVER then
     function ENT:EnterVehicle( vehicle )
     end
 
-    -- Text chat will be added sometime.
-    function ENT:Say()
-    end
-
     function ENT:GodEnable()
         self.l_godmode = true
     end
@@ -781,18 +777,20 @@ if SERVER then
     end
 
     function ENT:Kill()
+        if self:GetIsDead() then return end
         local info = DamageInfo()
         info:SetDamage( 0 )
-        info:SetDamageForce( 0 )
+        info:SetDamageForce( Vector( 0, 0, 0 ) )
         info:SetAttacker( Entity( 0 ) )
         info:SetDamagePosition( self:GetPos() )
         self:LambdaOnKilled( info )
     end
 
     function ENT:KillSilent()
+        if self:GetIsDead() then return end
         local info = DamageInfo()
         info:SetDamage( 0 )
-        info:SetDamageForce( 0 )
+        info:SetDamageForce( Vector( 0, 0, 0 ) )
         info:SetAttacker( Entity( 0 ) )
         info:SetDamagePosition( self:GetPos() )
         self:LambdaOnKilled( info )

@@ -6,7 +6,7 @@ local RealTime = RealTime
 local ScreenScale = ScreenScale
 local LambdaScreenScale = LambdaScreenScale
 local Left = string.Left
-local placeholdercolor = Color( 255,136,0)
+local placeholdercolor = Color( 255, 136, 0 )
 
 if SERVER then
 

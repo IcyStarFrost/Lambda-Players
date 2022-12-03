@@ -86,6 +86,7 @@ LambdaCreatePersonalityType( "Build", Chance_Build )
 LambdaCreatePersonalityType( "Tool", Chance_Tool )
 LambdaCreatePersonalityType( "Combat", Chance_Combat )
 CreateLambdaConvar( "lambdaplayers_personality_voicechance", 30, true, true, true, "The chance Voice will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = "Voice Chance", category = "Lambda Player Settings" } )
+CreateLambdaConvar( "lambdaplayers_personality_textchance", 30, true, true, true, "The chance Text will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = "Text Chance", category = "Lambda Player Settings" } )
 
 
 
