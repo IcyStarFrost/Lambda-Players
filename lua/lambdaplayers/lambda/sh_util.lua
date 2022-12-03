@@ -59,6 +59,7 @@ function ENT:Hook( hookname, uniquename, func, preserve, cooldown )
     local curtime = CurTime() + ( cooldown or 0 )
 
     self:DebugPrint( "Created a hook: " .. hookname .. " | " .. uniquename )
+    table_insert( self.l_Hooks, { hookname, uniquename, preserve } )
     hook.Add( hookname, "lambdaplayershook" .. id .. "_" .. uniquename, function( ... )
         if CurTime() < curtime then return end
         if preserve and !IsValid( self ) or !preserve and !LambdaIsValid( self ) then hook.Remove( hookname, "lambdaplayershook" .. id .. "_" .. uniquename ) return end 
@@ -78,6 +79,7 @@ end
 -- Removes a hook created by the function above
 function ENT:RemoveHook( hookname, uniquename )
     self:DebugPrint( "Removed a hook: " .. hookname .. " | " .. uniquename )
+    for k, v in ipairs( self.l_Hooks ) do if v[ 1 ] == hookname and v[ 2 ] == uniquename then table_remove( self.l_Hooks, k ) end end 
     hook.Remove( hookname, "lambdaplayershook" .. self:EntIndex() .. "_" .. uniquename )
 end
 

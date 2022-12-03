@@ -83,6 +83,7 @@ if SERVER then
         if callnpchook:GetBool() then hook.Run( "OnNPCKilled", self, info:GetAttacker(), info:GetInflictor() ) end
         self:SetDeaths( self:GetDeaths() + 1 )
 
+        for k, v in ipairs( self.l_Hooks ) do if !v[ 3 ] then self:RemoveHook( v[ 1 ], v[ 2 ] ) end end -- Remove all non preserved hooks
         self:RemoveTimers()
         self:TerminateNonIgnoredDeadTimers()
         self:RemoveFlags( FL_OBJECT )

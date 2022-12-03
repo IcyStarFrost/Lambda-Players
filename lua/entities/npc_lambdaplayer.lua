@@ -112,6 +112,7 @@ function ENT:Initialize()
         self.l_ExternalVars = {} -- The table holding any custom variables external addons want saved onto the Lambda so it can exported along with other Lambda Info
         self.l_Timers = {} -- The table holding all named timers
         self.l_SimpleTimers = {} -- The table holding all simple timers
+        self.l_Hooks = {} -- The table holding all our created hooks
 
         self.l_State = "Idle" -- The state we are in. See sv_states.lua
         self.l_Weapon = "" -- The weapon we currently have
