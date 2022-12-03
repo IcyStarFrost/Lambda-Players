@@ -567,6 +567,7 @@ if SERVER then
         self:SetIsDead( false )
         self:SetIsReloading( false )
         self:SetPos( rasp:GetBool() and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos ) -- Rasp aka Respawn at Spawn Points
+        self.loco:SetVelocity( Vector( 0, 0, 0 ) )
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
         self:GetPhysicsObject():EnableCollisions( true )
 
