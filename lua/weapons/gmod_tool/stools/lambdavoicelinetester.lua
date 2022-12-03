@@ -30,8 +30,7 @@ TOOL.ClientConVar = {
 function TOOL:LeftClick( tr )
     local ent = tr.Entity
     local owner = self:GetOwner()
-    if !IsValid( ent ) then return end
-    if !ent.IsLambdaPlayer then return end
+    if !IsValid( ent ) or !ent.IsLambdaPlayer then return end
 
     if SERVER then
         ent:PlaySoundFile( ent:GetVoiceLine( self:GetClientInfo( "voicetype" ) ), true )
@@ -44,8 +43,7 @@ end
 function TOOL:RightClick( tr )
     local ent = tr.Entity
     local owner = self:GetOwner()
-    if !IsValid( ent ) then return end
-    if !ent.IsLambdaPlayer then return end
+    if !IsValid( ent ) or !ent.IsLambdaPlayer then return end
 
     if SERVER then
         ent:PlaySoundFile( self:GetClientInfo( "voicelinepath" ), true )

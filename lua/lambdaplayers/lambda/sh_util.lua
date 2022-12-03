@@ -12,6 +12,7 @@ local table_empty = table.Empty
 local file_Find = file.Find
 local table_Empty = table.Empty
 local table_IsEmpty = table.IsEmpty
+local table_remove = table.remove
 local table_RemoveByValue = table.RemoveByValue
 local table_Copy = table.Copy
 local ents_GetAll = ents.GetAll
@@ -33,9 +34,13 @@ local tostring = tostring
 local visibilitytrace = {}
 local tracetable = {}
 local GetLambdaPlayers = GetLambdaPlayers
+local color_white = color_white
+local lambdacolor = Color( 255, 136, 0 )
+local red = Color( 255, 0, 0 )
 local tauntdir = GetConVar( "lambdaplayers_voice_tauntdir" )
 local aidisable = GetConVar( "ai_disabled" )
 local debugcvar = GetConVar( "lambdaplayers_debug" )
+local chatlimit = GetConVar( "lambdaplayers_text_chatlimit" )
 local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
 
@@ -55,6 +60,7 @@ function ENT:Hook( hookname, uniquename, func, preserve, cooldown )
     local curtime = CurTime() + ( cooldown or 0 )
 
     self:DebugPrint( "Created a hook: " .. hookname .. " | " .. uniquename )
+    table_insert( self.l_Hooks, { hookname, "lambdaplayershook" .. id .. "_" .. uniquename, preserve } )
     hook.Add( hookname, "lambdaplayershook" .. id .. "_" .. uniquename, function( ... )
         if CurTime() < curtime then return end
         if preserve and !IsValid( self ) or !preserve and !LambdaIsValid( self ) then hook.Remove( hookname, "lambdaplayershook" .. id .. "_" .. uniquename ) return end 
@@ -74,6 +80,7 @@ end
 -- Removes a hook created by the function above
 function ENT:RemoveHook( hookname, uniquename )
     self:DebugPrint( "Removed a hook: " .. hookname .. " | " .. uniquename )
+    for k, v in ipairs( self.l_Hooks ) do if v[ 1 ] == hookname and v[ 2 ] == "lambdaplayershook" .. self:EntIndex() .. "_" .. uniquename then table_remove( self.l_Hooks, k ) end end 
     hook.Remove( hookname, "lambdaplayershook" .. self:EntIndex() .. "_" .. uniquename )
 end
 
@@ -161,6 +168,25 @@ function ENT:FindInSphere( pos, radius, filter )
     return enttbl
 end
 
+-- Returns the closest entity to us
+function ENT:GetClosestEntity( pos, radius, filter )
+    pos = pos or self:GetPos()
+    local closestent 
+    local dist
+    local find = self:FindInSphere( pos, radius, filter )
+
+    for k, v in ipairs( find ) do
+        if !closestent then closestent = v dist = pos:DistToSqr( v:GetPos() ) continue end
+        local newdist = pos:DistToSqr( v:GetPos() )
+        if newdist < dist then
+            closestent = v
+            dist = newdist
+        end
+    end
+
+    return closestent
+end
+
 -- Returns bone position and angles
 function ENT:GetBoneTransformation( bone )
     local pos, ang = self:GetBonePosition( bone )
@@ -241,7 +267,9 @@ function ENT:ExportLambdaInfo()
 
         voicepitch = self:GetVoicePitch(),
         voice = self:GetVoiceChance(),
+        text = self:GetTextChance(),
         voiceprofile = self:GetNW2String( "lambda_vp", self.l_VoiceProfile ),
+        textprofile = self:GetNW2String( "lambda_tp", self.l_TextProfile ),
         pingrange = self:GetAbsPing(),
 
         -- Non personal data --
@@ -323,12 +351,16 @@ if SERVER then
             end
 
             self:SetVoiceChance( info.voice or self:GetVoiceChance() )
+            self:SetTextChance( info.text or self:GetTextChance() )
             SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
             self:SetAbsPing( info.pingrange or self:GetAbsPing() )
             self:SetVoicePitch( info.voicepitch or self:GetVoicePitch() )
             self.l_VoiceProfile = info.voiceprofile or self.l_VoiceProfile
             self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
+
+            self.l_TextProfile = info.textprofile or self.l_TextProfile
+            self:SetNW2String( "lambda_tp", self.l_TextProfile )
             -- Non Personal Data --
             local spawnwep = self:WeaponDataExists( info.spawnwep ) and info.spawnwep or self.l_SpawnWeapon
             self:SetRespawn( info.respawn or self:GetRespawn() )
@@ -486,6 +518,11 @@ if SERVER then
         return self.l_State
     end
 
+    -- If we currently are fighting
+    function ENT:InCombat()
+        return self:GetState() == "Combat"
+    end
+
     -- Returns the last state we were in
     function ENT:GetLastState()
         return self.l_LastState
@@ -493,7 +530,7 @@ if SERVER then
 
     -- Returns if our ai is disabled
     function ENT:IsDisabled()
-        return self.l_isfrozen or aidisable:GetBool()
+        return self:GetIsTyping() or self.l_isfrozen or aidisable:GetBool()
     end
 
     -- Returns if we are currently speaking
@@ -533,6 +570,7 @@ if SERVER then
         self:SetIsDead( false )
         self:SetIsReloading( false )
         self:SetPos( rasp:GetBool() and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos ) -- Rasp aka Respawn at Spawn Points
+        self.loco:SetVelocity( Vector( 0, 0, 0 ) )
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
         self:GetPhysicsObject():EnableCollisions( true )
 
@@ -652,6 +690,23 @@ if SERVER then
         return tbl[ random( #tbl ) ] 
     end
 
+    -- Literally the same thing as :GetVoiceLine() but for Text Lines
+    function ENT:GetTextLine( texttype )
+        if self.l_TextProfile then
+            if LambdaTextProfiles[ self.l_TextProfile ] then
+                local texttable = LambdaTextProfiles[ self.l_TextProfile ][ texttype ]
+                if texttable and #texttable > 0 then
+                    return texttable[ random( #texttable ) ]
+                end
+            end
+        end
+        local tbl = LambdaTextTable[ texttype ]
+
+        if !tbl then return "" end
+
+        return tbl[ random( #tbl ) ] 
+    end
+
     -- Makes the Lambda say the specified file or file path.
     -- Random sound files for example, something/idle/*
     function ENT:PlaySoundFile( filepath, stoponremove )
@@ -675,6 +730,40 @@ if SERVER then
             net.WriteBool( stoponremove )
             net.WriteUInt( self:GetCreationID(), 32 )
         net.Broadcast()
+    end
+
+    -- Makes the Lambda say the provided text
+    -- if instant is true, the Lambda will say the text instantly.
+    -- teamOnly is just so this function is compatible with addons basically
+    -- recipients is optional 
+    function ENT:Say( text, teamOnly, recipients )
+        local replacement = hook.Run( "LambdaPlayerSay", self, text, ( teamOnly or false ) )
+        text = isstring( replacement ) and replacement or text
+        if text == "" then return end
+        text = LambdaKeyWordModify( self, text )
+        LambdaPlayers_ChatAdd( recipients, ( self:GetIsDead() and red or color_white ), ( self:GetIsDead() and "*DEAD* " or ""), lambdacolor, self:GetLambdaName(), color_white, ": " .. text )
+    end
+
+    -- "Manually" type out a message and send it to text chat when we are finished
+    function ENT:TypeMessage( text )
+        if self:GetIsTyping() then self:Say( self.l_typedtext ) end
+        text = LambdaKeyWordModify( self, text )
+
+        self.l_starttypestate = self:GetState()
+        self.l_typedtext = ""
+        self.l_nexttext = 0
+        self.l_queuedtext = text
+        self:OnBeginTyping( text )
+    end
+
+    -- Returns if we can type a message
+    function ENT:CanType()
+        if chatlimit:GetInt() == 0 then return true end
+        local count = 0
+        for k, v in ipairs( GetLambdaPlayers() ) do
+            if IsValid( v ) and v:GetIsTyping() then count = count + 1 end 
+        end
+        return count < chatlimit:GetInt() 
     end
 
     -- Makes the entity no longer draw on the client if bool is set to true.

@@ -4,6 +4,7 @@ local table_insert = table.insert
 local RealTime = RealTime
 local IsValid = IsValid
 local math_Clamp = math.Clamp
+local random = math.random
 local sub = string.sub
 local Left = string.Left
 local cam = cam
@@ -317,12 +318,11 @@ end )
 
 local unpack = unpack
 local JSONToTable = util.JSONToTable
-local chat_AddText = chat.AddText
 net.Receive( "lambdaplayers_chatadd", function()
     local args = net.ReadString()
     args = JSONToTable( args )
 
-    chat_AddText( unpack( args ) )
+    chat.AddText( unpack( args ) )
 end )
 
 net.Receive( "lambdaplayers_addtokillfeed", function() 

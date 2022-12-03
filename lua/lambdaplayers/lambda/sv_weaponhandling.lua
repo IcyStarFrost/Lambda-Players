@@ -49,6 +49,8 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     if weapondata.bonemerge then wepent:AddEffects( EF_BONEMERGE ) else wepent:RemoveEffects( EF_BONEMERGE ) end
 
     self.l_Weapon = weaponname
+    self:SetNW2String( "lambda_spawnweapon", weaponname )
+    self.l_WeaponPrettyName = weaponname.prettyname
     self.l_HasLethal = weapondata.islethal
     self.l_HasMelee = weapondata.ismelee 
     self.l_HoldType = weapondata.holdtype or "normal"
@@ -117,10 +119,12 @@ function ENT:SwitchWeaponSWEP( classname )
     self:SetHasCustomDrawFunction( false )
     self:SetWeaponName( wep:GetClass() )
     self.l_Weapon = wep:GetClass()
+    self:SetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon )
     self.l_HoldType = wep:GetHoldType()
     self.l_Clip = wep:Clip1()
     self.l_MaxClip = wep:GetMaxClip1()
     self.l_OnDamagefunction = nil
+    self.l_WeaponPrettyName = wep:GetPrintName()
     self.l_WeaponNoDraw = false
     self:RemoveEffects( EF_BONEMERGE )
 

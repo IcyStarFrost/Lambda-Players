@@ -58,11 +58,13 @@ end
     local idledir = GetConVar( "lambdaplayers_voice_idledir" )
     local drawflashlight = GetConVar( "lambdaplayers_drawflashlights" )
     local profilechance = GetConVar( "lambdaplayers_lambda_profileusechance" )
+    local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
     local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
     local ents_Create = ents and ents.Create or nil
     local navmesh_GetNavArea = navmesh and navmesh.GetNavArea or nil
     local navmesh_Find = navmesh and navmesh.Find or nil 
     local voiceprofilechance = GetConVar( "lambdaplayers_lambda_voiceprofileusechance" )
+    local textprofilechance = GetConVar( "lambdaplayers_lambda_textprofileusechance" )
     local thinkrate = GetConVar( "lambdaplayers_lambda_singleplayerthinkdelay" )
     local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
     local CurTime = CurTime
@@ -97,7 +99,8 @@ function ENT:Initialize()
 
     self.l_SpawnPos = self:GetPos() -- Used for Respawning
     self.l_SpawnAngles = self:GetAngles()
-
+    self.l_Hooks = {} -- The table holding all our created hooks
+    
     -- Has to be here so the client can run this too. Originally was under Personal Stats
     self:BuildPersonalityTable() -- Builds all personality chances from autorun_includes/shared/lambda_personalityfuncs.lua for use in chance testing and creates Get/Set functions for each one
 
@@ -111,9 +114,14 @@ function ENT:Initialize()
         self.l_ExternalVars = {} -- The table holding any custom variables external addons want saved onto the Lambda so it can exported along with other Lambda Info
         self.l_Timers = {} -- The table holding all named timers
         self.l_SimpleTimers = {} -- The table holding all simple timers
+        
 
         self.l_State = "Idle" -- The state we are in. See sv_states.lua
         self.l_Weapon = "" -- The weapon we currently have
+        self.l_queuedtext = nil -- The text that we want to send in chat
+        self.l_typedtext = nil -- The current text we have typed out so far
+        self.l_nexttext = 0 -- The next time we can type the next character
+        self.l_starttypestate = "" -- The state we started typing in
 
         self.l_issmoving = false -- If we are moving
         self.l_isfrozen = false -- If set true, stop moving as if ai_disable is on
@@ -137,6 +145,7 @@ function ENT:Initialize()
         self.l_FallVelocity = 0 -- How fast we are falling
         self.debuginitstart = SysTime() -- Debug time from initialize to ENT:RunBehaviour()
         self.l_nextidlesound = CurTime() + 5 -- The next time we will play a idle sound
+        self.l_outboundsreset = CurTime() + 5 -- The time until we get teleported back to spawn because we are out of bounds
         self.l_nextnpccheck = CurTime() + 1 -- The next time we will check for surrounding NPCs
         self.l_nextnoclipheightchange = 0 -- The next time we will change our height while in noclip
         self.l_nextUA = CurTime() + rand( 1, 15 ) -- The next time we will run a UAction. See lambda/sv_x_universalactions.lua
@@ -172,6 +181,7 @@ function ENT:Initialize()
         self:SetAbsPing( rndpingrange )  -- The lowest point our fake ping can get
         self:SetPing( rndpingrange ) -- Our actual fake ping
         self:SetSteamID64( 90071996842377216 + random( 1, 10000000 ) )
+        self:SetTextPerMinute( 400 ) -- The amount of characters we can type within a minute
         self:SetNW2String( "lambda_steamid", "STEAM_0:0:" .. random( 1, 200000000 ) )
         self:SetNW2String( "lambda_ip", "192." .. random( 10, 200 ) .. "." .. random( 10 ).. "." .. random( 10, 200 ) .. ":27005" )
         
@@ -196,19 +206,26 @@ function ENT:Initialize()
         -- Personality function was relocated to the start of the code since it needs to be shared so clients can have Get functions
         
         self:SetVoiceChance( random( 1, 100 ) )
+        self:SetTextChance( random( 1, 100 ))
         self:SetVoicePitch( random( voicepitchmin:GetInt(), voicepitchmax:GetInt() ) )
 
         local vpchance = voiceprofilechance:GetInt()
         if vpchance > 0 and random( 1, 100 ) < vpchance then local vps = table_GetKeys( LambdaVoiceProfiles ) self.l_VoiceProfile = vps[ random( #vps ) ] end
         self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
+
+        local tpchance = textprofilechance:GetInt()
+        if tpchance > 0 and random( 1, 100 ) < tpchance then local tps = table_GetKeys( LambdaTextProfiles ) self.l_TextProfile = tps[ random( #tps ) ] end
+        self:SetNW2String( "lambda_tp", self.l_TextProfile )
+
         ----
 
         SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
         self.loco:SetJumpHeight( 50 )
-        self.loco:SetAcceleration( 1000 )
-        self.loco:SetDeceleration( 1000 )
+        self.loco:SetAcceleration( 2000 )
+        self.loco:SetDeceleration( 1000000 )
         self.loco:SetStepHeight( 30 )
+        self.l_LookAheadDistance = 0
         self.loco:SetGravity( -physenv.GetGravity().z ) -- Makes us fall at the same speed as the real players do
 
         self:SetRunSpeed( 400 )
@@ -217,7 +234,7 @@ function ENT:Initialize()
 
         self:SetCollisionBounds( Vector( -10, -10, 0 ), Vector( 10, 10, 72 ) )
         self:PhysicsInitShadow()
-        self:SetCollisionGroup( COLLISION_GROUP_NPC )
+        self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
         self:AddCallback( "PhysicsCollide", function( self, data )
             self:HandleCollision( data )
         end)
@@ -313,7 +330,8 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", 7, "FlashlightOn" )
     self:NetworkVar( "Bool", 8, "UsingSWEP" )
     self:NetworkVar( "Bool", 9, "IsFiring" )
-    self:NetworkVar( "Bool", 10, "IsUnderwater" )
+    self:NetworkVar( "Bool", 10, "IsTyping" )
+    self:NetworkVar( "Bool", 11, "IsUnderwater" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )
@@ -336,6 +354,8 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 11, "RunSpeed" )
     self:NetworkVar( "Int", 12, "CrouchSpeed" )
     self:NetworkVar( "Int", 13, "Team" )
+    self:NetworkVar( "Int", 14, "TextPerMinute" )
+    self:NetworkVar( "Int", 15, "TextChance" )
 
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
     self:NetworkVar( "Float", 1, "VoiceLevel" )
@@ -349,6 +369,26 @@ end
 
 
 function ENT:Think()
+
+    -- Text Chat --
+    -- Pretty simple stuff actually
+
+    self:SetIsTyping( self.l_queuedtext != nil )
+    if self.l_queuedtext and CurTime() > self.l_nexttext then
+
+        if #self.l_typedtext == #self.l_queuedtext or self:GetState() != self.l_starttypestate then 
+            self.l_queuedtext = nil
+            self:Say( self.l_typedtext )
+            self:OnEndMessage( self.l_typedtext )
+        else
+            self.l_typedtext = self.l_typedtext .. sub( self.l_queuedtext, #self.l_typedtext + 1, #self.l_typedtext + 1 )
+            self.l_nexttext = CurTime() + 1 / ( self:GetTextPerMinute() / 60 )
+        end
+
+    end
+    -- -- -- -- --
+
+        
     if self:GetIsDead() then return end
 
     -- Allow addons to add stuff to Lambda's Think
@@ -368,10 +408,15 @@ function ENT:Think()
             self.NextFootstepTime = CurTime() + min(0.25 * (self:GetRunSpeed() / desSpeed), 0.35)
         end
         
-        -- Play random Idle Voice lines
-        if CurTime() > self.l_nextidlesound and !self:IsSpeaking() and random( 1, 100 ) <= self:GetVoiceChance() then
+        -- Play random Idle lines
+        if !self:IsDisabled() and !self:GetIsTyping() and CurTime() > self.l_nextidlesound then
             
-            self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
+            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() then
+                self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
+            elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
+                self:TypeMessage( self:GetTextLine( "idle" ) )
+            end
+
             self.l_nextidlesound = CurTime() + 5
         end
 
@@ -408,7 +453,7 @@ function ENT:Think()
 
         -- Handle picking up entities
         if CurTime() > self.l_NextPickupCheck then
-            for _, v in ipairs( self:FindInSphere( self:WorldSpaceCenter(), 48 ) ) do
+            for _, v in ipairs( self:FindInSphere( self:GetPos(), 58 ) ) do
                 local pickFunc = _LAMBDAPLAYERSItemPickupFunctions[ v:GetClass() ]
                 if isfunction( pickFunc ) and self:Visible( v ) then pickFunc( self, v ) end
             end
@@ -432,10 +477,16 @@ function ENT:Think()
             end
         end
         
+        -- Out of Bounds Fail Safe --
+        if !self:IsInWorld() and CurTime() > self.l_outboundsreset then 
+            self:Kill()
+        elseif self:IsInWorld() then
+            self.l_outboundsreset = CurTime() + 5
+        end
 
         -- UA, Universal Actions
         -- See sv_x_universalactions.lua
-        if CurTime() > self.l_nextUA then
+        if CurTime() > self.l_nextUA and !self:IsDisabled() then
             local UAfunc = self.l_UniversalActions[ random( #self.l_UniversalActions ) ]
             UAfunc( self )
             self.l_nextUA = CurTime() + rand( 1, 15 )
@@ -613,6 +664,7 @@ function ENT:Think()
             self:SetPoseParameter( 'aim_yaw', approachaimy )
             self:SetPoseParameter( 'aim_pitch', approachaimp )
         end
+
 
 
         -- UNSTUCK --
