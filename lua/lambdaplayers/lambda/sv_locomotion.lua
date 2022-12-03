@@ -44,7 +44,7 @@ function ENT:MoveToPos( pos, options )
     local autorun = options.autorun
 
 	local path = Path( "Follow" )
-	path:SetMinLookAheadDistance( options.lookahead or 300 )
+    path:SetMinLookAheadDistance( self.l_LookAheadDistance )
 	path:SetGoalTolerance( options.tol or 20 )
 	path:Compute( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos), self:PathGenerator() )
 

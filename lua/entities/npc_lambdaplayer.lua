@@ -218,9 +218,10 @@ function ENT:Initialize()
         SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
         self.loco:SetJumpHeight( 50 )
-        self.loco:SetAcceleration( 1000 )
-        self.loco:SetDeceleration( 1000 )
+        self.loco:SetAcceleration( 2000 )
+        self.loco:SetDeceleration( 1000000 )
         self.loco:SetStepHeight( 30 )
+        self.l_LookAheadDistance = 0
         self.loco:SetGravity( -physenv.GetGravity().z ) -- Makes us fall at the same speed as the real players do
 
         self:SetRunSpeed( 400 )
