@@ -777,6 +777,7 @@ if SERVER then
     end
 
     function ENT:Kill()
+        if self:GetIsDead() then return end
         local info = DamageInfo()
         info:SetDamage( 0 )
         info:SetDamageForce( Vector( 0, 0, 0 ) )
@@ -786,6 +787,7 @@ if SERVER then
     end
 
     function ENT:KillSilent()
+        if self:GetIsDead() then return end
         local info = DamageInfo()
         info:SetDamage( 0 )
         info:SetDamageForce( Vector( 0, 0, 0 ) )

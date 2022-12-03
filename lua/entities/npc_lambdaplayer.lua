@@ -470,10 +470,7 @@ function ENT:Think()
         end
         
         if !self:IsInWorld() and CurTime() > self.l_outboundsreset then 
-            local pos = rasp:GetBool() and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos
-            self:SetPos( pos )
-            self.l_noclipheight = 0
-            self.l_noclippos = pos
+            self:Kill()
         else
             self.l_outboundsreset = CurTime() + 5
         end
