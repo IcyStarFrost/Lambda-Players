@@ -369,6 +369,7 @@ if SERVER then
         self:AddGesture( ACT_LAND )
 
         --hook.Run( "OnPlayerHitGround", self, self:GetPos():IsUnderwater(), false, self.l_FallVelocity )
+        hook.Run( "LambdaOnLandOnGround", self, ent )
 
         if !self:GetPos():IsUnderwater() then
             local damage = 0
@@ -394,6 +395,10 @@ if SERVER then
                 --hook.Run( "GetFallDamage", self, self.l_FallVelocity )
             end
         end
+    end
+
+    function ENT:OnLeaveGround( ent ) 
+        hook.Run( "LambdaOnLeaveGround", self, ent )
     end
 
 
@@ -440,7 +445,7 @@ function ENT:InitializeMiniHooks()
             if target != self then return end
 
             local result = hook.Run( "LambdaOnInjured", self, info )
-            if result then return true end
+            if result == true then return true end
 
             -- Armor Damage Reduction
             local curArmor = self:GetArmor()
