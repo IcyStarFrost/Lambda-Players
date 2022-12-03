@@ -472,9 +472,10 @@ function ENT:Think()
             end
         end
         
+        -- Out of Bounds Fail Safe --
         if !self:IsInWorld() and CurTime() > self.l_outboundsreset then 
             self:Kill()
-        else
+        elseif self:IsInWorld() then
             self.l_outboundsreset = CurTime() + 5
         end
 
