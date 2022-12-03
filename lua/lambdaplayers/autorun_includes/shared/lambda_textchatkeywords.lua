@@ -26,7 +26,7 @@ function LambdaAddTextChatKeyWord( keyword, replacefunction )
 end
 
 
-
+-- Replaces any existing key words in the provided string
 function LambdaKeyWordModify( self, str ) 
     for keyword, replacefunction in pairs( LambdaValidTextChatKeyWords ) do
         local haskeyword = string_find( str, keyword )
