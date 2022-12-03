@@ -14,6 +14,7 @@ local debugoverlay = debugoverlay
 local CurTime = CurTime
 local tracetable = {}
 local upvector = Vector( 0, 0, 1 )
+local bit_band = bit.band
 local unstucktable = {}
 local ents_FindByName = ents.FindByName
 local GetGroundHeight = navmesh.GetGroundHeight
@@ -313,6 +314,7 @@ function ENT:HandleStuck()
 
 end
 
+
 -- Returns a pathfinding function for the :Compute() function
 function ENT:PathGenerator()
     local jumpPenalty = 10
@@ -323,7 +325,7 @@ function ENT:PathGenerator()
 
     return function( area, fromArea, ladder, elevator, length )
         if !IsValid( fromArea ) then return 0 end
-        if !self.loco:IsAreaTraversable( area ) then return -1 end
+        if !self.loco:IsAreaTraversable( area ) or bit_band( area:GetAttributes(), NAV_MESH_AVOID ) == NAV_MESH_AVOID then return -1 end
 
         local dist = 0
         if !isInNoClip and IsValid( ladder ) then

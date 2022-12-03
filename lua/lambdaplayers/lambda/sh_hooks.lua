@@ -9,8 +9,11 @@ local table_Merge = table.Merge
 local isfunction = isfunction
 local ipairs = ipairs
 local bor = bit.bor
+local CurTime = CurTime
 local max = math.max
 local ceil = math.ceil
+local band = bit.band
+local rand = math.Rand
 local deathdir = GetConVar( "lambdaplayers_voice_deathdir" )
 local killdir = GetConVar( "lambdaplayers_voice_killdir" )
 local debugvar = GetConVar( "lambdaplayers_debug" )
@@ -193,10 +196,35 @@ if SERVER then
         self.LambdaPlayerPersonalInfo = self:ExportLambdaInfo()
     end
 
+    local Navmeshfunctions = {
+
+        [ NAV_MESH_CROUCH ] = function( self ) 
+            self:SetCrouch( true )
+
+            local lastState = self:GetState()
+            local crouchTime = CurTime() + rand( 1, 30 )
+            self:NamedTimer( "UnCrouch", 1, 0, function() 
+                if self:GetState() != lastState or CurTime() >= crouchTime then
+                    self:SetCrouch( false )
+                    return true
+                end
+            end )
+        end,
+
+        [ NAV_MESH_RUN ] = function( self ) self:SetRun( true ) end,
+        [ NAV_MESH_WALK ] = function( self ) self:SetRun( false ) end,
+        [ NAV_MESH_JUMP ] = function( self ) self.loco:Jump() end
+    }
+
+    local attributes = NAV_MESH_CROUCH + NAV_MESH_WALK + NAV_MESH_RUN + NAV_MESH_JUMP
 
     -- Sets our current nav area
     function ENT:OnNavAreaChanged( old , new ) 
         self.l_currentnavarea = new
+
+
+        local navfunc = Navmeshfunctions[ band( new:GetAttributes(), attributes ) ]
+        if navfunc then navfunc( self ) end
     end
     
     -- Called when we collide with something
