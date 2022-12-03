@@ -55,6 +55,26 @@ local function AddSourceConVarToSettings( cvarname, desc, settingstbl )
     end
 end
 
+function CreateLambdaColorConvar( name, defaultcolor, isclient, userinfo, desc, settingstbl )
+    CreateLambdaConvar( name .. "_r", defaultcolor.r, true, isclient, userinfo, desc, 0, 255, nil )
+    CreateLambdaConvar( name .. "_g", defaultcolor.g, true, isclient, userinfo, desc, 0, 255, nil )
+    CreateLambdaConvar( name .. "_b", defaultcolor.b, true, isclient, userinfo, desc, 0, 255, nil )
+
+
+    if CLIENT then
+        settingstbl.red = name .. "_r"
+        settingstbl.green = name .. "_g"
+        settingstbl.blue = name .. "_b"
+
+        settingstbl.default = "Red = " .. tostring( defaultcolor.r ) .. " | " .. "Green = " .. tostring( defaultcolor.g ) .. " | " .. "Blue = " .. tostring( defaultcolor.b )
+        settingstbl.type = "Color"
+
+        settingstbl.isclient = isclient
+        settingstbl.desc = ( isclient and "Client-Side | " or "Server-Side | " ) .. desc .. ( isclient and "" or "\nConVar: " .. name )
+        settingstbl.max = max
+        table_insert( _LAMBDAConVarSettings, settingstbl )
+    end
+end
 
 
 -- Why not?
@@ -63,7 +83,7 @@ local CreateLambdaConvar = CreateLambdaConvar
 -- These Convar Functions are capable of creating spawnmenu settings automatically.
 
 ---------- Valid Table options ----------
--- type | String | Must be one of the following: Slider, Bool, Text, Combo
+-- type | String | Must be one of the following: Slider, Bool, Text, Combo. For Colors, you must use CreateLambdaColorConvar()
 -- name | String | Pretty name
 -- decimals | Number | Slider only! How much decimals the slider should have
 -- category | String | The Lambda Settings category to place the convar into. Will create one if one doesn't exist already
@@ -76,6 +96,9 @@ CreateLambdaConvar( "lambdaplayers_uiscale", 0, true, true, false, "How much to 
 CreateLambdaConvar( "lambdaplayers_corpsecleanupeffect", 0, true, true, false, "If corpses should have a disintegration effect before they are removed", 0, 1, { type = "Bool", name = "Corpse Disintegration Effect", category = "Utilities" } )
 CreateLambdaConvar( "lambdaplayers_voice_warnvoicestereo", 0, true, true, false, "If console should warn you about voice lines that have stereo channels", 0, 1, { type = "Bool", name = "Warn Stereo Voices", category = "Utilities" } )
 CreateLambdaConvar( "lambdaplayers_displayarmor", 0, true, true, false, "If Lambda Player's current armor should be displayed when we're looking at it and it's above zero", 0, 1, { type = "Bool", name = "Display Armor", category = "Lambda Player Settings" } )
+
+CreateLambdaConvar( "lambdaplayers_useplayermodelcolorasdisplaycolor", 0, true, true, true, "If Lambda Player's Playermodel Color should be its Display Color. This has priority over the Display Color below", 0, 1, { type = "Bool", name = "Playermodel Color As Display Color", category = "Misc" } )
+CreateLambdaColorConvar( "lambdaplayers_displaycolor", Color( 255, 136, 0 ), true, true, "The display color to use for Name Display and others", { name = "Display Color", category = "Misc" } )
 --
 
 -- Lambda Player Server Convars
@@ -91,6 +114,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_textprofileusechance", 0, true, false,
 CreateLambdaConvar( "lambdaplayers_lambda_profileusechance", 0, true, false, false, "The chance a Lambda will spawn with a profile that isn't being used. Normally profile Lambda Players only spawn when a Lambda Player has the profile's name. This chance can make profiles appear more often. Do not confuse this with Voice Profiles!", 0, 100, { type = "Slider", decimals = 0, name = "Profile Use Chance", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_realisticfalldamage", 0, true, false, false, "If Lambda Players should take fall damage similar to Realistic Fall Damage", 0, 1, { type = "Bool", name = "Realistic Fall Damage", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_respawnatplayerspawns", 0, true, false, false, "If Lambda Players should respawn at player spawn points", 0, 1, { type = "Bool", name = "Respawn At Player Spawns", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_obeynavmeshattributes", 0, true, false, false, "If Lambda Players should obey navmesh attributes such as, Avoid, Walk, Run, Jump, and Crouch", 0, 1, { type = "Bool", name = "Obey Navigation Mesh", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_overridegamemodehooks", 1, true, false, false, "If the addon is allowed to override the following GAMEMODE hooks to support Lambda Players: GM:PlayerDeath() GM:PlayerStartVoice() GM:PlayerEndVoice() GM:OnNPCKilled() Default SandBox Scoreboard : Changing this requires you to restart the server/game for the changes to apply!", 0, 1, { type = "Bool", name = "Override Gamemode Hooks", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_callonnpckilledhook", 0, true, false, false, "If killed Lambda Players should call the OnNPCKilled hook. Best used with the Override Gamemode Hooks option!", 0, 1, { type = "Bool", name = "Call OnNPCKilled Hook On Death", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_singleplayerthinkdelay", 0, true, false, false, "The amount of seconds Lambda Players will execute their next Think. 0.1 is a good value. Increasing this will increase performance at the cost of delays and decreasing this may decrease performance but have less delays. This only applies to singleplayer since multiplayer automatically adjusts think time", 0, 0.24, { type = "Slider", decimals = 2, name = "Think Delay", category = "Lambda Server Settings" } )

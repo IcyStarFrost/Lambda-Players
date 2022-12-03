@@ -180,6 +180,24 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_debugtogglegod", function( ply )
 end, false, "Toggles God Mode, preventing any further damage to you", { name = "Toggle God Mode", category = "Debugging" } )
 
 
+if CLIENT then
+    local r = GetConVar( "lambdaplayers_displaycolor_r" )
+    local g = GetConVar( "lambdaplayers_displaycolor_g" )
+    local b = GetConVar( "lambdaplayers_displaycolor_b" )
+
+    _LambdaDisplayColor = Color( r:GetInt(), g:GetInt(), b:GetInt() )
+end
+
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedisplaycolor", function( ply ) 
+    local r = GetConVar( "lambdaplayers_displaycolor_r" )
+    local g = GetConVar( "lambdaplayers_displaycolor_g" )
+    local b = GetConVar( "lambdaplayers_displaycolor_b" )
+
+    _LambdaDisplayColor = Color( r:GetInt(), g:GetInt(), b:GetInt() )
+
+end, true, "Applies any changes done to Display Color", { name = "Update Display Color", category = "Misc" } )
+
+
 -- Calls this hook when all default console commands have been created.
 -- This hook can be used to ensure the CreateLambdaConsoleCommand() function exists so custom console commands can be made
 if !LambdaFilesReloaded then
@@ -189,3 +207,5 @@ if !LambdaFilesReloaded then
 else
     hook.Run( "LambdaOnConCommandsCreated" )
 end
+
+

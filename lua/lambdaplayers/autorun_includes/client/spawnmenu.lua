@@ -125,6 +125,16 @@ local function AddLambdaPlayersoptions()
 
                     local lbl = panel:ControlHelp( v.desc .. "\nDefault Value: " .. v.default )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
+                elseif v.type == "Color" then
+                    panel:Help( v.name )
+                    local colormixer = vgui.Create( "DColorMixer", panel )
+                    panel:AddItem( colormixer )
+                    colormixer:SetConVarR( v.red )
+                    colormixer:SetConVarG( v.green )
+                    colormixer:SetConVarB( v.blue )
+
+                    local lbl = panel:ControlHelp( v.desc .. "\nDefault Color: " .. v.default )
+                    lbl:SetColor( v.isclient and clientcolor or servercolor )
                 end
             end
 
