@@ -57,6 +57,7 @@ end
     local idledir = GetConVar( "lambdaplayers_voice_idledir" )
     local drawflashlight = GetConVar( "lambdaplayers_drawflashlights" )
     local profilechance = GetConVar( "lambdaplayers_lambda_profileusechance" )
+    local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
     local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
     local ents_Create = ents and ents.Create or nil
     local navmesh_GetNavArea = navmesh and navmesh.GetNavArea or nil
@@ -140,6 +141,7 @@ function ENT:Initialize()
         self.l_FallVelocity = 0 -- How fast we are falling
         self.debuginitstart = SysTime() -- Debug time from initialize to ENT:RunBehaviour()
         self.l_nextidlesound = CurTime() + 5 -- The next time we will play a idle sound
+        self.l_outboundsreset = CurTime() + 5 -- The time until we get teleported back to spawn because we are out of bounds
         self.l_nextnpccheck = CurTime() + 1 -- The next time we will check for surrounding NPCs
         self.l_nextnoclipheightchange = 0 -- The next time we will change our height while in noclip
         self.l_nextUA = CurTime() + rand( 1, 15 ) -- The next time we will run a UAction. See lambda/sv_x_universalactions.lua
@@ -467,6 +469,11 @@ function ENT:Think()
             end
         end
         
+        if !self:IsInWorld() and CurTime() > self.l_outboundsreset then 
+            self:SetPos( rasp:GetBool() and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos )
+        else
+            self.l_outboundsreset = CurTime() + 5
+        end
 
         -- UA, Universal Actions
         -- See sv_x_universalactions.lua
