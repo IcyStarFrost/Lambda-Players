@@ -227,7 +227,7 @@ function ENT:Initialize()
 
         self:SetCollisionBounds( Vector( -10, -10, 0 ), Vector( 10, 10, 72 ) )
         self:PhysicsInitShadow()
-        self:SetCollisionGroup( COLLISION_GROUP_NPC )
+        self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
         self:AddCallback( "PhysicsCollide", function( self, data )
             self:HandleCollision( data )
         end)
