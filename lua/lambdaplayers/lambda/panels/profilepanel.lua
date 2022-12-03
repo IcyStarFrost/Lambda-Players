@@ -229,41 +229,59 @@ local function OpenProfilePanel( ply )
 
     local mainscroll = LAMBDAPANELS:CreateScrollPanel( mainpanel, false, FILL )
 
-    LAMBDAPANELS:CreateLabel( "Lambda Name", mainscroll, TOP )
+    -- Name Category
+    local CCatLambdaName = LAMBDAPANELS:CreateCategory( mainscroll, TOP, "Lambda Name", 1 )
+    CCatLambdaName:AddItem( LAMBDAPANELS:CreateLabel( "The name used by the Lambda Player", mainscroll, TOP ) )
+    
     local name = LAMBDAPANELS:CreateTextEntry( mainscroll, TOP, "Enter a name here" )
+    CCatLambdaName:AddItem( name )
 
-    LAMBDAPANELS:CreateLabel( "Player Model", mainscroll, TOP )
-    LAMBDAPANELS:CreateLabel( "Leave blank for random", mainscroll, TOP )
+    -- Player Model Category
+    local CCatPlayerModel = LAMBDAPANELS:CreateCategory( mainscroll, TOP, "Player Model", 1 )
+    CCatPlayerModel:AddItem( LAMBDAPANELS:CreateLabel( "The model used by the Lambda Player", mainscroll, TOP ) )
+    
     local model = LAMBDAPANELS:CreateTextEntry( mainscroll, TOP, "Enter a model path" )
+    CCatPlayerModel:AddItem( model )
+    CCatPlayerModel:AddItem( LAMBDAPANELS:CreateLabel( "Leave blank for random", mainscroll, TOP ) )
 
-    LAMBDAPANELS:CreateLabel( "Profile Picture", mainscroll, TOP )
-    LAMBDAPANELS:CreateLabel( "Enter a file path relative to", mainscroll, TOP )
-    LAMBDAPANELS:CreateLabel( "materials/lambdaplayers/custom_profilepictures", mainscroll, TOP )
-    LAMBDAPANELS:CreateLabel( "Leave Blank for random", mainscroll, TOP )
-    LAMBDAPANELS:CreateURLLabel( "Click here to learn about Profile Pictures", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#profile-pictures", mainscroll, TOP )
+    -- Profile Picture Category
+    local CCatProfilePicture = LAMBDAPANELS:CreateCategory( mainscroll, TOP, "Profile Picture", 1 )
+    CCatProfilePicture:AddItem( LAMBDAPANELS:CreateLabel( "The profile picture used by the Lambda Player", mainscroll, TOP ) )
+    
     local profilepicture = LAMBDAPANELS:CreateTextEntry( mainscroll, TOP, "Enter a file path" )
+    CCatProfilePicture:AddItem( profilepicture )
+    CCatProfilePicture:AddItem( LAMBDAPANELS:CreateLabel( "Enter a file path relative to", mainscroll, TOP ) )
+    CCatProfilePicture:AddItem( LAMBDAPANELS:CreateLabel( "materials/lambdaplayers/custom_profilepictures", mainscroll, TOP ) )
+    CCatProfilePicture:AddItem( LAMBDAPANELS:CreateLabel( "Leave Blank for random", mainscroll, TOP ) )
+    CCatProfilePicture:AddItem( LAMBDAPANELS:CreateURLLabel( "Click here to learn about Profile Pictures", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#profile-pictures", mainscroll, TOP ) )
 
     local pfppreview = vgui.Create( "DImage", mainscroll )
     pfppreview:SetSize( 100, 150 )
     pfppreview:Dock( TOP ) 
+    CCatProfilePicture:AddItem( pfppreview )
 
     function profilepicture:OnChange() 
         local text = profilepicture:GetText()
         if file.Exists( "materials/lambdaplayers/custom_profilepictures/" .. text, "GAME" ) then pfppreview:SetMaterial( Material( "lambdaplayers/custom_profilepictures/" .. text ) ) end
     end
 
-    LAMBDAPANELS:CreateLabel( "Voice Profile", mainscroll, TOP )
-    LAMBDAPANELS:CreateURLLabel( "Click here to learn about Voice Profiles", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#voice-profiles", mainscroll, TOP )
+    -- Voice Profile Category
+    local CCatVoiceProfile = LAMBDAPANELS:CreateCategory( mainscroll, TOP, "Voice Profile", 1 )
+    CCatVoiceProfile:AddItem( LAMBDAPANELS:CreateLabel( "The voice profile used by the Lambda Player", mainscroll, TOP ) )
+ 
     local combotable = {}
     for k, v in pairs( LAMBDAFS:GetVoiceProfiles() ) do
         combotable[ k ] = k
     end
     combotable[ "No Voice Profile" ] = "/NIL"
     local voiceprofile = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, combotable )
+    CCatVoiceProfile:AddItem( voiceprofile )
+    CCatVoiceProfile:AddItem( LAMBDAPANELS:CreateURLLabel( "Click here to learn about Voice Profiles", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#voice-profiles", mainscroll, TOP ) )
 
-
-    LAMBDAPANELS:CreateLabel( "Text Profile", mainscroll, TOP )
-    LAMBDAPANELS:CreateURLLabel( "Click here to learn about Text Profiles", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#text-profiles", mainscroll, TOP )
+    -- Text Profile Category
+    local CCatTextProfile = LAMBDAPANELS:CreateCategory( mainscroll, TOP, "Text Profile", 1 )
+    CCatTextProfile:AddItem( LAMBDAPANELS:CreateLabel( "The text profile used by the Lambda Player", mainscroll, TOP ) )
+ 
 
     local textcombotable = {}
     for k, v in pairs( LAMBDAFS:GetTextProfiles() ) do
@@ -271,20 +289,28 @@ local function OpenProfilePanel( ply )
     end
     textcombotable[ "No Text Profile" ] = "/NIL"
     local textprofile = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, textcombotable )
+    CCatTextProfile:AddItem( textprofile )
+    CCatTextProfile:AddItem( LAMBDAPANELS:CreateURLLabel( "Click here to learn about Text Profiles", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#text-profiles", mainscroll, TOP ) )
 
-    LAMBDAPANELS:CreateLabel( "Voice Pitch", mainscroll, TOP )
+    -- Miscellaneous
+    local CCatOther = LAMBDAPANELS:CreateCategory( mainscroll, TOP, "Other", 1 )
+    
+    --CCatOther:AddItem( LAMBDAPANELS:CreateLabel( "Voice Pitch", mainscroll, TOP ) )
     local voicepitch = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 100, "Voice Pitch", 30, 255, 0 )
-
-    LAMBDAPANELS:CreateLabel( "Spawn Weapon", mainscroll, TOP )
-    LAMBDAPANELS:CreateLabel( "The weapon to spawn with", mainscroll, TOP )
+    CCatOther:AddItem( voicepitch )
+    
+    CCatOther:AddItem( LAMBDAPANELS:CreateLabel( "Spawn Weapon", mainscroll, TOP ) )
     local copy = table_Copy( _LAMBDAWEAPONCLASSANDPRINTS )
     copy[ "No Weapon" ] = "/NIL"
     local spawnweapon = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, copy )
-
-    LAMBDAPANELS:CreateLabel( "Ping", mainscroll, TOP )
-    LAMBDAPANELS:CreateLabel( "The lowest point this Lambda's Ping can get", mainscroll, TOP )
+    CCatOther:AddItem( spawnweapon )
+    CCatOther:AddItem( LAMBDAPANELS:CreateLabel( "The weapon to spawn with", mainscroll, TOP ) )
+    
+    --CCatOther:AddItem( LAMBDAPANELS:CreateLabel( "Ping", mainscroll, TOP ) )
     local pingrange = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 100, "Ping Range", 1, 130, 0 )
-
+    CCatOther:AddItem( pingrange )
+    CCatOther:AddItem( LAMBDAPANELS:CreateLabel( "The lowest point this Lambda's Ping can get", mainscroll, TOP ) )
+    
     ---- ---- ---- ---- ---- ----
 
 

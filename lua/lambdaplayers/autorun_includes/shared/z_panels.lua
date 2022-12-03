@@ -128,6 +128,24 @@ if CLIENT then
         return textentry
     end
 
+    -- Creates a category and related content list
+    function LAMBDAPANELS:CreateCategory( parent, dock, placeholder, expand )
+        local category = vgui.Create( "DCollapsibleCategory", parent )
+        if dock then category:Dock( dock ) end
+        category:SetLabel( placeholder or "" )
+        category:SetSize( 200, 50 ) -- Keep the second number at 50
+        category:SetExpanded( expand ) -- 1 for expanded
+
+        local catlist = vgui.Create( "DPanelList" )
+        catlist:SetAutoSize( true )
+        catlist:SetSpacing( 5 )
+        catlist:EnableHorizontal( false )
+        catlist:EnableVerticalScrollbar( true )
+
+        category:SetContents( catlist )
+        return catlist
+    end
+
     -- Creates a color mixer
     function LAMBDAPANELS:CreateColorMixer( parent, dock )
         local mixer = vgui.Create( "DColorMixer", parent )
