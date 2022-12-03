@@ -73,7 +73,7 @@ end
 -- Return a key entity's name
 local function Keyentity( self )
     local keyent = self.l_keyentity
-    if !IsValid( keyent ) then return end
+    if !IsValid( keyent ) then return "someone" end
 
     if keyent:IsPlayer() or keyent.IsLambdaPlayer then return keyent:Nick() end
     return keyent:GetClass()
@@ -142,7 +142,7 @@ end
 -- Returns the Key Ent's weapon
 local function keyentWeapon( self )
     local keyent = self.l_keyentity
-    if !IsValid( keyent ) then return end
+    if !IsValid( keyent ) then return "weapon" end
     local wep = keyent:GetActiveWeapon()
     return IsValid( wep ) and wep.GetPrintName and wep:GetPrintName() or keyent.IsLambdaPlayer and keyent.l_WeaponPrettyName or "weapon"
 end 
