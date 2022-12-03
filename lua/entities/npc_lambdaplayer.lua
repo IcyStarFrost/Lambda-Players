@@ -554,19 +554,18 @@ function ENT:Think()
 
          -- Handle swimming
         if self:GetIsUnderwater() and !self:IsInNoClip() then -- Don't swim if we are noclipping
-            local ene = self:GetEnemy()
-
-            if CurTime() > self.l_nextswimposupdate then -- Update our swimming position over time instead of always
+            if CurTime() > self.l_nextswimposupdate then -- Update our swimming position over time
                 self.l_nextswimposupdate = CurTime() + 0.1
 
+                local ene = self:GetEnemy()
+                local movePos = self.l_movepos
                 local newSwimPos = self.l_CurrentPath
-                if self:GetState() == "Combat" and LambdaIsValid( ene ) and ene:WaterLevel() != 0 and self:CanSee( ene ) then 
-                    local movePos = self.l_movepos
+                if movePos and self:GetState() == "Combat" and LambdaIsValid( ene ) and ene:WaterLevel() != 0 and self:CanSee( ene ) then -- Move to enemy's position if valid
                     newSwimPos = ( !isvector( movePos ) and movePos:GetPos() or movePos )
                     if self.l_HasMelee then newSwimPos = newSwimPos + VectorRand( -50, 50 ) end -- Prevents not moving when enclose with enemy
                     self.l_nextswimposupdate = self.l_nextswimposupdate + rand( 0.1, 0.2 ) -- Give me more time to update my swim position
                 elseif newSwimPos and !isvector( newSwimPos ) then 
-                    if IsValid( newSwimPos ) and newSwimPos:IsValid() then
+                    if IsValid( newSwimPos ) and newSwimPos:IsValid() then -- Use PathFollower if valid
                         local curGoal = newSwimPos:GetCurrentGoal()
                         if curGoal and istable( curGoal ) and curGoal.pos then 
                             newSwimPos = curGoal.pos 
@@ -583,29 +582,25 @@ function ENT:Think()
 
             local swimPos = self.l_swimpos
             if !self:IsOnGround() then
-                if !self.l_isswimming then
-                    self:RecomputePath()
-                    self.l_isswimming = true
-                end
+                self.l_isswimming = true
 
-                local swimVel
+                local swimVel = zerovector
                 if swimPos and self.l_issmoving then
                     local swimTrace = self:Trace( swimPos + Vector( 0, 0, 72 ), swimPos )
-                    if swimTrace.HitPos:IsUnderwater() then swimPos = swimTrace.HitPos end
+                    if swimTrace.HitPos:IsUnderwater() then swimPos = swimTrace.HitPos end -- Try swimming a little higher if possible
 
                     self.loco:FaceTowards( swimPos )
+
                     local swimSpeed = ( ( ( self:GetRun() and !self:GetCrouch() ) and 320 or 160 ) + self.l_CombatSpeedAdd )
-                    swimVel = LerpVector( 20 * FrameTime(), self.loco:GetVelocity(), ( swimPos - self:GetPos() ):GetNormalized() * swimSpeed )
-                else
-                    swimVel = LerpVector( 20 * FrameTime(), self.loco:GetVelocity(), zerovector )
+                    swimVel = ( ( swimPos - self:GetPos() ):GetNormalized() * swimSpeed )
                 end
 
-                self.loco:SetVelocity( swimVel )
-            elseif LambdaIsValid( ene ) or swimPos and ( swimPos.z - self:GetPos().z ) > self.loco:GetJumpHeight() then
+                self.loco:SetVelocity( LerpVector( 20 * FrameTime(), self.loco:GetVelocity(), swimVel ) )
+            elseif LambdaIsValid( self:GetEnemy() ) or swimPos and ( swimPos.z - self:GetPos().z ) > self.loco:GetJumpHeight() then
                 self.loco:Jump() -- Jump and start swimming if there's a enemy or our move position height is higher than our jump height
             end
-        elseif self.l_isswimming then
-            self:RecomputePath()
+        elseif self.l_isswimming then -- If just exited the swimming state
+            self:RecomputePath() -- Recompute our current path after exitting water if possible
             self.l_isswimming = false
         end
 

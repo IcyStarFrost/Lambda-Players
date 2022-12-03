@@ -117,6 +117,7 @@ function ENT:MoveToPos( pos, options )
             if IsValid( ladder ) and self:IsInRange( ( moveType == 4 and ladder:GetBottom() or ladder:GetTop() ), 64 ) then
                 self.l_ClimbingLadder = true
                 self:ClimbLadder( ladder, ( moveType == 5 ) )
+                path:Compute( self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), self:PathGenerator() )
                 self.l_ClimbingLadder = false
             end
         end
