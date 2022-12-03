@@ -445,7 +445,7 @@ function ENT:Think()
 
         -- Handle picking up entities
         if CurTime() > self.l_NextPickupCheck then
-            for _, v in ipairs( self:FindInSphere( self:WorldSpaceCenter(), 48 ) ) do
+            for _, v in ipairs( self:FindInSphere( self:GetPos(), 58 ) ) do
                 local pickFunc = _LAMBDAPLAYERSItemPickupFunctions[ v:GetClass() ]
                 if isfunction( pickFunc ) and self:Visible( v ) then pickFunc( self, v ) end
             end
@@ -470,7 +470,10 @@ function ENT:Think()
         end
         
         if !self:IsInWorld() and CurTime() > self.l_outboundsreset then 
-            self:SetPos( rasp:GetBool() and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos )
+            local pos = rasp:GetBool() and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos
+            self:SetPos( pos )
+            self.l_noclipheight = 0
+            self.l_noclippos = pos
         else
             self.l_outboundsreset = CurTime() + 5
         end
