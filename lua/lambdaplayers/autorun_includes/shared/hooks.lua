@@ -61,18 +61,19 @@ elseif CLIENT then
 
         if LambdaIsValid( traceent ) and traceent.IsLambdaPlayer then
             local name = traceent:GetLambdaName()
-            local colvec = traceent:GetPlyColor()
+            local color = traceent:GetDisplayColor()
             local hp = traceent:GetNW2Float( "lambda_health", "NAN" )
-            hp = hp == "NAN" and traceent:GetNWFloat( "lambda_health", "NAN" ) or hp
             local hpW = 2
             local armor = traceent:GetArmor()
+            hp = hp == "NAN" and traceent:GetNWFloat( "lambda_health", "NAN" ) or hp
+
             if armor > 0 and displayArmor:GetBool() then
                 hpW = 2.1
-                DrawText( tostring( armor ) .. "%", "lambdaplayers_healthfont", ( sw / 1.9 ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), placeholdercolor, TEXT_ALIGN_CENTER)
+                DrawText( tostring( armor ) .. "%", "lambdaplayers_healthfont", ( sw / 1.9 ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), color, TEXT_ALIGN_CENTER)
             end
 
-            DrawText( name, "lambdaplayers_displayname", ( sw / 2 ), ( sh / 1.95 ) , placeholdercolor, TEXT_ALIGN_CENTER )
-            DrawText( tostring( hp ) .. "%", "lambdaplayers_healthfont", ( sw / hpW ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), placeholdercolor, TEXT_ALIGN_CENTER)
+            DrawText( name, "lambdaplayers_displayname", ( sw / 2 ), ( sh / 1.95 ) , color, TEXT_ALIGN_CENTER )
+            DrawText( tostring( hp ) .. "%", "lambdaplayers_healthfont", ( sw / hpW ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), color, TEXT_ALIGN_CENTER)
         end
     
     end )

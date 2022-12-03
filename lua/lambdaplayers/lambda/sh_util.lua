@@ -26,6 +26,7 @@ local coroutine = coroutine
 local Trace = util.TraceLine
 local table_add = table.Add
 local EndsWith = string.EndsWith
+local tobool = tobool
 local math_Approach = math.Approach
 local string_Replace = string.Replace
 local table_insert = table.insert
@@ -302,16 +303,16 @@ function ENT:Trace( pos, overridestart )
     return Trace( tracetable )
 end
 
-    -- Returns if we can see the ent in question.
-    -- Simple trace 
-    function ENT:CanSee( ent )
-        if !IsValid( ent ) then return end
-        visibilitytrace.start = self:GetAttachmentPoint( "eyes" ).Pos
-        visibilitytrace.endpos = ent:WorldSpaceCenter()
-        visibilitytrace.filter = self
-        local result = Trace( visibilitytrace )
-        return ( result.Fraction == 1.0 or result.Entity == ent )
-    end
+-- Returns if we can see the ent in question.
+-- Simple trace 
+function ENT:CanSee( ent )
+    if !IsValid( ent ) then return end
+    visibilitytrace.start = self:GetAttachmentPoint( "eyes" ).Pos
+    visibilitytrace.endpos = ent:WorldSpaceCenter()
+    visibilitytrace.filter = self
+    local result = Trace( visibilitytrace )
+    return ( result.Fraction == 1.0 or result.Entity == ent )
+end
 
 if SERVER then
 
@@ -732,6 +733,14 @@ if SERVER then
         net.Broadcast()
     end
 
+
+    -- Gets the client side set color on the specified player
+    local function GetClientDisplayColor( self, ply )
+        local useplycolorasdisplay = tobool( ply:GetInfoNum( "lambdaplayers_useplayermodelcolorasdisplaycolor", 0 ) )
+        local overridecolor = hook.Run( "LambdaGetDisplayColor", self, ply )
+        return overridecolor != nil and overridecolor or useplycolorasdisplay and self:GetPlyColor():ToColor() or Color( ply:GetInfoNum( "lambdaplayers_displaycolor_r", 255 ), ply:GetInfoNum( "lambdaplayers_displaycolor_g", 136 ), ply:GetInfoNum( "lambdaplayers_displaycolor_b", 0 ) )
+    end
+
     -- Makes the Lambda say the provided text
     -- if instant is true, the Lambda will say the text instantly.
     -- teamOnly is just so this function is compatible with addons basically
@@ -741,7 +750,20 @@ if SERVER then
         text = isstring( replacement ) and replacement or text
         if text == "" then return end
         text = LambdaKeyWordModify( self, text )
-        LambdaPlayers_ChatAdd( recipients, ( self:GetIsDead() and red or color_white ), ( self:GetIsDead() and "*DEAD* " or ""), lambdacolor, self:GetLambdaName(), color_white, ": " .. text )
+
+        -- This has changed so we can properly send each player a text chat message with their own custom display colors
+        if !recipients then
+            for _, ply in ipairs( player.GetAll() ) do
+                LambdaPlayers_ChatAdd( ply, ( self:GetIsDead() and red or color_white ), ( self:GetIsDead() and "*DEAD* " or ""), GetClientDisplayColor( self, ply ), self:GetLambdaName(), color_white, ": " .. text )
+            end
+        elseif IsValid( recipients ) and recipients:IsPlayer() then
+            LambdaPlayers_ChatAdd( recipients, ( self:GetIsDead() and red or color_white ), ( self:GetIsDead() and "*DEAD* " or ""), GetClientDisplayColor( self, recipients ), self:GetLambdaName(), color_white, ": " .. text )
+        else
+            for _, ply in ipairs( recipients:GetPlayers() ) do
+                LambdaPlayers_ChatAdd( ply, ( self:GetIsDead() and red or color_white ), ( self:GetIsDead() and "*DEAD* " or ""), GetClientDisplayColor( self, ply ), self:GetLambdaName(), color_white, ": " .. text )
+            end
+        end
+
     end
 
     -- "Manually" type out a message and send it to text chat when we are finished
@@ -826,6 +848,12 @@ elseif CLIENT then
     function ENT:IsBeingDrawn()
         return RealTime() < self.l_lastdraw
     end
-
+    
+    -- Returns the color that should be used in displays such as Name Display, Text Chat, ect
+    local useplycolorasdisplay = GetConVar( "lambdaplayers_useplayermodelcolorasdisplaycolor" )
+    function ENT:GetDisplayColor()
+        local overridecolor = hook.Run( "LambdaGetDisplayColor", self, LocalPlayer() )
+        return overridecolor != nil and overridecolor or useplycolorasdisplay:GetBool() and self:GetPlyColor():ToColor() or _LambdaDisplayColor
+    end
 
 end
