@@ -98,7 +98,8 @@ function ENT:Initialize()
 
     self.l_SpawnPos = self:GetPos() -- Used for Respawning
     self.l_SpawnAngles = self:GetAngles()
-
+    self.l_Hooks = {} -- The table holding all our created hooks
+    
     -- Has to be here so the client can run this too. Originally was under Personal Stats
     self:BuildPersonalityTable() -- Builds all personality chances from autorun_includes/shared/lambda_personalityfuncs.lua for use in chance testing and creates Get/Set functions for each one
 
@@ -112,7 +113,7 @@ function ENT:Initialize()
         self.l_ExternalVars = {} -- The table holding any custom variables external addons want saved onto the Lambda so it can exported along with other Lambda Info
         self.l_Timers = {} -- The table holding all named timers
         self.l_SimpleTimers = {} -- The table holding all simple timers
-        self.l_Hooks = {} -- The table holding all our created hooks
+        
 
         self.l_State = "Idle" -- The state we are in. See sv_states.lua
         self.l_Weapon = "" -- The weapon we currently have
