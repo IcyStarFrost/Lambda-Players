@@ -129,7 +129,7 @@ CreateLambdaConvar( "lambdaplayers_voice_mergeaddonvoicelines", 1, true, false, 
 -- Text Chat Convars --
 CreateLambdaConvar( "lambdaplayers_text_usedefaultlines", 1, true, false, false, "If Lambda Players are able to use the default text chat lines. Disable this if you only want your custom text lines. Make sure you Update Lambda Data after changing this!", 0, 1, { type = "Bool", name = "Use Default Lines", category = "Text Chat Options" } )
 CreateLambdaConvar( "lambdaplayers_text_useaddonlines", 1, true, false, false, "If Lambda Players are able to use text chat lines added by addons. Make sure you Update Lambda Data after changing this!", 0, 1, { type = "Bool", name = "Use Addon Lines", category = "Text Chat Options" } )
-CreateLambdaConvar( "lambdaplayers_text_chatlimit", 0, true, false, false, "The amount of Lambda Players that can type a message at a time. Set to 0 for no limit", 0, 60, { type = "Slider", decimals = 0, name = "Chat Limit", category = "Text Chat Options" } )
+CreateLambdaConvar( "lambdaplayers_text_chatlimit", 1, true, false, false, "The amount of Lambda Players that can type a message at a time. Set to 0 for no limit", 0, 60, { type = "Slider", decimals = 0, name = "Chat Limit", category = "Text Chat Options" } )
 --
 
 -- Force Related Convars
