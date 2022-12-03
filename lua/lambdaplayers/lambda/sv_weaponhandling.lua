@@ -50,7 +50,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
 
     self.l_Weapon = weaponname
     self:SetNW2String( "lambda_spawnweapon", weaponname )
-    self.l_WeaponPrettyName = weaponname.prettyname
+    self.l_WeaponPrettyName = weapondata.notagprettyname
     self.l_HasLethal = weapondata.islethal
     self.l_HasMelee = weapondata.ismelee 
     self.l_HoldType = weapondata.holdtype or "normal"

@@ -24,6 +24,7 @@ _LAMBDAWEAPONALLOWCONVARS = {}
 for k, v in pairs( _LAMBDAPLAYERSWEAPONS ) do
     local convar = CreateLambdaConvar( "lambdaplayers_weapons_allow" .. k, 1, true, false, false, "Allows the Lambda Players to equip " .. v.prettyname, 0, 1 )
 	_LAMBDAWEAPONALLOWCONVARS[ k ] = convar
+    v.notagprettyname = ( v.prettyname != nil and v.prettyname or "" )
     v.prettyname = "[" .. v.origin .. "] " .. v.prettyname
 	if CLIENT then 
         _LAMBDAPLAYERSWEAPONORIGINS[ v.origin ] = v.origin 
