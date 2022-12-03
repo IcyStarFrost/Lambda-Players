@@ -175,7 +175,7 @@ if SERVER then
                 if random( 1, 100 ) <= self:GetVoiceChance() then
                     self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
                 elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
-                    self:TypeMessage( self:GetTextLine( "idle" ) )
+                    self:TypeMessage( self:GetTextLine( "kill" ) )
                 end
 
                 if random( 1, 10 ) == 1 then self.l_tbagpos = victim:GetPos(); self:SetState( "TBaggingPosition" ) end
