@@ -501,6 +501,11 @@ function ENT:InitializeMiniHooks()
             end
         end, true )
 
+        -- Might be better than constantly calling ENT:WaterLevel()?
+        self:Hook( "OnEntityWaterLevelChanged", "OnWaterLevelChanged", function( ent, oldVal, newVal ) 
+            if ent == self then self:SetIsUnderwater( newVal >= 2 ) end
+        end, true )
+
     elseif CLIENT then
 
         self:Hook( "PreDrawEffects", "CustomWeaponRenderEffects", function()
