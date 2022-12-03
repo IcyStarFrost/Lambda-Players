@@ -72,7 +72,6 @@ end
     local InSinglePlayer = game.SinglePlayer
     local Clamp = math.Clamp
     local min = math.min
-    local LerpVector = LerpVector
     local IsInWorld = util.IsInWorld
     local isvector = isvector
     local color_white = color_white

@@ -1,5 +1,6 @@
 local CurTime = CurTime
-local boltDmg = GetConVar("sk_plr_dmg_crossbow")
+local CreateEntity = ents.Create
+local IsValid = IsValid
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
@@ -22,40 +23,27 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         callback = function( self, wepent, target )
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
-            
-            local bolt = ents.Create( "crossbow_bolt" )
-            if IsValid( bolt ) then
-                self.l_Clip = self.l_Clip - 1
-                self.l_WeaponUseCooldown = CurTime() + 0.4
 
-                self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
-                self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
+            local bolt = CreateEntity( "crossbow_bolt" )
+            if !IsValid( bolt ) then return end
 
-                wepent:EmitSound( "Weapon_Crossbow.Single" )
+            self.l_Clip = self.l_Clip - 1
+            self.l_WeaponUseCooldown = CurTime() + 0.4
 
-                local fireDir = ( target:WorldSpaceCenter() - self:EyePos() ):Angle()
+            self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
+            self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
 
-                bolt:SetPos( self:EyePos() + fireDir:Forward() * 32 + fireDir:Up() * 32 ) 
-                bolt:SetAngles( fireDir )
-                bolt:Spawn()
-                bolt:SetOwner( self )
-                bolt:SetVelocity( fireDir:Forward() * ( bolt:WaterLevel() == 0 and 2500 or 1500 ) )
+            wepent:EmitSound( "Weapon_Crossbow.Single" )
 
-                bolt:EmitSound( "Weapon_Crossbow.BoltFly" )
-                bolt:CallOnRemove( "lambdaplayer_crossbowbolt_" .. bolt:EntIndex(), function()
-                    local tr = bolt:GetTouchTrace()
-                    if !tr or !tr.Entity or !IsValid( tr.Entity ) then return end
+            local fireDir = ( target:WorldSpaceCenter() - self:EyePos() ):Angle()
 
-                    local dmgInfo = DamageInfo()
-                    dmgInfo:SetDamage( boltDmg:GetFloat() )
-                    dmgInfo:SetDamageType( bit.bor( DMG_BULLET, DMG_NEVERGIB ) )
-                    dmgInfo:SetDamagePosition( tr.HitPos )
-                    dmgInfo:SetAttacker( IsValid( self ) and self or bolt )
-                    dmgInfo:SetInflictor( bolt )
-                    dmgInfo:SetDamagePosition( tr.HitPos )
-                    tr.Entity:DispatchTraceAttack( dmgInfo, tr )
-                end)
-            end
+            bolt:SetPos( self:EyePos() + fireDir:Forward() * 32 + fireDir:Up() * 32 ) 
+            bolt:SetAngles( fireDir )
+            bolt:Spawn()
+            bolt:SetOwner( self )
+            bolt:SetVelocity( fireDir:Forward() * ( bolt:WaterLevel() == 0 and 2500 or 1500 ) )
+            bolt:Fire( "SetDamage", "100" )
+            bolt:EmitSound( "Weapon_Crossbow.BoltFly" )
 
             return true
         end,
