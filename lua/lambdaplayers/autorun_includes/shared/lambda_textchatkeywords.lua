@@ -87,13 +87,14 @@ local props = {
 
 local numbers = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" }
 local endings = { "a", "b", "c" }
--- Basically returns the end of the filepath and removes the extension
+
+-- Remove the file pathy stuff, remove file extension, remove underscores, and numbers
 local function PrettyName( mdlpath )
     local split = string_Explode( "/", mdlpath )
     local basename = StripExtension( split[ #split ] )
     basename = string_Replace( basename, "_", " " )
     for k, number in ipairs( numbers ) do basename = string_Replace( basename, number, "" ) end
-    for k, ending in ipairs( endings ) do if string_find( basename, ending ) then basename = string_Left( basename, #basename - 1 ) end end
+    for k, ending in ipairs( endings ) do if string_find( basename, ending ) then basename = string_Left( basename, #basename - 1 ) break end end
     return basename
 end
 
@@ -127,14 +128,20 @@ local function selfkills( self )
     return tostring( self:Frags() ) 
 end
 
+-- Return the ping of the lambda
+local function selfping( self )
+    return tostring( self:Ping() ) 
+end
+
 LambdaAddTextChatKeyWord( "/rndply/", RandomPlayerKeyword )
 LambdaAddTextChatKeyWord( "/keyent/", Keyentity )
 LambdaAddTextChatKeyWord( "/self/", Selfname )
 LambdaAddTextChatKeyWord( "/servername/", ServerName )
 LambdaAddTextChatKeyWord( "/nearprop/", nearProp )
 LambdaAddTextChatKeyWord( "/nearply/", nearPly )
-LambdaAddTextChatKeyWord( "/selfdeaths/", selfdeaths )
-LambdaAddTextChatKeyWord( "/selfkills/", selfkills )
+LambdaAddTextChatKeyWord( "/deaths/", selfdeaths )
+LambdaAddTextChatKeyWord( "/ping/", selfping )
+LambdaAddTextChatKeyWord( "/kills/", selfkills )
 LambdaAddTextChatKeyWord( "/map/", Map )
 
 
