@@ -18,6 +18,7 @@ local deathdir = GetConVar( "lambdaplayers_voice_deathdir" )
 local killdir = GetConVar( "lambdaplayers_voice_killdir" )
 local debugvar = GetConVar( "lambdaplayers_debug" )
 local voicevar = GetConVar( "lambdaplayers_personality_voicechance" )
+local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 local callnpchook = GetConVar( "lambdaplayers_lambda_callonnpckilledhook" )
 
 if SERVER then
@@ -226,9 +227,8 @@ if SERVER then
     function ENT:OnNavAreaChanged( old , new ) 
         self.l_currentnavarea = new
 
-
         local navfunc = Navmeshfunctions[ band( new:GetAttributes(), attributes ) ]
-        if navfunc then navfunc( self ) end
+        if obeynav:GetBool() and navfunc then navfunc( self ) end
     end
     
     -- Called when we collide with something
