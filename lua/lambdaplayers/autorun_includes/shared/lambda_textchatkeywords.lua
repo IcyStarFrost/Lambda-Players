@@ -117,6 +117,15 @@ local function nearPly( self )
     return "someone"
 end
 
+-- Returns the amount of deaths the Lambda has died
+local function selfdeaths( self )
+    return tostring( self:Deaths() ) 
+end
+
+-- Return the amount of kills the Lambda has
+local function selfkills( self )
+    return tostring( self:Frags() ) 
+end
 
 LambdaAddTextChatKeyWord( "/rndply/", RandomPlayerKeyword )
 LambdaAddTextChatKeyWord( "/keyent/", Keyentity )
@@ -124,6 +133,8 @@ LambdaAddTextChatKeyWord( "/self/", Selfname )
 LambdaAddTextChatKeyWord( "/servername/", ServerName )
 LambdaAddTextChatKeyWord( "/nearprop/", nearProp )
 LambdaAddTextChatKeyWord( "/nearply/", nearPly )
+LambdaAddTextChatKeyWord( "/selfdeaths/", selfdeaths )
+LambdaAddTextChatKeyWord( "/selfkills/", selfkills )
 LambdaAddTextChatKeyWord( "/map/", Map )
 
 
