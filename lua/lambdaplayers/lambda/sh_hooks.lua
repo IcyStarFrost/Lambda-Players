@@ -136,6 +136,8 @@ if SERVER then
             if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self:TypeMessage( self:GetTextLine( "deathbyplayer" ) ) end
         elseif IsValid( attacker ) and attacker.IsLambdaPlayer and attacker != self then
             if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self:TypeMessage( self:GetTextLine( "deathbyplayer" ) ) end
+        elseif attacker != self then
+            if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self:TypeMessage( self:GetTextLine( "death" ) ) end
         end
 
 
@@ -335,12 +337,17 @@ if SERVER then
         local respawn = tobool( ply:GetInfoNum( "lambdaplayers_lambda_shouldrespawn", 0 ) )
         local weapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )
         local voiceprofile = ply:GetInfo( "lambdaplayers_lambda_voiceprofile" )
+        local textprofile = ply:GetInfo( "lambdaplayers_lambda_textprofile" )
         local personality = ply:GetInfo( "lambdaplayers_personality_preset" )
 
         self:SetRespawn( respawn )
         if self:WeaponDataExists( weapon ) then self:SwitchWeapon( weapon ) self.l_SpawnWeapon = weapon end
         self.l_VoiceProfile = voiceprofile != "" and voiceprofile or self.l_VoiceProfile
-
+        self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
+        
+        self.l_TextProfile = textprofile != "" and textprofile or self.l_TextProfile
+        self:SetNW2String( "lambda_tp", self.l_TextProfile )
+        
         if personality != "random" then
             self:BuildPersonalityTable( personalitypresets[ personality ]( ply, self ) )
         end
