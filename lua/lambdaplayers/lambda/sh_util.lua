@@ -12,6 +12,7 @@ local table_empty = table.Empty
 local file_Find = file.Find
 local table_Empty = table.Empty
 local table_IsEmpty = table.IsEmpty
+local table_remove = table.remove
 local table_RemoveByValue = table.RemoveByValue
 local table_Copy = table.Copy
 local ents_GetAll = ents.GetAll
