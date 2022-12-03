@@ -515,6 +515,11 @@ if SERVER then
         return self.l_State
     end
 
+    -- If we currently are fighting
+    function ENT:InCombat()
+        return self:GetState() == "Combat"
+    end
+
     -- Returns the last state we were in
     function ENT:GetLastState()
         return self.l_LastState

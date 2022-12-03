@@ -403,7 +403,7 @@ function ENT:Think()
             
             if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() then
                 self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
-            elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
+            elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
                 self:TypeMessage( self:GetTextLine( "idle" ) )
             end
 
