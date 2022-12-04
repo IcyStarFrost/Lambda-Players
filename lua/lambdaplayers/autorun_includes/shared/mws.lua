@@ -2,6 +2,7 @@ local enabled = CreateLambdaConvar( "lambdaplayers_mws_enabled", 0, true, false,
 local maxlambdacount = CreateLambdaConvar( "lambdaplayers_mws_maxlambdas", 5, true, false, false, "The amount of natural Lambdas can be spawned at once", 1, 500, { type = "Slider", decimals = 0, name = "Max Lambda Count", category = "MWS"} )
 local spawnrate = CreateLambdaConvar( "lambdaplayers_mws_spawnrate", 2, true, false, false, "Time in seconds before each Lambda Player is spawned", 0.1, 500, { type = "Slider", decimals = 1, name = "Spawn Rate", category = "MWS"} )
 local randomspawnrate = CreateLambdaConvar( "lambdaplayers_mws_randomspawnrate", 0, true, false, false, "If the spawn rate should be randomized between 0.1 and what ever Spawn Rate is set to", 0, 1, { type = "Bool", name = "Randomized Spawn Rate", category = "MWS"} )
+local respawn = CreateLambdaConvar( "lambdaplayers_mws_respawning", 1, true, false, false, "If Lambda Players spawned by MWS should respawn", 0, 1, { type = "Bool", name = "Respawn", category = "MWS"} )
 
 
 local table_insert = table.insert
@@ -151,6 +152,7 @@ hook.Add( "Tick", "lambdaplayers_MWS", function()
         lambda:SetPos( pos )
         lambda:SetAngles( ang )
         lambda:Spawn()
+        lambda:SetRespawn( respawn:GetBool() )
         table_insert( SpawnedLambdaPlayers, 1, lambda )
 
         if perspreset:GetString() != "random" then
