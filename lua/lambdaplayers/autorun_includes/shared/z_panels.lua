@@ -313,8 +313,10 @@ if CLIENT then
             end
 
             menu:AddOption( "Apply " .. line:GetColumnText( 1 ) .. " Preset", function()
-                for k, v in pairs( line:GetSortValue( 1 ) ) do
-                    GetConVar( k ):SetString( v )
+                if isclientonly then
+                    for k, v in pairs( line:GetSortValue( 1 ) ) do
+                        GetConVar( k ):SetString( v )
+                    end
                 end
 
                 local json = TableToJSON( line:GetSortValue( 1 ) )
