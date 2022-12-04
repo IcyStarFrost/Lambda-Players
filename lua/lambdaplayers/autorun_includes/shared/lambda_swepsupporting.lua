@@ -7,7 +7,6 @@ _LAMBDAWEAPONCLASSANDPRINTS = {}
 -- origin           | String |          Where the weapons come from
 -- islethal         | String |          if the weapon is lethal
 -- handlefunction   | Function |        The function used to setup Combat data for Lambda
--- shootfunction    | Function |        The function called when the Lambda wants to shoot the weapon
 
 function LambdaRegisterSWEP( classorbase, origin, islethal, handlefunction )
     local IsBase = string.find( classorbase, "base" )
