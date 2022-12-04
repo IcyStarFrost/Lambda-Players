@@ -12,7 +12,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         origin = "Misc",
         prettyname = "Punch Activated Impact Grenade",
         holdtype = "grenade",
-        killicon = "npc_grenade_frag",
+        killicon = "lambdaplayers/killicons/icon_paig",
         ismelee = true,
         bonemerge = true,
         keepdistance = 5,
@@ -47,13 +47,13 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 effectData:SetOrigin( blowPos )
                 Effect( "Explosion", effectData, true, true )
 
-                BlastDamage( self, self, blowPos, 400, 1000 )
+                BlastDamage( wepent, self, blowPos, 400, 1000 )
 
                 local selfDmg = DamageInfo()
                 selfDmg:SetDamage( 1000 )
                 selfDmg:SetDamageType( DMG_BLAST )
                 selfDmg:SetAttacker( self )
-                selfDmg:SetInflictor( self )
+                selfDmg:SetInflictor( wepent )
                 self:TakeDamageInfo( selfDmg )
 
                 wepent:EmitSound( "BaseExplosionEffect.Sound" , 90 )

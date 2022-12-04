@@ -14,19 +14,20 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         ismelee = true,
         bonemerge = true,
         keepdistance = 10,
-        attackrange = 65,
-                
+        attackrange = 55,
+
         callback = function( self, wepent, target )
-            self.l_WeaponUseCooldown = CurTime() + Rand(1.0, 1.2)
+            self.l_WeaponUseCooldown = CurTime() + Rand( 1.0, 1.2 )
+            wepent:EmitSound( "Zombie.AttackMiss" )
 
-            wepent:EmitSound( "npc/zombie/claw_miss1.wav", 70, 100, 1, CHAN_WEAPON )
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
-            self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
-            
-            self:SimpleTimer( 0.3, function()
-                if !IsValid( target ) or self:GetRangeSquaredTo( target ) > ( 65 * 65 ) then return end
+            local attackAnim = self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
+            self:SetLayerPlaybackRate( attackAnim, 0.8 )
 
-                local dmg = random( 40, 50 )
+            self:SimpleTimer( 0.4, function()
+                if !IsValid( target ) or !self:IsInRange( target, 60 ) then return end
+
+                local dmg = random( 45, 55 )
                 local dmginfo = DamageInfo()
                 dmginfo:SetDamage( dmg )
                 dmginfo:SetAttacker( self )
@@ -35,7 +36,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 dmginfo:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg )
                 target:TakeDamageInfo( dmginfo )
 
-                target:EmitSound( "lambdaplayers/weapons/meathook/hook-" .. random(3) .. ".mp3", 70 )
+                target:EmitSound( "lambdaplayers/weapons/meathook/hook-" .. random( 3 ) .. ".mp3", 70 )
             end )
             
             return true
