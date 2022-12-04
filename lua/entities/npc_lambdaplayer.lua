@@ -85,7 +85,9 @@ end
     local RealTime = RealTime
     local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
     local tracetable = {}
-    
+    local collisionmins = Vector( -10, -10, 0 )
+    local standingcollisionmaxs = Vector( 10, 10, 72 )
+    local crouchingcollisionmaxs = Vector( 10, 10, 32 )
 --
 
 if CLIENT then
@@ -231,7 +233,7 @@ function ENT:Initialize()
         self:SetCrouchSpeed( 60 )
         self:SetWalkSpeed( 200 )
 
-        self:SetCollisionBounds( Vector( -10, -10, 0 ), Vector( 10, 10, 72 ) )
+        self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
         self:PhysicsInitShadow()
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
         self:SetSolidMask( MASK_PLAYERSOLID )
@@ -623,6 +625,14 @@ function ENT:Think()
             elseif self:GetActivity() != anims.jump then
                 self:StartActivity( anims.jump )
             end
+        end
+        --
+
+        -- Change collision bounds based on if we are crouching or not.
+        if self:GetCrouch() then
+            self:SetCollisionBounds( collisionmins, crouchingcollisionmaxs )
+        else
+            self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
         end
         --
 
