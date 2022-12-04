@@ -769,6 +769,7 @@ if SERVER then
 
     -- "Manually" type out a message and send it to text chat when we are finished
     function ENT:TypeMessage( text )
+        if text == "" then return end
         if self:GetIsTyping() then self:Say( self.l_typedtext ) end
         text = LambdaKeyWordModify( self, text )
 
