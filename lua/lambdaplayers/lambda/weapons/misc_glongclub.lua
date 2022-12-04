@@ -14,18 +14,18 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         ismelee = true,
         bonemerge = true,
         keepdistance = 64,
-        attackrange = 150,
+        attackrange = 175,
 
         callback = function( self, wepent, target )
             self.l_WeaponUseCooldown = CurTime() + Rand(1.33, 1.8)
-
             wepent:EmitSound( "lambdaplayers/weapons/glongclub/wpn_golf_club_swing_miss" .. random( 2 ) .. ".mp3", 85, random( 95, 110 ), 1, CHAN_WEAPON )
+
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             local gestAttack = self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
-            self:SetLayerPlaybackRate(gestAttack, 0.75)
+            self:SetLayerPlaybackRate( gestAttack, 0.75 )
 
             self:SimpleTimer(0.45, function()
-                if !IsValid( target ) or self:GetRangeSquaredTo( target ) > ( 150 * 150 ) then return end
+                if !IsValid( target ) or !self:IsInRange( target, 200 ) then return end
 
                 local dmg = random( 500, 750 )
                 local attackAng = ( target:WorldSpaceCenter() - self:EyePos() ):Angle()

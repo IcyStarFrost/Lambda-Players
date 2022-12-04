@@ -22,7 +22,7 @@ function ENT:Idle()
     end
 end
 
-local combattbl = { update = 0.2, run = true }
+local combattbl = { update = 0.2, run = true, tol = 0 }
 function ENT:Combat()
     if !LambdaIsValid( self:GetEnemy() ) then self:SetEnemy( NULL ) self:SetState( "Idle" ) return end
 
