@@ -376,7 +376,6 @@ if SERVER then
 
             if info.externalvars then
                 for k, v in pairs( info.externalvars ) do
-                    print( k, v )
                     self.l_ExternalVars[ k ] = v
                     self[ k ] = v
                 end
@@ -497,7 +496,7 @@ if SERVER then
         local info = LambdaPersonalProfiles and LambdaPersonalProfiles[ self:GetLambdaName() ] or nil
         if info then
             self:ApplyLambdaInfo( info )
-            hook.Run( "LambdaOnProfileApplied", self, info )
+            self:SimpleTimer( 0, function() hook.Run( "LambdaOnProfileApplied", self, info ) end, true )
         end
     end
 
