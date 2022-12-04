@@ -52,6 +52,8 @@ if SERVER then
             undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
         end
 
+        hook.Run( "LambdaOnRecreated", newlambda )
+
     end
 
     function ENT:LambdaOnKilled( info )
