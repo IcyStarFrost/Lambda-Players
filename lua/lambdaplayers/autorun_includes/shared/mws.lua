@@ -98,6 +98,7 @@ local navmesh_GetAllNavAreas = navmesh.GetAllNavAreas
 
 local SpawnedLambdaPlayers = {}
 local shutdown = false
+local pause = false
 local failtimes = 0
 local nextspawn = 0
 hook.Add( "Tick", "lambdaplayers_MWS", function()
@@ -117,6 +118,8 @@ hook.Add( "Tick", "lambdaplayers_MWS", function()
         
         return
     end
+
+    if pause then return end
 
     if CurTime() > nextspawn and #SpawnedLambdaPlayers < maxlambdacount:GetInt() then
         local spawns = LambdaGetPossibleSpawns()
@@ -172,34 +175,19 @@ hook.Add( "Tick", "lambdaplayers_MWS", function()
 
 end )
 
--- Do not recreate 
-hook.Add( "LambdaOnInternalKilled", "lambdaplayers_MWS_preventrecreation", function( self )
-    if self.l_MWSspawned then
 
-        local exportinfo = self:ExportLambdaInfo()
-        local newlambda = ents_Create( "npc_lambdaplayer" )
-        newlambda:SetPos( self.l_SpawnPos )
-        newlambda:SetAngles( self.l_SpawnAngles )
-        newlambda:SetCreator( self:GetCreator() )
-        newlambda.l_MWSspawned = true
-        newlambda:Spawn()
-        newlambda:ApplyLambdaInfo( exportinfo )
 
-        table_Merge( newlambda.l_SpawnedEntities, self.l_SpawnedEntities )
+-- These hooks will prevent MWS from over shooting its limits
+hook.Add( "LambdaOnInternalKilled", "lambdaplayers_MWS_prerecreation", function( self )
+    if self.l_MWSspawned then self:SetExternalVar( "l_mwsprerecreation", true ) pause = true timer.Simple( 0.5, function() pause = false end ) end
+end ) 
 
-        if IsValid( self:GetCreator() ) then
-            undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
-                undo.SetPlayer( self:GetCreator() )
-                undo.AddEntity( newlambda )
-                undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. self:GetLambdaName() .. " )" )
-            undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
-        end
-
-        table_insert( SpawnedLambdaPlayers, 1, newlambda )
-
-        return true
+hook.Add( "LambdaOnRecreated", "lambdaplayers_MWS_postrecreation", function( self )
+    if self.l_mwsprerecreation then
+        pause = false
     end
 end )
+--
 
 -- Remove self from the MWS table
 hook.Add( "LambdaOnRemove", "lambdaplayers_MWS_OnRemove", function( self )
