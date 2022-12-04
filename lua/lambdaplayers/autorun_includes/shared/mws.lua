@@ -187,11 +187,13 @@ hook.Add( "LambdaOnInternalKilled", "lambdaplayers_MWS_prerecreation", function(
 end ) 
 
 hook.Add( "LambdaOnRecreated", "lambdaplayers_MWS_postrecreation", function( self )
-    if self:GetExternalVar( "l_mwsprerecreation" ) then
-        self.l_MWSspawned = true
-        table_insert( SpawnedLambdaPlayers, 1, self )
-        pause = false
-    end
+    timer.Simple( 0.2, function()
+        if IsValid( self ) and self:GetExternalVar( "l_mwsprerecreation" ) then
+            self.l_MWSspawned = true
+            table_insert( SpawnedLambdaPlayers, 1, self )
+            pause = false
+        end
+    end )
 end )
 --
 
