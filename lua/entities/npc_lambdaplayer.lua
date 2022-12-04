@@ -72,7 +72,6 @@ end
     local InSinglePlayer = game.SinglePlayer
     local Clamp = math.Clamp
     local min = math.min
-    local LerpVector = LerpVector
     local IsInWorld = util.IsInWorld
     local isvector = isvector
     local color_white = color_white
@@ -299,13 +298,13 @@ function ENT:Initialize()
 
 
     -- For some reason for the voice chat flexes we have to do this in order to get it to work
-    local sidewayFlex = self:GetFlexIDByName("mouth_sideways")
-    if sidewayFlex and self:GetFlexBounds(sidewayFlex) == -1 and self:GetFlexWeight(sidewayFlex) == 0.0 then
+    local sidewayFlex = self:GetFlexIDByName( "mouth_sideways" )
+    if sidewayFlex and self:GetFlexBounds( sidewayFlex ) == -1 and self:GetFlexWeight( sidewayFlex ) == 0.0 then
         self:SetFlexWeight(sidewayFlex, 0.5)
     end
-    sidewayFlex = self:GetFlexIDByName("jaw_sideways")
-    if sidewayFlex and self:GetFlexBounds(sidewayFlex) == -1 and self:GetFlexWeight(sidewayFlex) == 0.0 then
-        self:SetFlexWeight(sidewayFlex, 0.5)
+    sidewayFlex = self:GetFlexIDByName( "jaw_sideways" )
+    if sidewayFlex and self:GetFlexBounds( sidewayFlex ) == -1 and self:GetFlexWeight( sidewayFlex ) == 0.0 then
+        self:SetFlexWeight( sidewayFlex, 0.5 )
     end
 
     self:LambdaMoveMouth( 0 )

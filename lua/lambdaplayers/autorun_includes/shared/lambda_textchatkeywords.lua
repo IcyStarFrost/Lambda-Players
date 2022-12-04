@@ -28,6 +28,8 @@ end
 
 -- Replaces any existing key words in the provided string
 function LambdaKeyWordModify( self, str ) 
+    if !str then return "" end
+
     for keyword, replacefunction in pairs( LambdaValidTextChatKeyWords ) do
         local haskeyword = string_find( str, keyword )
 
@@ -73,7 +75,7 @@ end
 -- Return a key entity's name
 local function Keyentity( self )
     local keyent = self.l_keyentity
-    if !IsValid( keyent ) then return end
+    if !IsValid( keyent ) then return "someone" end
 
     if keyent:IsPlayer() or keyent.IsLambdaPlayer then return keyent:Nick() end
     return keyent:GetClass()
@@ -134,6 +136,19 @@ local function selfping( self )
     return tostring( self:Ping() ) 
 end
 
+-- Returns the current weapon name
+local function selfWeapon( self )
+    return self.l_WeaponPrettyName
+end 
+
+-- Returns the Key Ent's weapon
+local function keyentWeapon( self )
+    local keyent = self.l_keyentity
+    if !IsValid( keyent ) then return "weapon" end
+    local wep = keyent:GetActiveWeapon()
+    return IsValid( wep ) and wep.GetPrintName and wep:GetPrintName() or keyent.IsLambdaPlayer and keyent.l_WeaponPrettyName or "weapon"
+end 
+
 LambdaAddTextChatKeyWord( "/rndply/", RandomPlayerKeyword )
 LambdaAddTextChatKeyWord( "/keyent/", Keyentity )
 LambdaAddTextChatKeyWord( "/self/", Selfname )
@@ -144,6 +159,8 @@ LambdaAddTextChatKeyWord( "/deaths/", selfdeaths )
 LambdaAddTextChatKeyWord( "/ping/", selfping )
 LambdaAddTextChatKeyWord( "/kills/", selfkills )
 LambdaAddTextChatKeyWord( "/map/", Map )
+LambdaAddTextChatKeyWord( "/weapon/", selfWeapon )
+LambdaAddTextChatKeyWord( "/keyweapon/", keyentWeapon )
 
 
 -- LambdaAddKeyWords hook allows you to use LambdaAddTextChatKeyWord() externally

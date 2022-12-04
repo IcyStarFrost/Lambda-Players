@@ -44,6 +44,7 @@ local debugcvar = GetConVar( "lambdaplayers_debug" )
 local chatlimit = GetConVar( "lambdaplayers_text_chatlimit" )
 local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
+local player_GetAll = player.GetAll
 
 ---- Anything Shared can go here ----
 
@@ -375,7 +376,6 @@ if SERVER then
 
             if info.externalvars then
                 for k, v in pairs( info.externalvars ) do
-                    print( k, v )
                     self.l_ExternalVars[ k ] = v
                     self[ k ] = v
                 end
@@ -496,7 +496,7 @@ if SERVER then
         local info = LambdaPersonalProfiles and LambdaPersonalProfiles[ self:GetLambdaName() ] or nil
         if info then
             self:ApplyLambdaInfo( info )
-            hook.Run( "LambdaOnProfileApplied", self, info )
+            self:SimpleTimer( 0, function() hook.Run( "LambdaOnProfileApplied", self, info ) end, true )
         end
     end
 
@@ -753,7 +753,7 @@ if SERVER then
 
         -- This has changed so we can properly send each player a text chat message with their own custom display colors
         if !recipients then
-            for _, ply in ipairs( player.GetAll() ) do
+            for _, ply in ipairs( player_GetAll() ) do
                 LambdaPlayers_ChatAdd( ply, ( self:GetIsDead() and red or color_white ), ( self:GetIsDead() and "*DEAD* " or ""), GetClientDisplayColor( self, ply ), self:GetLambdaName(), color_white, ": " .. text )
             end
         elseif IsValid( recipients ) and recipients:IsPlayer() then
@@ -768,6 +768,7 @@ if SERVER then
 
     -- "Manually" type out a message and send it to text chat when we are finished
     function ENT:TypeMessage( text )
+        if text == "" then return end
         if self:GetIsTyping() then self:Say( self.l_typedtext ) end
         text = LambdaKeyWordModify( self, text )
 
