@@ -130,6 +130,9 @@ function ENT:SpawnEntity()
     local trace = self:GetEyeTrace()
     local class = entlist[ random( #entlist ) ]
 
+    -- We prevent Lambdas from spawning entities specified Admin Only.
+    if list.Get( "SpawnableEntities" )[class].AdminOnly then return end
+
     -- function located at autorun_includes/server/building_entitycreation.lua
     local entity = LambdaSpawn_SENT( self, class, trace )
     
