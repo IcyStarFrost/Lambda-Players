@@ -75,6 +75,7 @@ end
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_opencustompersonalitypresetpanel", function( ply ) 
     local tbl = {}
     tbl[ "lambdaplayers_personality_voicechance" ] = 30
+    tbl[ "lambdaplayers_personality_textchance" ] = 30
     for k, v in ipairs( LambdaPersonalityConVars ) do
         tbl[ v[ 2 ]:GetName() ] = v[ 2 ]:GetDefault()
     end
