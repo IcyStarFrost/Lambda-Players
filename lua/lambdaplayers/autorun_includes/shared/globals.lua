@@ -246,7 +246,7 @@ local meta = FindMetaTable( "Entity" )
 local oldgetname = meta.GetName 
 
 function meta:GetName()
-    if self.IsLambdaPlayer then return self:GetLambdaName() else oldgetname( self ) end
+    if self.IsLambdaPlayer then return self:GetLambdaName() else return oldgetname( self ) end
 end
 
 
