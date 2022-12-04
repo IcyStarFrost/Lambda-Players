@@ -52,7 +52,7 @@ if SERVER then
             undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
         end
 
-        hook.Run( "LambdaOnRecreated", newlambda )
+        timer.Simple( 0, function() hook.Run( "LambdaOnRecreated", newlambda ) end )
 
     end
 
