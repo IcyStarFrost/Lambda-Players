@@ -151,6 +151,7 @@ hook.Add( "Tick", "lambdaplayers_MWS", function()
         local lambda = ents.Create( "npc_lambdaplayer" )
         lambda:SetPos( pos )
         lambda:SetAngles( ang )
+        lambda.l_MWSspawned = true
         lambda:Spawn()
         lambda:SetRespawn( respawn:GetBool() )
         table_insert( SpawnedLambdaPlayers, 1, lambda )
@@ -169,6 +170,35 @@ hook.Add( "Tick", "lambdaplayers_MWS", function()
     end
 
 
+end )
+
+-- Do not recreate 
+hook.Add( "LambdaOnInternalKilled", "lambdaplayers_MWS_preventrecreation", function( self )
+    if self.l_MWSspawned then
+
+        local exportinfo = self:ExportLambdaInfo()
+        local newlambda = ents_Create( "npc_lambdaplayer" )
+        newlambda:SetPos( self.l_SpawnPos )
+        newlambda:SetAngles( self.l_SpawnAngles )
+        newlambda:SetCreator( self:GetCreator() )
+        newlambda.l_MWSspawned = true
+        newlambda:Spawn()
+        newlambda:ApplyLambdaInfo( exportinfo )
+
+        table_Merge( newlambda.l_SpawnedEntities, self.l_SpawnedEntities )
+
+        if IsValid( self:GetCreator() ) then
+            undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+                undo.SetPlayer( self:GetCreator() )
+                undo.AddEntity( newlambda )
+                undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+            undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+        end
+
+        table_insert( SpawnedLambdaPlayers, 1, newlambda )
+
+        return true
+    end
 end )
 
 -- Remove self from the MWS table
