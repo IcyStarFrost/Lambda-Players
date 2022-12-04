@@ -261,7 +261,7 @@ function LAMBDAFS:GetTextTable()
     
     MergeDirectory( "lambdaplayers/data/texttypes", "materials", mergedefaulttextlines:GetBool() )
     MergeDirectory( "lambdaplayers/texttypes", "materials", mergeaddontextlines:GetBool() )
-    MergeDirectory( "lambdaplayers/texttypes", "data" )
+    MergeDirectory( "lambdaplayers/texttypes", "data", true )
     
     return LambdaTextTable
 end
