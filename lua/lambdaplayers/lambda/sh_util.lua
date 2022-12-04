@@ -569,6 +569,7 @@ if SERVER then
     function ENT:LambdaRespawn()
         self:DebugPrint( "Respawned" )
         self:SetIsDead( false )
+        self.l_Clip = self.l_MaxClip
         self:SetIsReloading( false )
         self:SetPos( rasp:GetBool() and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos ) -- Rasp aka Respawn at Spawn Points
         self.loco:SetVelocity( Vector( 0, 0, 0 ) )

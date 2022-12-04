@@ -61,7 +61,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 dmginfo:SetDamage( self:Health() * 100000 )
                 dmginfo:SetDamageType( DMG_BLAST ) 
                 dmginfo:SetAttacker( self )
-                dmginfo:SetInflictor( self )
+                dmginfo:SetInflictor( wepent )
                 dmginfo:SetDamageForce( shootDir * -80000000 )
                 self:TakeDamageInfo( dmginfo )
             end)
