@@ -3,12 +3,92 @@ local maxlambdacount = CreateLambdaConvar( "lambdaplayers_mws_maxlambdas", 5, tr
 local spawnrate = CreateLambdaConvar( "lambdaplayers_mws_spawnrate", 2, true, false, false, "Time in seconds before each Lambda Player is spawned", 0.1, 500, { type = "Slider", decimals = 1, name = "Spawn Rate", category = "MWS"} )
 local randomspawnrate = CreateLambdaConvar( "lambdaplayers_mws_randomspawnrate", 0, true, false, false, "If the spawn rate should be randomized between 0.1 and what ever Spawn Rate is set to", 0, 1, { type = "Bool", name = "Randomized Spawn Rate", category = "MWS"} )
 
+
+local table_insert = table.insert
+
+
+local personalitypresets = {
+    [ "custom" ] = function( self ) -- Custom Personality set by Sliders
+        local tbl = {}
+        for k, v in ipairs( LambdaPersonalityConVars ) do
+            tbl[ v[ 1 ] ] = GetConVar( "lambdaplayers_mwspersonality_" .. v[ 1 ] .. "chance" ):GetInt()
+        end
+        self:SetVoiceChance( GetConVar( "lambdaplayers_personality_voicechance" ):GetInt() )
+        self:SetTextChance( GetConVar( "lambdaplayers_personality_textchance" ):GetInt() )
+        return  tbl
+    end,
+    [ "customrandom" ] = function( self ) -- Same thing as Custom except the values from Sliders are used in RNG
+        local tbl = {}
+        for k, v in ipairs( LambdaPersonalityConVars ) do
+            tbl[ v[ 1 ] ] = random( GetConVar( "lambdaplayers_personality_" .. v[ 1 ] .. "chance" ):GetInt() )
+        end
+        self:SetVoiceChance( random( 0, GetConVar( "lambdaplayers_personality_voicechance" ):GetInt() ) )
+        self:SetTextChance( random( 0, GetConVar( "lambdaplayers_personality_textchance" ):GetInt() ) )
+        return tbl
+    end,
+    [ "fighter" ] = function( self ) -- Focused on Combat
+        local tbl = {}
+        for k, v in ipairs( LambdaPersonalityConVars ) do
+            tbl[ v[ 1 ] ] = 0
+        end
+        tbl[ "Build" ] = 5
+        tbl[ "Combat" ] = 80
+        tbl[ "Tool" ] = 5
+        self:SetVoiceChance( 30 )
+        self:SetTextChance( 30 )
+        return tbl
+    end,
+    [ "builder" ] = function( self ) -- Focused on Building
+        local tbl = {}
+        for k, v in ipairs( LambdaPersonalityConVars ) do
+            tbl[ v[ 1 ] ] = random( 1, 100 )
+        end
+        tbl[ "Build" ] = 80
+        tbl[ "Combat" ] = 5
+        tbl[ "Tool" ] = 80
+        self:SetVoiceChance( 30 )
+        self:SetTextChance( 30 )
+        return tbl
+    end
+} 
+
+
+local presettbl = {
+    [ "Random" ] = "random",
+    [ "Builder" ] = "builder",
+    [ "Fighter" ] = "fighter",
+    [ "Custom" ] = "custom",
+    [ "Custom Random" ] = "customrandom"
+}
+
+local perspreset = CreateLambdaConvar( "lambdaplayers_mwspersonality_preset", "random", true, false, false, "The preset MWS Spawned Lambda Personalities should use. Set this to Custom to make use of the chance sliders", nil, nil, { type = "Combo", options = presettbl, name = "Personality Preset", category = "MWS" } )
+
+
+local MWSConvars = {}
+for k, v in ipairs( LambdaPersonalityConVars ) do
+    local convar = CreateLambdaConvar( "lambdaplayers_mwspersonality_" .. v[ 1 ] .. "chance", 30, true, false, false, "The chance " .. v[ 1 ] .. " will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = v[ 1 ] .. " Chance", category = "MWS" } )
+    table_insert( MWSConvars, { v[ 1 ], convar } )
+end
+CreateLambdaConvar( "lambdaplayers_mwspersonality_voicechance", 30, true, true, true, "The chance Voice will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = "Voice Chance", category = "MWS" } )
+CreateLambdaConvar( "lambdaplayers_mwspersonality_textchance", 30, true, true, true, "The chance Text will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = "Text Chance", category = "MWS" } )
+
+
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_openmwscustompersonalitypresetpanel", function( ply ) 
+    local tbl = {}
+    tbl[ "lambdaplayers_mwspersonality_voicechance" ] = 30
+    tbl[ "lambdaplayers_mwspersonality_textchance" ] = 30
+    for k, v in ipairs( MWSConvars ) do
+        tbl[ v[ 2 ]:GetName() ] = v[ 2 ]:GetDefault()
+    end
+    LAMBDAPANELS:CreateCVarPresetPanel( "Custom Personality Preset Editor", tbl, "custommwspersonalities", false )
+end, true, "Opens a panel to allow you to create custom preset personalities and load them", { name = "Custom Personality Presets", category = "MWS" } )
+
+
 if CLIENT then return end
 
 local CurTime = CurTime
 local ipairs = ipairs
 local table_remove = table.remove
-local table_insert = table.insert
 local IsValid = IsValid
 local rand = math.Rand
 local random = math.random
@@ -70,8 +150,13 @@ hook.Add( "Tick", "lambdaplayers_MWS", function()
         lambda:SetPos( pos )
         lambda:SetAngles( ang )
         lambda:Spawn()
-
         table_insert( SpawnedLambdaPlayers, 1, lambda )
+
+        if perspreset:GetString() != "random" then
+            lambda:BuildPersonalityTable( personalitypresets[ perspreset:GetString() ]( lambda ) )
+        end
+
+        
 
         nextspawn = randomspawnrate:GetBool() and CurTime() + rand( 0.1, spawnrate:GetFloat() ) or CurTime() + spawnrate:GetFloat()
 
