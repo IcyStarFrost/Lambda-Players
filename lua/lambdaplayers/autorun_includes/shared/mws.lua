@@ -5,6 +5,8 @@ local randomspawnrate = CreateLambdaConvar( "lambdaplayers_mws_randomspawnrate",
 
 
 local table_insert = table.insert
+local rand = math.Rand
+local random = math.random
 
 
 local personalitypresets = {
@@ -90,8 +92,7 @@ local CurTime = CurTime
 local ipairs = ipairs
 local table_remove = table.remove
 local IsValid = IsValid
-local rand = math.Rand
-local random = math.random
+
 local navmesh_GetAllNavAreas = navmesh.GetAllNavAreas
 
 local SpawnedLambdaPlayers = {}
