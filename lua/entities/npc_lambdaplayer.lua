@@ -450,6 +450,15 @@ function ENT:Think()
             else
                 phys:UpdateShadow( self:GetPos(), self:GetAngles(), 0 )
             end
+
+            -- Change collision bounds based on if we are crouching or not.
+            if self:GetCrouch() then
+                self:SetCollisionBounds( collisionmins, crouchingcollisionmaxs )
+            else
+                self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
+            end
+            --
+
             self.l_nextphysicsupdate = CurTime() + 0.5
         end
 
@@ -628,13 +637,7 @@ function ENT:Think()
         end
         --
 
-        -- Change collision bounds based on if we are crouching or not.
-        if self:GetCrouch() then
-            self:SetCollisionBounds( collisionmins, crouchingcollisionmaxs )
-        else
-            self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
-        end
-        --
+
 
 
         -- Handles facing positions or entities
