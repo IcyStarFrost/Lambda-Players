@@ -17,7 +17,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         ismelee = true,
         nodraw = true,
         keepdistance = 10,
-        attackrange = 75,
+        attackrange = 65,
         addspeed = 100,
 
         -- HP Auto Regen + Leap Attack
@@ -58,8 +58,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         callback = function( self, wepent, target )
-            self.l_WeaponUseCooldown = CurTime() + 1.25
-            self:EmitSound( "npc/zombie/zo_attack" .. random(2) .. ".wav", 70, self:GetVoicePitch(), 1, CHAN_WEAPON )
+            self.l_WeaponUseCooldown = CurTime() + Rand( 1.2, 1.66 )
+            self:EmitSound( "npc/zombie/zo_attack" .. random( 2 ) .. ".wav", 70, self:GetVoicePitch(), 1, CHAN_WEAPON )
 
             self:RemoveGesture( ACT_GMOD_GESTURE_RANGE_ZOMBIE )
             local attackAnim = self:AddGesture( ACT_GMOD_GESTURE_RANGE_ZOMBIE )
@@ -67,12 +67,12 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             -- To make sure damage syncs with the animation
             self:SimpleTimer( 0.5, function()
-                if !LambdaIsValid( target ) or self:GetRangeSquaredTo( target ) > ( 65 * 65 ) then 
+                if !LambdaIsValid( target ) or !self:IsInRange( target, 55 ) then 
                     wepent:EmitSound( "Zombie.AttackMiss" ) 
                     return 
                 end
 
-                local dmg = random( 35, 55 )
+                local dmg = random( 25, 40 )
                 local dmginfo = DamageInfo()
                 dmginfo:SetDamage( dmg )
                 dmginfo:SetAttacker( self )
@@ -82,14 +82,15 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                 local targetPrevHP = target:Health()
                 target:TakeDamageInfo( dmginfo )
-                PlaySound( "Zombie.AttackHit", target:WorldSpaceCenter() )
 
-                -- Steal target's HP on successful hit
-                local maxHP = self:GetMaxHealth() * 2.25
-                if target:Health() < targetPrevHP and self:Health() < maxHP then
-                    self:SetHealth( math_min( self:Health() + ( targetPrevHP - target:Health() ), maxHP ) )
+                local maxHP = ( self:GetMaxHealth() * 2 )
+                if target:Health() < targetPrevHP and self:Health() < maxHP then -- Steal chunk of target's HP on successful hit
+                    local chunk = ( ( targetPrevHP - target:Health() ) * Rand( 0.5, 0.75 ) )
+                    self:SetHealth( math_min( self:Health() + chunk, maxHP ) )
                 end
-            end)
+
+                PlaySound( "Zombie.AttackHit", target:WorldSpaceCenter() )
+           end)
 
             return true
         end,

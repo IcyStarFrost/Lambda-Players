@@ -85,7 +85,9 @@ end
     local RealTime = RealTime
     local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
     local tracetable = {}
-    
+    local collisionmins = Vector( -10, -10, 0 )
+    local standingcollisionmaxs = Vector( 10, 10, 72 )
+    local crouchingcollisionmaxs = Vector( 10, 10, 32 )
 --
 
 if CLIENT then
@@ -231,7 +233,7 @@ function ENT:Initialize()
         self:SetCrouchSpeed( 60 )
         self:SetWalkSpeed( 200 )
 
-        self:SetCollisionBounds( Vector( -10, -10, 0 ), Vector( 10, 10, 72 ) )
+        self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
         self:PhysicsInitShadow()
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
         self:SetSolidMask( MASK_PLAYERSOLID )
@@ -448,6 +450,15 @@ function ENT:Think()
             else
                 phys:UpdateShadow( self:GetPos(), self:GetAngles(), 0 )
             end
+
+            -- Change collision bounds based on if we are crouching or not.
+            if self:GetCrouch() then
+                self:SetCollisionBounds( collisionmins, crouchingcollisionmaxs )
+            else
+                self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
+            end
+            --
+
             self.l_nextphysicsupdate = CurTime() + 0.5
         end
 
@@ -625,6 +636,8 @@ function ENT:Think()
             end
         end
         --
+
+
 
 
         -- Handles facing positions or entities

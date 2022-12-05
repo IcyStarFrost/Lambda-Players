@@ -37,8 +37,11 @@ function AddConsoleCommandToLambdaSettings( cmd, isclient, helptext, settingstbl
     table_insert( _LAMBDAConVarSettings, settingstbl )
 end
 
+local cooldown = 0
+
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedata", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
+    if CurTime() < cooldown then LambdaPlayers_Notify( ply, "Command is on cooldown! Please wait 3 seconds before trying again", 1, "buttons/button10.wav" ) return end
     print( "Lambda Players: Updated data via console command. Ran by ", ( IsValid( ply ) and ply:Name() .. " | " .. ply:SteamID() or "Console" )  )
 
     LambdaPlayerNames = LAMBDAFS:GetNameTable()
@@ -53,6 +56,8 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedata", function( ply )
     LambdaPersonalProfiles = file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
 
     LambdaPlayers_Notify( ply, "Updated Lambda Data", 3, "buttons/button15.wav" )
+
+    cooldown = CurTime() + 3
 
 end, false, "Updates data such as names, props, ect. You must use this after any changes to custom content for changes to take effect!", { name = "Update Lambda Data", category = "Utilities" } )
 

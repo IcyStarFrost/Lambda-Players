@@ -277,7 +277,7 @@ if CLIENT then
     file.CreateDir( "lambdaplayers/presets" )
     -- Creates a panel that will handle convar presets. Cause Gmod's preset system is kinda garbage in my opinion
     function LAMBDAPANELS:CreateCVarPresetPanel( name, convars, presetcategory, isclientonly )
-        
+        if !isclientonly and !LocalPlayer():IsSuperAdmin() then chat.AddText( "This panel requires you to be a super admin due to this handling server data!" ) surface.PlaySound( "buttons/button10.wav" ) return end
         local frame = LAMBDAPANELS:CreateFrame( name, 300, 200 )
 
         LAMBDAPANELS:CreateLabel( "Right Click on a line for options", frame, TOP )
@@ -313,8 +313,10 @@ if CLIENT then
             end
 
             menu:AddOption( "Apply " .. line:GetColumnText( 1 ) .. " Preset", function()
-                for k, v in pairs( line:GetSortValue( 1 ) ) do
-                    GetConVar( k ):SetString( v )
+                if isclientonly then
+                    for k, v in pairs( line:GetSortValue( 1 ) ) do
+                        GetConVar( k ):SetString( v )
+                    end
                 end
 
                 local json = TableToJSON( line:GetSortValue( 1 ) )

@@ -26,7 +26,7 @@ function CreateLambdaConvar( name, val, shouldsave, isclient, userinfo, desc, mi
 
     if isclient then
         convar = CreateClientConVar( name, tostring( val ), shouldsave, userinfo, desc, min, max )
-    elseif SERVER then
+    else
         convar = CreateConVar( name, tostring( val ), shouldsave and FCVAR_ARCHIVE or FCVAR_NONE, desc, min, max )
     end
 

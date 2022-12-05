@@ -51,6 +51,11 @@ elseif CLIENT then
     local DrawText = draw.DrawText
     local tostring = tostring
     local uiscale = GetConVar( "lambdaplayers_uiscale" )
+    local string_find = string.find
+    local IsSinglePlayer = game.SinglePlayer()
+    local input_LookupBinding = input.LookupBinding
+    local input_GetKeyCode = input.GetKeyCode
+    local input_IsKeyDown = input.IsKeyDown
 
     local displayArmor = GetConVar( "lambdaplayers_displayarmor" )
 
@@ -77,6 +82,25 @@ elseif CLIENT then
         end
     
     end )
+
+
+    if IsSinglePlayer then
+        local limit = false
+        hook.Add( "Think", "lambdaplayers_forceenablevoicechat", function()
+            local vcbind = input_LookupBinding( "+voicerecord" )
+            local bindenum = input_GetKeyCode( vcbind ) or KEY_X
+        
+            if input_IsKeyDown( bindenum ) and !limit then
+                limit = true
+                GAMEMODE:PlayerStartVoice( LocalPlayer() )
+            elseif !input_IsKeyDown( bindenum ) and limit then
+                limit = false
+                GAMEMODE:PlayerEndVoice( LocalPlayer() )
+                net.Start( "lambdaplayers_realplayerendvoice", true )
+                net.SendToServer()
+            end
+        end )
+    end
 
 
     -- Zeta's old voice pop up

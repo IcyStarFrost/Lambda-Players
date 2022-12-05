@@ -17,16 +17,16 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 70,
                 
         callback = function( self, wepent, target )
-            self.l_WeaponUseCooldown = CurTime() + Rand( 0.8, 0.95 )
+            self.l_WeaponUseCooldown = CurTime() + Rand( 0.66, 0.85 )
+            wepent:EmitSound( "Zombie.AttackMiss" )
 
-            wepent:EmitSound( "npc/zombie/claw_miss1.wav", 70, 100, 1, CHAN_WEAPON )
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             
             self:SimpleTimer( 0.3, function()
-                if !IsValid( target ) or self:GetRangeSquaredTo( target ) > ( 70 * 70 ) then return end
+                if !IsValid( target ) or !self:IsInRange( target, 60 ) then return end
 
-                local dmg = random( 25,30 )
+                local dmg = random( 20, 30 )
                 local dmginfo = DamageInfo()
                 dmginfo:SetDamage( dmg )
                 dmginfo:SetAttacker( self )
@@ -42,7 +42,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             return true
         end,
 
-        islethal = true,
+        islethal = true
     }
 
 })

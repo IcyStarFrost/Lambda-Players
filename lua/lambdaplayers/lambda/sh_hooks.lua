@@ -28,6 +28,12 @@ if SERVER then
     function ENT:OnKilled( info )
         if debugvar:GetBool() then ErrorNoHaltWithStack( "WARNING! ", self:GetLambdaName(), " was killed on a engine level! The entity will be recreated!" ) end
 
+        local shouldblock = hook.Run( "LambdaOnInternalKilled", self )
+
+
+        self:SimpleTimer( 0.1, function() self:Remove() end, true )
+        if shouldblock == true then return end
+
         local exportinfo = self:ExportLambdaInfo()
         local newlambda = ents_Create( "npc_lambdaplayer" )
         newlambda:SetPos( self.l_SpawnPos )
@@ -46,7 +52,8 @@ if SERVER then
             undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
         end
 
-        self:SimpleTimer( 0.1, function() self:Remove() end, true )
+        timer.Simple( 0, function() hook.Run( "LambdaOnRecreated", newlambda ) end )
+
     end
 
     function ENT:LambdaOnKilled( info )
@@ -175,7 +182,7 @@ if SERVER then
             if victim == self:GetEnemy() then
 
                 if random( 1, 100 ) <= self:GetVoiceChance() then
-                    self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
+                    self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "kill" ), true )
                 elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
                     self.l_keyentity = victim
                     self:TypeMessage( self:GetTextLine( "kill" ) )
