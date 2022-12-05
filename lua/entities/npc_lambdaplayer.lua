@@ -228,7 +228,6 @@ function ENT:Initialize()
         self.loco:SetStepHeight( 30 )
         self.l_LookAheadDistance = 0
         self.loco:SetGravity( -physenv.GetGravity().z ) -- Makes us fall at the same speed as the real players do
-        self.loco:SetClimbAllowed( false ) -- Theoretically this should stop the default ladder climbing that doesn't work
 
         self:SetRunSpeed( 400 )
         self:SetCrouchSpeed( 60 )
