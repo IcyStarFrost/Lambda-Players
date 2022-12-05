@@ -27,33 +27,7 @@ if SERVER then
     -- If there is a fix for the damage handling failing to prevent them from actually getting below 0 please make it known so it can be fixed ASAP.
     function ENT:OnKilled( info )
         if debugvar:GetBool() then ErrorNoHaltWithStack( "WARNING! ", self:GetLambdaName(), " was killed on a engine level! The entity will be recreated!" ) end
-
-        local shouldblock = hook.Run( "LambdaPreRecreated", self )
-
-
-        self:SimpleTimer( 0.1, function() self:Remove() end, true )
-        if shouldblock == true then return end
-
-        local exportinfo = self:ExportLambdaInfo()
-        local newlambda = ents_Create( "npc_lambdaplayer" )
-        newlambda:SetPos( self.l_SpawnPos )
-        newlambda:SetAngles( self.l_SpawnAngles )
-        newlambda:SetCreator( self:GetCreator() )
-        newlambda:Spawn()
-        newlambda:ApplyLambdaInfo( exportinfo )
-
-        table_Merge( newlambda.l_SpawnedEntities, self.l_SpawnedEntities )
-
-        if IsValid( self:GetCreator() ) then
-            undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
-                undo.SetPlayer( self:GetCreator() )
-                undo.AddEntity( newlambda )
-                undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. self:GetLambdaName() .. " )" )
-            undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
-        end
-
-        timer.Simple( 0, function() hook.Run( "LambdaPostRecreated", newlambda ) end )
-
+        self:Recreate()
     end
 
     function ENT:LambdaOnKilled( info )

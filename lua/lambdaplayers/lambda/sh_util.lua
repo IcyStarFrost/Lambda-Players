@@ -22,6 +22,7 @@ local timer_simple = timer.Simple
 local timer_create = timer.Create
 local istable = istable
 local timer_Remove = timer.Remove
+local table_Merge = table.Merge
 local coroutine = coroutine
 local Trace = util.TraceLine
 local table_add = table.Add
@@ -608,6 +609,35 @@ if SERVER then
         net.Start( "lambdaplayers_invalidateragdoll" )
         net.WriteEntity( self )
         net.Broadcast()
+    end
+
+    -- Delete ourself and spawn a recreation of ourself.
+    -- If ignoreprehook is true, the LambdaPreRecreated hook won't run meaning addons won't be able to stop this 
+    function ENT:Recreate( ignoreprehook )
+        local shouldblock = hook.Run( "LambdaPreRecreated", self )
+        
+        self:SimpleTimer( 0.1, function() self:Remove() end, true )
+        if !ignoreprehook and shouldblock == true then return end
+
+        local exportinfo = self:ExportLambdaInfo()
+        local newlambda = ents_Create( "npc_lambdaplayer" )
+        newlambda:SetPos( self.l_SpawnPos )
+        newlambda:SetAngles( self.l_SpawnAngles )
+        newlambda:SetCreator( self:GetCreator() )
+        newlambda:Spawn()
+        newlambda:ApplyLambdaInfo( exportinfo )
+
+        table_Merge( newlambda.l_SpawnedEntities, self.l_SpawnedEntities )
+
+        if IsValid( self:GetCreator() ) then
+            undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+                undo.SetPlayer( self:GetCreator() )
+                undo.AddEntity( newlambda )
+                undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+            undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+        end
+
+        self:SimpleTimer( 0, function() hook.Run( "LambdaPostRecreated", newlambda ) end, true )
     end
 
     -- Returns a sequential table full of nav areas near the position
