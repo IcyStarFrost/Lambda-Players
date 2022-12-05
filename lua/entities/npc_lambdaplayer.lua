@@ -153,6 +153,7 @@ function ENT:Initialize()
         self.l_NextPickupCheck = 0 -- The next time we will check for nearby items to pickup
         self.l_moveWaitTime = 0 -- The time we will wait until continuing moving through our path
         self.l_nextswimposupdate = 0 -- the next time we will update our swimming position
+        self.l_ladderfailtimer = CurTime() + 15 -- The time until we are removed and recreated due to Gmod issues with nextbots and ladders. Thanks Facepunch
 
 
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
@@ -435,11 +436,20 @@ function ENT:Think()
             self.l_NexthealthUpdate = CurTime() + 0.1
         end
 
+        -- Attack nearby NPCs
         if CurTime() > self.l_nextnpccheck and self:GetState() != "Combat" then
             local npcs = self:FindInSphere( nil, 2000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() and !self:ShouldTreatAsLPlayer( ent ) ) and self:ShouldAttackNPC( ent ) and self:CanSee( ent ) end )
             self:AttackTarget( npcs[ random( #npcs ) ] )
             self.l_nextnpccheck = CurTime() + 1
         end
+
+        -- Ladder Physics Failure (LPF to sound cool) fallback
+        if self.loco:IsUsingLadder() and CurTime() > self.l_ladderfailtimer then
+            self:Recreate( true )
+        elseif !self.loco:IsUsingLadder() then
+            self.l_ladderfailtimer = CurTime() + 15
+        end
+        --
 
         -- Update our physics object
         if CurTime() > self.l_nextphysicsupdate then
