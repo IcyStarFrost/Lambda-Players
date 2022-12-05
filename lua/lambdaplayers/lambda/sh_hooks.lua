@@ -28,7 +28,7 @@ if SERVER then
     function ENT:OnKilled( info )
         if debugvar:GetBool() then ErrorNoHaltWithStack( "WARNING! ", self:GetLambdaName(), " was killed on a engine level! The entity will be recreated!" ) end
 
-        local shouldblock = hook.Run( "LambdaOnInternalKilled", self )
+        local shouldblock = hook.Run( "LambdaPreRecreated", self )
 
 
         self:SimpleTimer( 0.1, function() self:Remove() end, true )
@@ -52,7 +52,7 @@ if SERVER then
             undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
         end
 
-        timer.Simple( 0, function() hook.Run( "LambdaOnRecreated", newlambda ) end )
+        timer.Simple( 0, function() hook.Run( "LambdaPostRecreated", newlambda ) end )
 
     end
 

@@ -178,7 +178,7 @@ end )
 
 
 -- These hooks will prevent MWS from over shooting its limits
-hook.Add( "LambdaOnInternalKilled", "lambdaplayers_MWS_prerecreation", function( self )
+hook.Add( "LambdaPreRecreated", "lambdaplayers_MWS_prerecreation", function( self )
     if self.l_MWSspawned then 
         self:SetExternalVar( "l_mwsprerecreation", true ) 
         pause = true 
@@ -186,7 +186,7 @@ hook.Add( "LambdaOnInternalKilled", "lambdaplayers_MWS_prerecreation", function(
     end
 end ) 
 
-hook.Add( "LambdaOnRecreated", "lambdaplayers_MWS_postrecreation", function( self )
+hook.Add( "LambdaPostRecreated", "lambdaplayers_MWS_postrecreation", function( self )
     timer.Simple( 0.2, function()
         if IsValid( self ) and self:GetExternalVar( "l_mwsprerecreation" ) then
             self.l_MWSspawned = true
