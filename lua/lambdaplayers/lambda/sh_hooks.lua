@@ -182,7 +182,7 @@ if SERVER then
             if victim == self:GetEnemy() then
 
                 if random( 1, 100 ) <= self:GetVoiceChance() then
-                    self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
+                    self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "kill" ), true )
                 elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
                     self.l_keyentity = victim
                     self:TypeMessage( self:GetTextLine( "kill" ) )
