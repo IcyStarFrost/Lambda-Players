@@ -17,3 +17,7 @@ net.Receive( "lambdaplayers_updateconvar", function( len, ply )
     local val = net.ReadString()
     GetConVar( convar ):SetString( val )
 end )
+
+net.Receive( "lambdaplayers_realplayerendvoice", function( len, ply )
+    hook.Run( "LambdaOnRealPlayerEndVoice", ply )
+end )
