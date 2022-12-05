@@ -37,6 +37,7 @@ local visibilitytrace = {}
 local tracetable = {}
 local GetLambdaPlayers = GetLambdaPlayers
 local color_white = color_white
+local ents_Create = ents and ents.Create or nil
 local lambdacolor = Color( 255, 136, 0 )
 local red = Color( 255, 0, 0 )
 local tauntdir = GetConVar( "lambdaplayers_voice_tauntdir" )
@@ -615,7 +616,7 @@ if SERVER then
     -- If ignoreprehook is true, the LambdaPreRecreated hook won't run meaning addons won't be able to stop this 
     function ENT:Recreate( ignoreprehook )
         local shouldblock = hook.Run( "LambdaPreRecreated", self )
-        
+
         self:SimpleTimer( 0.1, function() self:Remove() end, true )
         if !ignoreprehook and shouldblock == true then return end
 
