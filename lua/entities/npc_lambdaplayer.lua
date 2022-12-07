@@ -138,7 +138,7 @@ function ENT:Initialize()
         self.l_NexthealthUpdate = 0 -- The next time we update our networked health
         self.l_stucktimes = 0 -- How many times did we get stuck in the past 10 seconds
         self.l_stucktimereset = 0 -- The time until l_stucktimes gets reset to 0
-        self.NextFootstepTime = 0 -- The next time we play a footstep sound
+        self.l_nextfootsteptime = 0 -- The next time we play a footstep sound
         self.l_nextdoorcheck = 0 -- The next time we will check for doors to open
         self.l_nextphysicsupdate = 0 -- The next time we will update our Physics Shadow
         self.l_WeaponUseCooldown = 0 -- The time before we can use our weapon again
@@ -401,14 +401,14 @@ function ENT:Think()
         if self.l_ispickedupbyphysgun then self.loco:SetVelocity( Vector() ) end
 
         -- Footstep sounds
-        if CurTime() > self.NextFootstepTime and self:IsOnGround() and !self.loco:GetVelocity():IsZero() then
+        if CurTime() > self.l_nextfootsteptime and self:IsOnGround() and !self.loco:GetVelocity():IsZero() then
             local desSpeed = self.loco:GetDesiredSpeed()
             local result = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32600, self )
             local stepsounds = _LAMBDAPLAYERSFootstepMaterials[ result.MatType ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ]
             local snd = stepsounds[ random( #stepsounds ) ]
             --hook.Run( "PlayerFootstep", self, self:GetPos(), random( 0, 1 ), snd, 0.5, RecipientFilter() )
             self:EmitSound( snd, 75, 100, 0.5 )
-            self.NextFootstepTime = CurTime() + min(0.25 * (self:GetRunSpeed() / desSpeed), 0.35)
+            self.l_nextfootsteptime = CurTime() + min(0.25 * (self:GetRunSpeed() / desSpeed), 0.35)
         end
         
         -- Play random Idle lines
