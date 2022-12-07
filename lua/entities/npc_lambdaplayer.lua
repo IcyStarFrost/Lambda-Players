@@ -138,7 +138,7 @@ function ENT:Initialize()
         self.l_NexthealthUpdate = 0 -- The next time we update our networked health
         self.l_stucktimes = 0 -- How many times did we get stuck in the past 10 seconds
         self.l_stucktimereset = 0 -- The time until l_stucktimes gets reset to 0
-        self.NextFootstepTime = 0 -- The next time we play a footstep sound
+        self.l_nextfootsteptime = 0 -- The next time we play a footstep sound
         self.l_nextdoorcheck = 0 -- The next time we will check for doors to open
         self.l_nextphysicsupdate = 0 -- The next time we will update our Physics Shadow
         self.l_WeaponUseCooldown = 0 -- The time before we can use our weapon again
@@ -153,6 +153,7 @@ function ENT:Initialize()
         self.l_NextPickupCheck = 0 -- The next time we will check for nearby items to pickup
         self.l_moveWaitTime = 0 -- The time we will wait until continuing moving through our path
         self.l_nextswimposupdate = 0 -- the next time we will update our swimming position
+        self.l_ladderfailtimer = CurTime() + 15 -- The time until we are removed and recreated due to Gmod issues with nextbots and ladders. Thanks Facepunch
 
 
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
@@ -400,14 +401,14 @@ function ENT:Think()
         if self.l_ispickedupbyphysgun then self.loco:SetVelocity( Vector() ) end
 
         -- Footstep sounds
-        if CurTime() > self.NextFootstepTime and self:IsOnGround() and !self.loco:GetVelocity():IsZero() then
+        if CurTime() > self.l_nextfootsteptime and self:IsOnGround() and !self.loco:GetVelocity():IsZero() then
             local desSpeed = self.loco:GetDesiredSpeed()
             local result = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32600, self )
             local stepsounds = _LAMBDAPLAYERSFootstepMaterials[ result.MatType ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ]
             local snd = stepsounds[ random( #stepsounds ) ]
             --hook.Run( "PlayerFootstep", self, self:GetPos(), random( 0, 1 ), snd, 0.5, RecipientFilter() )
             self:EmitSound( snd, 75, 100, 0.5 )
-            self.NextFootstepTime = CurTime() + min(0.25 * (self:GetRunSpeed() / desSpeed), 0.35)
+            self.l_nextfootsteptime = CurTime() + min(0.25 * (self:GetRunSpeed() / desSpeed), 0.35)
         end
         
         -- Play random Idle lines
@@ -435,11 +436,20 @@ function ENT:Think()
             self.l_NexthealthUpdate = CurTime() + 0.1
         end
 
+        -- Attack nearby NPCs
         if CurTime() > self.l_nextnpccheck and self:GetState() != "Combat" then
             local npcs = self:FindInSphere( nil, 2000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() and !self:ShouldTreatAsLPlayer( ent ) ) and self:ShouldAttackNPC( ent ) and self:CanSee( ent ) end )
             self:AttackTarget( npcs[ random( #npcs ) ] )
             self.l_nextnpccheck = CurTime() + 1
         end
+
+        -- Ladder Physics Failure (LPF to sound cool) fallback
+        if self.loco:IsUsingLadder() and CurTime() > self.l_ladderfailtimer then
+            self:Recreate( true )
+        elseif !self.loco:IsUsingLadder() then
+            self.l_ladderfailtimer = CurTime() + 15
+        end
+        --
 
         -- Update our physics object
         if CurTime() > self.l_nextphysicsupdate then
@@ -791,6 +801,9 @@ end
 
 function ENT:RunBehaviour()
     self:DebugPrint( "Initialized their AI in ", SysTime() - self.debuginitstart, " seconds" )
+
+    hook.Run( "LambdaAIInitialize", self )
+
     if IsValid( self:GetCreator() ) then
         undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
             undo.SetPlayer( self:GetCreator() )

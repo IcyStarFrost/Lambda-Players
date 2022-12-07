@@ -22,6 +22,7 @@ local timer_simple = timer.Simple
 local timer_create = timer.Create
 local istable = istable
 local timer_Remove = timer.Remove
+local table_Merge = table.Merge
 local coroutine = coroutine
 local Trace = util.TraceLine
 local table_add = table.Add
@@ -36,6 +37,7 @@ local visibilitytrace = {}
 local tracetable = {}
 local GetLambdaPlayers = GetLambdaPlayers
 local color_white = color_white
+local ents_Create = ents and ents.Create or nil
 local lambdacolor = Color( 255, 136, 0 )
 local red = Color( 255, 0, 0 )
 local tauntdir = GetConVar( "lambdaplayers_voice_tauntdir" )
@@ -313,6 +315,21 @@ function ENT:CanSee( ent )
     visibilitytrace.filter = self
     local result = Trace( visibilitytrace )
     return ( result.Fraction == 1.0 or result.Entity == ent )
+end
+
+
+-- Returns the color that should be used in displays such as Name Display, Text Chat, ect
+-- If on Server, returns the color the ply is using for the Display Color
+local useplycolorasdisplay = GetConVar( "lambdaplayers_useplayermodelcolorasdisplaycolor" )
+function ENT:GetDisplayColor( ply )
+    if CLIENT then
+        local overridecolor = hook.Run( "LambdaGetDisplayColor", self, LocalPlayer() )
+        return overridecolor != nil and overridecolor or useplycolorasdisplay:GetBool() and self:GetPlyColor():ToColor() or _LambdaDisplayColor
+    elseif SERVER then
+        local useplycolorasdisplay = tobool( ply:GetInfoNum( "lambdaplayers_useplayermodelcolorasdisplaycolor", 0 ) )
+        local overridecolor = hook.Run( "LambdaGetDisplayColor", self, ply )
+        return overridecolor != nil and overridecolor or useplycolorasdisplay and self:GetPlyColor():ToColor() or Color( ply:GetInfoNum( "lambdaplayers_displaycolor_r", 255 ), ply:GetInfoNum( "lambdaplayers_displaycolor_g", 136 ), ply:GetInfoNum( "lambdaplayers_displaycolor_b", 0 ) )
+    end
 end
 
 if SERVER then
@@ -610,6 +627,35 @@ if SERVER then
         net.Broadcast()
     end
 
+    -- Delete ourself and spawn a recreation of ourself.
+    -- If ignoreprehook is true, the LambdaPreRecreated hook won't run meaning addons won't be able to stop this 
+    function ENT:Recreate( ignoreprehook )
+        local shouldblock = hook.Run( "LambdaPreRecreated", self )
+
+        self:SimpleTimer( 0.1, function() self:Remove() end, true )
+        if !ignoreprehook and shouldblock == true then return end
+
+        local exportinfo = self:ExportLambdaInfo()
+        local newlambda = ents_Create( "npc_lambdaplayer" )
+        newlambda:SetPos( self.l_SpawnPos )
+        newlambda:SetAngles( self.l_SpawnAngles )
+        newlambda:SetCreator( self:GetCreator() )
+        newlambda:Spawn()
+        newlambda:ApplyLambdaInfo( exportinfo )
+
+        table_Merge( newlambda.l_SpawnedEntities, self.l_SpawnedEntities )
+
+        if IsValid( self:GetCreator() ) then
+            undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+                undo.SetPlayer( self:GetCreator() )
+                undo.AddEntity( newlambda )
+                undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+            undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+        end
+
+        self:SimpleTimer( 0, function() hook.Run( "LambdaPostRecreated", newlambda ) end, true )
+    end
+
     -- Returns a sequential table full of nav areas near the position
     function ENT:GetNavAreas( pos, dist )
         pos = pos or self:GetPos()
@@ -735,13 +781,6 @@ if SERVER then
     end
 
 
-    -- Gets the client side set color on the specified player
-    local function GetClientDisplayColor( self, ply )
-        local useplycolorasdisplay = tobool( ply:GetInfoNum( "lambdaplayers_useplayermodelcolorasdisplaycolor", 0 ) )
-        local overridecolor = hook.Run( "LambdaGetDisplayColor", self, ply )
-        return overridecolor != nil and overridecolor or useplycolorasdisplay and self:GetPlyColor():ToColor() or Color( ply:GetInfoNum( "lambdaplayers_displaycolor_r", 255 ), ply:GetInfoNum( "lambdaplayers_displaycolor_g", 136 ), ply:GetInfoNum( "lambdaplayers_displaycolor_b", 0 ) )
-    end
-
     -- Makes the Lambda say the provided text
     -- if instant is true, the Lambda will say the text instantly.
     -- teamOnly is just so this function is compatible with addons basically
@@ -755,13 +794,13 @@ if SERVER then
         -- This has changed so we can properly send each player a text chat message with their own custom display colors
         if !recipients then
             for _, ply in ipairs( player_GetAll() ) do
-                LambdaPlayers_ChatAdd( ply, ( self:GetIsDead() and red or color_white ), ( self:GetIsDead() and "*DEAD* " or ""), GetClientDisplayColor( self, ply ), self:GetLambdaName(), color_white, ": " .. text )
+                LambdaPlayers_ChatAdd( ply, ( self:GetIsDead() and red or color_white ), ( self:GetIsDead() and "*DEAD* " or ""), self:GetDisplayColor( ply ), self:GetLambdaName(), color_white, ": " .. text )
             end
         elseif IsValid( recipients ) and recipients:IsPlayer() then
-            LambdaPlayers_ChatAdd( recipients, ( self:GetIsDead() and red or color_white ), ( self:GetIsDead() and "*DEAD* " or ""), GetClientDisplayColor( self, recipients ), self:GetLambdaName(), color_white, ": " .. text )
+            LambdaPlayers_ChatAdd( recipients, ( self:GetIsDead() and red or color_white ), ( self:GetIsDead() and "*DEAD* " or ""), self:GetDisplayColor( recipients ), self:GetLambdaName(), color_white, ": " .. text )
         else
             for _, ply in ipairs( recipients:GetPlayers() ) do
-                LambdaPlayers_ChatAdd( ply, ( self:GetIsDead() and red or color_white ), ( self:GetIsDead() and "*DEAD* " or ""), GetClientDisplayColor( self, ply ), self:GetLambdaName(), color_white, ": " .. text )
+                LambdaPlayers_ChatAdd( ply, ( self:GetIsDead() and red or color_white ), ( self:GetIsDead() and "*DEAD* " or ""), self:GetDisplayColor( ply ), self:GetLambdaName(), color_white, ": " .. text )
             end
         end
 
@@ -771,6 +810,7 @@ if SERVER then
     function ENT:TypeMessage( text )
         if text == "" then return end
         if self:GetIsTyping() then self:Say( self.l_typedtext ) end
+        self:SetIsTyping( true )
         text = LambdaKeyWordModify( self, text )
 
         self.l_starttypestate = self:GetState()
@@ -851,11 +891,5 @@ elseif CLIENT then
         return RealTime() < self.l_lastdraw
     end
     
-    -- Returns the color that should be used in displays such as Name Display, Text Chat, ect
-    local useplycolorasdisplay = GetConVar( "lambdaplayers_useplayermodelcolorasdisplaycolor" )
-    function ENT:GetDisplayColor()
-        local overridecolor = hook.Run( "LambdaGetDisplayColor", self, LocalPlayer() )
-        return overridecolor != nil and overridecolor or useplycolorasdisplay:GetBool() and self:GetPlyColor():ToColor() or _LambdaDisplayColor
-    end
 
 end

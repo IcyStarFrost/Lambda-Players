@@ -19,6 +19,7 @@ if SERVER then
         [HITGROUP_LEFTLEG]  = GetConVar("sk_player_leg"),
         [HITGROUP_RIGHTARM] = GetConVar("sk_player_leg")
     }
+
     hook.Add("ScalePlayerDamage", "LambdaPlayers_DmgScale", function( ply,hit,dmginfo )
         if !ply.IsLambdaPlayer or !dmginfo:IsBulletDamage() then return end
         ply.l_lasthitgroup = hit
@@ -30,18 +31,22 @@ if SERVER then
         dmginfo:ScaleDamage( ( hitScales[ hit ] and hitScales[ hit ]:GetFloat() or 1.0 ) )
     end)
 
+    -- God mode simple stuff
     hook.Add( "EntityTakeDamage", "LambdaMainDamageHook", function( ent, info )
         if ent.l_godmode then return true end
     end )
 
+    -- This is for SWEP support 
     hook.Add("PlayerCanPickupWeapon", "Lambdacanpickupwep", function( ply, wep )
         return !wep.IsLambdaWeapon
     end )
 
+    -- Updates the map's spawn points when we clean the map
     hook.Add( "PostCleanupMap", "LambdaResetSpawnPoints", function()
         LambdaSpawnPoints = LambdaGetPossibleSpawns()
     end )
 
+    -- So the client knows if the player is the host or not
     hook.Add("PlayerInitialSpawn", "Lambdasetserverhost", function( ply )
         if ply:IsListenServerHost() then ply:SetNW2Bool( "lambda_serverhost", true ) end
     end )
@@ -59,6 +64,7 @@ elseif CLIENT then
 
     local displayArmor = GetConVar( "lambdaplayers_displayarmor" )
 
+    -- The little name and health display when you look at Lambdas
     hook.Add( "HUDPaint", "LambdaPlayers_NameDisplay", function()
         local sw, sh = ScrW(), ScrH()
         local traceent = LocalPlayer():GetEyeTrace().Entity
@@ -84,8 +90,9 @@ elseif CLIENT then
     end )
 
 
+    -- Since Singleplayer prevents normal use of the Voice Chat bind, we force it on with this
     if IsSinglePlayer then
-        local limit = false
+        local limit = false -- This is important so code doesn't run constantly
         hook.Add( "Think", "lambdaplayers_forceenablevoicechat", function()
             local vcbind = input_LookupBinding( "+voicerecord" )
             local bindenum = input_GetKeyCode( vcbind ) or KEY_X
@@ -137,6 +144,8 @@ elseif CLIENT then
         draw_DrawText( name, "lambdaplayers_voicepopuptext", x + LambdaScreenScale( 9 + uiscale:GetFloat() ), y + 10, Color( 255, 255, 255, alpha ), TEXT_ALIGN_LEFT )
     end
 
+
+    -- This handles the rendering of the Voice Popups to the right side 
     hook.Add( "HUDPaint", "lambdaplayervoicepopup", function()
         if !allowpopups:GetBool() or usegmodpopups:GetBool() then return end
 
@@ -166,7 +175,7 @@ elseif CLIENT then
                 table_remove( _LAMBDAPLAYERS_Voicechannels, k )
             else
 
-                LambdaVoicePopUp( x, y, name, icon, volume, v[ "alpha" ] )
+                LambdaVoicePopUp( x, y, name, icon, volume, v[ "alpha" ] ) -- Call the voice pop up function
 
             end
         end
