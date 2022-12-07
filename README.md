@@ -44,6 +44,7 @@ Lambda Players are **your** players of **your** Server whether it is singleplaye
 
 - Lambda Players has higher performance then the Zetas
 - Lambda Player's way of handling custom content is much better than the Zeta's way
+- Lambda Players can work without a Navigation Mesh! However they won't be able to pathfind
 - Lambda Players has official support for Multiplayer. This means Clients can not harm the Server's custom content, Lambda's features are not targetted to only the first person (`Entity(1)`) in the server, you can make clients download things like Lambda Profile Pictures by using workshop addons so they can see Profile Pictures and such, and lastly to note all the convars and settings are properly labeled whether they are Client-Side or Server-Side.
 - Lambda Players have a much cleaner, optimized, and documented internal code. For example, Lambda's Initialize functions has a total of 1,119 less lines than what the Zetas have for their Initialize function! That's a big deal! Look at the difference between each one's code for finding if they have permission to edit something
 
