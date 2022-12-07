@@ -359,7 +359,7 @@ function ENT:LocalEyeAngles()
 end
 
 function ENT:HasGodMode()
-    return false
+    return self.l_godmode
 end
 
 function ENT:HasWeapon( className )
