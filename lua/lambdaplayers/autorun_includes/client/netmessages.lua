@@ -67,6 +67,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     local force = net.ReadVector()
     local offset = net.ReadVector()
     local colvec = net.ReadVector()
+    local wepName = net.ReadString()
 
     if !IsValid( ent ) then return end
 
@@ -79,6 +80,9 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     cs_prop:Spawn()
 
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, cs_prop )
+
+    local dropFunc = _LAMBDAPLAYERSWEAPONS[ wepName ].OnDrop
+    if isfunction( dropFunc ) then dropFunc( cs_prop ) end
 
     local phys = cs_prop:GetPhysicsObject()
 
