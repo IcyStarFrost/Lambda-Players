@@ -531,6 +531,11 @@ if SERVER then
         self.l_State = state
     end
 
+    -- Returns if the provided state exists
+    function ENT:StateExists( state )
+        return isfunction( self[ state ] )
+    end
+
     -- Obviously returns the current state
     function ENT:GetState()
         return self.l_State
