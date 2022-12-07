@@ -801,6 +801,9 @@ end
 
 function ENT:RunBehaviour()
     self:DebugPrint( "Initialized their AI in ", SysTime() - self.debuginitstart, " seconds" )
+
+    hook.Run( "LambdaAIInitialize", self )
+
     if IsValid( self:GetCreator() ) then
         undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
             undo.SetPlayer( self:GetCreator() )
