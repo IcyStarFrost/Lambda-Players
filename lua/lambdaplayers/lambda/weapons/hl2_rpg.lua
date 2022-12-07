@@ -17,15 +17,15 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         OnEquip = function( lambda, wepent )
             wepent.CurrentRocket = NULL
-            lambda:Hook( "Think", "LambdaPlayer_OnlyOneRPGRocket", function()
-                if !IsValid( wepent.CurrentRocket ) then return end
-                lambda.l_WeaponUseCooldown = CurTime() + 2.0
-            end, false )
+        end,
+
+        OnThink = function( lambda, wepent )
+            if IsValid( wepent.CurrentRocket ) then lambda.l_WeaponUseCooldown = CurTime() + 2.0 end
+            return 0.1
         end,
 
         OnUnequip = function( lambda, wepent )
             wepent.CurrentRocket = nil
-            lambda:RemoveHook( "Think", "LambdaPlayer_OnlyOneRPGRocket" )
         end,
 
         callback = function( self, wepent, target )            

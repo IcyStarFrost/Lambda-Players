@@ -154,6 +154,7 @@ function ENT:Initialize()
         self.l_moveWaitTime = 0 -- The time we will wait until continuing moving through our path
         self.l_nextswimposupdate = 0 -- the next time we will update our swimming position
         self.l_ladderfailtimer = CurTime() + 15 -- The time until we are removed and recreated due to Gmod issues with nextbots and ladders. Thanks Facepunch
+        self.l_NextWeaponThink = 0 -- The next time we will run the currenly held weapon's think callback
 
 
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
@@ -398,6 +399,15 @@ function ENT:Think()
     hook.Run( "LambdaOnThink", self, self:GetWeaponENT() )
     
     if SERVER then
+        -- Run our weapon's think callback if possible
+        if CurTime() > self.l_NextWeaponThink then
+            local wepThinkFunc = self.l_WeaponThinkFunction
+            if isfunction( wepThinkFunc ) then
+                local thinkTime = wepThinkFunc( self, self:GetWeaponENT() )
+                if isnumber( thinkTime ) then self.l_NextWeaponThink = CurTime() + thinkTime end 
+            end
+        end
+
         if self.l_ispickedupbyphysgun then self.loco:SetVelocity( Vector() ) end
 
         -- Footstep sounds

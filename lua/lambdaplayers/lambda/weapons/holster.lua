@@ -34,6 +34,7 @@
     OnEquip         | Function |    A function that will be called when the weapon is equipped  | OPTIONAL
     OnUnequip       | Function |    A function that will be called when the weapon is unequipped    | OPTIONAL
     OnDrop          | Function |    A client side function that will be called when weapon's dropped prop is created | OPTIONAL
+    OnThink         | Function |    A function that runs every tick on server while the weapon is held by Lambda Player. Returning a number in the function will add a cooldown | OPTIONAL
 
 
 
@@ -84,6 +85,7 @@
     OnUnequip       | Function |    A function that will be called when the weapon is unequipped    | OPTIONAL
     OnReload        | Function |    A function that will be called when the weapon's reload is started  | OPTIONAL
     OnDrop          | Function |    A client side function that will be called when weapon's dropped prop is created | OPTIONAL
+    OnThink         | Function |    A function that runs every tick on server while the weapon is held by Lambda Player. Returning a number in the function will add a cooldown | OPTIONAL
 
     ---------------------------------
 ]]

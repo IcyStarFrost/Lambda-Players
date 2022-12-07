@@ -20,18 +20,18 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 300,
         attackrange = 400,
 
-        OnEquip = function( self, wepent )
-            self:Hook( "Think", "LambdaSLAM_ThrowRandomly", function()
-                if CurTime() < self.l_WeaponUseCooldown or self:GetState() == "Combat" or RandomInt( 1, 6 ) != 1 then return end
-
+        OnThink = function( self, wepent )
+            if CurTime() > self.l_WeaponUseCooldown and self:GetState() != "Combat" and RandomInt( 1, 6 ) == 1 then
                 local randPos = self:GetRandomPosition( self:WorldSpaceCenter(), 400 )
                 self:LookTo( randPos, 1.5 )
-                
+
                 self:SimpleTimer( 1, function()
                     if self.l_Weapon != "slam" or !IsValid( wepent ) then return end
                     self:UseWeapon( randPos )
                 end )
-            end, false, 1 )
+            end
+
+            return 1.0
         end,
 
         callback = function( self, wepent, target )
@@ -107,10 +107,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent:EmitSound( "Weapon_SLAM.SatchelThrow" )
 
             return true
-        end,
-
-        OnUnequip = function( self, wepent )
-            self:RemoveHook( "Think", "LambdaSLAM_ThrowRandomly" )
         end,
 
         islethal = true

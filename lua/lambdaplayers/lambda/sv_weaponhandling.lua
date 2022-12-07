@@ -88,6 +88,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     wepent:SetModel( weapondata.model )
     
     
+    self.l_WeaponThinkFunction = weapondata.OnThink
     if isfunction( weapondata.OnEquip ) then weapondata.OnEquip( self, wepent ) end
 
 end
