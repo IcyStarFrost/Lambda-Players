@@ -18,7 +18,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         nodraw = true,
         keepdistance = 10,
         attackrange = 65,
-        addspeed = 100,
+        speedmultiplier = 1.33,
 
         OnEquip = function( lambda, wepent )
             wepent.NextLeapAttackTime = 0
@@ -46,7 +46,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 end
             end
 
-            return 0.5
+            return 0.75
         end,
 
         -- Damage reduction

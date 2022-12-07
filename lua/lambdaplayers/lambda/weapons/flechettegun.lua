@@ -3,8 +3,8 @@ if !IsMounted( "ep2" ) then return end
 local IsValid = IsValid
 local CurTime = CurTime
 local CreateEntity = ents.Create
-local VectorRand = VectorRand
-local ShootSound = Sound( "NPC_Hunter.FlechetteShoot" )
+local random = math.random
+
 local ShellOffPos = Vector( 3, 5, 5 )
 local ShellOffAng = Angle( -180, 0, 0 )
 
@@ -23,7 +23,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local ent = CreateEntity( "hunter_flechette" )
             if !IsValid( ent ) then return true end
 
-            wepent:EmitSound( ShootSound )
+            wepent:EmitSound( "NPC_Hunter.FlechetteShoot" )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SMG1 )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SMG1 )
@@ -40,7 +40,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             ent:SetOwner( self )
             ent:Spawn()
             ent:Activate()
-            ent:SetVelocity( targetAng:Forward() * 2000 + VectorRand( -150, 150 ) )
+            ent:SetVelocity( targetAng:Forward() * 2000 + targetAng:Right() * random( -100, 100 ) + targetAng:Up() * random( -100, 100 ) )
 
             return true
         end,

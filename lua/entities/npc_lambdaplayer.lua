@@ -435,7 +435,7 @@ function ENT:Think()
 
         -- Update our speed after some time
         if CurTime() > self.l_nextspeedupdate then
-            local speed = ( self:GetCrouch() and self:GetCrouchSpeed() or self:GetRun() and self:GetRunSpeed() or self:GetWalkSpeed() ) +  self.l_CombatSpeedAdd
+            local speed = ( self:GetCrouch() and self:GetCrouchSpeed() or self:GetRun() and self:GetRunSpeed() or self:GetWalkSpeed() ) * self.l_WeaponSpeedMultiplier
             self.loco:SetDesiredSpeed( speed )
             self.l_nextspeedupdate = CurTime() + 0.5
         end
@@ -622,7 +622,7 @@ function ENT:Think()
 
                     self.loco:FaceTowards( swimPos )
 
-                    local swimSpeed = ( ( ( self:GetRun() and !self:GetCrouch() ) and 320 or 160 ) + self.l_CombatSpeedAdd )
+                    local swimSpeed = ( ( ( self:GetRun() and !self:GetCrouch() ) and 320 or 160 ) * self.l_WeaponSpeedMultiplier )
                     swimVel = ( ( swimPos - self:GetPos() ):GetNormalized() * swimSpeed )
                 end
 

@@ -39,7 +39,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if !IsValid( satchel ) then return end
 
             local throwPos = ( ( IsEntity( target ) and IsValid( target ) ) and target:GetPos() or target )
-            local faceDir = ( !throwPos and self:GetForward() or ( throwPos - self:WorldSpaceCenter() + self:GetUp() * 24 ):GetNormalized() )
+            local faceDir = ( !throwPos and self:GetForward() or ( throwPos - ( self:WorldSpaceCenter() + self:GetUp() * 24 ) ):GetNormalized() )
 
             satchel:SetPos( self:WorldSpaceCenter() + faceDir * 18 + self:GetUp() * 24 )
             satchel:SetSaveValue( "m_hThrower", self )
