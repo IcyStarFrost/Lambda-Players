@@ -810,6 +810,7 @@ if SERVER then
     function ENT:TypeMessage( text )
         if text == "" then return end
         if self:GetIsTyping() then self:Say( self.l_typedtext ) end
+        self:SetIsTyping( true )
         text = LambdaKeyWordModify( self, text )
 
         self.l_starttypestate = self:GetState()
