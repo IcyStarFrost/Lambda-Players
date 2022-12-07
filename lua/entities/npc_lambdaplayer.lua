@@ -402,12 +402,13 @@ function ENT:Think()
 
         -- Footstep sounds
         if CurTime() > self.l_nextfootsteptime and self:IsOnGround() and !self.loco:GetVelocity():IsZero() then
+            
             local desSpeed = self.loco:GetDesiredSpeed()
             local result = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32600, self )
             local stepsounds = _LAMBDAPLAYERSFootstepMaterials[ result.MatType ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ]
             local snd = stepsounds[ random( #stepsounds ) ]
-            --hook.Run( "PlayerFootstep", self, self:GetPos(), random( 0, 1 ), snd, 0.5, RecipientFilter() )
-            self:EmitSound( snd, 75, 100, 0.5 )
+            local result = hook.Run( "LambdaFootStep", self, self:GetPos(), result.MatType )
+            if result != true then self:EmitSound( snd, 75, 100, 0.5 ) end
             self.l_nextfootsteptime = CurTime() + min(0.25 * (self:GetRunSpeed() / desSpeed), 0.35)
         end
         
