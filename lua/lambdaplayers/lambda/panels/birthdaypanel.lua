@@ -38,6 +38,7 @@ local function OpenBirthdaypanel( ply )
 
     function frame:OnClose() 
         local _, month = box:GetSelected()
+        if !month or month == "" then return end
         LAMBDAFS:UpdateKeyValueFile(  "lambdaplayers/playerbirthday.json", { month = month, day = round( day:GetValue(), 0 ) }, "json" ) 
 
         net.Start( "lambdaplayers_onclosebirthdaypanel" )
