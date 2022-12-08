@@ -749,7 +749,14 @@ if SERVER then
             if LambdaTextProfiles[ self.l_TextProfile ] then
                 local texttable = LambdaTextProfiles[ self.l_TextProfile ][ texttype ]
                 if texttable and #texttable > 0 then
-                    return texttable[ random( #texttable ) ]
+                    
+                    for k, textline in RandomPairs( texttable ) do
+                        local condition, modifiedline = LambdaConditionalKeyWordCheck( self, textline )
+                        if condition then
+                            return modifiedline
+                        end
+                    end
+
                 end
             end
         end
@@ -757,7 +764,14 @@ if SERVER then
 
         if !tbl then return "" end
 
-        return tbl[ random( #tbl ) ] 
+        for k, textline in RandomPairs( tbl ) do
+            local condition, modifiedline = LambdaConditionalKeyWordCheck( self, textline )
+            if condition then
+                return modifiedline
+            end
+        end
+
+        return ""
     end
 
     -- Makes the Lambda say the specified file or file path.

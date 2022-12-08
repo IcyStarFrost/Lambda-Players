@@ -18,6 +18,7 @@ local string_Replace = string.Replace
 local string_EndsWith = string.EndsWith
 
 LambdaValidTextChatKeyWords = {}
+LambdaConditionalKeyWords = {}
 
 -- keyword      | String |      The word that will be detected and replaced
 -- replacefunction( lambda )      | Function |      Return a string in the function to replace the keyword with
@@ -25,6 +26,27 @@ function LambdaAddTextChatKeyWord( keyword, replacefunction )
     LambdaValidTextChatKeyWords[ keyword ] = replacefunction
 end
 
+-- keyword      | String |      The word that will be detected and will test the conditionfunc if the text line the keyword originated from can be used
+-- conditionfunc( lambda )      | Function |      Return true to allow the text line to be used
+function LambdaAddConditionalKeyWord( keyword, conditionfunc )
+    LambdaConditionalKeyWords[ keyword ] = conditionfunc
+end
+
+-- If a text line has a conditional keyword anywhere, this will return if the text line can be used if the condition function allows it
+function LambdaConditionalKeyWordCheck( self, str )
+    if !str then return true end
+
+    for keyword, conditionfunction in pairs( LambdaConditionalKeyWords ) do
+        local haskeyword = string_find( str, keyword )
+
+        if haskeyword then
+            str = string_Replace( str, keyword, "" )
+            return conditionfunction( self ), str
+        end
+    end
+
+    return true, str
+end
 
 -- Replaces any existing key words in the provided string
 function LambdaKeyWordModify( self, str ) 
@@ -149,6 +171,7 @@ local function keyentWeapon( self )
     return IsValid( wep ) and wep.GetPrintName and wep:GetPrintName() or keyent.IsLambdaPlayer and keyent.l_WeaponPrettyName or "weapon"
 end 
 
+-- Key words that will be replaced with some text --
 LambdaAddTextChatKeyWord( "/rndply/", RandomPlayerKeyword )
 LambdaAddTextChatKeyWord( "/keyent/", Keyentity )
 LambdaAddTextChatKeyWord( "/self/", Selfname )
@@ -161,9 +184,20 @@ LambdaAddTextChatKeyWord( "/kills/", selfkills )
 LambdaAddTextChatKeyWord( "/map/", Map )
 LambdaAddTextChatKeyWord( "/weapon/", selfWeapon )
 LambdaAddTextChatKeyWord( "/keyweapon/", keyentWeapon )
+------------------------------------------------------
+
+-- Text lines with this condition can only be used if the Lambda has high ping
+local function HighPing( self )
+    return self:GetPing() > 200
+end
+
+-- Conditional Key Words that will determine if a text line that has the key word can be used --
+LambdaAddTextChatKeyWord( "|highping|", HighPing )
+------------------------------------------------------
 
 
--- LambdaAddKeyWords hook allows you to use LambdaAddTextChatKeyWord() externally
+
+-- LambdaAddKeyWords hook allows you to use LambdaAddTextChatKeyWord() and LambdaAddConditionalKeyWord() externally
 if !LambdaFilesReloaded then
     hook.Add( "PreGamemodeLoaded", "lambdakeywordinit", function()
         hook.Run( "LambdaAddKeyWords" )
