@@ -231,6 +231,18 @@ local function KeyEntIsHost( self )
     return keyent:GetNW2Bool( "lambda_serverhost", false )
 end
 
+-- Text lines with this condition can only be used if the time currently is in the night/morning ( AM )
+local function AMTime( self )
+    local date = os.date( "%p" )
+    return date == "am"
+end
+
+-- Text lines with this condition can only be used if the time currently is in the noon/afternoon/evening ( PM )
+local function PMTime( self )
+    local date = os.date( "%p" )
+    return date == "pm"
+end
+
 
 -- Conditional Key Words that will determine if a text line that has the key word can be used --
 LambdaAddConditionalKeyWord( "|highping|", HighPing )
@@ -240,6 +252,8 @@ LambdaAddConditionalKeyWord( "|alone|", IsAlone )
 LambdaAddConditionalKeyWord( "|quietserver|", IsQuietServer )
 LambdaAddConditionalKeyWord( "|activeserver|", IsActiveServer )
 LambdaAddConditionalKeyWord( "|keyentishost|", KeyEntIsHost )
+LambdaAddConditionalKeyWord( "|amtime|", AMTime )
+LambdaAddConditionalKeyWord( "|pmtime|", PMTime )
 ------------------------------------------------------
 
 
