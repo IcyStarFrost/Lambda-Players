@@ -132,9 +132,9 @@ function ENT:IsSuperAdmin()
     return false
 end
 
--- Soon..
+
 function ENT:IsTyping()
-    return false
+    return self:GetIsTyping()
 end
 
 function ENT:IsUserGroup( groupname )
