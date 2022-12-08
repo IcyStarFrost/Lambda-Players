@@ -16,6 +16,8 @@ local gsub = string.gsub
 local StripExtension = string.StripExtension
 local string_Replace = string.Replace
 local string_EndsWith = string.EndsWith
+local tonumber = tonumber
+local os_date = os.date
 
 LambdaValidTextChatKeyWords = {}
 LambdaConditionalKeyWords = {}
@@ -233,14 +235,57 @@ end
 
 -- Text lines with this condition can only be used if the time currently is in the night/morning ( AM )
 local function AMTime( self )
-    local date = os.date( "%p" )
+    local date = os_date( "%p" )
     return date == "am"
 end
 
 -- Text lines with this condition can only be used if the time currently is in the noon/afternoon/evening ( PM )
 local function PMTime( self )
-    local date = os.date( "%p" )
+    local date = os_date( "%p" )
     return date == "pm"
+end
+
+-- Text lines with this condition can only be used if it is currently Christmas
+local function IsChristmasDay( self )
+    local month = os_date( "%B" )
+    local weekday = tonumber( os_date( "%d" ) )
+    return month == "December" and weekday == 25
+end
+
+-- Text lines with this condition can only be used if it is currently New Years
+local function IsNewYears( self )
+    local month = os_date( "%B" )
+    local weekday = tonumber( os_date( "%d" ) )
+    return month == "January" and weekday == 1
+end
+
+-- Text lines with this condition can only be used if it is currently the addon's creation day
+local function IsAddonBirthday( self )
+    local month = os_date( "%B" )
+    local weekday = tonumber( os_date( "%d" ) )
+    return month == "October" and weekday == 28
+end
+
+-- Text lines with this condition can only be used if it is currently Thanksgiving
+local function IsThanksgiving( self )
+    local month = os_date( "%B" )
+    local weekday = tonumber( os_date( "%d" ) )
+    return month == "November" and weekday == 24
+end
+
+-- Text lines with this condition can only be used if it is currently the 4th of July
+local function Is4thofJuly( self )
+    local month = os_date( "%B" )
+    local weekday = tonumber( os_date( "%d" ) )
+    return month == "July" and weekday == 4
+end
+
+
+-- Text lines with this condition can only be used if it is currently Easter
+local function IsEaster( self )
+    local month = os_date( "%B" )
+    local weekday = tonumber( os_date( "%d" ) )
+    return month == "April" and weekday == 9
 end
 
 
@@ -254,6 +299,14 @@ LambdaAddConditionalKeyWord( "|activeserver|", IsActiveServer )
 LambdaAddConditionalKeyWord( "|keyentishost|", KeyEntIsHost )
 LambdaAddConditionalKeyWord( "|amtime|", AMTime )
 LambdaAddConditionalKeyWord( "|pmtime|", PMTime )
+
+-- Special Day Conditions --
+LambdaAddConditionalKeyWord( "|christmas|", IsChristmasDay )
+LambdaAddConditionalKeyWord( "|newyears|", IsNewYears )
+LambdaAddConditionalKeyWord( "|addonbirthday|", IsAddonBirthday )
+LambdaAddConditionalKeyWord( "|thanksgiving|", IsThanksgiving )
+LambdaAddConditionalKeyWord( "|4thjuly|", Is4thofJuly )
+LambdaAddConditionalKeyWord( "|easter|", IsEaster )
 ------------------------------------------------------
 
 
