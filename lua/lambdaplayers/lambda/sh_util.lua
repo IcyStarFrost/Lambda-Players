@@ -513,6 +513,7 @@ if SERVER then
         local info = LambdaPersonalProfiles and LambdaPersonalProfiles[ self:GetLambdaName() ] or nil
         if info then
             self:ApplyLambdaInfo( info )
+            self.l_usingaprofile = true
             self:SimpleTimer( 0, function() hook.Run( "LambdaOnProfileApplied", self, info ) end, true )
         end
     end
