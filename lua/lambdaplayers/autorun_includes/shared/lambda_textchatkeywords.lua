@@ -191,8 +191,15 @@ local function HighPing( self )
     return self:GetPing() > 200
 end
 
+-- Text lines with this condition can only be used if this is a lot of people packed together near the Lambda
+local function IsCrowded( self )
+   local near = self:FindInSphere( nil, 500, function( ent ) return ent.IsLambdaPlayer or ent:IsPlayer() end )
+   return #near > 5
+end
+
 -- Conditional Key Words that will determine if a text line that has the key word can be used --
-LambdaAddTextChatKeyWord( "|highping|", HighPing )
+LambdaAddConditionalKeyWord( "|highping|", HighPing )
+LambdaAddConditionalKeyWord( "|crowded|", IsCrowded )
 ------------------------------------------------------
 
 
