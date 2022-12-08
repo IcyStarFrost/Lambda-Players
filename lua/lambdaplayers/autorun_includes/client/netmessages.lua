@@ -392,3 +392,17 @@ net.Receive( "lambdaplayers_spray", function()
     local index = net.ReadUInt( 32 )
     Spray( spraypath, tracehitpos, tracehitnormal, index )
 end )
+
+net.Receive( "lambdaplayers_getplybirthday", function() 
+    local birthdaydata = LAMBDAFS:ReadFile( "lambdaplayers/playerbirthday.json", "json" )
+
+    net.Start( "lambdaplayers_returnplybirthday" )
+    if birthdaydata then
+        net.WriteString( birthdaydata.month )
+        net.WriteUInt( birthdaydata.day, 5 )
+    else
+        net.WriteString( "NIL" )
+        net.WriteUInt( 1, 5 )
+    end
+    net.SendToServer()
+end )

@@ -15,6 +15,7 @@ local string_Explode = string.Explode
 local gsub = string.gsub
 local StripExtension = string.StripExtension
 local string_Replace = string.Replace
+local player_GetBySteamID = player.GetBySteamID
 local string_EndsWith = string.EndsWith
 local tonumber = tonumber
 local os_date = os.date
@@ -173,9 +174,21 @@ local function keyentWeapon( self )
     return IsValid( wep ) and wep.GetPrintName and wep:GetPrintName() or keyent.IsLambdaPlayer and keyent.l_WeaponPrettyName or "weapon"
 end 
 
+-- Returns a Player that currently has a Birthday. SHOULD BE USED WITH CONDITION KEY WORD |birthday|
+local function BirthdayPlayer( self )
+    for steamid, birthdaydata in RandomPairs( _LambdaPlayerBirthdays ) do
+        local ply = player_GetBySteamID( steamid )
+        if IsValid( ply ) then
+            return ply:Name()
+        end
+    end
+    return "someone"
+end 
+
 -- Key words that will be replaced with some text --
 LambdaAddTextChatKeyWord( "/rndply/", RandomPlayerKeyword )
 LambdaAddTextChatKeyWord( "/keyent/", Keyentity )
+LambdaAddTextChatKeyWord( "/birthdayply/", BirthdayPlayer )
 LambdaAddTextChatKeyWord( "/self/", Selfname )
 LambdaAddTextChatKeyWord( "/servername/", ServerName )
 LambdaAddTextChatKeyWord( "/nearprop/", nearProp )
@@ -288,6 +301,16 @@ local function IsEaster( self )
     return month == "April" and weekday == 9
 end
 
+-- Text lines with this condition can only be used if it is currently someone's birthday. Best used with key word /birthdayply/
+local function SomeonesBirthday( self )
+    local month = os_date( "%B" )
+    local weekday = tonumber( os_date( "%d" ) )
+    for steamid, birthdaydata in pairs( _LambdaPlayerBirthdays ) do
+        if birthdaydata.month == month and birthdaydata.day == weekday then return true end
+    end
+    return false
+end
+
 
 -- Conditional Key Words that will determine if a text line that has the key word can be used --
 LambdaAddConditionalKeyWord( "|highping|", HighPing )
@@ -301,6 +324,7 @@ LambdaAddConditionalKeyWord( "|amtime|", AMTime )
 LambdaAddConditionalKeyWord( "|pmtime|", PMTime )
 
 -- Special Day Conditions --
+LambdaAddConditionalKeyWord( "|birthday|", SomeonesBirthday )
 LambdaAddConditionalKeyWord( "|christmas|", IsChristmasDay )
 LambdaAddConditionalKeyWord( "|newyears|", IsNewYears )
 LambdaAddConditionalKeyWord( "|addonbirthday|", IsAddonBirthday )
