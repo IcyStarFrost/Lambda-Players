@@ -167,7 +167,7 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
     disabletbl = disabletbl or {}
     if !disabletbl.cooldown then self.l_WeaponUseCooldown = CurTime() + weapondata.rateoffire end
     
-    if !disabletbl.sound then wepent:EmitSound( TranslateRandomization( weapondata.attacksnd ), 70, 100, 1, CHAN_WEAPON ) end
+    if !disabletbl.sound then wepent:EmitSound( TranslateRandomization( weapondata.attacksnd ), 80, random( 98, 102 ), 1, CHAN_WEAPON ) end
     
     if !disabletbl.muzzleflash then self:HandleMuzzleFlash( weapondata.muzzleflash, weapondata.muzzleoffpos, weapondata.muzzleoffang ) end
     if !disabletbl.shell then self:HandleShellEject( weapondata.shelleject, weapondata.shelloffpos, weapondata.shelloffang ) end
@@ -201,7 +201,7 @@ local function DefaultMeleeWeaponUse( self, wepent, target, weapondata, disablet
     disabletbl = disabletbl or {}
     if !disabletbl.cooldown then self.l_WeaponUseCooldown = CurTime() + weapondata.rateoffire end
     
-    if !disabletbl.sound then wepent:EmitSound( TranslateRandomization( weapondata.attacksnd ), 70, 100, 1, CHAN_WEAPON ) end
+    if !disabletbl.sound then wepent:EmitSound( TranslateRandomization( weapondata.attacksnd ), 75, random( 98, 102 ), 1, CHAN_WEAPON ) end
     
     if !disabletbl.anim then
         self:RemoveGesture( weapondata.attackanim )
