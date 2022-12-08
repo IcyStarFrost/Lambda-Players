@@ -631,6 +631,8 @@ if SERVER then
         net.Start( "lambdaplayers_invalidateragdoll" )
         net.WriteEntity( self )
         net.Broadcast()
+
+        hook.Run( "LambdaOnRespawn", self )
     end
 
     -- Delete ourself and spawn a recreation of ourself.
