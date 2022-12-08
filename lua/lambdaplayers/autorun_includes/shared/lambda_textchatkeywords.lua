@@ -206,7 +206,7 @@ end
 local function IsAlone( self )
     local near = self:FindInSphere( nil, 2000, function( ent ) return ent.IsLambdaPlayer or ent:IsPlayer() end )
     return #near == 0
- end
+end
 
 
 -- Text lines with this condition can only be used if there is less than 6 Lambda/players in the game
@@ -214,14 +214,22 @@ local function IsQuietServer( self )
     local players = player_GetAll()
     table_Add( players, GetLambdaPlayers() )
     return #players < 6
- end
+end
 
- -- Text lines with this condition can only be used if there is more than 15 Lambda/players in the game
+-- Text lines with this condition can only be used if there is more than 15 Lambda/players in the game
 local function IsActiveServer( self )
     local players = player_GetAll()
     table_Add( players, GetLambdaPlayers() )
     return #players < 15
- end
+end
+
+-- This condition must be used where /keyent/ is supported for it to work properly!
+-- Text lines with this condition can only be used if the key ent is the host of the server. This doesn't work in Dedicated Servers
+local function KeyEntIsHost( self )
+    local keyent = self.l_keyentity
+    if !IsValid( keyent ) or !keyent:IsPlayer() then return false end
+    return keyent:GetNW2Bool( "lambda_serverhost", false )
+end
 
 
 -- Conditional Key Words that will determine if a text line that has the key word can be used --
@@ -231,6 +239,7 @@ LambdaAddConditionalKeyWord( "|crowded|", IsCrowded )
 LambdaAddConditionalKeyWord( "|alone|", IsAlone )
 LambdaAddConditionalKeyWord( "|quietserver|", IsQuietServer )
 LambdaAddConditionalKeyWord( "|activeserver|", IsActiveServer )
+LambdaAddConditionalKeyWord( "|keyentishost|", KeyEntIsHost )
 ------------------------------------------------------
 
 
