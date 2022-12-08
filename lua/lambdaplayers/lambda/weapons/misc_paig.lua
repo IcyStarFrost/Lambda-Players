@@ -17,7 +17,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 5,
         attackrange = 50,
-        addspeed = 50,
+        speedmultiplier = 1.2,
 
         callback = function( self, wepent, target )
             self.l_WeaponUseCooldown = CurTime() + 4

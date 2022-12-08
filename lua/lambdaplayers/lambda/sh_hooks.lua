@@ -85,6 +85,7 @@ if SERVER then
                 net.WriteVector( info:GetDamageForce() )
                 net.WriteVector( info:GetDamagePosition() )
                 net.WriteVector( self:GetPhysColor() )
+                net.WriteString( self:GetWeaponName() )
             net.Broadcast()
         end
 

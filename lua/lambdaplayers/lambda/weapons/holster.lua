@@ -19,7 +19,7 @@
     offpos          | Vector |      The offset position of the weapon local to the Lambda's considered hand position    | OPTIONAL
     offang          | Angle |       The offset angle of the weapon local to the Lambda  | OPTIONAL
 
-    addspeed        | Number |      The amount to add to speed while in combat  | OPTIONAL
+    speedmultiplier | Number |      Multiplies the Lambda's movement speed to this value while the weapon is held
     keepdistance    | Number |      The distance the Lambda will keep from the target
     attackrange     | Number |      The range the Lambda can attack from
     damage          | Number |      The amount of damage the weapon can deal
@@ -33,6 +33,8 @@
     callback        | Function |    A function that will be called when the weapon is used. Return true if you are making a custom shooting/swinging code   | OPTIONAL
     OnEquip         | Function |    A function that will be called when the weapon is equipped  | OPTIONAL
     OnUnequip       | Function |    A function that will be called when the weapon is unequipped    | OPTIONAL
+    OnDrop          | Function |    A client side function that will be called when weapon's dropped prop is created | OPTIONAL
+    OnThink         | Function |    A function that runs every tick on server while the weapon is held by Lambda Player. Returning a number in the function will add a cooldown | OPTIONAL
 
 
 
@@ -52,7 +54,7 @@
     offpos          | Vector |      The offset position of the weapon local to the Lambda's considered hand position    | OPTIONAL
     offang          | Angle |       The offset angle of the weapon local to the Lambda  | OPTIONAL
 
-    addspeed        | Number |      The amount to add to speed while in combat
+    speedmultiplier | Number |      Multiplies the Lambda's movement speed to this value while the weapon is held
     keepdistance    | Number |      The distance the Lambda will keep from the target
     attackrange     | Number |      The range the Lambda can attack from
     damage          | Number |      The amount of damage the weapon can deal
@@ -82,6 +84,8 @@
     OnEquip         | Function |    A function that will be called when the weapon is equipped  | OPTIONAL
     OnUnequip       | Function |    A function that will be called when the weapon is unequipped    | OPTIONAL
     OnReload        | Function |    A function that will be called when the weapon's reload is started  | OPTIONAL
+    OnDrop          | Function |    A client side function that will be called when weapon's dropped prop is created | OPTIONAL
+    OnThink         | Function |    A function that runs every tick on server while the weapon is held by Lambda Player. Returning a number in the function will add a cooldown | OPTIONAL
 
     ---------------------------------
 ]]

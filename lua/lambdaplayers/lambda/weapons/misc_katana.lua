@@ -22,7 +22,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 32,
         attackrange = 70,
-        addspeed = 50,
+        speedmultiplier = 1.2,
 
         OnEquip = function( lambda, wepent )
             --[[if GetConVar("lambdaplayers_weapons_katanamotivated"):GetBool() then

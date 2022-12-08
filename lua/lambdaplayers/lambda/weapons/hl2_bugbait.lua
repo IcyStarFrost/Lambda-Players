@@ -1,7 +1,8 @@
 local random = math.random
-local rand = math.Rand
-local ents_Create = ents and ents.Create or nil
+local ents_Create = ents.Create
 local Angle = Angle
+local IsValid = IsValid
+local CurTime = CurTime
 local IsValid = IsValid
 
 local function IsCharacter( ent )
@@ -17,30 +18,32 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         holdtype = "grenade",
         bonemerge = true,
 
-        
-
         OnEquip = function( self, wepent )
+            wepent.NextSqueezeTime = CurTime() + random( 1, 20 )
+            wepent.NextThrowTime = CurTime() + random( 1, 20 )
+        end,
 
-            local nextthrow = CurTime() + rand( 1, 10 )
-            local nextsqueeze = CurTime() + rand( 1, 20 )
-            
+        OnUnequip = function( self, wepent )
+            wepent.NextSqueezeTime = nil
+            wepent.NextThrowTime = nil
+        end,
 
-            self:Hook( "Tick", "Bugbaitthrowing", function()
+        OnThink = function( self, wepent )
+            if CurTime() > wepent.NextSqueezeTime then
+                wepent:EmitSound( "weapons/bugbait/bugbait_squeeze" .. random( 1, 3 ) .. ".wav", 65, 100, 10, CHAN_WEAPON )
+                wepent.NextSqueezeTime = CurTime() + random( 1, 20 )
+            end
 
-                if CurTime() > nextsqueeze then
-                    wepent:EmitSound( "weapons/bugbait/bugbait_squeeze" .. random( 1, 3 ) .. ".wav", 65, 100, 10, CHAN_WEAPON )
-                    nextsqueeze = CurTime() + rand( 1, 20 )
-                end
+            if CurTime() > wepent.NextThrowTime then
+                wepent.NextThrowTime = CurTime() + random( 1, 10 )
 
-                if CurTime() < nextthrow then return end
-
-                local nearby = self:FindInSphere( nil, 200, function( ent ) return IsCharacter( ent ) or self:HasVPhysics( ent ) end )
+                local nearby = self:FindInSphere( nil, 200, function( ent ) return ( IsCharacter( ent ) or self:HasVPhysics( ent ) ) end )
                 local rndent = nearby[ random( #nearby ) ]
-                local time = IsValid( rndent ) and 1 or 0
-                self:LookTo( IsValid( rndent ) and rndent or nil, 3 )
-            
+                local time = ( IsValid( rndent ) and 1 or 0 )
+                
+                self:LookTo( ( ( time == 1 ) and rndent or nil ), 3 )
+                
                 self:SimpleTimer( time, function()
-
                     self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
                     self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
 
@@ -52,20 +55,13 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                     bait:SetVelocity( ( self:GetEyeTrace().HitPos - bait:GetPos() ):GetNormalized() * 1000 )
                     bait:SetLocalAngularVelocity( Angle( 600, random( -1200, 1200 ), 0 ) )
-
                 end )
+            end
 
-
-                nextthrow = CurTime() + rand( 1, 10 )
-            end )
-
-        end,
-        
-        OnUnequip = function( self, wepent )
-            self:RemoveHook( "Tick", "Bugbaitthrowing" )
+            return 1.0
         end,
 
-        islethal = false,
+        islethal = false
     }
 
 })

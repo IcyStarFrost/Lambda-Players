@@ -4,6 +4,21 @@ local max = math.max
 local random = math.random
 local LambdaIsValid = LambdaIsValid
 
+local function HealEnemyState( self )
+    self:PreventWeaponSwitch( true )
+
+    local moveResult = self:MoveToPos( self:GetEnemy(), { update = 0.4, tol = 64, callback = function()
+        if self:Health() < self:GetMaxHealth() then self:CancelMovement() end
+        if self:GetEnemy():Health() >= self:GetEnemy():GetMaxHealth() then self:CancelMovement() end
+    end } )
+    if moveResult != "ok" then self:SetState( "Idle" ); self:PreventWeaponSwitch( false ) return end
+
+    self:LookTo( self:GetEnemy():WorldSpaceCenter(), 1 )
+    self:UseWeapon( self:GetEnemy() )
+    self:SetState( "Idle" ) 
+    self:PreventWeaponSwitch( false )
+end
+
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     medkit = {
@@ -12,45 +27,29 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         prettyname = "Medkit",
         holdtype = "slam",
         bonemerge = true,
-
         clip = 100,
 
-        OnEquip = function( self, wepent )
-            self[ "HealEnemy" ] = function( self )              
-                self:PreventWeaponSwitch( true )
+        OnEquip = function( self, wepent ) self[ "HealEnemy" ] = HealEnemyState end,
+        OnUnequip = function( self, wepent ) self[ "HealEnemy" ] = nil end,
 
-                local moveResult = self:MoveToPos( self:GetEnemy(), { update = 0.4, tol = 64, callback = function()
-                    if self:Health() < self:GetMaxHealth() then self:CancelMovement() end
-                    if self:GetEnemy():Health() >= self:GetEnemy():GetMaxHealth() then self:CancelMovement() end
-                end } )
-                if moveResult != "ok" then self:SetState( "Idle" ); self:PreventWeaponSwitch( false ) return end
+        OnThink = function( self, wepent )
+            self.l_Clip = min( self.l_Clip + 2, self.l_MaxClip )
 
-                self:LookTo( self:GetEnemy():WorldSpaceCenter(), 1 )
-                self:UseWeapon( self:GetEnemy() )
-                self:SetState( "Idle" ) 
-                self:PreventWeaponSwitch( false )
-            end
-
-            self:Hook( "Think", "LambdaMedkit_Think", function()
-                self.l_Clip = min( self.l_Clip + 2, self.l_MaxClip )
-
-                if self:Health() < self:GetMaxHealth() then
-                    self:UseWeapon( self ) 
-                    return 
-                end
-
-                if self:GetState() == "Idle" and self.l_Clip >= 20 and random( 1, 2 ) == 1 and random( 1, 100 ) > self:GetCombatChance() then
-                    local nearby = self:FindInSphere( self:GetPos(), 500, function( ent ) 
-                        return ( self:CanTarget( ent ) and ent:Health() < ent:GetMaxHealth() ) 
-                    end )
-                    local rndEnt = nearby[ random( #nearby ) ]
-                    if !IsValid( rndEnt ) then return end
-
+            if self:Health() < self:GetMaxHealth() then
+                self:UseWeapon( self ) 
+            elseif self:GetState() == "Idle" and self.l_Clip >= 20 and random( 1, 2 ) == 1 and random( 1, 100 ) > self:GetCombatChance() then
+                local nearby = self:FindInSphere( self:GetPos(), 500, function( ent ) 
+                    return ( self:CanTarget( ent ) and ent:Health() < ent:GetMaxHealth() ) 
+                end )
+                local rndEnt = nearby[ random( #nearby ) ]
+                if IsValid( rndEnt ) then
                     self:SetState( "HealEnemy" )
                     self:SetEnemy( rndEnt )
                     self:CancelMovement()
                 end
-            end, false, 1 )
+            end
+
+            return 1.0
         end,
 
         callback = function( self, wepent, target )
@@ -73,11 +72,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self.l_Clip = max( 0, self.l_Clip - healNeed )
 
             return true
-        end,
-
-        OnUnequip = function( self, wepent )
-            self[ "HealEnemy" ] = nil
-            self:RemoveHook( "Think", "LambdaMedkit_Think" )
         end,
 
         islethal = false
