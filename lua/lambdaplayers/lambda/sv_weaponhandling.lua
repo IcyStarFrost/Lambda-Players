@@ -58,7 +58,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self.l_CombatAttackRange = weapondata.attackrange
     self.l_OnDamagefunction = weapondata.OnDamage
     self.l_WeaponNoDraw = weapondata.nodraw or false
-    self.l_CombatSpeedAdd = weapondata.addspeed or 0
+    self.l_WeaponSpeedMultiplier = weapondata.speedmultiplier or 1
     self.l_Clip = weapondata.clip or 0
     self.l_MaxClip = weapondata.clip or 0
 
@@ -88,6 +88,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     wepent:SetModel( weapondata.model )
     
     
+    self.l_WeaponThinkFunction = weapondata.OnThink
     if isfunction( weapondata.OnEquip ) then weapondata.OnEquip( self, wepent ) end
 
 end
@@ -166,7 +167,7 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
     disabletbl = disabletbl or {}
     if !disabletbl.cooldown then self.l_WeaponUseCooldown = CurTime() + weapondata.rateoffire end
     
-    if !disabletbl.sound then wepent:EmitSound( TranslateRandomization( weapondata.attacksnd ), 70, 100, 1, CHAN_WEAPON ) end
+    if !disabletbl.sound then wepent:EmitSound( TranslateRandomization( weapondata.attacksnd ), 80, random( 98, 102 ), 1, CHAN_WEAPON ) end
     
     if !disabletbl.muzzleflash then self:HandleMuzzleFlash( weapondata.muzzleflash, weapondata.muzzleoffpos, weapondata.muzzleoffang ) end
     if !disabletbl.shell then self:HandleShellEject( weapondata.shelleject, weapondata.shelloffpos, weapondata.shelloffang ) end
@@ -200,7 +201,7 @@ local function DefaultMeleeWeaponUse( self, wepent, target, weapondata, disablet
     disabletbl = disabletbl or {}
     if !disabletbl.cooldown then self.l_WeaponUseCooldown = CurTime() + weapondata.rateoffire end
     
-    if !disabletbl.sound then wepent:EmitSound( TranslateRandomization( weapondata.attacksnd ), 70, 100, 1, CHAN_WEAPON ) end
+    if !disabletbl.sound then wepent:EmitSound( TranslateRandomization( weapondata.attacksnd ), 75, random( 98, 102 ), 1, CHAN_WEAPON ) end
     
     if !disabletbl.anim then
         self:RemoveGesture( weapondata.attackanim )

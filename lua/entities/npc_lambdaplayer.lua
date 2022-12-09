@@ -154,6 +154,7 @@ function ENT:Initialize()
         self.l_moveWaitTime = 0 -- The time we will wait until continuing moving through our path
         self.l_nextswimposupdate = 0 -- the next time we will update our swimming position
         self.l_ladderfailtimer = CurTime() + 15 -- The time until we are removed and recreated due to Gmod issues with nextbots and ladders. Thanks Facepunch
+        self.l_NextWeaponThink = 0 -- The next time we will run the currenly held weapon's think callback
 
 
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
@@ -398,16 +399,26 @@ function ENT:Think()
     hook.Run( "LambdaOnThink", self, self:GetWeaponENT() )
     
     if SERVER then
+        -- Run our weapon's think callback if possible
+        if CurTime() > self.l_NextWeaponThink then
+            local wepThinkFunc = self.l_WeaponThinkFunction
+            if isfunction( wepThinkFunc ) then
+                local thinkTime = wepThinkFunc( self, self:GetWeaponENT() )
+                if isnumber( thinkTime ) then self.l_NextWeaponThink = CurTime() + thinkTime end 
+            end
+        end
+
         if self.l_ispickedupbyphysgun then self.loco:SetVelocity( Vector() ) end
 
         -- Footstep sounds
         if CurTime() > self.l_nextfootsteptime and self:IsOnGround() and !self.loco:GetVelocity():IsZero() then
+            
             local desSpeed = self.loco:GetDesiredSpeed()
             local result = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32600, self )
             local stepsounds = _LAMBDAPLAYERSFootstepMaterials[ result.MatType ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ]
             local snd = stepsounds[ random( #stepsounds ) ]
-            --hook.Run( "PlayerFootstep", self, self:GetPos(), random( 0, 1 ), snd, 0.5, RecipientFilter() )
-            self:EmitSound( snd, 75, 100, 0.5 )
+            local result = hook.Run( "LambdaFootStep", self, self:GetPos(), result.MatType )
+            if result != true then self:EmitSound( snd, 75, 100, 0.5 ) end
             self.l_nextfootsteptime = CurTime() + min(0.25 * (self:GetRunSpeed() / desSpeed), 0.35)
         end
         
@@ -425,7 +436,7 @@ function ENT:Think()
 
         -- Update our speed after some time
         if CurTime() > self.l_nextspeedupdate then
-            local speed = ( self:GetCrouch() and self:GetCrouchSpeed() or self:GetRun() and self:GetRunSpeed() or self:GetWalkSpeed() ) +  self.l_CombatSpeedAdd
+            local speed = ( self:GetCrouch() and self:GetCrouchSpeed() or self:GetRun() and self:GetRunSpeed() or self:GetWalkSpeed() ) * self.l_WeaponSpeedMultiplier
             self.loco:SetDesiredSpeed( speed )
             self.l_nextspeedupdate = CurTime() + 0.5
         end
@@ -612,7 +623,7 @@ function ENT:Think()
 
                     self.loco:FaceTowards( swimPos )
 
-                    local swimSpeed = ( ( ( self:GetRun() and !self:GetCrouch() ) and 320 or 160 ) + self.l_CombatSpeedAdd )
+                    local swimSpeed = ( ( ( self:GetRun() and !self:GetCrouch() ) and 320 or 160 ) * self.l_WeaponSpeedMultiplier )
                     swimVel = ( ( swimPos - self:GetPos() ):GetNormalized() * swimSpeed )
                 end
 

@@ -480,3 +480,20 @@ function LambdaPlayers_Spray( path, tracehitpos, tracehitnormal, index )
         net.WriteUInt( index, 32 )
     net.Broadcast()
 end
+
+_LambdaPlayerBirthdays = {}
+
+function LambdaGetPlayerBirthday( ply, callback )
+    net.Start( "lambdaplayers_getplybirthday" )
+    net.Send( ply )
+
+    print( "Lambda Players: Requesting " .. ply:Name() .. "'s birthday.." )
+
+    net.Receive( "lambdaplayers_returnplybirthday", function( len, ply )
+        local month = net.ReadString()
+        local day = net.ReadUInt( 5 )
+        if month == "NIL" then print( "Lambda Players: " .. ply:Name() .. " has not set up their birthday for Lambda" ) return end
+        print( "Lambda Players: Successfully received " .. ply:Name() .. "'s birthday!")
+        callback( ply, month, day )
+    end )
+end

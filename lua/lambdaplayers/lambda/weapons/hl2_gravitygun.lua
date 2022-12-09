@@ -15,6 +15,7 @@ local punted = false
 local blastStart, smoothBlast, smoothBlastA = 0, 0, 255
 local blastTarget = false
 local color = Color(255,255,255,255)
+local attachtab = { "fork1m", "fork1t", "fork2m", "fork2t", "fork3m", "fork3t" }
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
@@ -28,10 +29,11 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         Draw = function( lambda, wepent )
             if IsValid( wepent ) then
-                local attachtab = { "fork1m", "fork1t", "fork2m", "fork2t", "fork3m", "fork3t" }
-
                 for i = 1, #attachtab do
-                    local at = wepent:GetAttachment( wepent:LookupAttachment( attachtab[i] ) )
+                    local atID = wepent:LookupAttachment( attachtab[i] )
+                    if atID == -1 or atID == 0 then return end
+
+                    local at = wepent:GetAttachment( atID )
                     render.SetMaterial( ggunGlowSprite )
                     render.DrawSprite( at.Pos, 6, 6, Color(255, 128, 0, 64) )
                 end
@@ -48,20 +50,19 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             end
         end,
 
-        OnEquip = function( lambda, wepent )
+        OnThink = function( lambda, wepent )
             -- Pretty much will punt any prop they get close to
-            lambda:Hook( "Think", "GravityGunPuntThink", function( )
-                local find = lambda:FindInSphere( lambda:GetPos(), 150, function( ent ) if !ent:IsNPC() and ent:GetClass()=="prop_physics" and !ent:IsPlayer() and !ent:IsNextBot() and lambda:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and lambda:HasPermissionToEdit( ent ) and ent:GetPhysicsObject():IsMoveable() then return true end end )
-                local prop = find[ random( #find ) ]
+            local find = lambda:FindInSphere( lambda:GetPos(), 150, function( ent ) if !ent:IsNPC() and ent:GetClass()=="prop_physics" and !ent:IsPlayer() and !ent:IsNextBot() and lambda:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and lambda:HasPermissionToEdit( ent ) and ent:GetPhysicsObject():IsMoveable() then return true end end )
+            local prop = find[ random( #find ) ]
 
-                lambda:LookTo( prop, 3 )
+            lambda:LookTo( prop, 3 )
 
-                lambda:SimpleTimer( 1, function() -- To let the Lambda aim properly
-                    if !IsValid( prop ) or !IsValid( wepent ) then return end
-                    lambda:UseWeapon( prop )
-                end)
-            
-            end, true, 1) -- "Attack" prop twice then do another check (1)
+            lambda:SimpleTimer( 1, function() -- To let the Lambda aim properly
+                if !IsValid( prop ) or !IsValid( wepent ) then return end
+                lambda:UseWeapon( prop )
+            end)
+
+            return 1.0 -- "Attack" prop twice then do another check (1)
         end,
 
         callback = function( self, wepent, target )
@@ -141,11 +142,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             return true
         end,
 
-        OnUnequip = function( lambda, wepent )
-            lambda:RemoveHook( "Think", "GravityGunPuntThink" )
-        end,
-
-        islethal = false,
+        islethal = false
 
     }
 

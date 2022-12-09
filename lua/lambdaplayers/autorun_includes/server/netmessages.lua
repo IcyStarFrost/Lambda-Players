@@ -21,3 +21,11 @@ end )
 net.Receive( "lambdaplayers_realplayerendvoice", function( len, ply )
     hook.Run( "LambdaOnRealPlayerEndVoice", ply )
 end )
+
+net.Receive( "lambdaplayers_onclosebirthdaypanel", function( len, ply )
+    local month = net.ReadString()
+    local day = net.ReadUInt( 5 )
+    print( "Lambda Players: " .. ply:Name() .. " changed their birthday setting")
+    if month == "NIL" then return end
+    _LambdaPlayerBirthdays[ ply:SteamID() ] = { month = month, day = day }
+end )

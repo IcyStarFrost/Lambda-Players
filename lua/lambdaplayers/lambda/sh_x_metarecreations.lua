@@ -132,9 +132,9 @@ function ENT:IsSuperAdmin()
     return false
 end
 
--- Soon..
+
 function ENT:IsTyping()
-    return false
+    return self:GetIsTyping()
 end
 
 function ENT:IsUserGroup( groupname )
@@ -359,7 +359,7 @@ function ENT:LocalEyeAngles()
 end
 
 function ENT:HasGodMode()
-    return false
+    return self.l_godmode
 end
 
 function ENT:HasWeapon( className )

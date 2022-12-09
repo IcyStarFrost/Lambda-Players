@@ -49,6 +49,10 @@ if SERVER then
     -- So the client knows if the player is the host or not
     hook.Add("PlayerInitialSpawn", "Lambdasetserverhost", function( ply )
         if ply:IsListenServerHost() then ply:SetNW2Bool( "lambda_serverhost", true ) end
+        
+        LambdaGetPlayerBirthday( ply, function( ply, month, day )
+            _LambdaPlayerBirthdays[ ply:SteamID() ] = { month = month, day = day } 
+        end )
     end )
 
 elseif CLIENT then

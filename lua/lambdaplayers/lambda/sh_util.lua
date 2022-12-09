@@ -513,6 +513,7 @@ if SERVER then
         local info = LambdaPersonalProfiles and LambdaPersonalProfiles[ self:GetLambdaName() ] or nil
         if info then
             self:ApplyLambdaInfo( info )
+            self.l_usingaprofile = true
             self:SimpleTimer( 0, function() hook.Run( "LambdaOnProfileApplied", self, info ) end, true )
         end
     end
@@ -529,6 +530,11 @@ if SERVER then
         self:DebugPrint( "Changed state from " .. self.l_State .. " to " .. state )
         self.l_LastState = self.l_State
         self.l_State = state
+    end
+
+    -- Returns if the provided state exists
+    function ENT:StateExists( state )
+        return isfunction( self[ state ] )
     end
 
     -- Obviously returns the current state
@@ -625,6 +631,8 @@ if SERVER then
         net.Start( "lambdaplayers_invalidateragdoll" )
         net.WriteEntity( self )
         net.Broadcast()
+
+        hook.Run( "LambdaOnRespawn", self )
     end
 
     -- Delete ourself and spawn a recreation of ourself.
@@ -744,7 +752,14 @@ if SERVER then
             if LambdaTextProfiles[ self.l_TextProfile ] then
                 local texttable = LambdaTextProfiles[ self.l_TextProfile ][ texttype ]
                 if texttable and #texttable > 0 then
-                    return texttable[ random( #texttable ) ]
+                    
+                    for k, textline in RandomPairs( texttable ) do
+                        local condition, modifiedline = LambdaConditionalKeyWordCheck( self, textline )
+                        if condition then
+                            return modifiedline
+                        end
+                    end
+
                 end
             end
         end
@@ -752,7 +767,14 @@ if SERVER then
 
         if !tbl then return "" end
 
-        return tbl[ random( #tbl ) ] 
+        for k, textline in RandomPairs( tbl ) do
+            local condition, modifiedline = LambdaConditionalKeyWordCheck( self, textline )
+            if condition then
+                return modifiedline
+            end
+        end
+
+        return ""
     end
 
     -- Makes the Lambda say the specified file or file path.

@@ -37,7 +37,9 @@
 	"2009 MW2 is the reason why I am so good",
 	"Cool now I have /kills/ kills",
 	"/keyent/ is kinda bad at fighting",
-	"Yeah that's right I beat you with /ping/ ping",
+	"|highping|Yeah that's right I beat you with /ping/ ping",
+	"|highping|Bro I'm lagging a bit and you still lost",
+	"|highping|clearly you still suck even when i have high ping",
 	"Remember /keyent/, dying is gay. Don't die again",
 	"Oh, if it isn't the man himself! /keyent/",
 	"You made a compelling case but my verdict still stands",
@@ -49,5 +51,6 @@
 	"The best of the best still die like the rest /keyent/",
 	"You had it coming",
 	"This wasn't even a fight",
+	"|lowhp|good fight, almost got me",
 	"You put up a way less of a fight than a karen in a Waffle House /keyent/"
 ]

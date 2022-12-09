@@ -67,6 +67,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     local force = net.ReadVector()
     local offset = net.ReadVector()
     local colvec = net.ReadVector()
+    local wepName = net.ReadString()
 
     if !IsValid( ent ) then return end
 
@@ -79,6 +80,9 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     cs_prop:Spawn()
 
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, cs_prop )
+
+    local dropFunc = _LAMBDAPLAYERSWEAPONS[ wepName ].OnDrop
+    if isfunction( dropFunc ) then dropFunc( cs_prop ) end
 
     local phys = cs_prop:GetPhysicsObject()
 
@@ -391,4 +395,18 @@ net.Receive( "lambdaplayers_spray", function()
     local tracehitnormal = net.ReadNormal()
     local index = net.ReadUInt( 32 )
     Spray( spraypath, tracehitpos, tracehitnormal, index )
+end )
+
+net.Receive( "lambdaplayers_getplybirthday", function() 
+    local birthdaydata = LAMBDAFS:ReadFile( "lambdaplayers/playerbirthday.json", "json" )
+
+    net.Start( "lambdaplayers_returnplybirthday" )
+    if birthdaydata then
+        net.WriteString( birthdaydata.month )
+        net.WriteUInt( birthdaydata.day, 5 )
+    else
+        net.WriteString( "NIL" )
+        net.WriteUInt( 1, 5 )
+    end
+    net.SendToServer()
 end )

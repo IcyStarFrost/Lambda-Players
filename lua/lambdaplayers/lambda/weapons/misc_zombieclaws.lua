@@ -18,33 +18,35 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         nodraw = true,
         keepdistance = 10,
         attackrange = 65,
-        addspeed = 100,
+        speedmultiplier = 1.33,
+
+        OnEquip = function( lambda, wepent )
+            wepent.NextLeapAttackTime = 0
+        end,
 
         -- HP Auto Regen + Leap Attack
-        OnEquip = function( lambda, wepent )
-            wepent.NextLeapAttackTime = CurTime()
+        OnThink = function( lambda, wepent )
+            if lambda:Health() < lambda:GetMaxHealth() then
+                lambda:SetHealth( math_min( lambda:Health() + 1, lambda:GetMaxHealth() ) )
+            end
 
-            lambda:Hook( "Think", "ZombieClawsThink", function( )
-                if lambda:Health() < lambda:GetMaxHealth() then
-                    lambda:SetHealth( math_min( lambda:Health() + 1, lambda:GetMaxHealth() ) )
-                end
+            if lambda:GetState() == "Combat" and CurTime() > wepent.NextLeapAttackTime then
+                local target = lambda:GetEnemy()
+                if LambdaIsValid( target ) then
+                    local distTarget = lambda:GetRangeSquaredTo( target )
+                    if distTarget > ( 300 * 300 ) and distTarget <= ( 600 * 600 ) and lambda.loco:IsOnGround() and lambda:Visible( target ) and target:Visible( lambda ) then
+                        lambda.loco:Jump()
 
-                if lambda:GetState() == "Combat" and CurTime() > wepent.NextLeapAttackTime then
-                    local target = lambda:GetEnemy()
-                    if LambdaIsValid( target ) then
-                        local distTarget = lambda:GetRangeSquaredTo( target )
-                        if distTarget > ( 300 * 300 ) and distTarget <= ( 600 * 600 ) and lambda.loco:IsOnGround() and lambda:Visible( target ) and target:Visible( lambda ) then
-                            lambda.loco:Jump()
+                        local jumpDir = ( target:GetPos() - lambda:GetPos() ):Angle()
+                        lambda.loco:SetVelocity( jumpDir:Up() * 400 + jumpDir:Forward() * math_min( math_sqrt( distTarget ) * 1.5, 1024 ) )
 
-                            local jumpDir = ( target:GetPos() - lambda:GetPos() ):Angle()
-                            lambda.loco:SetVelocity( jumpDir:Up() * 400 + jumpDir:Forward() * math_min( math_sqrt( distTarget ) * 1.5, 1024 ) )
-
-                            lambda:EmitSound( "npc/fast_zombie/fz_scream1.wav", 80, lambda:GetVoicePitch() )
-                            wepent.NextLeapAttackTime = CurTime() + 5
-                        end
+                        lambda:EmitSound( "npc/fast_zombie/fz_scream1.wav", 80, lambda:GetVoicePitch() )
+                        wepent.NextLeapAttackTime = CurTime() + 5
                     end
                 end
-            end, false, 0.5)
+            end
+
+            return 0.75
         end,
 
         -- Damage reduction
@@ -53,7 +55,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         OnUnequip = function( lambda, wepent )
-            lambda:RemoveHook( "Think", "ZombieClawsThink" )
             wepent.NextLeapAttackTime = nil
         end,
 
@@ -95,7 +96,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             return true
         end,
         
-        islethal = true,
+        islethal = true
     }
 
 })

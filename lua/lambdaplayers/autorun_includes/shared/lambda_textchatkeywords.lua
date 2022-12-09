@@ -15,9 +15,13 @@ local string_Explode = string.Explode
 local gsub = string.gsub
 local StripExtension = string.StripExtension
 local string_Replace = string.Replace
+local player_GetBySteamID = player.GetBySteamID
 local string_EndsWith = string.EndsWith
+local tonumber = tonumber
+local os_date = os.date
 
 LambdaValidTextChatKeyWords = {}
+LambdaConditionalKeyWords = {}
 
 -- keyword      | String |      The word that will be detected and replaced
 -- replacefunction( lambda )      | Function |      Return a string in the function to replace the keyword with
@@ -25,6 +29,27 @@ function LambdaAddTextChatKeyWord( keyword, replacefunction )
     LambdaValidTextChatKeyWords[ keyword ] = replacefunction
 end
 
+-- keyword      | String |      The word that will be detected and will test the conditionfunc if the text line the keyword originated from can be used
+-- conditionfunc( lambda )      | Function |      Return true to allow the text line to be used
+function LambdaAddConditionalKeyWord( keyword, conditionfunc )
+    LambdaConditionalKeyWords[ keyword ] = conditionfunc
+end
+
+-- If a text line has a conditional keyword anywhere, this will return if the text line can be used if the condition function allows it
+function LambdaConditionalKeyWordCheck( self, str )
+    if !str then return true end
+
+    for keyword, conditionfunction in pairs( LambdaConditionalKeyWords ) do
+        local haskeyword = string_find( str, keyword )
+
+        if haskeyword then
+            str = string_Replace( str, keyword, "" )
+            return conditionfunction( self ), str
+        end
+    end
+
+    return true, str
+end
 
 -- Replaces any existing key words in the provided string
 function LambdaKeyWordModify( self, str ) 
@@ -149,8 +174,21 @@ local function keyentWeapon( self )
     return IsValid( wep ) and wep.GetPrintName and wep:GetPrintName() or keyent.IsLambdaPlayer and keyent.l_WeaponPrettyName or "weapon"
 end 
 
+-- Returns a Player that currently has a Birthday. SHOULD BE USED WITH CONDITION KEY WORD |birthday|
+local function BirthdayPlayer( self )
+    for steamid, birthdaydata in RandomPairs( _LambdaPlayerBirthdays ) do
+        local ply = player_GetBySteamID( steamid )
+        if IsValid( ply ) then
+            return ply:Name()
+        end
+    end
+    return "someone"
+end 
+
+-- Key words that will be replaced with some text --
 LambdaAddTextChatKeyWord( "/rndply/", RandomPlayerKeyword )
 LambdaAddTextChatKeyWord( "/keyent/", Keyentity )
+LambdaAddTextChatKeyWord( "/birthdayply/", BirthdayPlayer )
 LambdaAddTextChatKeyWord( "/self/", Selfname )
 LambdaAddTextChatKeyWord( "/servername/", ServerName )
 LambdaAddTextChatKeyWord( "/nearprop/", nearProp )
@@ -161,9 +199,143 @@ LambdaAddTextChatKeyWord( "/kills/", selfkills )
 LambdaAddTextChatKeyWord( "/map/", Map )
 LambdaAddTextChatKeyWord( "/weapon/", selfWeapon )
 LambdaAddTextChatKeyWord( "/keyweapon/", keyentWeapon )
+------------------------------------------------------
+
+-- Text lines with this condition can only be used if the Lambda has high ping
+local function HighPing( self )
+    return self:GetPing() > 200
+end
+
+-- Text lines with this condition can only be used if the Lambda has low health 
+local function Lowhealth( self )
+    return self:Health() < ( self:GetMaxHealth() * 0.4 )
+end
+
+-- Text lines with this condition can only be used if this is a lot of people packed together near the Lambda
+local function IsCrowded( self )
+   local near = self:FindInSphere( nil, 500, function( ent ) return ent.IsLambdaPlayer or ent:IsPlayer() end )
+   return #near > 5
+end
+
+-- Text lines with this condition can only be used if there is no one nearby
+local function IsAlone( self )
+    local near = self:FindInSphere( nil, 2000, function( ent ) return ent.IsLambdaPlayer or ent:IsPlayer() end )
+    return #near == 0
+end
 
 
--- LambdaAddKeyWords hook allows you to use LambdaAddTextChatKeyWord() externally
+-- Text lines with this condition can only be used if there is less than 6 Lambda/players in the game
+local function IsQuietServer( self )
+    local players = player_GetAll()
+    table_Add( players, GetLambdaPlayers() )
+    return #players < 6
+end
+
+-- Text lines with this condition can only be used if there is more than 15 Lambda/players in the game
+local function IsActiveServer( self )
+    local players = player_GetAll()
+    table_Add( players, GetLambdaPlayers() )
+    return #players < 15
+end
+
+-- This condition must be used where /keyent/ is supported for it to work properly!
+-- Text lines with this condition can only be used if the key ent is the host of the server. This doesn't work in Dedicated Servers
+local function KeyEntIsHost( self )
+    local keyent = self.l_keyentity
+    if !IsValid( keyent ) or !keyent:IsPlayer() then return false end
+    return keyent:GetNW2Bool( "lambda_serverhost", false )
+end
+
+-- Text lines with this condition can only be used if the time currently is in the night/morning ( AM )
+local function AMTime( self )
+    local date = os_date( "%p" )
+    return date == "am"
+end
+
+-- Text lines with this condition can only be used if the time currently is in the noon/afternoon/evening ( PM )
+local function PMTime( self )
+    local date = os_date( "%p" )
+    return date == "pm"
+end
+
+-- Text lines with this condition can only be used if it is currently Christmas
+local function IsChristmasDay( self )
+    local month = os_date( "%B" )
+    local weekday = tonumber( os_date( "%d" ) )
+    return month == "December" and weekday == 25
+end
+
+-- Text lines with this condition can only be used if it is currently New Years
+local function IsNewYears( self )
+    local month = os_date( "%B" )
+    local weekday = tonumber( os_date( "%d" ) )
+    return month == "January" and weekday == 1
+end
+
+-- Text lines with this condition can only be used if it is currently the addon's creation day
+local function IsAddonBirthday( self )
+    local month = os_date( "%B" )
+    local weekday = tonumber( os_date( "%d" ) )
+    return month == "October" and weekday == 28
+end
+
+-- Text lines with this condition can only be used if it is currently Thanksgiving
+local function IsThanksgiving( self )
+    local month = os_date( "%B" )
+    local weekday = tonumber( os_date( "%d" ) )
+    return month == "November" and weekday == 24
+end
+
+-- Text lines with this condition can only be used if it is currently the 4th of July
+local function Is4thofJuly( self )
+    local month = os_date( "%B" )
+    local weekday = tonumber( os_date( "%d" ) )
+    return month == "July" and weekday == 4
+end
+
+
+-- Text lines with this condition can only be used if it is currently Easter
+local function IsEaster( self )
+    local month = os_date( "%B" )
+    local weekday = tonumber( os_date( "%d" ) )
+    return month == "April" and weekday == 9
+end
+
+-- Text lines with this condition can only be used if it is currently someone's birthday. Best used with key word /birthdayply/
+local function SomeonesBirthday( self )
+    local month = os_date( "%B" )
+    local weekday = tonumber( os_date( "%d" ) )
+    for steamid, birthdaydata in pairs( _LambdaPlayerBirthdays ) do
+        if birthdaydata.month == month and birthdaydata.day == weekday then return true end
+    end
+    return false
+end
+
+
+-- Conditional Key Words that will determine if a text line that has the key word can be used --
+LambdaAddConditionalKeyWord( "|highping|", HighPing )
+LambdaAddConditionalKeyWord( "|lowhp|", Lowhealth )
+LambdaAddConditionalKeyWord( "|crowded|", IsCrowded )
+LambdaAddConditionalKeyWord( "|alone|", IsAlone )
+LambdaAddConditionalKeyWord( "|quietserver|", IsQuietServer )
+LambdaAddConditionalKeyWord( "|activeserver|", IsActiveServer )
+LambdaAddConditionalKeyWord( "|keyentishost|", KeyEntIsHost )
+LambdaAddConditionalKeyWord( "|amtime|", AMTime )
+LambdaAddConditionalKeyWord( "|pmtime|", PMTime )
+
+-- Special Day Conditions --
+LambdaAddConditionalKeyWord( "|birthday|", SomeonesBirthday )
+LambdaAddConditionalKeyWord( "|christmas|", IsChristmasDay )
+LambdaAddConditionalKeyWord( "|newyears|", IsNewYears )
+LambdaAddConditionalKeyWord( "|addonbirthday|", IsAddonBirthday )
+LambdaAddConditionalKeyWord( "|thanksgiving|", IsThanksgiving )
+LambdaAddConditionalKeyWord( "|4thjuly|", Is4thofJuly )
+LambdaAddConditionalKeyWord( "|easter|", IsEaster )
+------------------------------------------------------
+
+
+
+-- LambdaAddKeyWords hook allows you to use LambdaAddTextChatKeyWord() and LambdaAddConditionalKeyWord() externally
 if !LambdaFilesReloaded then
     hook.Add( "PreGamemodeLoaded", "lambdakeywordinit", function()
         hook.Run( "LambdaAddKeyWords" )

@@ -54,7 +54,7 @@ local function HandleARCCW( self, wep )
     self.l_HasMelee = false -- If the weapon is a melee weapon
     self.l_CombatKeepDistance = 400 -- How far to stay away from the target
     self.l_CombatAttackRange = 5000 -- How far to shoot from
-    self.l_CombatSpeedAdd = 0 -- How much to add to movement speed
+    self.l_WeaponSpeedMultiplier = 1 -- How much to multiply our movement speed
     self.l_swepreloadtime = wep.Animations[ "reload_empty" ] and wep.Animations[ "reload_empty" ].Time or wep.Animations[ "reload" ] and wep.Animations[ "reload" ].Time or 1.5 -- The time it will take to reload the weapon
     self.l_swepspread = wep:GetNPCBulletSpread( WEAPON_PROFICIENCY_VERY_GOOD ) -- The spread in degrees
     wep:NPC_Initialize()
@@ -71,7 +71,7 @@ local function HandleM9k( self, wep )
     self.l_HasMelee = false
     self.l_CombatKeepDistance = 400
     self.l_CombatAttackRange = 5000 
-    self.l_CombatSpeedAdd = 0
+    self.l_WeaponSpeedMultiplier = 1
     self.l_swepreloadtime = 2
     self.l_swepspread = wep.Primary.Spread + 2
     
