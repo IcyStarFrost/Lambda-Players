@@ -452,7 +452,7 @@ function ENT:InitializeMiniHooks()
 
             if isfunction( self.l_OnDamagefunction ) then self.l_OnDamagefunction( self, self:GetWeaponENT(), info )  end
 
-            local potentialdeath = ( self:Health() - info:GetDamage() ) <= 0
+            local potentialdeath = ( self:Health() - ceil( info:GetDamage() ) ) <= 0
             if potentialdeath then
                 info:SetDamageBonus( 0 )
                 info:SetBaseDamage( 0 )
