@@ -493,7 +493,7 @@ if SERVER then
 
         for k, v in ipairs( GetLambdaPlayers() ) do
             if v == self then continue end
-            table_RemoveByValue( nametablecopy, v )
+            table_RemoveByValue( nametablecopy, v:GetLambdaName() )
         end
         local name = nametablecopy[ random( #nametablecopy ) ]
         if !name then name = LambdaPlayerNames[ random( #LambdaPlayerNames ) ] end
