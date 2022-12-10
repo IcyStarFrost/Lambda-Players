@@ -7,6 +7,7 @@ local CurTime = CurTime
 local RandomPairs = RandomPairs
 local random = math.random
 local Rand = math.Rand
+local ceil = math.ceil
 local IsValid = IsValid
 local IsInWorld = util.IsInWorld
 local VectorRand = VectorRand
@@ -60,6 +61,46 @@ function ENT:Combat()
     end
 
     self:MoveToPos( self:GetEnemy(), combattbl )
+end
+
+-- Heal ourselves when hurt
+function ENT:HealUp()
+    local spawnRate = Rand( 0.25, 0.4 )
+    local spawnCount = ceil( ( self:GetMaxHealth() - self:Health() ) / 25 )
+    local rndVec = VectorRand( -32, 32 )
+
+    coroutine_wait( spawnRate )
+    for i = 1, random( ( spawnCount / 2 ), spawnCount ) do
+        if self:GetState() != "HealUp" then return end
+
+        local lookPos = ( self:GetPos() + rndVec )
+        self:LookTo( lookPos, spawnRate )
+        LambdaSpawn_SENT( self, "item_healthkit", self:Trace( lookPos, self:GetAttachmentPoint( "eyes" ).Pos ) )
+
+        coroutine_wait( spawnRate )
+    end
+
+    self:SetState( "Idle" )
+end
+
+-- Armor ourselves for better chance at surviving in combat
+function ENT:ArmorUp()
+    local spawnRate = Rand( 0.25, 0.4 )
+    local spawnCount = ceil( ( self:GetMaxArmor() - self:Armor() ) / 15 )
+    local rndVec = VectorRand( -32, 32 )
+
+    coroutine_wait( spawnRate )
+    for i = 1, random( ( spawnCount / 3 ), spawnCount ) do
+        if self:GetState() != "ArmorUp" then return end
+
+        local lookPos = ( self:GetPos() + rndVec )
+        self:LookTo( lookPos, spawnRate )
+        LambdaSpawn_SENT( self, "item_battery", self:Trace( lookPos, self:GetAttachmentPoint( "eyes" ).Pos ) )
+
+        coroutine_wait( spawnRate )
+    end
+
+    self:SetState( "Idle" )
 end
 
 -- Wander around until we find someone to jump

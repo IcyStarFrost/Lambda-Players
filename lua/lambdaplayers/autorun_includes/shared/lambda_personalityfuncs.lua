@@ -69,7 +69,14 @@ end
 
 
 local function Chance_Combat( self ) 
-    self:SetState( "FindTarget" )
+    local rndCombat = random( 1, 4 )
+    if rndCombat == 1 and self:Armor() < self:GetMaxArmor() then
+        self:SetState( "ArmorUp" )
+    elseif rndCombat == 2 and self:Health() < self:GetMaxHealth() then
+        self:SetState( "HealUp" )
+    else
+        self:SetState( "FindTarget" )
+    end
 end
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_opencustompersonalitypresetpanel", function( ply ) 
