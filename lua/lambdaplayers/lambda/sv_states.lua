@@ -12,6 +12,7 @@ local IsValid = IsValid
 local IsInWorld = util.IsInWorld
 local VectorRand = VectorRand
 local coroutine_wait = coroutine.wait
+local table_insert = table.insert
 
 local wandertbl = { autorun = true }
 function ENT:Idle()
@@ -71,11 +72,17 @@ function ENT:HealUp()
 
     coroutine_wait( spawnRate )
     for i = 1, random( ( spawnCount / 2 ), spawnCount ) do
-        if self:GetState() != "HealUp" then return end
+        if self:GetState() != "HealUp" or !self:IsUnderLimit( "Entity" ) then break end
 
         local lookPos = ( self:GetPos() + rndVec )
         self:LookTo( lookPos, spawnRate )
-        LambdaSpawn_SENT( self, "item_healthkit", self:Trace( lookPos, self:GetAttachmentPoint( "eyes" ).Pos ) )
+        
+        local healthkit = LambdaSpawn_SENT( self, "item_healthkit", self:Trace( lookPos, self:GetAttachmentPoint( "eyes" ).Pos ) )
+        if !IsValid( healthkit ) then break end
+        
+        self:DebugPrint( "spawned a Entity item_healthkit" )
+        self:ContributeEntToLimit( healthkit, "Entity" )
+        table_insert( self.l_SpawnedEntities, 1, healthkit )
 
         coroutine_wait( spawnRate )
     end
@@ -91,11 +98,17 @@ function ENT:ArmorUp()
 
     coroutine_wait( spawnRate )
     for i = 1, random( ( spawnCount / 3 ), spawnCount ) do
-        if self:GetState() != "ArmorUp" then return end
+        if self:GetState() != "ArmorUp" or !self:IsUnderLimit( "Entity" ) then break end
 
         local lookPos = ( self:GetPos() + rndVec )
         self:LookTo( lookPos, spawnRate )
-        LambdaSpawn_SENT( self, "item_battery", self:Trace( lookPos, self:GetAttachmentPoint( "eyes" ).Pos ) )
+        
+        local battery = LambdaSpawn_SENT( self, "item_battery", self:Trace( lookPos, self:GetAttachmentPoint( "eyes" ).Pos ) )
+        if !IsValid( battery ) then break end
+        
+        self:DebugPrint( "spawned a Entity item_battery" )
+        self:ContributeEntToLimit( battery, "Entity" )
+        table_insert( self.l_SpawnedEntities, 1, battery )
 
         coroutine_wait( spawnRate )
     end
