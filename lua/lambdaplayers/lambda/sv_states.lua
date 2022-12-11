@@ -7,10 +7,12 @@ local CurTime = CurTime
 local RandomPairs = RandomPairs
 local random = math.random
 local Rand = math.Rand
+local ceil = math.ceil
 local IsValid = IsValid
 local IsInWorld = util.IsInWorld
 local VectorRand = VectorRand
 local coroutine_wait = coroutine.wait
+local table_insert = table.insert
 
 local wandertbl = { autorun = true }
 function ENT:Idle()
@@ -60,6 +62,58 @@ function ENT:Combat()
     end
 
     self:MoveToPos( self:GetEnemy(), combattbl )
+end
+
+-- Heal ourselves when hurt
+function ENT:HealUp()
+    local spawnRate = Rand( 0.25, 0.4 )
+    local spawnCount = ceil( ( self:GetMaxHealth() - self:Health() ) / 25 )
+    local rndVec = VectorRand( -32, 32 )
+
+    coroutine_wait( spawnRate )
+    for i = 1, random( ( spawnCount / 2 ), spawnCount ) do
+        if self:GetState() != "HealUp" or !self:IsUnderLimit( "Entity" ) then break end
+
+        local lookPos = ( self:GetPos() + rndVec )
+        self:LookTo( lookPos, spawnRate )
+        
+        local healthkit = LambdaSpawn_SENT( self, "item_healthkit", self:Trace( lookPos, self:GetAttachmentPoint( "eyes" ).Pos ) )
+        if !IsValid( healthkit ) then break end
+        
+        self:DebugPrint( "spawned a Entity item_healthkit" )
+        self:ContributeEntToLimit( healthkit, "Entity" )
+        table_insert( self.l_SpawnedEntities, 1, healthkit )
+
+        coroutine_wait( spawnRate )
+    end
+
+    self:SetState( "Idle" )
+end
+
+-- Armor ourselves for better chance at surviving in combat
+function ENT:ArmorUp()
+    local spawnRate = Rand( 0.25, 0.4 )
+    local spawnCount = ceil( ( self:GetMaxArmor() - self:Armor() ) / 15 )
+    local rndVec = VectorRand( -32, 32 )
+
+    coroutine_wait( spawnRate )
+    for i = 1, random( ( spawnCount / 3 ), spawnCount ) do
+        if self:GetState() != "ArmorUp" or !self:IsUnderLimit( "Entity" ) then break end
+
+        local lookPos = ( self:GetPos() + rndVec )
+        self:LookTo( lookPos, spawnRate )
+        
+        local battery = LambdaSpawn_SENT( self, "item_battery", self:Trace( lookPos, self:GetAttachmentPoint( "eyes" ).Pos ) )
+        if !IsValid( battery ) then break end
+        
+        self:DebugPrint( "spawned a Entity item_battery" )
+        self:ContributeEntToLimit( battery, "Entity" )
+        table_insert( self.l_SpawnedEntities, 1, battery )
+
+        coroutine_wait( spawnRate )
+    end
+
+    self:SetState( "Idle" )
 end
 
 -- Wander around until we find someone to jump

@@ -67,9 +67,18 @@ local function Chance_Tool( self )
     self:PreventWeaponSwitch( false )
 end
 
+local spawnEntities = GetConVar( "lambdaplayers_building_allowentity" )
 
 local function Chance_Combat( self ) 
-    self:SetState( "FindTarget" )
+    local rndCombat = random( 1, 4 )
+    local allowEntities = spawnEntities:GetBool()
+    if rndCombat == 1 and allowEntities and self:Armor() < self:GetMaxArmor() then
+        self:SetState( "ArmorUp" )
+    elseif rndCombat == 2 and allowEntities and self:Health() < self:GetMaxHealth() then
+        self:SetState( "HealUp" )
+    else
+        self:SetState( "FindTarget" )
+    end
 end
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_opencustompersonalitypresetpanel", function( ply ) 

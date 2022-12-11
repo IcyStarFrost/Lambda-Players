@@ -457,6 +457,7 @@ function ENT:Think()
         -- Ladder Physics Failure (LPF to sound cool) fallback
         if self.loco:IsUsingLadder() and CurTime() > self.l_ladderfailtimer then
             self:Recreate( true )
+            self.l_ladderfailtimer = CurTime() + 1 -- To prevent multiple recreation from occuring
         elseif !self.loco:IsUsingLadder() then
             self.l_ladderfailtimer = CurTime() + 15
         end

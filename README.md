@@ -90,6 +90,8 @@ If you are new to Lambda, you will be surprised on the memorable moments you can
 - Proper Multiplayer support
 - Optimized
 - Somewhat stable SWEP support
+- Voice Chat
+- Text Chat
 - Fun 
 
 ## Origins
