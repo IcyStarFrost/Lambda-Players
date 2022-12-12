@@ -1,6 +1,7 @@
 local IsValid = IsValid
 local CurTime = CurTime
 local ents_Create = ents.Create
+local Rand = math.Rand
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 --Missing guided rockets
@@ -15,24 +16,11 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 800,
         attackrange = 5000,
 
-        OnEquip = function( lambda, wepent )
-            wepent.CurrentRocket = NULL
-        end,
-
-        OnThink = function( lambda, wepent )
-            if IsValid( wepent.CurrentRocket ) then lambda.l_WeaponUseCooldown = CurTime() + 2.0 end
-            return 0.1
-        end,
-
-        OnUnequip = function( lambda, wepent )
-            wepent.CurrentRocket = nil
-        end,
-
         callback = function( self, wepent, target )            
             local rocket = ents_Create( "rpg_missile" )
             if !IsValid( rocket ) then return end
 
-            self.l_WeaponUseCooldown = CurTime() + 2.0
+            self.l_WeaponUseCooldown = CurTime() + Rand( 2.0, 3.0 )
 
             wepent:EmitSound( "Weapon_RPG.Single" )
 
@@ -58,8 +46,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             rocket:CallOnRemove( "LambdaPlayer_RPGRocket_" .. rocket:EntIndex(), function()
                 rocket:StopSound( "weapons/rpg/rocket1.wav" ) -- Trying to prevent source being dumb
             end)
-
-            wepent.CurrentRocket = rocket
 
             return true
         end,
