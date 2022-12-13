@@ -397,6 +397,13 @@ function ENT:DoorCheck()
     if IsValid( ent ) then
         local class = ent:GetClass()
         if doorClasses[ class ] and ent.Fire then
+
+            -- Back up when opening a door
+            if ent:GetInternalVariable( "m_eDoorState" ) != 0 or ent:GetInternalVariable( "m_toggle_state" ) != 0 then
+                self:Approach( self:GetPos() - self:GetForward() * 50, 0.8 )
+                --self:WaitWhileMoving( 1.5 )
+            end
+
             if class == "prop_door_rotating" then
                 ent:Fire( "OpenAwayFrom", "!activator", 0, self )
                 local keys = ent:GetKeyValues()
@@ -405,8 +412,6 @@ function ENT:DoorCheck()
             else
                 ent:Fire( "Open" )
             end
-            self:Approach( self:GetPos() - self:GetForward() * 50 )
-            self:WaitWhileMoving( 1.0 )
         end
     end
 
