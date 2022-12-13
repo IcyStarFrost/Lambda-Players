@@ -231,6 +231,7 @@ function LAMBDAFS:GetProfilePictures()
     return Lambdaprofilepictures
 end
 
+
 function LAMBDAFS:GetTextTable()
     LambdaTextTable = {}
 
@@ -260,7 +261,7 @@ function LAMBDAFS:GetTextTable()
 
     
     MergeDirectory( "lambdaplayers/data/texttypes", "materials", mergedefaulttextlines:GetBool() )
-    MergeDirectory( "lambdaplayers/texttypes", "materials", mergeaddontextlines:GetBool() )
+    MergeDirectory( "lambdaplayers/texttypes", "materials", mergeaddontextlines:GetBool() ) -- TODO: This is bad. Only one addon could add custom text lines. Gonna have to make a better way
     MergeDirectory( "lambdaplayers/texttypes", "data", true )
     
     return LambdaTextTable
