@@ -371,7 +371,7 @@ end
 
 -- Approaches a position 
 function ENT:Approach( pos, time )
-    time = CurTime() + time or CurTime() + 1
+    time = time and CurTime() + time or CurTime() + 1
     self:Hook( "Tick", "approachposition", function()
         if CurTime() > time then return "end" end
         self.loco:Approach( pos, 99 )
@@ -405,7 +405,7 @@ function ENT:DoorCheck()
             else
                 ent:Fire( "Open" )
             end
-            self.loco:Approach( self:GetPos() - self:GetForward() * 50, 90 )
+            self:Approach( self:GetPos() - self:GetForward() * 50 )
             self:WaitWhileMoving( 1.0 )
         end
     end
