@@ -99,7 +99,7 @@ elseif CLIENT then
         local limit = false -- This is important so code doesn't run constantly
         hook.Add( "Think", "lambdaplayers_forceenablevoicechat", function()
             local vcbind = input_LookupBinding( "+voicerecord" )
-            local bindenum = input_GetKeyCode( vcbind ) or KEY_X
+            local bindenum = vcbind and input_GetKeyCode( vcbind ) or KEY_X
         
             if input_IsKeyDown( bindenum ) and !limit then
                 limit = true
