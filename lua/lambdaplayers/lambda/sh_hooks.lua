@@ -53,6 +53,7 @@ if SERVER then
         self:DrawShadow( false )
         self.WeaponEnt:SetNoDraw( true )
         self.WeaponEnt:DrawShadow( false )
+        self:LookTo( nil )
 
         if IsValid( self:GetSWEPWeaponEnt() ) then
             local swep = self:GetSWEPWeaponEnt()
@@ -427,6 +428,7 @@ function ENT:InitializeMiniHooks()
         -- To get around that we basically predict if the Lambda is gonna die and completely block the damage so we don't actually die. This of course is exclusive to Respawning
         self:Hook( "EntityTakeDamage", "DamageHandling", function( target, info )
             if target != self then return end
+            if self.l_godmode then return true end
 
             local result = hook.Run( "LambdaOnInjured", self, info )
             if result == true then return true end
