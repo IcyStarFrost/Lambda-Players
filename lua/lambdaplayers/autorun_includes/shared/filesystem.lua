@@ -231,6 +231,7 @@ function LAMBDAFS:GetProfilePictures()
     return Lambdaprofilepictures
 end
 
+
 function LAMBDAFS:GetTextTable()
     LambdaTextTable = {}
 
@@ -239,7 +240,8 @@ function LAMBDAFS:GetTextTable()
         local files, dirs = file.Find( path .. "/" .. dir .. "*", "GAME", "nameasc" )
 
         for k, v in ipairs( files ) do 
-            local texttype = string.StripExtension( v )
+            local filename = string.StripExtension( v )
+            local texttype = string.Explode( "_", filename )[ 1 ] -- 1st result to the left of the underscore should always be the text type. The rest to the right is simply used for having unique names to prevent conflicts
             local content = LAMBDAFS:ReadFile( path .. "/" .. dir .. v, "json", "GAME" )
 
             if !content then

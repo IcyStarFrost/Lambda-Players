@@ -981,8 +981,8 @@ elseif CLIENT then
         return "none"
     end
 
-    function ENT:SetMuted()
-        self.l_ismuted = true
+    function ENT:SetMuted( bool )
+        self.l_ismuted = bool
     end
 
     function ENT:SetVoiceVolumeScale()

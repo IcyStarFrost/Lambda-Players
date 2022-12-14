@@ -369,6 +369,15 @@ function ENT:PathGenerator()
     end
 end
 
+-- Approaches a position 
+function ENT:Approach( pos, time )
+    time = time and CurTime() + time or CurTime() + 1
+    self:Hook( "Tick", "approachposition", function()
+        if CurTime() > time then return "end" end
+        self.loco:Approach( pos, 99 )
+    end )
+end
+
 
 local doorClasses = {
     ["prop_door_rotating"] = true,
@@ -388,13 +397,21 @@ function ENT:DoorCheck()
     if IsValid( ent ) then
         local class = ent:GetClass()
         if doorClasses[ class ] and ent.Fire then
-            ent:Fire( "OpenAwayFrom", "!activator", 0, self )
+
+            -- Back up when opening a door
+            if ent:GetInternalVariable( "m_eDoorState" ) != 0 or ent:GetInternalVariable( "m_toggle_state" ) != 0 then
+                self:Approach( self:GetPos() - self:GetForward() * 50, 0.8 )
+                --self:WaitWhileMoving( 1.5 )
+            end
+
             if class == "prop_door_rotating" then
+                ent:Fire( "OpenAwayFrom", "!activator", 0, self )
                 local keys = ent:GetKeyValues()
                 local slaveDoor = ents_FindByName( keys.slavename )
                 if IsValid( slaveDoor ) then slaveDoor:Fire( "OpenAwayFrom", "!activator", 0, self ) end
+            else
+                ent:Fire( "Open" )
             end
-            self:WaitWhileMoving( 1.0 )
         end
     end
 

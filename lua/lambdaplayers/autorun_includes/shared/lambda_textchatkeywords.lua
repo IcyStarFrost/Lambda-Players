@@ -235,7 +235,7 @@ end
 local function IsActiveServer( self )
     local players = player_GetAll()
     table_Add( players, GetLambdaPlayers() )
-    return #players < 15
+    return #players > 15
 end
 
 -- This condition must be used where /keyent/ is supported for it to work properly!
