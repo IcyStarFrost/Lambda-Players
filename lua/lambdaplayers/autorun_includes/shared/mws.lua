@@ -102,6 +102,7 @@ local pause = false
 local failtimes = 0
 local nextspawn = 0
 hook.Add( "Tick", "lambdaplayers_MWS", function()
+    if CurTime() < 5 then return end
     if shutdown then return end
 
     -- Remove all spawned Lambdas and remain dormant
