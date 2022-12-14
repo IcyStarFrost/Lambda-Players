@@ -148,7 +148,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                             end
 
-                        elseif physgunactive and random( 1, 6 ) == 1 then
+                        elseif physgunactive and !lambda.l_allowdropphys and random( 1, 6 ) == 1 then
                             lambda.l_physgungrabbedent = nil
                             wepent:SetNW2Bool( "lambda_physgundraw", false )
                         end
@@ -163,6 +163,25 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         OnDamage = function( lambda, wepent, info )
             if info:GetInflictor() == lambda.l_physgungrabbedent then info:SetDamage( 0 ) end
+        end,
+
+        callback = function( lambda, wepent, ent )
+            if IsValid( ent ) then
+
+                local result = lambda:Trace( ent )
+                endpos = ent:WorldToLocal( result.HitPos )
+                
+                wepent:SetNW2Entity( "lambda_physgunent", ent )
+                wepent:SetNW2Vector( "lambda_physgunendpos", endpos )
+                wepent:SetNW2Bool( "lambda_physgundraw", true )
+                physgunactive = true
+
+                local range = lambda:GetRangeTo( ent )
+                physdistance = range < 100 and 200 or range
+                lambda.l_physgungrabbedent = ent
+
+            end
+            return true
         end,
 
         -- Custom rendering effects
