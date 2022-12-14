@@ -9,8 +9,10 @@ local random = math.random
 local IsValid = IsValid
 local TraceEntity = util.TraceEntity
 local LerpVector = LerpVector
+local Angle = Angle
 local min = math.min
 local max = math.max
+local math_ApproachAngle = math.ApproachAngle
 local render = render or nil
 local trace = {}
 
@@ -38,6 +40,13 @@ local ignoreentclasses = {
     [ "prop_dynamic_override" ] = true,
     [ "func_button" ] = true,
 }
+
+local function ApproachAngle( a1, a2 )
+    local p = math_ApproachAngle( a1[ 1 ], a2[ 1 ], 5 )
+    local y = math_ApproachAngle( a1[ 2 ], a2[ 2 ], 5 )
+    local r = math_ApproachAngle( a1[ 3 ], a2[ 3 ], 5 )
+    return Angle( p, y, r )
+end
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
@@ -79,15 +88,22 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 
                             if phys:IsValid() then
                                 phys:EnableMotion( true )
-                                local dist = ( ( wepent:GetPos() + wepent:GetForward() * physdistance ) + Vector( 0, 0, 50 ) ) - lambda.l_physgungrabbedent:GetPos()
+                                local dist = ( !lambda.l_physholdpos and ( wepent:GetPos() + wepent:GetForward() * physdistance ) or !lambda.l_physholdpos ) - lambda.l_physgungrabbedent:GetPos()
                                 local dir = dist:GetNormalized()
+                                
                                 local speed = min( 5000 / 2, dist:Dot( dir ) * 5 ) * dir + lambda.l_physgungrabbedent:GetVelocity() * 0.5
                                 speed = max( min( 5000, speed:Dot( dir ) ), -1000 )
                                     
                                 phys:SetVelocity( ( speed ) * dir )
+
+                                if lambda.l_physholdang then
+                                    local ang = ApproachAngle( lambda.l_physgungrabbedent:GetAngles(), lambda.l_physholdang )
+                                    phys:SetAngles( ang )
+                                end
+
                             else
                                 traceData.start = lambda.l_physgungrabbedent:GetPos()
-                                traceData.endpos = wepent:GetPos() + wepent:GetForward() * self.PhysgunBeamDistance
+                                traceData.endpos = wepent:GetPos() + wepent:GetForward() * physdistance
                                 traceData.filter = function( ent ) return ent == lambda.l_physgungrabbedent end
                 
                                 local traceResult = util.TraceEntity( traceData, lambda.l_physgungrabbedent )
