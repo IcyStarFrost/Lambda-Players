@@ -12,6 +12,7 @@ local LerpVector = LerpVector
 local Angle = Angle
 local min = math.min
 local max = math.max
+local util_TraceEntity = util.TraceEntity
 local math_ApproachAngle = math.ApproachAngle
 local render = render or nil
 local trace = {}
@@ -90,7 +91,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                                 phys:EnableMotion( true )
                                 local dist = ( !lambda.l_physholdpos and ( wepent:GetPos() + wepent:GetForward() * physdistance ) or !lambda.l_physholdpos ) - lambda.l_physgungrabbedent:GetPos()
                                 local dir = dist:GetNormalized()
-                                
+
                                 local speed = min( 5000 / 2, dist:Dot( dir ) * 5 ) * dir + lambda.l_physgungrabbedent:GetVelocity() * 0.5
                                 speed = max( min( 5000, speed:Dot( dir ) ), -1000 )
                                     
@@ -106,7 +107,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                                 traceData.endpos = wepent:GetPos() + wepent:GetForward() * physdistance
                                 traceData.filter = function( ent ) return ent == lambda.l_physgungrabbedent end
                 
-                                local traceResult = util.TraceEntity( traceData, lambda.l_physgungrabbedent )
+                                local traceResult = util_TraceEntity( traceData, lambda.l_physgungrabbedent )
                                 lambda.l_physgungrabbedent:SetPos( traceResult.HitPos )
                             end
                         end
