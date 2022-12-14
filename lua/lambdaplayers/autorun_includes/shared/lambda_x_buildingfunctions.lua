@@ -41,7 +41,7 @@ end
 local function SpawnAPropandPickUp( self )
     if !self:IsUnderLimit( "Prop" ) or !self:CanEquipWeapon( "physgun" ) then return end
     self:PreventWeaponSwitch( false )
-    
+
     self:SwitchWeapon( "physgun" )
 
     self:LookTo( self:GetPos() + VectorRand( -100, 100 ), 2 )
@@ -53,7 +53,7 @@ local function SpawnAPropandPickUp( self )
 
     self:UseWeapon( prop )
 
-    return true -- Just like for toolguns, we return true to let the for loop know we completed what we wanted to do and it can break
+    return true
 end
 
 
@@ -113,7 +113,7 @@ AddBuildFunctionToLambdaBuildingFunctions( "prop", "Allow Prop Spawning", "If La
 AddBuildFunctionToLambdaBuildingFunctions( "npc", "Allow NPC Spawning", "If Lambda Players are allowed to spawn NPCs", SpawnNPC )
 AddBuildFunctionToLambdaBuildingFunctions( "entity", "Allow Entity Spawning", "If Lambda Players are allowed to spawn Entities", SpawnEntity )
 AddBuildFunctionToLambdaBuildingFunctions( "spray", "Allow Sprays", "If Lambda Players are allowed to place Sprays", Spray )
-table_insert( LambdaBuildingFunctions, { "prop", GetConVar( "lambdaplayers_building_allowprop" ), SpawnAPropandPickUp } )
+table_insert( LambdaBuildingFunctions, { "prop", GetConVar( "lambdaplayers_building_allowprop" ), SpawnAPropandPickUp } ) -- Pretty much made this be connected to the prop spawning option
 
 -- Called when all default building functions above have been loaded.
 -- This hook can be used to add more building functions with AddBuildFunctionToLambdaBuildingFunctions()
