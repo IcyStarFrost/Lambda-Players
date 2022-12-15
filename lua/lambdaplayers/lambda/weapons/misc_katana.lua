@@ -57,7 +57,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             end, true )
 
             local sparkPos = dmginfo:GetDamagePosition()
-            if !lambda:IsInRange( sparkpos, 150 ) then sparkPos = wepent:GetPos() end
+            if lambda:GetRangeSquaredTo( sparkPos ) > ( 150 * 150 ) then sparkPos = wepent:GetPos() end
 
             -- Blocking effect
             local sparkForward = ( ( attacker:WorldSpaceCenter() ) - sparkPos ):Angle():Forward()
