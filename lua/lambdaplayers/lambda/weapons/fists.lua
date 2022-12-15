@@ -41,7 +41,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_FIST )
             
             self:SimpleTimer( 0.2, function()
-                if !IsValid( target ) or self:GetRangeSquaredTo( target ) > ( 45 * 45 ) then return end
+                if !IsValid( target ) or !self:IsInRange( target, 45 ) then return end
 
                 local dmginfo = DamageInfo()
                 dmginfo:SetAttacker( self )
