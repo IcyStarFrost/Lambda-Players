@@ -103,11 +103,11 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                                 end
 
                             else
-                                traceData.start = lambda.l_physgungrabbedent:GetPos()
-                                traceData.endpos = wepent:GetPos() + wepent:GetForward() * physdistance
-                                traceData.filter = function( ent ) return ent == lambda.l_physgungrabbedent end
+                                trace.start = lambda.l_physgungrabbedent:GetPos()
+                                trace.endpos = wepent:GetPos() + wepent:GetForward() * physdistance
+                                trace.filter = function( ent ) return ent == lambda.l_physgungrabbedent end
                 
-                                local traceResult = util_TraceEntity( traceData, lambda.l_physgungrabbedent )
+                                local traceResult = util_TraceEntity( trace, lambda.l_physgungrabbedent )
                                 lambda.l_physgungrabbedent:SetPos( traceResult.HitPos )
                             end
                         end
