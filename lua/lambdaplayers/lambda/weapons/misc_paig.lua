@@ -2,11 +2,18 @@ local CurTime = CurTime
 local IsValid = IsValid
 local Effect = util.Effect
 local BlastDamage = util.BlastDamage
+local EffectData = EffectData
+local DamageInfo = DamageInfo
+local random = math.random
+local CreateSound = CreateSound
+local tauntDir = GetConVar( "lambdaplayers_voice_tauntdir" )
+local killDir = GetConVar( "lambdaplayers_voice_killdir" )
 --local Rand = math.Rand
---local convar = CreateLambdaConvar( "lambdaplayers_weapons_paigsentrybuster", 0, true, false, true, "If Lambda that spawn with the PAIG have the ability to act like the Sentry Buster from TF2.", 0, 1, { type = "Bool", name = "PAIG - Enable Sentry Buster Mode", category = "Weapon Utilities" } )
+--local ipairs = ipairs
+
+local busterMode = CreateLambdaConvar( "lambdaplayers_weapons_paigsentrybuster", 0, true, false, true, "If Lambda that spawn with the PAIG have the ability to act like the Sentry Buster from TF2.", 0, 1, { type = "Bool", name = "PAIG - Enable Sentry Buster Mode", category = "Weapon Utilities" } )
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
-
     paig = {
         model = "models/weapons/w_grenade.mdl",
         origin = "Misc",
@@ -19,27 +26,79 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 50,
         speedmultiplier = 1.2,
 
+        OnEquip = function( self, wepent )
+            wepent.SentryBusterMode = busterMode:GetBool()
+            if !wepent.SentryBusterMode then return end
+            
+            wepent:EmitSound( "lambdaplayers/weapons/paig/sb_intro.mp3" )
+           
+            wepent.LoopSound = CreateSound( wepent, "lambdaplayers/weapons/paig/sb_loop.wav" ) -- Looping only works on .WAV formats, unfortunately
+            if wepent.LoopSound then wepent.LoopSound:Play() end
+
+            wepent:CallOnRemove( "Lambda_PAIG_StopSound" .. wepent:EntIndex(), function() 
+                wepent:StopSound( "lambdaplayers/weapons/paig/sb_intro.mp3" )
+                wepent:StopSound( "lambdaplayers/weapons/paig/sb_spin.mp3" )
+                if wepent.LoopSound then wepent.LoopSound:Stop(); wepent.LoopSound = nil end 
+            end )
+
+            wepent:LambdaHookTick( "Lambda_PAIG_SentryBusterThink", function() 
+                local loopSnd = wepent.LoopSound
+                if !loopSnd then return true end
+
+                if !LambdaIsValid( self ) or CurTime() <= self.l_WeaponUseCooldown then 
+                    loopSnd:Stop() 
+                elseif !loopSnd:IsPlaying() then
+                    loopSnd:Play()
+                end 
+            end )
+        end,
+
+        OnUnequip = function( self, wepent )
+            wepent.SentryBusterMode = nil
+            wepent:StopSound( "lambdaplayers/weapons/paig/sb_intro.mp3" )
+            wepent:StopSound( "lambdaplayers/weapons/paig/sb_spin.mp3" )
+            if wepent.LoopSound then wepent.LoopSound:Stop(); wepent.LoopSound = nil end
+        end,
+
         callback = function( self, wepent, target )
-            self.l_WeaponUseCooldown = CurTime() + 4
+            local detonateTime = 0.3
+            local detonateSnd = "BaseExplosionEffect.Sound"
+            
+            if wepent.SentryBusterMode then
+                detonateTime = 2.069
+                detonateSnd = "lambdaplayers/weapons/paig/sb_explode.mp3"
 
-            wepent:EmitSound( "WeaponFrag.Throw", 70 )
+                wepent:EmitSound( "lambdaplayers/weapons/paig/sb_spin.mp3", 80 )
+                if random( 1, 100 ) <= self:GetVoiceChance() then 
+                    local rndVoice = ( random( 1, 2 ) == 1 and ( tauntDir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "taunt" ) ) or ( killDir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "kill" ) ) )
+                    self:PlaySoundFile( rndVoice, true ) 
+                end
+            end
 
-            self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
-            self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
-
-            --[[for _, v in ipairs( ents.FindByClass( "npc_lambdaplayer" ) ) do
-                if v != self and v:GetRangeSquaredTo ( self ) <= ( 400*400 ) and v:Visible( self ) and LambdaIsValid( v ) then
+            --[[
+            for _, v in ipairs( GetLambdaPlayers() ) do
+                if LambdaIsValid( v ) and v != self and v:IsInRange( self, 400 ) and v:Visible( self ) then
                     v:SimpleTimer( Rand( 0.1, 0.5 ), function()
-                        if LambdaIsValid( v ) then return end
-                        --v:SetState( "Panic" )
-                        --v:GetRandomSound()
-                        --Play random scream
+                        -- Play random scream
+                        v:SetState( "Panic" )
+                        v:GetRandomSound()
                     end)
                 end
-            end]]
+            end
+            ]]
 
-            self:SimpleTimer( 0.3, function()
-                if !IsValid( wepent ) then return end
+            self.l_WeaponUseCooldown = CurTime() + 1 + detonateTime
+
+            self:SimpleTimer( detonateTime - 0.3, function()
+                if !IsValid( wepent ) or self:GetWeaponName() != "paig" then return end
+                wepent:EmitSound( "WeaponFrag.Throw", 70 )
+                
+                self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
+                self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
+            end )
+
+            self:SimpleTimer( detonateTime, function()
+                if !IsValid( wepent ) or self:GetWeaponName() != "paig" then return end
 
                 local blowPos = self:GetAttachmentPoint( "hand" ).Pos
 
@@ -56,13 +115,12 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 selfDmg:SetInflictor( wepent )
                 self:TakeDamageInfo( selfDmg )
 
-                wepent:EmitSound( "BaseExplosionEffect.Sound" , 90 )
+                wepent:EmitSound( detonateSnd, 90 )
             end)
 
             return true
         end,
 
-        islethal = true,
+        islethal = true
     }
-
 })
