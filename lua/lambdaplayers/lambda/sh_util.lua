@@ -445,6 +445,7 @@ if SERVER then
         self:SetEnemy( ent )
         self:SetState( "Combat" )
         self:CancelMovement()
+        hook.Run( "LambdaOnAttackTarget", self, ent )
     end
 
     function ENT:LaughAt( pos )
