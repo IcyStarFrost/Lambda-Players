@@ -18,6 +18,7 @@ local table_Copy = table.Copy
 local ents_GetAll = ents.GetAll
 local VectorRand = VectorRand
 local SortTable = table.sort
+local string_Explode = string.Explode
 local timer_simple = timer.Simple
 local timer_create = timer.Create
 local istable = istable
@@ -46,6 +47,7 @@ local debugcvar = GetConVar( "lambdaplayers_debug" )
 local chatlimit = GetConVar( "lambdaplayers_text_chatlimit" )
 local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
+local shouldsentencemix = GetConVar( "lambdaplayers_text_sentencemixing" )
 local player_GetAll = player.GetAll
 
 ---- Anything Shared can go here ----
@@ -747,6 +749,55 @@ if SERVER then
         return tbl[ random( #tbl ) ] 
     end
 
+
+    -- Combines a table of strings into one string
+    local function CombineStringTable( tbl )
+        local strin = ""
+     
+         for k, v in ipairs( tbl ) do
+             strin = strin .. " " .. v    
+         end 
+         
+         return strin
+     end
+         
+     -- Prototype created in StarFall
+     -- Mixes sentences together for a wacky result
+     local function sentencemixing( text, feed )
+         
+         local mod = ""
+         
+         local feedstring = CombineStringTable( feed )
+         local textsplit = string_Explode( " ", text )
+         local validwords = {}
+         local smallwords = {}
+         
+         for k, word in ipairs( string_Explode( " ", feedstring ) ) do
+             if #word > 3 then validwords[ #validwords + 1 ] = word end
+         end
+         
+         for k, word in ipairs( string_Explode( " ", feedstring ) ) do
+             if #word < 3 then smallwords[ #smallwords + 1 ] = word end
+         end
+         
+         for k, word in ipairs( textsplit ) do
+             local preword = word
+             
+             if #preword > 3 and random( 1, 2 ) == 1 then
+                 preword = validwords[ random( #validwords ) ]
+             elseif #preword < 3 and random( 1, 6 ) == 1 then
+                 preword = smallwords[ random( #smallwords ) ]
+             end    
+             
+             mod = mod .. " " .. preword
+         end
+    
+         return mod
+     end
+
+
+
+
     -- Literally the same thing as :GetVoiceLine() but for Text Lines
     function ENT:GetTextLine( texttype )
         if self.l_TextProfile then
@@ -755,7 +806,8 @@ if SERVER then
                 if texttable and #texttable > 0 then
                     
                     for k, textline in RandomPairs( texttable ) do
-                        local condition, modifiedline = LambdaConditionalKeyWordCheck( self, textline )
+                        local line = shouldsentencemix:GetBool() and sentencemixing( textline, texttable ) or textline
+                        local condition, modifiedline = LambdaConditionalKeyWordCheck( self, line )
                         if condition then
                             return modifiedline
                         end
@@ -769,7 +821,8 @@ if SERVER then
         if !tbl then return "" end
 
         for k, textline in RandomPairs( tbl ) do
-            local condition, modifiedline = LambdaConditionalKeyWordCheck( self, textline )
+            local line = shouldsentencemix:GetBool() and sentencemixing( textline, tbl ) or textline
+            local condition, modifiedline = LambdaConditionalKeyWordCheck( self, line )
             if condition then
                 return modifiedline
             end
