@@ -866,6 +866,9 @@ if SERVER then
         text = isstring( replacement ) and replacement or text
         if text == "" then return end
         text = LambdaKeyWordModify( self, text )
+        local condition, modifiedline = LambdaConditionalKeyWordCheck( self, text )
+        if !condition then return end
+        text = modifiedline
 
         -- This has changed so we can properly send each player a text chat message with their own custom display colors
         if !recipients then
