@@ -488,7 +488,7 @@ function ENT:Think()
         if CurTime() > self.l_NextPickupCheck then
             for _, v in ipairs( self:FindInSphere( self:GetPos(), 58 ) ) do
                 local pickFunc = _LAMBDAPLAYERSItemPickupFunctions[ v:GetClass() ]
-                if isfunction( pickFunc ) and self:Visible( v ) then pickFunc( self, v ) end
+                if isfunction( pickFunc ) and self:Visible( v ) then hook.Run( "LambdaOnPickupEnt", self, v ) pickFunc( self, v ) end
             end
             self.l_NextPickupCheck = CurTime() + 0.1
         end
