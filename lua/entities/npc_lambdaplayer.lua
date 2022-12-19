@@ -85,9 +85,9 @@ end
     local RealTime = RealTime
     local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
     local tracetable = {}
-    local collisionmins = Vector( -10, -10, 0 )
-    local standingcollisionmaxs = Vector( 10, 10, 72 )
-    local crouchingcollisionmaxs = Vector( 10, 10, 32 )
+    local collisionmins = Vector( -16, -16, 0 )
+    local standingcollisionmaxs = Vector( 16, 16, 72 )
+    local crouchingcollisionmaxs = Vector( 16, 16, 36 )
 --
 
 if CLIENT then
