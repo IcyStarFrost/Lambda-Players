@@ -67,7 +67,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if allowphysgunuse:GetBool() then
                 local endpos = Vector()
                 local physgunactive = false
-                local physdistance = 0
+                lambda.l_physdistance = 0
                 lambda.l_physgungrabbedent = nil
 
                 lambda:Hook( "Think", "physgunthink", function()
@@ -78,7 +78,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                         if lambda.l_physgungrabbedent:IsPlayer() or lambda.l_physgungrabbedent:IsNPC() or lambda.l_physgungrabbedent:IsNextBot() then
                             trace.start = lambda.l_physgungrabbedent:GetPos()
-                            trace.endpos = wepent:GetPos() + wepent:GetForward() * physdistance
+                            trace.endpos = wepent:GetPos() + wepent:GetForward() * lambda.l_physdistance
                             trace.filter = function( ent ) return ent == lambda.l_physgungrabbedent end
                 
                             local result = TraceEntity( trace, lambda.l_physgungrabbedent )
@@ -89,7 +89,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 
                             if phys:IsValid() then
                                 phys:EnableMotion( true )
-                                local dist = ( !lambda.l_physholdpos and ( wepent:GetPos() + wepent:GetForward() * physdistance ) or !lambda.l_physholdpos ) - lambda.l_physgungrabbedent:GetPos()
+                                local dist = ( !lambda.l_physholdpos and ( wepent:GetPos() + wepent:GetForward() * lambda.l_physdistance ) or !lambda.l_physholdpos ) - lambda.l_physgungrabbedent:GetPos()
                                 local dir = dist:GetNormalized()
 
                                 local speed = min( 5000 / 2, dist:Dot( dir ) * 5 ) * dir + lambda.l_physgungrabbedent:GetVelocity() * 0.5
@@ -104,7 +104,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                             else
                                 trace.start = lambda.l_physgungrabbedent:GetPos()
-                                trace.endpos = wepent:GetPos() + wepent:GetForward() * physdistance
+                                trace.endpos = wepent:GetPos() + wepent:GetForward() * lambda.l_physdistance
                                 trace.filter = function( ent ) return ent == lambda.l_physgungrabbedent end
                 
                                 local traceResult = util_TraceEntity( trace, lambda.l_physgungrabbedent )
@@ -141,7 +141,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                                     physgunactive = true
 
                                     local range = lambda:GetRangeTo( ent )
-                                    physdistance = range < 100 and 200 or range
+                                    lambda.l_physdistance = range < 100 and 200 or range
                                     lambda.l_physgungrabbedent = ent
 
                                 end
@@ -177,7 +177,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 physgunactive = true
 
                 local range = lambda:GetRangeTo( ent )
-                physdistance = range < 100 and 200 or range
+                lambda.l_physdistance = range < 100 and 200 or range
                 lambda.l_physgungrabbedent = ent
 
             end
