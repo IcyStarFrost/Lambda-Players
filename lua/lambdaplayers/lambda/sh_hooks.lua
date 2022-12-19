@@ -20,6 +20,7 @@ local debugvar = GetConVar( "lambdaplayers_debug" )
 local voicevar = GetConVar( "lambdaplayers_personality_voicechance" )
 local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 local callnpchook = GetConVar( "lambdaplayers_lambda_callonnpckilledhook" )
+local idledir = GetConVar( "lambdaplayers_voice_idledir" )
 
 if SERVER then
 
@@ -491,6 +492,30 @@ function ENT:InitializeMiniHooks()
                 self:TypeMessage( self:GetTextLine( "response" ) )
             end
         end, true )
+
+        self:Hook( "PlayerSay", "lambdarespondtoplayertextchat", function( ply, text )
+            
+            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() and self:IsInRange( ply, 300 ) then
+                self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
+            elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
+                self.l_keyentity = ply
+                self:TypeMessage( self:GetTextLine( "response" ) )
+            end
+
+        end )
+
+        self:Hook( "LambdaOnRealPlayerEndVoice", "lambdarespondtoplayervoicechat", function( ply )
+            if !self:IsInRange( ply, 300 ) then return end
+            
+            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() then
+                self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
+            elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
+                self.l_keyentity = ply
+                self:TypeMessage( self:GetTextLine( "response" ) )
+            end
+
+        end )
+
 
         -- Might be better than constantly calling ENT:WaterLevel()?
         self:Hook( "OnEntityWaterLevelChanged", "OnWaterLevelChanged", function( ent, oldVal, newVal ) 
