@@ -34,7 +34,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         callback = function( self, wepent, target )
             -- Secondary grenade launcher
-            if random( 75 ) != 1 or self:GetRangeSquaredTo( target ) > ( 1000 * 1000 ) then return end
+            if random( 75 ) != 1 or !self:IsInRange( target, 1000 ) then return end
             
             local grenade = ents.Create( "grenade_ar2" )
             if !IsValid( grenade ) then return end

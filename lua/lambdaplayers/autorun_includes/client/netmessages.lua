@@ -87,6 +87,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     local phys = cs_prop:GetPhysicsObject()
 
     if IsValid( phys ) then
+        phys:SetMass( 20 )
         force = force / 2
         phys:ApplyForceOffset( force, offset )
     end

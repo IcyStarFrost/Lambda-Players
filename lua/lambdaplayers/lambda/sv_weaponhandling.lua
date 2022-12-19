@@ -91,6 +91,8 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self.l_WeaponThinkFunction = weapondata.OnThink
     if isfunction( weapondata.OnEquip ) then weapondata.OnEquip( self, wepent ) end
 
+    hook.Run( "LambdaOnSwitchWeapon", self, self.WeaponEnt, weapondata )
+
 end
 
 
@@ -139,6 +141,8 @@ function ENT:SwitchWeaponSWEP( classname )
     end
 
     if LambdaSupportedSweps[ classname ] then LambdaSupportedSweps[ classname ][ 1 ]( self, wep ) end
+
+    hook.Run( "LambdaOnSwitchWeaponSWEP", self, wep )
 
 end
 

@@ -78,6 +78,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             --[[
             for _, v in ipairs( GetLambdaPlayers() ) do
                 if LambdaIsValid( v ) and v != self and v:IsInRange( self, 400 ) and v:Visible( self ) then
+
                     v:SimpleTimer( Rand( 0.1, 0.5 ), function()
                         -- Play random scream
                         v:SetState( "Panic" )

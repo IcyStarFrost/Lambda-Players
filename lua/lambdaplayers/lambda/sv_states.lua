@@ -9,6 +9,7 @@ local random = math.random
 local Rand = math.Rand
 local ceil = math.ceil
 local IsValid = IsValid
+local bit_band = bit.band
 local IsInWorld = util.IsInWorld
 local VectorRand = VectorRand
 local coroutine_wait = coroutine.wait
@@ -19,7 +20,19 @@ function ENT:Idle()
     if random( 1, 100 ) < 70 then
         self:ComputeChance()
     else
+
         local pos = self:GetRandomPosition()
+
+        if random( 1, 3 ) == 1 then
+            local triggers = self:FindInSphere( nil, 2000, function( ent ) return ent:GetClass() == "trigger_teleport" and !ent:GetInternalVariable( "StartDisabled" ) and bit_band( ent:GetInternalVariable( "spawnflags" ), 2 ) == 2 end )
+            for k, v in RandomPairs( triggers ) do
+                if self:Visible( v ) then
+                    pos = v:WorldSpaceCenter()
+                    break
+                end
+            end
+        end
+
         self:MoveToPos( pos, wandertbl )
     end
 end

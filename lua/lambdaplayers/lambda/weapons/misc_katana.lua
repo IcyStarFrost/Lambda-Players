@@ -143,6 +143,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local attackGest = self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             local swingSpeed = Rand( 0.9, 1.4 ); self:SetLayerPlaybackRate( attackGest, swingSpeed )
 
+
             self:SimpleTimer( ( 0.3 / swingSpeed ), function()
                 if !LambdaIsValid( target ) or !self:IsInRange( target, 70 ) then return end
 
