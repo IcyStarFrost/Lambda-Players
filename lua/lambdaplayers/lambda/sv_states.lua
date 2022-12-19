@@ -19,7 +19,19 @@ function ENT:Idle()
     if random( 1, 100 ) < 70 then
         self:ComputeChance()
     else
+
         local pos = self:GetRandomPosition()
+
+        if random( 1, 3 ) == 1 then
+            local triggers = self:FindInSphere( nil, 2000, function( ent ) return ent:GetClass() == "trigger_teleport" and !ent:GetInternalVariable( "StartDisabled" ) end )
+            for k, v in RandomPairs( triggers ) do
+                if self:Visible( v ) then
+                    pos = v:WorldSpaceCenter()
+                    break
+                end
+            end
+        end
+
         self:MoveToPos( pos, wandertbl )
     end
 end
