@@ -97,7 +97,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
 
             self:SimpleTimer( 0.075, function()
-                if !IsValid( target ) or self:GetRangeSquaredTo( target ) > ( 70 * 70 ) then return end
+                if !IsValid( target ) or !self:IsInRange( target, 70 ) then return end
 
                 local dmg = 35 * ( cooldown / 0.8 )
                 local dmginfo = DamageInfo()

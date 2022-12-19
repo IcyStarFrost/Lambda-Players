@@ -28,7 +28,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
 
             --[[for _, v in ipairs( ents.FindByClass( "npc_lambdaplayer" ) ) do
-                if v != self and v:GetRangeSquaredTo ( self ) <= ( 400*400 ) and v:Visible( self ) and LambdaIsValid( v ) then
+                if v != self and v:IsInRange( self, 400 ) and v:Visible( self ) and LambdaIsValid( v ) then
                     v:SimpleTimer( Rand( 0.1, 0.5 ), function()
                         if LambdaIsValid( v ) then return end
                         --v:SetState( "Panic" )

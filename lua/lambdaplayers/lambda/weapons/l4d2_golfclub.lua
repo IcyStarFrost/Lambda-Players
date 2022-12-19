@@ -26,7 +26,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             //make them fly later
             
             self:SimpleTimer( 0.3, function()
-                if !IsValid( target ) or self:GetRangeSquaredTo( target ) > ( 70 * 70 ) then return end
+                if !IsValid( target ) or !self:IsInRange( target, 70 ) then return end
                 
                 local dmg = random( 25, 75 )
                 local dmginfo = DamageInfo()
