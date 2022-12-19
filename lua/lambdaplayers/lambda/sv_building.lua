@@ -88,6 +88,7 @@ function ENT:SpawnProp()
             if IsValid( phys ) then phys:EnableMotion( false ) end
         else
             self:SimpleTimer( 10, function()  
+                if !IsValid( prop ) then return end
                 local phys = prop:GetPhysicsObject()
                 if IsValid( phys ) then phys:EnableMotion( false ) end
             end, true)
