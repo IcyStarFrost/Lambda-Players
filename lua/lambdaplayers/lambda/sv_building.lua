@@ -77,6 +77,23 @@ function ENT:SpawnProp()
     proppos[ 3 ] = proppos[ 3 ] - mins[ 3 ]
     prop:SetPos( proppos )
 
+    if GetConVar( "lambdaplayers_building_alwaysfreezelargeprops" ):GetBool() and prop:GetModelRadius() > 150 then
+        local phys = prop:GetPhysicsObject()
+        if IsValid( phys ) then phys:EnableMotion( false ) end
+    end
+
+    if GetConVar( "lambdaplayers_building_freezeprops" ):GetBool() then
+        if random( 1, 2 ) == 1 then
+            local phys = prop:GetPhysicsObject()
+            if IsValid( phys ) then phys:EnableMotion( false ) end
+        else
+            self:SimpleTimer( 10, function()  
+                local phys = prop:GetPhysicsObject()
+                if IsValid( phys ) then phys:EnableMotion( false ) end
+            end, true)
+        end
+    end
+
     self:DebugPrint( "spawned a prop ", prop )
 
     self:ContributeEntToLimit( prop, "Prop" )

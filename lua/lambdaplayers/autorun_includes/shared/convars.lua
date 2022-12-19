@@ -135,6 +135,8 @@ CreateLambdaConvar( "lambdaplayers_building_caneditworld", 1, true, false, false
 CreateLambdaConvar( "lambdaplayers_building_caneditnonworld", 1, true, false, false, "If the Lambda Players are allowed to use the Physgun and Toolgun on non world entities. Typically player spawned entities and addon spawned entities", 0, 1, { type = "Bool", name = "Allow Edit Non World", category = "Building" } )
 CreateLambdaConvar( "lambdaplayers_building_canedityourents", 1, true, true, true, "If the Lambda Players are allowed to use the Physgun and Toolgun on your props and entities", 0, 1, { type = "Bool", name = "Allow Edit Your Entities", category = "Building" } )
 CreateLambdaConvar( "lambdaplayers_lambda_allowphysgunpickup", 1, true, false, false, "If Lambda Players are able to pickup things with their physgun", 0, 1, { type = "Bool", name = "Allow Physgun Pickup", category = "Building" } )
+CreateLambdaConvar( "lambdaplayers_building_freezeprops", 0, true, false, false, "If props spawned by Lambda Players should spawn with either of these effects that lead them to being frozen: Spawn Frozen, Spawn unfrozen and freeze 10 seconds later. This can help with performance", 0, 1, { type = "Bool", name = "Handle Freezing Props", category = "Building" } )
+CreateLambdaConvar( "lambdaplayers_building_alwaysfreezelargeprops", 0, true, false, false, "If large props spawned by Lambda Players should always spawn frozen. This can help with performance", 0, 1, { type = "Bool", name = "Freeze Large Props", category = "Building" } )
 --
 
 -- Voice Related Convars
