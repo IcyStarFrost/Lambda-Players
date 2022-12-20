@@ -17,8 +17,8 @@ file.CreateDir( "lambdaplayers" )
 -- Lambda File System
 LAMBDAFS = {}
 
-function LAMBDAFS:WriteFile( filename, content, type ) 
-	local f = file.Open( filename, "w", "DATA" )
+function LAMBDAFS:WriteFile( filename, content, type, isbinary ) 
+	local f = file.Open( filename, ( isbinary and "wb" or "w" ), "DATA" )
 	if !f then return end
 
     if type == "json" then 
@@ -94,10 +94,10 @@ function LAMBDAFS:RemoveVarFromKVFile( filename, key, type )
 end
 
 
-function LAMBDAFS:ReadFile( filename, type, path )
+function LAMBDAFS:ReadFile( filename, type, path, isbinary )
 	if !path then path = "DATA" end
 
-	local f = file.Open( filename, "r", path )
+	local f = file.Open( filename, ( isbinary and "rb" or "r" ), path )
 	if !f then return nil end
 
 	local str = f:Read( f:Size() )
