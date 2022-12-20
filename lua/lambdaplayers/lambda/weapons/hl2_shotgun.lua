@@ -30,7 +30,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
 
             -- Secondary double barrel attack
-            if self.l_Clip >= 2 and random( 8 ) == 1 and self:GetRangeSquaredTo( target ) <= ( 400 * 400 ) then
+            if self.l_Clip >= 2 and random( 8 ) == 1 and self:IsInRange( target, 400 ) then
                 self.l_WeaponUseCooldown = CurTime() + random( 1.2, 1.5 )
                 wepent:EmitSound( "Weapon_Shotgun.Double" )
                 bulletData.Num = 12

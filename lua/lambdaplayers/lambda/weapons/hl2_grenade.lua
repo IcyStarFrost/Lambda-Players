@@ -36,7 +36,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local throwSnd = "WeaponFrag.Throw"
             if IsValid( target ) then
                 throwDir = ( target:GetPos() - grenade:GetPos() ):GetNormalized()
-                if self:GetRangeSquaredTo( target ) < ( 350 * 350 ) then
+                if self:IsInRange( target, 350 ) then
                     throwForce = 400
                     throwSnd = "WeaponFrag.Roll"
                 end

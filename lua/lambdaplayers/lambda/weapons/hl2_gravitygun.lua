@@ -71,7 +71,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local phys = target:GetPhysicsObjectNum(0)
 
             if IsValid( phys ) then
-                if self:GetRangeSquaredTo( target ) > ( 175 * 175 ) then wepent:EmitSound( "weapons/physcannon/physcannon_dryfire.wav", 70 ) return end
+                if !self:IsInRange( target, 175 ) then wepent:EmitSound( "weapons/physcannon/physcannon_dryfire.wav", 70 ) return end
                 wepent:EmitSound( "weapons/physcannon/superphys_launch"..random( 1, 4 )..".wav", 70, random( 110, 120 ) )
 
                 --[[

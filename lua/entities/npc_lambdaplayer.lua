@@ -85,9 +85,9 @@ end
     local RealTime = RealTime
     local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
     local tracetable = {}
-    local collisionmins = Vector( -10, -10, 0 )
-    local standingcollisionmaxs = Vector( 10, 10, 72 )
-    local crouchingcollisionmaxs = Vector( 10, 10, 32 )
+    local collisionmins = Vector( -16, -16, 0 )
+    local standingcollisionmaxs = Vector( 16, 16, 72 )
+    local crouchingcollisionmaxs = Vector( 16, 16, 36 )
 --
 
 if CLIENT then
@@ -101,6 +101,8 @@ function ENT:Initialize()
     self.l_SpawnPos = self:GetPos() -- Used for Respawning
     self.l_SpawnAngles = self:GetAngles()
     self.l_Hooks = {} -- The table holding all our created hooks
+    self.l_Timers = {} -- The table holding all named timers
+    self.l_SimpleTimers = {} -- The table holding all simple timers
     
     -- Has to be here so the client can run this too. Originally was under Personal Stats
     self:BuildPersonalityTable() -- Builds all personality chances from autorun_includes/shared/lambda_personalityfuncs.lua for use in chance testing and creates Get/Set functions for each one
@@ -113,9 +115,7 @@ function ENT:Initialize()
 
         self.l_SpawnedEntities = {} -- The table holding every entity we have spawned
         self.l_ExternalVars = {} -- The table holding any custom variables external addons want saved onto the Lambda so it can exported along with other Lambda Info
-        self.l_Timers = {} -- The table holding all named timers
-        self.l_SimpleTimers = {} -- The table holding all simple timers
-        
+
 
         self.l_State = "Idle" -- The state we are in. See sv_states.lua
         self.l_Weapon = "" -- The weapon we currently have
@@ -488,7 +488,7 @@ function ENT:Think()
         if CurTime() > self.l_NextPickupCheck then
             for _, v in ipairs( self:FindInSphere( self:GetPos(), 58 ) ) do
                 local pickFunc = _LAMBDAPLAYERSItemPickupFunctions[ v:GetClass() ]
-                if isfunction( pickFunc ) and self:Visible( v ) then pickFunc( self, v ) end
+                if isfunction( pickFunc ) and self:Visible( v ) then hook.Run( "LambdaOnPickupEnt", self, v ) pickFunc( self, v ) end
             end
             self.l_NextPickupCheck = CurTime() + 0.1
         end
