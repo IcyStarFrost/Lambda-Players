@@ -25,8 +25,10 @@ if !LambdaFilesReloaded then -- This is so when the game is loading, the hook is
     hook.Add( "PreGamemodeLoaded", "lambdavoicetypesinit", function()
         hook.Run( "LambdaOnVoiceTypesRegistered" )
         LambdaVoiceLinesTable = LAMBDAFS:GetVoiceLinesTable()
+        LambdaVoiceProfiles = LAMBDAFS:GetVoiceProfiles()
     end )
 else
     hook.Run( "LambdaOnVoiceTypesRegistered" )
     LambdaVoiceLinesTable = LAMBDAFS:GetVoiceLinesTable()
+    LambdaVoiceProfiles = LAMBDAFS:GetVoiceProfiles()
 end
