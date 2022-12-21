@@ -22,7 +22,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local muzzle = wepent:GetAttachment( 1 )
 
             tracetbl.start = muzzle.Pos
-            tracetbl.endpos = target
+            tracetbl.endpos = ( isentity( target ) and target:WorldSpaceCenter() or target )
             tracetbl.filter = self
             
             local result = TraceLine( tracetbl )
