@@ -24,7 +24,9 @@ LambdaRegisterVoiceType( "laugh", "lambdaplayers/vo/laugh", "These are voice lin
 if !LambdaFilesReloaded then -- This is so when the game is loading, the hook is created and if we are already in-game and reload the lua files, the hook will be forced to run
     hook.Add( "PreGamemodeLoaded", "lambdavoicetypesinit", function()
         hook.Run( "LambdaOnVoiceTypesRegistered" )
+        LambdaVoiceLinesTable = LAMBDAFS:GetVoiceLinesTable()
     end )
 else
     hook.Run( "LambdaOnVoiceTypesRegistered" )
+    LambdaVoiceLinesTable = LAMBDAFS:GetVoiceLinesTable()
 end
