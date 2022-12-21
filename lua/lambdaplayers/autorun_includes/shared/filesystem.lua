@@ -35,13 +35,13 @@ end
 -- Updates or creates a new file containing a sequential table
 -- type should be json or compressed
 function LAMBDAFS:UpdateSequentialFile( filename, addcontent, type ) 
-    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA", type == "compressed" )
 
     if contents then
         table_insert( contents, addcontent )
-        LAMBDAFS:WriteFile( filename, contents, type )
+        LAMBDAFS:WriteFile( filename, contents, type, type == "compressed" )
     else
-        LAMBDAFS:WriteFile( filename, { addcontent }, type )
+        LAMBDAFS:WriteFile( filename, { addcontent }, type, type == "compressed" )
     end
 
 end
@@ -49,15 +49,15 @@ end
 -- Updates or creates a new file containing a table that uses strings as keys
 -- type should be json or compressed
 function LAMBDAFS:UpdateKeyValueFile( filename, addcontent, type ) 
-    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA", type == "compressed" )
 
     if contents then
         for k, v in pairs( addcontent ) do contents[ k ] = v end
-        LAMBDAFS:WriteFile( filename, contents, type )
+        LAMBDAFS:WriteFile( filename, contents, type, type == "compressed" )
     else
         local tbl = {}
         for k, v in pairs( addcontent ) do tbl[ k ] = v end
-        LAMBDAFS:WriteFile( filename, tbl, type )
+        LAMBDAFS:WriteFile( filename, tbl, type, type == "compressed" )
     end
 
 end
@@ -66,31 +66,31 @@ end
 -- Only works if the file contains a sequential table
 function LAMBDAFS:FileHasValue( filename, value, type ) 
     if !file.Exists( filename, "DATA" ) then return false end
-    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA", type == "compressed" )
     return table_HasValue( contents, value )
 end
 
 -- Returns if the specified key's value is valid
 function LAMBDAFS:FileKeyIsValid( filename, key, type ) 
     if !file.Exists( filename, "DATA" ) then return false end
-    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA", type == "compressed" )
     return contents[ key ] != nil
 end
 
 -- SQ short for Sequential
 -- Removes a value from the specified file containing a sequential table
 function LAMBDAFS:RemoveVarFromSQFile( filename, var, type )
-    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA", type == "compressed" )
     table_RemoveByValue( contents, var )
-    LAMBDAFS:WriteFile( filename, contents, type )
+    LAMBDAFS:WriteFile( filename, contents, type, type == "compressed" )
 end
 
 -- KV short for Key Value
 -- Removes a key from the specified file containing a table that uses strings as keys
 function LAMBDAFS:RemoveVarFromKVFile( filename, key, type )
-    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA", type == "compressed" )
     contents[ key ] = nil
-    LAMBDAFS:WriteFile( filename, contents, type )
+    LAMBDAFS:WriteFile( filename, contents, type, type == "compressed" )
 end
 
 
@@ -340,6 +340,8 @@ function LAMBDAFS:GetTextProfiles()
     
     return LambdaTextProfiles
 end
+
+
 
 
 LambdaPersonalProfiles = LambdaPersonalProfiles or file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
