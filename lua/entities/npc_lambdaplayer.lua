@@ -116,6 +116,10 @@ function ENT:Initialize()
         self.l_SpawnedEntities = {} -- The table holding every entity we have spawned
         self.l_ExternalVars = {} -- The table holding any custom variables external addons want saved onto the Lambda so it can exported along with other Lambda Info
 
+        -- Tables of certain types of entities. Used to limit certain entities
+        for k, name in ipairs( LambdaEntityLimits ) do
+            self[ "l_Spawned" .. name ] = {}
+        end
 
         self.l_State = "Idle" -- The state we are in. See sv_states.lua
         self.l_Weapon = "" -- The weapon we currently have

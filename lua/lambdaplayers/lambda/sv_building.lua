@@ -13,10 +13,6 @@ local caneditworld = GetConVar( "lambdaplayers_building_caneditworld" )
 local caneditnonworld = GetConVar( "lambdaplayers_building_caneditnonworld" )
 
 
-ENT.l_BuildingFunctions = {}
-
-table_Merge( ENT.l_BuildingFunctions, LambdaBuildingFunctions )
-
 
 -- Building Helper functions --
 

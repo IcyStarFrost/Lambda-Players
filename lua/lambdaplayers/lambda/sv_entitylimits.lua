@@ -6,10 +6,6 @@ local pairs = pairs
 
 -- This is a nice and easy way of setting up a limit like Prop Limits, NPC limits, and ect
 
-for k, name in ipairs( LambdaEntityLimits ) do
-    ENT[ "l_Spawned" .. name ] = {}
-end
-
 -- Gets the limit
 function ENT:GetLimit( name )
     return GetConVar( "lambdaplayers_limits_" .. name .. "limit" ):GetInt()
