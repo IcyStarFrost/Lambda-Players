@@ -65,6 +65,9 @@ if SERVER then
 
         self:GetPhysicsObject():EnableCollisions( false )
 
+        -- Restart our coroutine thread
+        self.BehaveThread = coroutine.create( function() self:RunBehaviour() end )
+
         LambdaKillFeedAdd( self, info:GetAttacker(), info:GetInflictor() )
         if callnpchook:GetBool() then hook.Run( "OnNPCKilled", self, info:GetAttacker(), info:GetInflictor() ) end
         self:SetDeaths( self:GetDeaths() + 1 )
