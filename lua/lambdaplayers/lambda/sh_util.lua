@@ -621,6 +621,8 @@ if SERVER then
             self.WeaponEnt:DrawShadow( !self:IsWeaponMarkedNodraw() )
         end
 
+        self.l_UpdateAnimations = true
+
         self:SetHealth( self:GetMaxHealth() )
         self:SetArmor( 0 )
         self:AddFlags( FL_OBJECT )
