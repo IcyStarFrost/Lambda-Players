@@ -11,6 +11,7 @@ local ipairs = ipairs
 local bor = bit.bor
 local CurTime = CurTime
 local max = math.max
+local SortTable = table.sort
 local ceil = math.ceil
 local band = bit.band
 local rand = math.Rand
@@ -323,6 +324,7 @@ if SERVER then
         end
     } 
 
+    
     local allowrespawn = GetConVar( "lambdaplayers_lambda_allownonadminrespawn" )
     function ENT:OnSpawnedByPlayer( ply )
         local respawn = tobool( ply:GetInfoNum( "lambdaplayers_lambda_shouldrespawn", 0 ) )
@@ -341,6 +343,8 @@ if SERVER then
         
         if personality != "random" then
             self:BuildPersonalityTable( personalitypresets[ personality ]( ply, self ) )
+
+            SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
         end
         
 
