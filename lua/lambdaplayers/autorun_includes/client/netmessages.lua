@@ -1,6 +1,7 @@
 
 local LambdaIsValid = LambdaIsValid
 local table_insert = table.insert
+local timer_Simple = timer.Simple
 local RealTime = RealTime
 local IsValid = IsValid
 local math_Clamp = math.Clamp
@@ -24,51 +25,37 @@ local usegmodpopups = GetConVar( "lambdaplayers_voice_usegmodvoicepopups" )
 -- Net sent from ENT:OnKilled()
 net.Receive( "lambdaplayers_becomeragdoll", function() 
     local ent = net.ReadEntity()
-    local force = net.ReadVector()
-    local offset = net.ReadVector()
-    local colvec = net.ReadVector()
-
     if !IsValid( ent ) then return end
-
+    
     local ragdoll = ent:BecomeRagdollOnClient()
     ragdoll:DrawShadow( true )
-    ragdoll.GetPlayerColor = function() return colvec end
+    
+    local plyColor = net.ReadVector()
+    ragdoll.GetPlayerColor = function() return plyColor end
 
     ragdoll.LambdaOwner = ent
     ent.ragdoll = ragdoll
-
-    local time = cleanuptime:GetInt()
-
-    if time != 0 then 
-        timer.Simple( time , function()
-            if cleaneffect:GetBool() and IsValid( ragdoll ) then
-                ragdoll:LambdaDisintegrate()
-            elseif IsValid( ragdoll ) then 
-                ragdoll:Remove()
-            end 
-        end ) 
-    end
-
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, ragdoll )
 
-    for i=1, 3 do
-        local phys = ent.ragdoll:GetPhysicsObjectNum( i )
-
-        if IsValid( phys ) then
-            phys:ApplyForceOffset( force, offset )
-        end
-
+    local force = net.ReadVector()
+    local offset = net.ReadVector()
+    for i = 1, 3 do
+        local phys = ragdoll:GetPhysicsObjectNum( i )
+        if IsValid( phys ) then phys:ApplyForceOffset( force, offset ) end
     end
 
+    local time = cleanuptime:GetInt()
+    if time != 0 then 
+        timer_Simple( time, function()
+            if !IsValid( ragdoll ) then return end
+            if cleaneffect:GetBool() then ragdoll:LambdaDisintegrate() return end 
+            ragdoll:Remove()
+        end ) 
+    end
 end )
 
 net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     local ent = net.ReadEntity()
-    local force = net.ReadVector()
-    local offset = net.ReadVector()
-    local colvec = net.ReadVector()
-    local wepName = net.ReadString()
-
     if !IsValid( ent ) then return end
 
     local cs_prop = ents.CreateClientProp( ent:GetModel() )
@@ -76,34 +63,34 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     cs_prop:SetAngles( ent:GetAngles() )
     cs_prop:SetSkin( ent:GetSkin() )
     cs_prop:SetSubMaterial( 1, ent:GetSubMaterial( 1 ) )
+
+    local colvec = net.ReadVector()
     cs_prop:SetNW2Vector( "lambda_weaponcolor", colvec )
+
     cs_prop:Spawn()
 
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, cs_prop )
 
-    local dropFunc = _LAMBDAPLAYERSWEAPONS[ wepName ].OnDrop
+    local dropFunc = _LAMBDAPLAYERSWEAPONS[ net.ReadString() ].OnDrop
     if isfunction( dropFunc ) then dropFunc( cs_prop ) end
 
     local phys = cs_prop:GetPhysicsObject()
-
     if IsValid( phys ) then
-        phys:SetMass( 20 )
+        local force = net.ReadVector()
         force = force / 2
-        phys:ApplyForceOffset( force, offset )
+
+        phys:SetMass( 20 )
+        phys:ApplyForceOffset( force, net.ReadVector() )
     end
 
     local time = cleanuptime:GetInt()
-
     if time != 0 then 
-        timer.Simple( time , function()
-            if cleaneffect:GetBool() and IsValid( cs_prop ) then
-                cs_prop:LambdaDisintegrate()
-            elseif IsValid( cs_prop ) then 
-                cs_prop:Remove()
-            end 
+        timer_Simple( time, function()
+            if !IsValid( cs_prop ) then return end
+            if cleaneffect:GetBool() then cs_prop:LambdaDisintegrate() return end 
+            cs_prop:Remove()
         end ) 
     end
-
 end )
 
 local Material = Material
