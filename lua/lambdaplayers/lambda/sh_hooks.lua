@@ -80,18 +80,18 @@ if SERVER then
         
         net.Start( "lambdaplayers_becomeragdoll" )
             net.WriteEntity( self )
+            net.WriteVector( self:GetPlyColor() )
             net.WriteVector( info:GetDamageForce() )
             net.WriteVector( info:GetDamagePosition() )
-            net.WriteVector( self:GetPlyColor() )
         net.Broadcast()
 
         if !self:IsWeaponMarkedNodraw() then
             net.Start( "lambdaplayers_createclientsidedroppedweapon" )
                 net.WriteEntity( ( IsValid( self:GetSWEPWeaponEnt() ) and self:GetSWEPWeaponEnt() or self.WeaponEnt ) )
-                net.WriteVector( info:GetDamageForce() )
-                net.WriteVector( info:GetDamagePosition() )
                 net.WriteVector( self:GetPhysColor() )
                 net.WriteString( self:GetWeaponName() )
+                net.WriteVector( info:GetDamageForce() )
+                net.WriteVector( info:GetDamagePosition() )
             net.Broadcast()
         end
 
@@ -139,7 +139,7 @@ if SERVER then
     function ENT:OnInjured( info )
         local attacker = info:GetAttacker()
 
-        if ( self:ShouldTreatAsLPlayer( attacker ) and random( 1, 3 ) == 1 or !self:ShouldTreatAsLPlayer( attacker ) and true ) and self:CanTarget( attacker ) and self:GetEnemy() != attacker and attacker != self  then
+        if ( self:ShouldTreatAsLPlayer( attacker ) and random( 1, 3 ) == 1 or !self:ShouldTreatAsLPlayer( attacker ) and true ) and self:CanTarget( attacker ) and self:GetEnemy() != attacker and attacker != self and self:CanSee( attacker ) then
             if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
             self:AttackTarget( attacker )
         end
