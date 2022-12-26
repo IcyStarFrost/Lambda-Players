@@ -25,8 +25,6 @@ local function MakeNiceName( str )
 end
 
 
--- Later I will make a Bodygroups and Skins settings for the panel by default
-
 local function OpenProfilePanel( ply )
     if !IsValid( ply ) then return end
 
@@ -85,9 +83,8 @@ local function OpenProfilePanel( ply )
     end
 
     function profilelist:OnRowRightClick( id, line )
-        local conmenu = DermaMenu( false )
-        local x, y = input.GetCursorPos()
-        conmenu:SetPos( x, y + 10)
+        local conmenu = DermaMenu( false, rightpanel )
+
         local info = line:GetSortValue( 1 )
 
         conmenu:AddOption( "Cancel", function() end )

@@ -27,7 +27,7 @@ end
 local function Chance_Build( self )
     self:PreventWeaponSwitch( true )
 
-    for index, buildtable in RandomPairs( self.l_BuildingFunctions ) do
+    for index, buildtable in RandomPairs( LambdaBuildingFunctions ) do
         if !buildtable[ 2 ]:GetBool() then continue end
         if hook.Run( "LambdaOnUseBuildFunction", self, buildtable[ 1 ] ) == true then return end
         local result 
@@ -54,7 +54,7 @@ local function Chance_Tool( self )
 
     -- Loops through random tools and only stops if a tool tells us it actually got used by returning true 
     
-    for index, tooltable in RandomPairs( self.l_ToolgunTools ) do
+    for index, tooltable in RandomPairs( LambdaToolGunTools ) do
         if !tooltable[ 2 ]:GetBool() then continue end -- If the tool is allowed
         if hook.Run( "LambdaOnToolUse", self, tooltable[ 1 ] ) == true then return end
         local result
