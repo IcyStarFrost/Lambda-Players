@@ -44,6 +44,7 @@ local red = Color( 255, 0, 0 )
 local tauntdir = GetConVar( "lambdaplayers_voice_tauntdir" )
 local aidisable = GetConVar( "ai_disabled" )
 local debugcvar = GetConVar( "lambdaplayers_debug" )
+local chatAllowed = GetConVar( "lambdaplayers_text_enabled" )
 local chatlimit = GetConVar( "lambdaplayers_text_chatlimit" )
 local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
@@ -463,6 +464,7 @@ if SERVER then
         if !self:IsValidLayer( layer ) then return end
 
         self.l_UpdateAnimations = false
+        self.l_CurrentPlayedGesture = id
 
         local len = self:GetLayerDuration( layer )
         speed = speed or 1
@@ -479,6 +481,7 @@ if SERVER then
         end
 
         self.l_UpdateAnimations = true
+        self.l_CurrentPlayedGesture = -1
     
     end
 
@@ -901,6 +904,7 @@ if SERVER then
 
     -- Returns if we can type a message
     function ENT:CanType()
+        if !chatAllowed:GetBool() then return false end
         if chatlimit:GetInt() == 0 then return true end
         local count = 0
         for k, v in ipairs( GetLambdaPlayers() ) do

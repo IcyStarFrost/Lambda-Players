@@ -22,6 +22,7 @@ local voicevar = GetConVar( "lambdaplayers_personality_voicechance" )
 local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 local callnpchook = GetConVar( "lambdaplayers_lambda_callonnpckilledhook" )
 local idledir = GetConVar( "lambdaplayers_voice_idledir" )
+local deathAlways = GetConVar( "lambdaplayers_voice_alwaysplaydeathsnds" )
 
 if SERVER then
 
@@ -40,7 +41,7 @@ if SERVER then
 
         self:EmitSound( info:IsDamageType( DMG_FALL ) and "Player.FallGib" or "Player.Death" )
         
-        if random( 1, 100 ) <= self:GetVoiceChance() and !self:GetIsTyping() then
+        if ( deathAlways:GetBool() or random( 1, 100 ) <= self:GetVoiceChance() ) and !self:GetIsTyping() then
             self:PlaySoundFile( deathdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "death" ) )
         end
 
@@ -68,6 +69,11 @@ if SERVER then
 
         -- Restart our coroutine thread
         self.BehaveThread = coroutine.create( function() self:RunBehaviour() end )
+        
+        -- Stop playing current gesture animation
+        self:RemoveGesture( self.l_CurrentPlayedGesture )
+        self.l_CurrentPlayedGesture = -1
+        self.l_UpdateAnimations = true
 
         LambdaKillFeedAdd( self, info:GetAttacker(), info:GetInflictor() )
         if callnpchook:GetBool() then hook.Run( "OnNPCKilled", self, info:GetAttacker(), info:GetInflictor() ) end
@@ -123,13 +129,12 @@ if SERVER then
         end
 
         local attacker = info:GetAttacker()
-        if IsValid( attacker ) and attacker:IsPlayer() and attacker != self then 
-            attacker:AddFrags( 1 ) 
-            if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self.l_keyentity = attacker self:TypeMessage( self:GetTextLine( "deathbyplayer" ) ) end
-        elseif IsValid( attacker ) and attacker.IsLambdaPlayer and attacker != self then
-            if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self.l_keyentity = attacker self:TypeMessage( self:GetTextLine( "deathbyplayer" ) ) end
-        elseif attacker != self then
-            if random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then self.l_keyentity = attacker self:TypeMessage( self:GetTextLine( "death" ) ) end
+        if attacker != self and IsValid( attacker ) then 
+            if attacker:IsPlayer() then attacker:AddFrags( 1 ) end
+            if !self:IsSpeaking() and random( 1, 100 ) <= self:GetTextChance() and self:CanType() then
+                self.l_keyentity = attacker
+                self:TypeMessage( self:GetTextLine( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and "deathbyplayer" or "death" ) )
+            end
         end
 
 
