@@ -467,6 +467,13 @@ function ENT:InitializeMiniHooks()
                 info:SetDamage( flDmg )
             end
 
+            -- Fixes Lambda-launched Combine Balls not setting its damage's attacker properly
+            local attacker = info:GetAttacker()
+            if IsValid( attacker ) and attacker:GetClass() == "prop_combine_ball" then
+                local owner = attacker:GetOwner()
+                if IsValid( owner ) and owner.IsLambdaPlayer then info:SetAttacker( owner ) end
+            end
+
             local onDmgFunc = self.l_OnDamagefunction
             if isfunction( onDmgFunc ) and onDmgFunc( self, self:GetWeaponENT(), info ) == true then return true end
 
