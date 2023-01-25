@@ -49,6 +49,7 @@ end
 -- The Disintegration effect used in corpse cleanup
 function EntMeta:LambdaDisintegrate()
     ClearInvalids( disintegratingents )
+    if self.l_IsDisintegrating then return end
     if #disintegratingents > 8 then self:Remove() return end -- The effect is limitted so we don't overload the emitters
 
     local id = random( 1, 10000000 )
@@ -57,6 +58,8 @@ function EntMeta:LambdaDisintegrate()
     local nextparticle = 0
     local endtime = RealTime() + 5
     local norm = Angle( 0, random( 360 ), 0 ):Forward()
+
+    self.l_IsDisintegrating = true
     self:SetRenderClipPlaneEnabled( true )
     self:EmitSound( "lambdaplayers/misc/disintegrate" .. random( 1, 3 ) .. ".mp3", 65, random( 80, 100 ) )
 

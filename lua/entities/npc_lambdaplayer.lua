@@ -60,6 +60,7 @@ end
     local profilechance = GetConVar( "lambdaplayers_lambda_profileusechance" )
     local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
     local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
+    local onlyaddonmodels = GetConVar( "lambdaplayers_lambda_onlyaddonmodels" ) 
     local ents_Create = ents and ents.Create or nil
     local navmesh_GetNavArea = navmesh and navmesh.GetNavArea or nil
     local navmesh_Find = navmesh and navmesh.Find or nil 
@@ -108,10 +109,13 @@ function ENT:Initialize()
     self:BuildPersonalityTable() -- Builds all personality chances from autorun_includes/shared/lambda_personalityfuncs.lua for use in chance testing and creates Get/Set functions for each one
 
     if SERVER then
-    
-
-        self:SetModel( allowaddonmodels:GetBool() and _LAMBDAPLAYERS_Allplayermodels[ random( #_LAMBDAPLAYERS_Allplayermodels ) ] or _LAMBDAPLAYERSDEFAULTMDLS[ random( #_LAMBDAPLAYERSDEFAULTMDLS ) ] )
-
+        
+        local mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels
+        if allowaddonmodels:GetBool() then
+            mdlTbl = ( onlyaddonmodels:GetBool() and _LAMBDAPLAYERS_AddonPlayermodels or _LAMBDAPLAYERS_AllPlayermodels )
+            if #mdlTbl == 0 then mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels end
+        end    
+        self:SetModel( mdlTbl[ random( #mdlTbl ) ] )
 
         self.l_SpawnedEntities = {} -- The table holding every entity we have spawned
         self.l_ExternalVars = {} -- The table holding any custom variables external addons want saved onto the Lambda so it can exported along with other Lambda Info

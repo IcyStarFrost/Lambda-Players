@@ -21,6 +21,7 @@ local globalvoice = GetConVar(  "lambdaplayers_voice_globalvoice" )
 local stereowarn = GetConVar( "lambdaplayers_voice_warnvoicestereo" )
 local voicevolume = GetConVar( "lambdaplayers_voice_voicevolume" )
 local usegmodpopups = GetConVar( "lambdaplayers_voice_usegmodvoicepopups" )
+local removeCorpse = GetConVar( "lambdaplayers_removecorpseonrespawn" )
 
 -- Net sent from ENT:OnKilled()
 net.Receive( "lambdaplayers_becomeragdoll", function() 
@@ -44,10 +45,15 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
         if IsValid( phys ) then phys:ApplyForceOffset( force, offset ) end
     end
 
-    local time = cleanuptime:GetInt()
-    if time != 0 then 
-        timer_Simple( time, function()
+    if cleanuptime:GetInt() != 0 then 
+        local startTime = CurTime()
+        LambdaCreateThread( function()
+            while ( CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( ent ) and CurTime() < ent:GetLastSpeakingTime() ) do 
+                if !IsValid( ragdoll ) then return end
+                coroutine.yield() 
+            end
             if !IsValid( ragdoll ) then return end
+
             if cleaneffect:GetBool() then ragdoll:LambdaDisintegrate() return end 
             ragdoll:Remove()
         end ) 
@@ -74,6 +80,9 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     local dropFunc = _LAMBDAPLAYERSWEAPONS[ net.ReadString() ].OnDrop
     if isfunction( dropFunc ) then dropFunc( cs_prop ) end
 
+    local lambda = net.ReadEntity()
+    if IsValid( lambda ) then lambda.cs_prop = cs_prop end 
+
     local phys = cs_prop:GetPhysicsObject()
     if IsValid( phys ) then
         local force = net.ReadVector()
@@ -83,10 +92,15 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
         phys:ApplyForceOffset( force, net.ReadVector() )
     end
 
-    local time = cleanuptime:GetInt()
-    if time != 0 then 
-        timer_Simple( time, function()
+    if cleanuptime:GetInt() != 0 then 
+        local startTime = CurTime()
+        LambdaCreateThread( function()
+            while ( CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and CurTime() < lambda:GetLastSpeakingTime() ) do 
+                if !IsValid( cs_prop ) then return end
+                coroutine.yield() 
+            end
             if !IsValid( cs_prop ) then return end
+
             if cleaneffect:GetBool() then cs_prop:LambdaDisintegrate() return end 
             cs_prop:Remove()
         end ) 
@@ -282,10 +296,30 @@ end)
 
 net.Receive( "lambdaplayers_invalidateragdoll", function()
     local ent = net.ReadEntity()
-
     if !IsValid( ent ) then return end
 
-    ent.ragdoll = nil
+    if removeCorpse:GetBool() then
+        local ragdoll = ent.ragdoll
+        if IsValid( ragdoll ) then
+            if cleaneffect:GetBool() then 
+                ragdoll:LambdaDisintegrate()
+            else
+                ragdoll:Remove()
+            end
+        end
+
+        local cs_prop = ent.cs_prop
+        if IsValid( cs_prop ) then
+            if cleaneffect:GetBool() then 
+                cs_prop:LambdaDisintegrate()
+            else
+                cs_prop:Remove()
+            end
+        end
+    end
+
+    ent.ragdoll = NULL
+    ent.cs_prop = NULL
 end )
 
 

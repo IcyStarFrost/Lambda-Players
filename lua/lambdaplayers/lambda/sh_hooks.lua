@@ -23,6 +23,8 @@ local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 local callnpchook = GetConVar( "lambdaplayers_lambda_callonnpckilledhook" )
 local idledir = GetConVar( "lambdaplayers_voice_idledir" )
 local deathAlways = GetConVar( "lambdaplayers_voice_alwaysplaydeathsnds" )
+local respawnTime = GetConVar( "lambdaplayers_lambda_respawntime" )
+local respawnSpeech = GetConVar( "lambdaplayers_lambda_dontrespawnifspeaking" )
 
 if SERVER then
 
@@ -96,6 +98,7 @@ if SERVER then
                 net.WriteEntity( ( IsValid( self:GetSWEPWeaponEnt() ) and self:GetSWEPWeaponEnt() or self.WeaponEnt ) )
                 net.WriteVector( self:GetPhysColor() )
                 net.WriteString( self:GetWeaponName() )
+                net.WriteEntity( self )
                 net.WriteVector( info:GetDamageForce() )
                 net.WriteVector( info:GetDamagePosition() )
             net.Broadcast()
@@ -107,17 +110,16 @@ if SERVER then
 
         self:Thread( function()
 
-            local time = self:GetRespawn() and 2 or 0.1
-            
-            coroutine.wait( time )
+            local canRespawn = self:GetRespawn()
+            coroutine.wait( canRespawn and respawnTime:GetFloat() or 0.1 )
 
-            while self:GetIsTyping() do coroutine.yield() end
-
-            if self:GetRespawn() then
-                self:LambdaRespawn()
-            else
+            while self:GetIsTyping() or self:IsSpeaking() and respawnSpeech:GetBool() do coroutine.yield() end
+            if !canRespawn then
                 self:Remove()
+                return
             end
+
+            self:LambdaRespawn()
 
         end, "DeathThread", true )
 
