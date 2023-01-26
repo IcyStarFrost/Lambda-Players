@@ -17,6 +17,10 @@ LambdaRegisterVoiceType( "taunt", "lambdaplayers/vo/taunt", "These are voice lin
 LambdaRegisterVoiceType( "death", "lambdaplayers/vo/death", "These are voice lines that play when a Lambda Player dies." )
 LambdaRegisterVoiceType( "kill", "lambdaplayers/vo/kill", "These are voice lines that play when a Lambda Player kills their enemy." )
 LambdaRegisterVoiceType( "laugh", "lambdaplayers/vo/laugh", "These are voice lines that play when a Lambda Player laughs at someone." )
+LambdaRegisterVoiceType( "fall", "lambdaplayers/vo/fall", "These are voice lines that play when a Lambda Player starts falling from deadly distance." )
+LambdaRegisterVoiceType( "killassist", "lambdaplayers/vo/killassist", "These are voice lines that play when someone else kills Lambda Player's current enemy." )
+LambdaRegisterVoiceType( "witnesskill", "lambdaplayers/vo/witnesskill", "These are voice lines that play when a Lambda Player sees someone get killed." )
+LambdaRegisterVoiceType( "panic", "lambdaplayers/vo/panic", "These are voice lines that play when a Lambda Player is low on health and starts retreating." )
 
 -- Called when all default voice types have been registered and before the file system has loaded the voice types
 

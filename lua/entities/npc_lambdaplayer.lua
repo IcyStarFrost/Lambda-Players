@@ -55,7 +55,6 @@ end
     local table_GetKeys = table.GetKeys
     local voicepitchmin = GetConVar( "lambdaplayers_voice_voicepitchmin" )
     local voicepitchmax = GetConVar( "lambdaplayers_voice_voicepitchmax" )
-    local idledir = GetConVar( "lambdaplayers_voice_idledir" )
     local drawflashlight = GetConVar( "lambdaplayers_drawflashlights" )
     local profilechance = GetConVar( "lambdaplayers_lambda_profileusechance" )
     local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
@@ -435,7 +434,7 @@ function ENT:Think()
         if !self:IsDisabled() and !self:GetIsTyping() and CurTime() > self.l_nextidlesound then
             
             if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() then
-                self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
+                self:PlaySoundFile( self:GetVoiceLine( "idle" ), true )
             elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
                 self:TypeMessage( self:GetTextLine( "idle" ) )
             end

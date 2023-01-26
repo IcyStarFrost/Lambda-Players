@@ -126,6 +126,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_singleplayerthinkdelay", 0, true, fals
 
 -- Combat Convars 
 CreateLambdaConvar( "lambdaplayers_combat_allowtargetyou", 1, true, true, true, "If Lambda Players are allowed to attack you", 0, 1, { type = "Bool", name = "Target You", category = "Combat" } )
+CreateLambdaConvar( "lambdaplayers_combat_allowretreating", 1, true, false, false, "If Lambda Players are allowed to retreat from enemy if they're low on health", 0, 1, { type = "Bool", name = "Allow Retreating", category = "Combat" } )
 --
 
 -- Lambda Player Convars

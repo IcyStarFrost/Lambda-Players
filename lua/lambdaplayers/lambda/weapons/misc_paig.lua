@@ -6,8 +6,6 @@ local EffectData = EffectData
 local DamageInfo = DamageInfo
 local random = math.random
 local CreateSound = CreateSound
-local tauntDir = GetConVar( "lambdaplayers_voice_tauntdir" )
-local killDir = GetConVar( "lambdaplayers_voice_killdir" )
 --local Rand = math.Rand
 --local ipairs = ipairs
 
@@ -70,8 +68,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                 wepent:EmitSound( "lambdaplayers/weapons/paig/sb_spin.mp3", 80 )
                 if random( 1, 100 ) <= self:GetVoiceChance() then 
-                    local rndVoice = ( random( 1, 2 ) == 1 and ( tauntDir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "taunt" ) ) or ( killDir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "kill" ) ) )
-                    self:PlaySoundFile( rndVoice, true ) 
+                    self:PlaySoundFile( self:GetVoiceLine( random( 1, 2 ) == 1 and "taunt" or "kill" ), true ) 
                 end
             end
 

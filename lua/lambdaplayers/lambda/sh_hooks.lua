@@ -15,16 +15,16 @@ local SortTable = table.sort
 local ceil = math.ceil
 local band = bit.band
 local rand = math.Rand
-local deathdir = GetConVar( "lambdaplayers_voice_deathdir" )
-local killdir = GetConVar( "lambdaplayers_voice_killdir" )
+local TraceHull = util.TraceHull
+local fallTrTbl = {}
 local debugvar = GetConVar( "lambdaplayers_debug" )
 local voicevar = GetConVar( "lambdaplayers_personality_voicechance" )
 local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 local callnpchook = GetConVar( "lambdaplayers_lambda_callonnpckilledhook" )
-local idledir = GetConVar( "lambdaplayers_voice_idledir" )
 local deathAlways = GetConVar( "lambdaplayers_voice_alwaysplaydeathsnds" )
 local respawnTime = GetConVar( "lambdaplayers_lambda_respawntime" )
 local respawnSpeech = GetConVar( "lambdaplayers_lambda_dontrespawnifspeaking" )
+local allowRetreat = GetConVar( "lambdaplayers_combat_allowretreating" )
 
 if SERVER then
 
@@ -44,7 +44,7 @@ if SERVER then
         self:EmitSound( info:IsDamageType( DMG_FALL ) and "Player.FallGib" or "Player.Death" )
         
         if ( deathAlways:GetBool() or random( 1, 100 ) <= self:GetVoiceChance() ) and !self:GetIsTyping() then
-            self:PlaySoundFile( deathdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "death" ) )
+            self:PlaySoundFile( self:GetVoiceLine( "death" ) )
         end
 
         self:SetHealth( -1 ) -- SNPCs will think that we are still alive without doing this.
@@ -146,6 +146,19 @@ if SERVER then
     function ENT:OnInjured( info )
         local attacker = info:GetAttacker()
 
+        if self:GetState() != "RetreatFromCombat" and attacker != self and random( 1, 2 ) == 1 and LambdaIsValid( attacker ) and allowRetreat:GetBool() then
+            local hpThreshold = ( 100 - self:GetCombatChance() )
+            if hpThreshold > 33 then hpThreshold = hpThreshold / random( 2, 3 ) end
+            if hpThreshold <= 10 then hpThreshold = hpThreshold * random( 1, 3 ) end
+
+            if self:Health() < hpThreshold then
+                self:CancelMovement()
+                self:SetEnemy( attacker )
+                self:SetState( "RetreatFromCombat" )
+                return
+            end
+        end
+
         if ( self:ShouldTreatAsLPlayer( attacker ) and random( 1, 3 ) == 1 or !self:ShouldTreatAsLPlayer( attacker ) and true ) and self:CanTarget( attacker ) and self:GetEnemy() != attacker and attacker != self and self:CanSee( attacker ) then
             if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
             self:AttackTarget( attacker )
@@ -158,9 +171,16 @@ if SERVER then
 
         local attacker = info:GetAttacker()
 
-        local laughChance = ( ( IsValid( attacker ) and ( victim == attacker or attacker:IsPlayer() and !attacker:Alive() or attacker.IsLambdaPlayer and attacker:GetIsDead() ) ) and 4 or 10 )
-        if self:GetState() != "Combat" and random( 1, laughChance ) == 1 and self:IsInRange( victim, 2000 ) and self:CanSee( victim ) then 
-            self:LaughAt( victim ) 
+        if self:GetState() != "Combat" and self:IsInRange( victim, 2000 ) and self:CanSee( victim ) then
+            local witnessChance = random( 1, 10 )
+            if witnessChance == 1 then
+                self:LaughAt( victim ) 
+            elseif witnessChance == 2 then
+                self:LookTo( victimPos, random( 1, 3 ) )
+                self:SimpleTimer( rand( 0.1, 1.0 ), function()
+                    self:PlaySoundFile( self:GetVoiceLine( "witnesskill" ), true )
+                end )
+            end
         end
 
         -- If we killed the victim
@@ -172,7 +192,7 @@ if SERVER then
             if victim == self:GetEnemy() then
 
                 if random( 1, 100 ) <= self:GetVoiceChance() then
-                    self:PlaySoundFile( killdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "kill" ), true )
+                    self:PlaySoundFile( self:GetVoiceLine( "kill" ), true )
                 elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
                     self.l_keyentity = victim
                     self:TypeMessage( self:GetTextLine( "kill" ) )
@@ -183,7 +203,13 @@ if SERVER then
 
             if !victim.IsLambdaPlayer then LambdaKillFeedAdd( victim, info:GetAttacker(), info:GetInflictor() ) end
         else -- Someone else killed the victim
-
+            if self:GetState() == "Combat" and victim == self:GetEnemy() and random( 1, 100 ) <= self:GetVoiceChance() and ( attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot() ) and self:CanSee( attacker ) then
+                self:LookTo( attacker, 1 )
+                self:SimpleTimer( rand( 0.1, 1.0 ), function()
+                    if !IsValid( attacker ) then return end
+                    self:PlaySoundFile( self:GetVoiceLine( "killassist" ), true )
+                end )
+            end
         end
 
         if victim == self:GetEnemy() then
@@ -399,6 +425,21 @@ if SERVER then
 
     function ENT:OnLeaveGround( ent ) 
         hook.Run( "LambdaOnLeaveGround", self, ent )
+        
+        -- Fall Voiceline Handling
+        local deathDist = 800
+        if realisticfalldamage:GetBool() then deathDist = max( 256, 800 * ( self:Health() / self:GetMaxHealth() ) ) end
+
+        fallTrTbl.start = self:GetPos()
+        fallTrTbl.endpos = ( fallTrTbl.start - self:GetUp() * deathDist )
+        fallTrTbl.filter = self
+        fallTrTbl.mins = self:OBBMins()
+        fallTrTbl.maxs = self:OBBMaxs()
+        if TraceHull( fallTrTbl ).Hit then return end
+            
+        fallTrTbl.endpos = ( fallTrTbl.start - self:GetUp() * 32756 )
+        if TraceHull( fallTrTbl ).HitPos:IsUnderwater() then return end
+        self:PlaySoundFile( self:GetVoiceLine( "fall" ), true )
     end
 
 
@@ -518,7 +559,7 @@ function ENT:InitializeMiniHooks()
         self:Hook( "PlayerSay", "lambdarespondtoplayertextchat", function( ply, text )
             
             if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() and self:IsInRange( ply, 300 ) then
-                self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
+                self:PlaySoundFile( self:GetVoiceLine( "idle" ), true )
             elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
                 self.l_keyentity = ply
                 self:TypeMessage( self:GetTextLine( "response" ) )
@@ -530,7 +571,7 @@ function ENT:InitializeMiniHooks()
             if !self:IsInRange( ply, 300 ) then return end
             
             if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() then
-                self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
+                self:PlaySoundFile( self:GetVoiceLine( "idle" ), true )
             elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
                 self.l_keyentity = ply
                 self:TypeMessage( self:GetTextLine( "response" ) )

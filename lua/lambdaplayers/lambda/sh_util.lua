@@ -41,7 +41,7 @@ local color_white = color_white
 local ents_Create = ents and ents.Create or nil
 local lambdacolor = Color( 255, 136, 0 )
 local red = Color( 255, 0, 0 )
-local tauntdir = GetConVar( "lambdaplayers_voice_tauntdir" )
+local GetConVar = GetConVar
 local aidisable = GetConVar( "ai_disabled" )
 local debugcvar = GetConVar( "lambdaplayers_debug" )
 local chatAllowed = GetConVar( "lambdaplayers_text_enabled" )
@@ -50,6 +50,7 @@ local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
 local shouldsentencemix = GetConVar( "lambdaplayers_text_sentencemixing" )
 local player_GetAll = player.GetAll
+local Rand = math.Rand
 
 ---- Anything Shared can go here ----
 
@@ -442,9 +443,7 @@ if SERVER then
     -- Attacks the specified entity
     function ENT:AttackTarget( ent )
         if !IsValid( ent ) then return end
-        
-        local tauntsounds = LambdaVoiceLinesTable.taunt
-        if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( tauntdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "taunt" ), true ) end
+        if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( self:GetVoiceLine( "taunt" ), true ) end
         self:SetEnemy( ent )
         self:SetState( "Combat" )
         self:CancelMovement()
@@ -454,8 +453,10 @@ if SERVER then
     function ENT:LaughAt( pos )
         pos = ( isentity( pos ) and IsValid( pos ) and pos:GetPos() or pos)
         self:LookTo( pos, 2 )
-        self:CancelMovement()
-        self:SetState( "Laughing" )
+        self:SimpleTimer( Rand( 0.25, 1.0 ), function()
+            self:CancelMovement()
+            self:SetState( "Laughing" )
+        end )
     end
 
     function ENT:PlayGestureAndWait( id, speed )
@@ -747,8 +748,11 @@ if SERVER then
                 end
             end
         end
-        local tbl = LambdaVoiceLinesTable[ voicetype ]
 
+        local voiceDir = GetConVar( "lambdaplayers_voice_" .. voicetype .. "dir" )
+        if voiceDir and voiceDir:GetString() == "randomengine" then return self:GetRandomSound() end
+
+        local tbl = LambdaVoiceLinesTable[ voicetype ]
         return tbl[ random( #tbl ) ] 
     end
 
