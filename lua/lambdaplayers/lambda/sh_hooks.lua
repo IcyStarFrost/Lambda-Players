@@ -178,7 +178,7 @@ if SERVER then
             elseif witnessChance == 2 then
                 self:LookTo( victimPos, random( 1, 3 ) )
                 self:SimpleTimer( rand( 0.1, 1.0 ), function()
-                    self:PlaySoundFile( self:GetVoiceLine( "witnesskill" ), true )
+                    self:PlaySoundFile( self:GetVoiceLine( "witness" ), true )
                 end )
             end
         end
@@ -207,7 +207,7 @@ if SERVER then
                 self:LookTo( attacker, 1 )
                 self:SimpleTimer( rand( 0.1, 1.0 ), function()
                     if !IsValid( attacker ) then return end
-                    self:PlaySoundFile( self:GetVoiceLine( "killassist" ), true )
+                    self:PlaySoundFile( self:GetVoiceLine( "assist" ), true )
                 end )
             end
         end
