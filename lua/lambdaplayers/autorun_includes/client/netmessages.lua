@@ -77,8 +77,11 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
 
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, cs_prop )
 
-    local dropFunc = _LAMBDAPLAYERSWEAPONS[ net.ReadString() ].OnDrop
-    if isfunction( dropFunc ) then dropFunc( cs_prop ) end
+    local wpnName = net.ReadString()
+    if isstring( wpnName ) then
+        local dropFunc = _LAMBDAPLAYERSWEAPONS[ wpnName ].OnDrop
+        if isfunction( dropFunc ) then dropFunc( cs_prop ) end
+    end
 
     local lambda = net.ReadEntity()
     if IsValid( lambda ) then lambda.cs_prop = cs_prop end 

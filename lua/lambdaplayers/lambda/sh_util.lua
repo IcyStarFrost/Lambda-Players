@@ -452,8 +452,8 @@ if SERVER then
 
     function ENT:LaughAt( pos )
         pos = ( isentity( pos ) and IsValid( pos ) and pos:GetPos() or pos)
-        self:LookTo( pos, 2 )
-        self:SimpleTimer( Rand( 0.25, 1.0 ), function()
+        self:LookTo( pos, 3 )
+        self:SimpleTimer( Rand( 0.2, 0.66 ), function()
             self:CancelMovement()
             self:SetState( "Laughing" )
         end )
