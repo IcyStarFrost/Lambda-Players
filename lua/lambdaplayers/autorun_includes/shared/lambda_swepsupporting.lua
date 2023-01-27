@@ -1,5 +1,3 @@
-local table_insert = table.insert
-
 LambdaSupportedSweps = {}
 _LAMBDAWEAPONCLASSANDPRINTS = {}
 
@@ -47,7 +45,6 @@ end
 -- These functions are called when the weapon is equipped. We use this to pretty much configure the Lambda's combat 
 local function HandleARCCW( self, wep )
 
-    local min, max, delay = wep:GetNPCBurstSettings() -- Get the fire rate
     -- The variables below are important
 
     self.l_HasLethal = true -- If the weapon is lethal

@@ -4,8 +4,8 @@ local ents_FindInSphere = ents.FindInSphere
 local ipairs = ipairs
 local random = math.random
 local IsValid = IsValid
-local distance = GetConVar('lambdaplayers_force_radius')
-local spawnatplayerpoints = GetConVar( "lambdaplayers_lambda_spawnatplayerspawns" )
+local distance = GetConVar( "lambdaplayers_force_radius" )
+
 
 -- The reason this lua file has a d_ in its filename is because of the order on how lua files are loaded.
 -- If we didn't do this, we wouldn't have _LAMBDAConVarSettings 
@@ -100,7 +100,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply 
 
     if !spawnatplayerpoints:GetBool() then
 
-        //need a cleaner way for this navmesh stuff
+        -- need a cleaner way for this navmesh stuff
 
         area = areas[ random( #areas ) ]
         if !area or !area:IsValid() then

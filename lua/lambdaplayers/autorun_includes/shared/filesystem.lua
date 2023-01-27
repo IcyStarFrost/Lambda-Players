@@ -8,7 +8,6 @@ local table_RemoveByValue = table.RemoveByValue
 local ipairs = ipairs
 local table_HasValue = table.HasValue
 local table_Add = table.Add
-local table_GetKeys = table.GetKeys
 local mergevoicelines = GetConVar( "lambdaplayers_voice_mergeaddonvoicelines" )
 local mergedefaulttextlines = GetConVar( "lambdaplayers_text_usedefaultlines" )
 local mergeaddontextlines = GetConVar( "lambdaplayers_text_useaddonlines" )

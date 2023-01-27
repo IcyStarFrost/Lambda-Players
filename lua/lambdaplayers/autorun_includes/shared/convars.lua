@@ -1,6 +1,4 @@
 local table_insert = table.insert
-local pairs = pairs
-local table_GetKeys = table.GetKeys
 
 -- Will be used for presets
 _LAMBDAPLAYERSCONVARS = {}

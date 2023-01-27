@@ -10,7 +10,6 @@ local NormalizeAngle = math.NormalizeAngle
 local ents_Create = ents.Create
 local util_Effect = util.Effect
 local tobool = tobool
-local table_GetKeys = table.GetKeys
 local util_IsValidPhysicsObject = util.IsValidPhysicsObject
 local timer = timer 
 local util = util
@@ -181,7 +180,6 @@ local function UseBallsocketTool( self, target )
     if !IsValid( target2 ) and !world then return end
     target2 = !world and target2 or Entity( 0 )
 
-    local lpos1 = target:WorldToLocal( self:Trace( target:WorldSpaceCenter() ).HitPos )
     local lpos2 = !world and target2:WorldToLocal( self:Trace( target2:WorldSpaceCenter() ).HitPos ) or self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) ).HitPos
 
     self:LookTo( target , 2 )
@@ -261,7 +259,7 @@ local function UseCreatorTool( self, target )
     prop:Spawn()
     DoPropSpawnedEffect( prop )
 
-    local mins, maxs = prop:GetModelBounds()
+    local mins = prop:GetModelBounds()
     local proppos = prop:GetPos()
     proppos[ 3 ] = proppos[ 3 ] - mins[ 3 ]
     prop:SetPos( proppos )
@@ -423,7 +421,7 @@ local function UseEmitterTool( self, target )
     table_insert( self.l_SpawnedEntities, 1, ent )
 
     if entity != NULL and !entity:IsWorld() then -- Only want to weld to props
-        local weld = constraint.Weld( ent, entity, 0, physbone, 0, true, true )
+        constraint.Weld( ent, entity, 0, physbone, 0, true, true )
 
         if ( IsValid( ent:GetPhysicsObject() ) ) then ent:GetPhysicsObject():EnableCollisions( false ) end
         ent.nocollide = true
@@ -503,7 +501,7 @@ local function UseHoverballTool( self, target )
     ent:SetPos( hitpos + Offset )
 
     if entity != NULL and !entity:IsWorld() then -- Hoverballs spawned on world are not welded nor notcollided
-        local const = constraint.Weld( ent, entity, 0, physbone, 0, 0, true )
+        constraint.Weld( ent, entity, 0, physbone, 0, 0, true )
         if ( IsValid( ent:GetPhysicsObject() ) ) then ent:GetPhysicsObject():EnableCollisions( false ) end
         ent:SetCollisionGroup( COLLISION_GROUP_WORLD )
     end
@@ -949,7 +947,7 @@ local function UseThrusterTool( self, target )
     ent:SetPos( hitpos - trace.HitNormal * min.z )
 
     if entity != NULL and !entity:IsWorld() then -- Thruster spawned on world are not welded
-        local const = constraint.Weld( ent, entity, 0, trace.PhysicsBone, 0, 0, true )
+        constraint.Weld( ent, entity, 0, trace.PhysicsBone, 0, 0, true )
         if ( IsValid( ent:GetPhysicsObject() ) ) then ent:GetPhysicsObject():EnableCollisions( false ) end
         if random( 0 , 1 ) == 1 then -- Randomly can be nocollided or not to the attached prop
             ent:SetCollisionGroup( COLLISION_GROUP_WORLD )
@@ -1019,7 +1017,6 @@ local function UseWeldTool( self, target )
     if !IsValid( target2 ) and !world then return end
     target2 = !world and target2 or Entity( 0 )
 
-    local lpos1 = target:WorldToLocal( self:Trace( target:WorldSpaceCenter() ).HitPos )
     local lpos2 = !world and target2:WorldToLocal( self:Trace( target2:WorldSpaceCenter() ).HitPos ) or self:Trace( self:WorldSpaceCenter() + VectorRand( -126000, 126000 ) ).HitPos
 
     self:LookTo( target , 2 )

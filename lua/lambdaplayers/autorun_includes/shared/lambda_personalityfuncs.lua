@@ -15,7 +15,7 @@ local presettbl = {
     [ "Custom Random" ] = "customrandom"
 }
 
-local convar = CreateLambdaConvar( "lambdaplayers_personality_preset", "random", true, true, true, "The preset Lambda Personalities should use. Set this to Custom to make use of the chance sliders", nil, nil, { type = "Combo", options = presettbl, name = "Personality Preset", category = "Lambda Player Settings" } )
+CreateLambdaConvar( "lambdaplayers_personality_preset", "random", true, true, true, "The preset Lambda Personalities should use. Set this to Custom to make use of the chance sliders", nil, nil, { type = "Combo", options = presettbl, name = "Personality Preset", category = "Lambda Player Settings" } )
 
 function LambdaCreatePersonalityType( personalityname, func )
     local convar = CreateLambdaConvar( "lambdaplayers_personality_" .. personalityname .. "chance", 30, true, true, true, "The chance " .. personalityname .. " will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = personalityname .. " Chance", category = "Lambda Player Settings" } )
@@ -34,7 +34,7 @@ local function Chance_Build( self )
 
         local ok, msg = pcall( function() result = buildtable[ 3 ]( self ) end )
 
-        if !ok then if buildtable[ 1 ] != "entity" and buildtable[ 1 ] != "npc" then ErrorNoHaltWithStack( buildtable[ 1 ] .. " Building function had a error! If this is from a addon, report it to the author!", msg ) end end
+        if !ok and buildtable[ 1 ] != "entity" and buildtable[ 1 ] != "npc" then ErrorNoHaltWithStack( buildtable[ 1 ] .. " Building function had a error! If this is from a addon, report it to the author!", msg ) end
         if result then self:DebugPrint( "Used a building function: " .. buildtable[ 1 ] ) break end
     end
 

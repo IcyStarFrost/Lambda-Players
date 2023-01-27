@@ -1,4 +1,3 @@
-local GetKeys = table.GetKeys
 local pairs = pairs
 
 local combotable = {}

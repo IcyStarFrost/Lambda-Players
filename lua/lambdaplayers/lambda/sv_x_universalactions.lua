@@ -1,5 +1,4 @@
 local table_insert = table.insert
-local table_ClearKeys = table.ClearKeys
 -- Universal actions are functions that are randomly called during run time.
 -- This means Lambda players could randomly change weapons or randomly look at something and ect
 

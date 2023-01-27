@@ -2,7 +2,6 @@
 
 local LambdaIsValid = LambdaIsValid
 local dev = GetConVar( "developer" )
-local aidisable = GetConVar( "ai_disabled" )
 local IsValid = IsValid
 local math_max = math.max
 local color_white = color_white
@@ -97,8 +96,9 @@ function ENT:MoveToPos( pos, options )
 
 		end
 
-		if timeout then
-			if path:GetAge() > timeout then self.l_issmoving = false return "timeout" end
+		if timeout and path:GetAge() > timeout then
+			self.l_issmoving = false 
+            return "timeout"
 		end
 
         if self.l_recomputepath then
@@ -278,8 +278,9 @@ function ENT:MoveToPosOFFNAV( pos, options )
             end
 		end
 
-        if timeout then
-			if CurTime() > CurTime() + timeout then self.l_issmoving = false return "timeout" end
+        if timeout and CurTime() > CurTime() + timeout then
+			self.l_issmoving = false 
+            return "timeout"
 		end
         coroutine.yield()
     end

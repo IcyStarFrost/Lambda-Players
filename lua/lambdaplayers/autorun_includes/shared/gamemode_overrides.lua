@@ -7,7 +7,6 @@ if CLIENT then
     local math = math
     local sub = string.sub
     local Material = Material
-    local pnlMeta = FindMetaTable( "Panel" )
 
     local function CreateProfilePictureMat( ent )
         local pfp = ent:GetProfilePicture()

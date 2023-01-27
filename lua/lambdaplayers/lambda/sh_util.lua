@@ -8,7 +8,6 @@ local file_Find = file.Find
 local string_find = string.find
 local random = math.random
 local FindInSphere = ents.FindInSphere
-local table_empty = table.Empty
 local file_Find = file.Find
 local table_Empty = table.Empty
 local table_IsEmpty = table.IsEmpty
@@ -21,15 +20,12 @@ local SortTable = table.sort
 local string_Explode = string.Explode
 local timer_simple = timer.Simple
 local timer_create = timer.Create
-local istable = istable
 local timer_Remove = timer.Remove
 local table_Merge = table.Merge
 local coroutine = coroutine
 local Trace = util.TraceLine
-local table_add = table.Add
 local EndsWith = string.EndsWith
 local tobool = tobool
-local math_Approach = math.Approach
 local string_Replace = string.Replace
 local table_insert = table.insert
 local isfunction = isfunction
@@ -39,7 +35,6 @@ local tracetable = {}
 local GetLambdaPlayers = GetLambdaPlayers
 local color_white = color_white
 local ents_Create = ents and ents.Create or nil
-local lambdacolor = Color( 255, 136, 0 )
 local red = Color( 255, 0, 0 )
 local tauntdir = GetConVar( "lambdaplayers_voice_tauntdir" )
 local aidisable = GetConVar( "ai_disabled" )
@@ -213,7 +208,7 @@ end
 -- Returns a table that contains a position and angle with the specified type. hand or eyes
 function ENT:GetAttachmentPoint( pointtype )
     if pointtype == "hand" then
-        local lookup = self:LookupAttachment( 'anim_attachment_RH' )
+        local lookup = self:LookupAttachment( "anim_attachment_RH" )
         if lookup == 0 then
             local bone = self:LookupBone( "ValveBiped.Bip01_R_Hand" )
             if !bone then
@@ -229,7 +224,7 @@ function ENT:GetAttachmentPoint( pointtype )
             return self:GetAttachment( lookup )
         end
     elseif pointtype == "eyes" then
-        local lookup = self:LookupAttachment( 'eyes' )
+        local lookup = self:LookupAttachment( "eyes" )
         if lookup == 0 then
             return { Pos = self:WorldSpaceCenter() + Vector( 0, 0, 5 ), Ang = self:GetForward():Angle() + Angle( 20, 0, 0 ) }
         else
@@ -442,7 +437,6 @@ if SERVER then
     function ENT:AttackTarget( ent )
         if !IsValid( ent ) then return end
         
-        local tauntsounds = LambdaVoiceLinesTable.taunt
         if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( tauntdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "taunt" ), true ) end
         self:SetEnemy( ent )
         self:SetState( "Combat" )
