@@ -40,3 +40,17 @@ end
 
 LambdaFilesReloaded = LambdaFilesReloaded or true
 ---
+
+
+-- Initialize these globals --
+LambdaPersonalProfiles = LambdaPersonalProfiles or file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
+LambdaPlayerNames = LambdaPlayerNames or LAMBDAFS:GetNameTable()
+LambdaPlayerProps = LambdaPlayerProps or LAMBDAFS:GetPropTable()
+LambdaPlayerMaterials = LambdaPlayerMaterials or LAMBDAFS:GetMaterialTable()
+Lambdaprofilepictures = Lambdaprofilepictures or LAMBDAFS:GetProfilePictures()
+LambdaVoiceLinesTable = LambdaVoiceLinesTable or LAMBDAFS:GetVoiceLinesTable()
+LambdaVoiceProfiles = LambdaVoiceProfiles or LAMBDAFS:GetVoiceProfiles()
+LambdaPlayerSprays = LambdaPlayerSprays or LAMBDAFS:GetSprays()
+LambdaTextTable = LambdaTextTable or LAMBDAFS:GetTextTable()
+LambdaTextProfiles = LambdaTextProfiles or LAMBDAFS:GetTextProfiles()
+--
