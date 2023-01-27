@@ -212,9 +212,9 @@ function ENT:RetreatFromCombat()
     local rndPos = self:GetRandomPosition( nil, 4000 )
     self:MoveToPos( rndPos, retreatOptions )
 
-    local enemy = self:GetEnemy()
-    if !LambdaIsValid( enemy ) or enemy.IsLambdaPlayer and ( enemy:GetState() != "Combat" or enemy:GetEnemy() != self ) or !self:IsInRange( enemy, 2000 ) or !self:CanSee( enemy ) then 
+    local target = self.l_RetreatTarget
+    if !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 500 ) then 
         self:SetState( "Idle" ) 
-        return 
+        self.l_RetreatTarget = NULL
     end
 end

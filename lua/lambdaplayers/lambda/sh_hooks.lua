@@ -153,7 +153,8 @@ if SERVER then
 
             if self:Health() < hpThreshold then
                 self:CancelMovement()
-                self:SetEnemy( attacker )
+                self:SetEnemy( NULL )
+                self.l_RetreatTarget = attacker
                 self:SetState( "RetreatFromCombat" )
                 return
             end
