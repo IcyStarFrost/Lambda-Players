@@ -26,6 +26,112 @@ local function CreateUrlLabel( text, url, parent, dock )
     return panel
 end
 
+-- In dedicated servers, you can not change settings via the spawn menu. This function fixes that by allowing Super Admins to edit the Server's setting convars. 
+-- Better than using the server console
+local function InstallMPConVarHandling( PANEL, convar, paneltype )
+    local isserverside = GetConVar( convar ):IsFlagSet( FCVAR_REPLICATED )
+
+    if paneltype == "Bool" then
+
+        function PANEL:OnChange( val )
+            if game.SinglePlayer() or !isserverside then
+                RunConsoleCommand( convar, val and "1" or "0" )
+            elseif !game.SinglePlayer() and isserverside and LocalPlayer():IsSuperAdmin() then
+                net.Start( "lambdaplayers_updateconvar" )
+                net.WriteString( convar )
+                net.WriteString( val and "1" or "0" )
+                net.SendToServer()
+            elseif !game.SinglePlayer() and isserverside and !LocalPlayer():IsSuperAdmin() then
+                chat.AddText( "Only Super Admins can change Server-Side settings!")
+            end
+        end
+
+    elseif paneltype == "Text" then 
+
+        function PANEL:OnChange()
+            local val = self:GetText()
+            if game.SinglePlayer() or !isserverside then
+                RunConsoleCommand( convar, val )
+            elseif !game.SinglePlayer() and isserverside and LocalPlayer():IsSuperAdmin() then
+                net.Start( "lambdaplayers_updateconvar" )
+                net.WriteString( convar )
+                net.WriteString( val )
+                net.SendToServer()
+            elseif !game.SinglePlayer() and isserverside and !LocalPlayer():IsSuperAdmin() then
+                chat.AddText( "Only Super Admins can change Server-Side settings!")
+            end
+        end
+        
+    elseif paneltype == "Slider" then 
+        
+        function PANEL:OnValueChanged( val )
+            if game.SinglePlayer() or !isserverside then
+                RunConsoleCommand( convar, tostring( val ) )
+            elseif !game.SinglePlayer() and isserverside and LocalPlayer():IsSuperAdmin() then
+                net.Start( "lambdaplayers_updateconvar" )
+                net.WriteString( convar )
+                net.WriteString( tostring( val ) )
+                net.SendToServer()
+            elseif !game.SinglePlayer() and isserverside and !LocalPlayer():IsSuperAdmin() then
+                chat.AddText( "Only Super Admins can change Server-Side settings!")
+            end
+        end
+
+    elseif paneltype == "Color" then 
+
+        function PANEL:ValueChanged( col )
+            local rvar = self:GetConVarR()
+            local gvar = self:GetConVarG()
+            local bvar = self:GetConVarB()
+
+            if game.SinglePlayer() or !isserverside then
+
+                RunConsoleCommand( rvar, tostring( col[ 1 ] ) )
+                RunConsoleCommand( gvar, tostring( col[ 2 ] ) )
+                RunConsoleCommand( bvar, tostring( col[ 3 ] ) )
+
+            elseif !game.SinglePlayer() and isserverside and LocalPlayer():IsSuperAdmin() then
+
+                net.Start( "lambdaplayers_updateconvar" )
+                net.WriteString( rvar )
+                net.WriteString( tostring( col[ 1 ] ) )
+                net.SendToServer()
+
+                net.Start( "lambdaplayers_updateconvar" )
+                net.WriteString( gvar )
+                net.WriteString( tostring( col[ 2 ] ) )
+                net.SendToServer()
+
+                net.Start( "lambdaplayers_updateconvar" )
+                net.WriteString( bvar )
+                net.WriteString( tostring( col[ 3 ] ) )
+                net.SendToServer()
+
+            elseif !game.SinglePlayer() and isserverside and !LocalPlayer():IsSuperAdmin() then
+                chat.AddText( "Only Super Admins can change Server-Side settings!")
+            end
+        end
+    elseif paneltype == "Combo" then 
+
+        function PANEL:OnSelect( index, val, data )
+            if game.SinglePlayer() or !isserverside then
+                RunConsoleCommand( convar, tostring( data ) )
+            elseif !game.SinglePlayer() and isserverside and LocalPlayer():IsSuperAdmin() then
+                net.Start( "lambdaplayers_updateconvar" )
+                net.WriteString( convar )
+                net.WriteString( tostring( data ) )
+                net.SendToServer()
+            elseif !game.SinglePlayer() and isserverside and !LocalPlayer():IsSuperAdmin() then
+                chat.AddText( "Only Super Admins can change Server-Side settings!")
+            end
+        end
+
+    end
+
+end
+
+
+
 local function AddLambdaPlayersoptions()
 
     local categories = {}
@@ -84,6 +190,8 @@ local function AddLambdaPlayersoptions()
                     local box = panel:CheckBox( "Allow " .. data.prettyname, "lambdaplayers_weapons_allow" .. weaponclass )
                     local lbl = panel:ControlHelp( "Server-Side | Allows the Lambda Players to equip " .. data.prettyname .. "\nConVar: lambdaplayers_weapons_allow" .. weaponclass )
                     lbl:SetColor( servercolor )
+
+                    
                     box.l_conVar = "lambdaplayers_weapons_allow" .. weaponclass
                     table_insert( weaponcheckboxes, box )
                 end
@@ -101,17 +209,26 @@ local function AddLambdaPlayersoptions()
             for k, v in ipairs( _LAMBDAConVarSettings ) do
                 if v.category != categoryname then continue end
                 if v.type == "Slider" then
-                    panel:NumSlider( v.name, v.convar, v.min, v.max, v.decimals or 2 )
+
+                    local slider = panel:NumSlider( v.name, v.convar, v.min, v.max, v.decimals or 2 )
                     local lbl = panel:ControlHelp( v.desc .. "\nDefault Value: " .. v.default )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
+
+                    InstallMPConVarHandling( slider, v.convar, "Slider" )
                 elseif v.type == "Bool" then
-                    panel:CheckBox( v.name, v.convar )
+
+                    local checkbox = panel:CheckBox( v.name, v.convar )
                     local lbl = panel:ControlHelp( v.desc .. "\nDefault Value: " .. ( v.default == 1 and "True" or "False") )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
+
+                    InstallMPConVarHandling( checkbox, v.convar, "Bool" )
                 elseif v.type == "Text" then
-                    panel:TextEntry( v.name, v.convar )
+
+                    local textentry = panel:TextEntry( v.name, v.convar )
                     local lbl = panel:ControlHelp( v.desc .. "\nDefault Value: " .. v.default )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
+
+                    InstallMPConVarHandling( textentry, v.convar, "Text" )
                 elseif v.type == "Button" then
                     panel:Button( v.name, v.concmd )
                     local lbl = panel:ControlHelp( v.desc )
@@ -125,16 +242,22 @@ local function AddLambdaPlayersoptions()
 
                     local lbl = panel:ControlHelp( v.desc .. "\nDefault Value: " .. v.default )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
+
+                    InstallMPConVarHandling( combo, v.convar, "Combo" )
                 elseif v.type == "Color" then
                     panel:Help( v.name )
                     local colormixer = vgui.Create( "DColorMixer", panel )
                     panel:AddItem( colormixer )
+
+
                     colormixer:SetConVarR( v.red )
                     colormixer:SetConVarG( v.green )
                     colormixer:SetConVarB( v.blue )
 
                     local lbl = panel:ControlHelp( v.desc .. "\nDefault Color: " .. v.default )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
+
+                    InstallMPConVarHandling( colormixer, v.red, "Color" )
                 end
             end
 
