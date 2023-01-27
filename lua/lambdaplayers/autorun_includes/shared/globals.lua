@@ -244,11 +244,6 @@ end
 local meta = FindMetaTable( "Entity" )
 
 
-local oldnet = net.Send
-function net.Send( ply )
-    if ply.IsLambdaPlayer then ply = RecipientFilter( true ) end
-    oldnet( ply )
-end
 
 
 local oldisplayer = meta.IsPlayer
