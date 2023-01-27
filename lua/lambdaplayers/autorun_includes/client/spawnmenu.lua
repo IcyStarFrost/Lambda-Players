@@ -28,8 +28,7 @@ end
 
 -- In dedicated servers, you can not change settings via the spawn menu. This function fixes that by allowing Super Admins to edit the Server's setting convars. 
 -- Better than using the server console
-local function InstallMPConVarHandling( PANEL, convar, paneltype )
-    local isserverside = GetConVar( convar ):IsFlagSet( FCVAR_REPLICATED )
+local function InstallMPConVarHandling( PANEL, convar, paneltype, isserverside )
 
     if paneltype == "Bool" then
 
@@ -85,7 +84,7 @@ local function InstallMPConVarHandling( PANEL, convar, paneltype )
             local bvar = self:GetConVarB()
 
             if game.SinglePlayer() or !isserverside then
-
+                print( tostring( col.r ) )
                 RunConsoleCommand( rvar, tostring( col[ 1 ] ) )
                 RunConsoleCommand( gvar, tostring( col[ 2 ] ) )
                 RunConsoleCommand( bvar, tostring( col[ 3 ] ) )
@@ -123,6 +122,20 @@ local function InstallMPConVarHandling( PANEL, convar, paneltype )
                 net.SendToServer()
             elseif !game.SinglePlayer() and isserverside and !LocalPlayer():IsSuperAdmin() then
                 chat.AddText( "Only Super Admins can change Server-Side settings!")
+            end
+        end
+
+    elseif paneltype == "Button" then 
+
+        function PANEL:DoClick()
+            if game.SinglePlayer() or !isserverside then
+                RunConsoleCommand( convar )
+            elseif !game.SinglePlayer() and isserverside and LocalPlayer():IsSuperAdmin() then
+                net.Start( "lambdaplayers_runconcommand" )
+                net.WriteString( convar )
+                net.SendToServer()
+            elseif !game.SinglePlayer() and isserverside and !LocalPlayer():IsSuperAdmin() then
+                chat.AddText( "Only Super Admins can run Server-Side Console Commands!")
             end
         end
 
@@ -194,6 +207,7 @@ local function AddLambdaPlayersoptions()
                     
                     box.l_conVar = "lambdaplayers_weapons_allow" .. weaponclass
                     table_insert( weaponcheckboxes, box )
+                    InstallMPConVarHandling( box, "lambdaplayers_weapons_allow" .. weaponclass, "Bool", true )
                 end
             end
 
@@ -214,25 +228,27 @@ local function AddLambdaPlayersoptions()
                     local lbl = panel:ControlHelp( v.desc .. "\nDefault Value: " .. v.default )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
 
-                    InstallMPConVarHandling( slider, v.convar, "Slider" )
+                    InstallMPConVarHandling( slider, v.convar, "Slider", !v.isclient )
                 elseif v.type == "Bool" then
 
                     local checkbox = panel:CheckBox( v.name, v.convar )
                     local lbl = panel:ControlHelp( v.desc .. "\nDefault Value: " .. ( v.default == 1 and "True" or "False") )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
 
-                    InstallMPConVarHandling( checkbox, v.convar, "Bool" )
+                    InstallMPConVarHandling( checkbox, v.convar, "Bool", !v.isclient )
                 elseif v.type == "Text" then
 
                     local textentry = panel:TextEntry( v.name, v.convar )
                     local lbl = panel:ControlHelp( v.desc .. "\nDefault Value: " .. v.default )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
 
-                    InstallMPConVarHandling( textentry, v.convar, "Text" )
+                    InstallMPConVarHandling( textentry, v.convar, "Text", !v.isclient )
                 elseif v.type == "Button" then
-                    panel:Button( v.name, v.concmd )
+                    local button = panel:Button( v.name, v.concmd )
                     local lbl = panel:ControlHelp( v.desc )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
+                    
+                    InstallMPConVarHandling( button, v.concmd, "Button", !v.isclient )
                 elseif v.type == "Combo" then
                     local combo = panel:ComboBox( v.name, v.convar )
 
@@ -243,7 +259,7 @@ local function AddLambdaPlayersoptions()
                     local lbl = panel:ControlHelp( v.desc .. "\nDefault Value: " .. v.default )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
 
-                    InstallMPConVarHandling( combo, v.convar, "Combo" )
+                    InstallMPConVarHandling( combo, v.convar, "Combo", !v.isclient )
                 elseif v.type == "Color" then
                     panel:Help( v.name )
                     local colormixer = vgui.Create( "DColorMixer", panel )
@@ -257,7 +273,7 @@ local function AddLambdaPlayersoptions()
                     local lbl = panel:ControlHelp( v.desc .. "\nDefault Color: " .. v.default )
                     lbl:SetColor( v.isclient and clientcolor or servercolor )
 
-                    InstallMPConVarHandling( colormixer, v.red, "Color" )
+                    InstallMPConVarHandling( colormixer, v.red, "Color", !v.isclient )
                 end
             end
 

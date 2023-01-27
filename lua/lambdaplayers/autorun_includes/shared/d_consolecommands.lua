@@ -16,7 +16,11 @@ function CreateLambdaConsoleCommand( name, func, isclient, helptext, settingstbl
     
     if isclient and SERVER then return end
 
-    concommand.Add( name, func, nil, helptext )
+    if isclient then
+        concommand.Add( name, func, nil, helptext )
+    elseif !isclient and SERVER then
+        concommand.Add( name, func, nil, helptext )
+    end
 
     if CLIENT and settingstbl then
         settingstbl.concmd = name

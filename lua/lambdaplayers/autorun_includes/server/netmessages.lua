@@ -15,7 +15,18 @@ net.Receive( "lambdaplayers_updateconvar", function( len, ply )
     if !ply:IsSuperAdmin() then return end
     local convar = net.ReadString()
     local val = net.ReadString()
-    GetConVar( convar ):SetString( val )
+
+    local cvar =  GetConVar( convar )
+
+    if cvar then cvar:SetString( val ) end
+   
+end )
+
+net.Receive( "lambdaplayers_runconcommand", function( len, ply )
+    if !ply:IsSuperAdmin() then return end
+    local concmd = net.ReadString()
+
+    concommand.Run( ply, concmd )
 end )
 
 net.Receive( "lambdaplayers_realplayerendvoice", function( len, ply )
