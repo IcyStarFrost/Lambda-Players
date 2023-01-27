@@ -18,7 +18,7 @@ net.Receive( "lambdaplayers_updateconvar", function( len, ply )
 
     local cvar =  GetConVar( convar )
 
-    if cvar then cvar:SetString( val ) end
+    if cvar and cvar:IsFlagSet( FCVAR_LUA_SERVER ) then cvar:SetString( val ) end
    
 end )
 
