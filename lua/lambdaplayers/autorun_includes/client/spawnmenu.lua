@@ -84,10 +84,9 @@ local function InstallMPConVarHandling( PANEL, convar, paneltype, isserverside )
             local bvar = self:GetConVarB()
 
             if game.SinglePlayer() or !isserverside then
-                print( tostring( col.r ) )
-                RunConsoleCommand( rvar, tostring( col[ 1 ] ) )
-                RunConsoleCommand( gvar, tostring( col[ 2 ] ) )
-                RunConsoleCommand( bvar, tostring( col[ 3 ] ) )
+                RunConsoleCommand( rvar, tostring( col.r ) )
+                RunConsoleCommand( gvar, tostring( col.g ) )
+                RunConsoleCommand( bvar, tostring( col.b ) )
 
             elseif !game.SinglePlayer() and isserverside and LocalPlayer():IsSuperAdmin() then
 
