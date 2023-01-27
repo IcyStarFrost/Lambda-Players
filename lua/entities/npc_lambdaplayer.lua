@@ -519,7 +519,7 @@ function ENT:Think()
         -- UA, Universal Actions
         -- See sv_x_universalactions.lua
         if CurTime() > self.l_nextUA and !self:IsDisabled() then
-            local UAfunc = self.l_UniversalActions[ random( #self.l_UniversalActions ) ]
+            local UAfunc = LambdaUniversalActions[ random( #LambdaUniversalActions ) ]
             UAfunc( self )
             self.l_nextUA = CurTime() + rand( 1, 15 )
         end

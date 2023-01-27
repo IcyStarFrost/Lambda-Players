@@ -331,13 +331,3 @@ LambdaAddConditionalKeyWord( "|4thjuly|", Is4thofJuly )
 LambdaAddConditionalKeyWord( "|easter|", IsEaster )
 ------------------------------------------------------
 
-
-
--- LambdaAddKeyWords hook allows you to use LambdaAddTextChatKeyWord() and LambdaAddConditionalKeyWord() externally
-if !LambdaFilesReloaded then
-    hook.Add( "PreGamemodeLoaded", "lambdakeywordinit", function()
-        hook.Run( "LambdaAddKeyWords" )
-    end )
-else
-    hook.Run( "LambdaAddKeyWords" )
-end

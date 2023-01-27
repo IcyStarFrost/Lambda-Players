@@ -101,14 +101,3 @@ LambdaCreatePersonalityType( "Combat", Chance_Combat )
 CreateLambdaConvar( "lambdaplayers_personality_voicechance", 30, true, true, true, "The chance Voice will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = "Voice Chance", category = "Lambda Player Settings" } )
 CreateLambdaConvar( "lambdaplayers_personality_textchance", 30, true, true, true, "The chance Text will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = "Text Chance", category = "Lambda Player Settings" } )
 
-
-
--- Called when all default personality types are loaded
--- This hook can be used to create custom personality types using LambdaCreatePersonalityType()
-if !LambdaFilesReloaded then -- This is so when the game is loading, the hook is created and if we are already in-game and reload the lua files, the hook will be forced to run
-    hook.Add( "PreGamemodeLoaded", "lambdapersonalityinit", function()
-        hook.Run( "LambdaOnPersonalitiesLoaded" )
-    end )
-else
-    hook.Run( "LambdaOnPersonalitiesLoaded" )
-end

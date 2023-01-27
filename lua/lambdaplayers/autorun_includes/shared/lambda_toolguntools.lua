@@ -1116,14 +1116,3 @@ local function UseWheelTool( self, target )
     return true
 end
 AddToolFunctionToLambdaTools( "Wheel", UseWheelTool )
-
-
--- Called when all default tools are loaded
--- This hook can be used to add custom tool functions by using AddToolFunctionToLambdaTools()
-if !LambdaFilesReloaded then -- This is so when the game is loading, the hook is created and if we are already in-game and reload the lua files, the hook will be forced to run
-    hook.Add( "PreGamemodeLoaded", "lambdatoolguntoolsinit", function()
-        hook.Run( "LambdaOnToolsLoaded" )
-    end )
-else
-    hook.Run( "LambdaOnToolsLoaded" )
-end

@@ -1,17 +1,18 @@
 local table_insert = table.insert
+local random = math.random
+local rand = math.Rand
+
+-- Adds a function to Lambda's Universal Actions
+
 -- Universal actions are functions that are randomly called during run time.
 -- This means Lambda players could randomly change weapons or randomly look at something and ect
 
-ENT.l_UniversalActions = {}
+LambdaUniversalActions = {}
 
--- Adds a function to the Universal Actions
+-- The first arg in the functions is the Lambda Player who called the function
 function AddUActionToLambdaUA( func )
-    table_insert( ENT.l_UniversalActions, func )
+    table_insert( LambdaUniversalActions, func )
 end
-
-local curTime = CurTime
-local random = math.random
-local rand = math.Rand
 
 -- Random weapon switching
 AddUActionToLambdaUA( function( self )
@@ -61,9 +62,9 @@ AddUActionToLambdaUA( function( self )
     self:SetCrouch( true )
 
     local lastState = self:GetState()
-    local crouchTime = curTime() + rand( 1, 30 )
+    local crouchTime = CurTime() + rand( 1, 30 )
     self:NamedTimer( "UnCrouch", 1, 0, function() 
-        if self:GetState() != lastState or curTime() >= crouchTime then
+        if self:GetState() != lastState or CurTime() >= crouchTime then
             self:SetCrouch( false )
             return true
         end
@@ -77,9 +78,9 @@ AddUActionToLambdaUA( function( self )
     if random( 1, 2 ) != 1 or !noclip:GetBool() then return end
     self:NoClipState( true )
 
-    local Nocliptime = curTime() + rand( 1, 120 )
+    local Nocliptime = CurTime() + rand( 1, 120 )
     self:NamedTimer( "UnNoclip", 1, 0, function() 
-        if curTime() >= Nocliptime or !noclip:GetBool() then
+        if CurTime() >= Nocliptime or !noclip:GetBool() then
             self:NoClipState( false )
             return true
         end
@@ -112,9 +113,3 @@ AddUActionToLambdaUA( function( self )
     dmginfo:SetInflictor( self )
     self:LambdaOnKilled( dmginfo )
 end )
-
-
-
--- Called when all default UA actions have been made
--- This hook can be used to add UActions with AddUActionToLambdaUA()
-hook.Run( "LambdaOnUAloaded" )

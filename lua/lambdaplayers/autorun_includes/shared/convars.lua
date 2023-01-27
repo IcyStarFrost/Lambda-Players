@@ -75,8 +75,6 @@ function CreateLambdaColorConvar( name, defaultcolor, isclient, userinfo, desc, 
 end
 
 
--- Why not?
-local CreateLambdaConvar = CreateLambdaConvar 
 
 -- These Convar Functions are capable of creating spawnmenu settings automatically.
 
@@ -166,16 +164,5 @@ CreateLambdaConvar( "lambdaplayers_lambda_spawnatplayerspawns", 0, true, false, 
 CreateLambdaConvar( "lambdaplayers_debug", 0, false, false, false, "Enables the debugging features", 0, 1, { type = "Bool", name = "Enable Debug", category = "Debugging" } )
 AddSourceConVarToSettings( "developer", "Enables Source's Developer mode", { type = "Bool", name = "Developer", category = "Debugging" } )
 --
-
--- Calls this hook when all default convars have been created.
--- This hook can be used to ensure the CreateLambdaConvar() function exists so custom convars can be made
-
-if !LambdaFilesReloaded then -- This is so when the game is loading, the hook is created and if we are already in-game and reload the lua files, the hook will be forced to run
-    hook.Add( "PreGamemodeLoaded", "lambdaconvarinit", function()
-        hook.Run( "LambdaOnConvarsCreated" )
-    end )
-else
-    hook.Run( "LambdaOnConvarsCreated" )
-end
 
 -- Note, Weapon allowing convars are located in the shared/globals.lua

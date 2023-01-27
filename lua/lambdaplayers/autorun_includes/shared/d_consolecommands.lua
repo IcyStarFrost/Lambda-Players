@@ -203,16 +203,3 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedisplaycolor", function( pl
     _LambdaDisplayColor = Color( r:GetInt(), g:GetInt(), b:GetInt() )
 
 end, true, "Applies any changes done to Display Color", { name = "Update Display Color", category = "Misc" } )
-
-
--- Calls this hook when all default console commands have been created.
--- This hook can be used to ensure the CreateLambdaConsoleCommand() function exists so custom console commands can be made
-if !LambdaFilesReloaded then
-    hook.Add( "PreGamemodeLoaded", "lambdaconcommandinit", function()
-        hook.Run( "LambdaOnConCommandsCreated" )
-    end )
-else
-    hook.Run( "LambdaOnConCommandsCreated" )
-end
-
-

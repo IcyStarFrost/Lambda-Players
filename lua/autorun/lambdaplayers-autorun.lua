@@ -1,6 +1,9 @@
 --- Include files in the corresponding folders
 -- Autorun files are seperated in folders unlike the ENT include lua files
 
+
+
+-- Base Addon includes --
 if SERVER then
 
     local serversidefiles = file.Find( "lambdaplayers/autorun_includes/server/*", "LUA", "nameasc" )
@@ -37,12 +40,60 @@ for k, luafile in ipairs( clientsidefiles ) do
         print( "Lambda Players: Included Client Side Lua File [ " .. luafile .. " ]" )
     end
 end
+--
+
+print( "Lambda Players: Preparing to load External Addon Lua Files.." )
+
+-- External Addon Includes --
+if SERVER then
+
+    local serversidefiles = file.Find( "lambdaplayers/extaddon/server/*", "LUA", "nameasc" )
+
+    for k, luafile in ipairs( serversidefiles ) do
+        include( "lambdaplayers/extaddon/server/" .. luafile )
+        print( "Lambda Players: Included Server Side External Lua File [ " .. luafile .. " ]" )
+    end
+
+end
+
+print("\n")
+
+local sharedfiles = file.Find( "lambdaplayers/extaddon/shared/*", "LUA", "nameasc" )
+
+for k, luafile in ipairs( sharedfiles ) do
+    if SERVER then
+        AddCSLuaFile( "lambdaplayers/extaddon/shared/" .. luafile )
+    end
+    include( "lambdaplayers/extaddon/shared/" .. luafile )
+    print( "Lambda Players: Included Shared External Lua File [ " .. luafile .. " ]" )
+end
+
+print("\n")
+
+
+local clientsidefiles = file.Find( "lambdaplayers/extaddon/client/*", "LUA", "nameasc" )
+
+for k, luafile in ipairs( clientsidefiles ) do
+    if SERVER then
+        AddCSLuaFile( "lambdaplayers/extaddon/client/" .. luafile )
+    elseif CLIENT then
+        include( "lambdaplayers/extaddon/client/" .. luafile )
+        print( "Lambda Players: Included Client Side External Lua File [ " .. luafile .. " ]" )
+    end
+end
+
+print( "Lambda Players: Loaded all External Addon Lua Files!")
+--
+
+
+
 
 LambdaFilesReloaded = LambdaFilesReloaded or true
 ---
 
 
 -- Initialize these globals --
+-- These will be run after external addon lua files have been run so it is ensured anything they add is included here
 LambdaPersonalProfiles = LambdaPersonalProfiles or file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
 LambdaPlayerNames = LambdaPlayerNames or LAMBDAFS:GetNameTable()
 LambdaPlayerProps = LambdaPlayerProps or LAMBDAFS:GetPropTable()
@@ -53,4 +104,27 @@ LambdaVoiceProfiles = LambdaVoiceProfiles or LAMBDAFS:GetVoiceProfiles()
 LambdaPlayerSprays = LambdaPlayerSprays or LAMBDAFS:GetSprays()
 LambdaTextTable = LambdaTextTable or LAMBDAFS:GetTextTable()
 LambdaTextProfiles = LambdaTextProfiles or LAMBDAFS:GetTextProfiles()
+--
+
+-- Voice Profiles --
+-- Had to move these here for code order reason
+local combotable = {}
+
+for k, v in pairs( LambdaVoiceProfiles ) do
+    combotable[ k ] = k
+end
+combotable[ "None" ] ="" 
+
+CreateLambdaConvar( "lambdaplayers_lambda_voiceprofile", "", true, true, true, "The Voice Profile your newly spawned Lambda Players should spawn with. Note: This will only work if the server has the specified Voice Profile", 0, 1, { type = "Combo", options = combotable, name = "Voice Profile", category = "Lambda Player Settings" } )
+--
+
+-- Text Profiles --
+combotable = {}
+
+for k, v in pairs( LambdaTextProfiles ) do
+    combotable[ k ] = k
+end
+combotable[ "None" ] = "" 
+
+CreateLambdaConvar( "lambdaplayers_lambda_textprofile", "", true, true, true, "The Text Profile your newly spawned Lambda Players should spawn with. Note: This will only work if the server has the specified Text Profile", 0, 1, { type = "Combo", options = combotable, name = "Text Profile", category = "Lambda Player Settings" } )
 --

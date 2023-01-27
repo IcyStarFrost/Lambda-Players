@@ -73,6 +73,8 @@ local function HandleM9k( self, wep )
     self.l_swepspread = wep.Primary.Spread + 2
     
 end
+
+
 local canmerge = GetConVar( "lambdaplayers_lambda_allowswepmerging" )
 local function LoadSWEPS()
 
@@ -92,8 +94,6 @@ local function LoadSWEPS()
     
 end
 
-if !LambdaFilesReloaded then
-    hook.Add( "InitPostEntity", "lambdaregisterSWEPs", LoadSWEPS )
-else
-    LoadSWEPS()
-end
+
+LoadSWEPS()
+
