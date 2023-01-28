@@ -71,24 +71,20 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
         local ragdoll = ent:BecomeRagdollOnClient()
         InitializeRagdoll( ragdoll, plyColor, ent, force, offset )
     else -- If we are not drawn, do some networking
-        net.Start( "lambdaplayers_server_getpos" ) -- Get the Lambda's actual position from the server
+        net.Start( "lambdaplayers_getlambdavisuals" ) -- Get the Lambda's visuals from the server
             net.WriteEntity( ent )
         net.SendToServer()
 
-        net.Receive( "lambdaplayers_server_sendpos", function() -- Is successful, receive and create a standalone ragdoll entity
-            local ragdoll = ClientsideRagdoll( ent:GetModel() )
+        net.Receive( "lambdaplayers_sendlambdavisuals", function() -- Is successful, receive and create a standalone ragdoll entity
+            local ragdoll = ClientsideRagdoll( net.ReadString() )
+            ragdoll:SetSkin( net.ReadUInt( 5 ) )
+            for k, v in ipairs( net.ReadTable() ) do ragdoll:SetBodygroup( k, v ) end
 
             -- GetPos() doesn't work, so we instead use ragdoll's physics objects
             local entPos = net.ReadVector()
             for i = 0, ragdoll:GetPhysicsObjectCount() - 1 do
                 local phys = ragdoll:GetPhysicsObjectNum( i )
                 if IsValid( phys ) then phys:SetPos( entPos, true ) end
-            end
-
-            ragdoll:SetSkin( ent:GetSkin() )
-            for _, v in ipairs( ent:GetBodyGroups() ) do
-                local groupID = v.id
-                ragdoll:SetBodygroup( groupID, ent:GetBodygroup( groupID ) )
             end
 
             table_insert( _LAMBDAPLAYERS_ClientSideRagdolls, ragdoll ) -- These ragdolls don't get removed on map cleanup, so we instead store them and delete in map cleanup's hook

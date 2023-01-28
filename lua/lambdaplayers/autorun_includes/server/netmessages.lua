@@ -6,6 +6,7 @@ local print = print
 local CurTime = CurTime
 local concommand_Run = concommand.Run
 local hook_Run = hook.Run
+local ipairs = ipairs
 
 -- Due to how some sound files are not .wav, Garry's Mod's SoundDuration() function is completely useless.
 -- So we ask for the help of the client to send us the duration of the sound a Lambda Player is playing-
@@ -39,11 +40,20 @@ net.Receive( "lambdaplayers_onclosebirthdaypanel", function( len, ply )
     _LambdaPlayerBirthdays[ ply:SteamID() ] = { month = month, day = net.ReadUInt( 5 ) }
 end )
 
-net.Receive( "lambdaplayers_server_getpos", function( len, ply )
-    local ent = net.ReadEntity()
-    if !IsValid( ent ) or !isfunction( ent.GetPos ) then return end
+net.Receive( "lambdaplayers_getlambdavisuals", function( len, ply )
+    local lambda = net.ReadEntity()
+    if !IsValid( lambda ) then return end
+        
+    local groupID, mdlBGs = {}
+    for _, v in ipairs( lambda:GetBodyGroups() ) do
+        groupID = v.id
+        mdlBGs[ groupID ] = lambda:GetBodygroup( groupID )
+    end
 
-    net.Start( "lambdaplayers_server_sendpos" )
-        net.WriteVector( net.ReadBool() and ent:GetPos() or ent:WorldSpaceCenter() )
+    net.Start( "lambdaplayers_sendlambdavisuals" )
+        net.WriteString( lambda:GetModel() )
+        net.WriteUInt( lambda:GetSkin(), 5 )
+        net.WriteTable( mdlBGs )
+        net.WriteVector( lambda:WorldSpaceCenter() )
     net.Broadcast()
 end )
