@@ -92,9 +92,9 @@ if SERVER then
         if !self:IsWeaponMarkedNodraw() then
             net.Start( "lambdaplayers_createclientsidedroppedweapon" )
                 net.WriteEntity( ( IsValid( self:GetSWEPWeaponEnt() ) and self:GetSWEPWeaponEnt() or self.WeaponEnt ) )
+                net.WriteEntity( self )
                 net.WriteVector( self:GetPhysColor() )
                 net.WriteString( self:GetWeaponName() )
-                net.WriteEntity( self )
                 net.WriteVector( info:GetDamageForce() )
                 net.WriteVector( info:GetDamagePosition() )
             net.Broadcast()

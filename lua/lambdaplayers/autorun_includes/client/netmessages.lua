@@ -25,7 +25,7 @@ local removeCorpse = GetConVar( "lambdaplayers_removecorpseonrespawn" )
 -- Net sent from ENT:OnKilled()
 net.Receive( "lambdaplayers_becomeragdoll", function() 
     local ent = net.ReadEntity()
-    if !IsValid( ent ) then return end
+    if !IsValid( ent ) or !ent:IsBeingDrawn() then return end
     
     local ragdoll = ent:BecomeRagdollOnClient()
     ragdoll:DrawShadow( true )
@@ -63,6 +63,9 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     local ent = net.ReadEntity()
     if !IsValid( ent ) then return end
 
+    local lambda = net.ReadEntity()
+    if IsValid( lambda ) and !lambda:IsBeingDrawn() then return end
+
     local cs_prop = ents.CreateClientProp( ent:GetModel() )
     cs_prop:SetPos( ent:GetPos() )
     cs_prop:SetAngles( ent:GetAngles() )
@@ -74,6 +77,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
 
     cs_prop:Spawn()
 
+    if IsValid( lambda ) then lambda.cs_prop = cs_prop end 
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, cs_prop )
 
     local wpnName = net.ReadString()
@@ -81,9 +85,6 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
         local dropFunc = _LAMBDAPLAYERSWEAPONS[ wpnName ].OnDrop
         if isfunction( dropFunc ) then dropFunc( cs_prop ) end
     end
-
-    local lambda = net.ReadEntity()
-    if IsValid( lambda ) then lambda.cs_prop = cs_prop end 
 
     local phys = cs_prop:GetPhysicsObject()
     if IsValid( phys ) then
@@ -171,6 +172,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                 if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
                 if RealTime() > RealTime() + length then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
                 if !IsValid( followEnt ) then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
+                if followEnt.IsLambdaPlayer and !followEnt:IsBeingDrawn() then return end
 
                 local ang = EyeAngles()
                 local pos = followEnt:GetPos() + Vector( 0, 0, 80 )
@@ -231,9 +233,10 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                 if RealTime() > RealTime() + length then if usegmodpopups:GetBool() then hook.Run( "PlayerEndVoice", ent ) end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
 
                 tickent = LambdaIsValid( ent ) and ent or IsValid( ent.ragdoll ) and ent.ragdoll or tickent
-                snd:Set3DEnabled( ( !globalvoice:GetBool() and is3d ) )
+                local globalVC = globalvoice:GetBool()
+                snd:Set3DEnabled( ( !globalVC and is3d ) )
 
-                if !globalvoice:GetBool() and !is3d then
+                if !globalVC and !is3d then
                     local ply = LocalPlayer()
                     lastpos = IsValid( tickent ) and tickent:GetPos() or lastpos or origin
 
@@ -246,7 +249,12 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                 else
                     lastpos = IsValid( tickent ) and tickent:GetPos() or lastpos or origin
                     snd:SetPos( lastpos )
-                    volume = voicevolume:GetFloat()
+                    
+                    if !globalVC and IsValid( tickent ) and tickent.IsLambdaPlayer and !tickent:IsBeingDrawn() then
+                        volume = 0
+                    else
+                        volume = voicevolume:GetFloat()
+                    end
                 end
 
                 snd:SetVolume( volume )
