@@ -106,8 +106,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
         net.SendToServer()
 
         net.Receive( "lambdaplayers_server_sendpos", function()
-            local entPos = net.ReadVector()
-            cs_prop:SetPos( entPos )
+            cs_prop:SetPos( net.ReadVector() )
         end )
     else
         cs_prop:SetPos( ent:GetPos() )

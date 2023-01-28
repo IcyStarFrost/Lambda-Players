@@ -40,7 +40,7 @@ net.Receive( "lambdaplayers_onclosebirthdaypanel", function( len, ply )
     _LambdaPlayerBirthdays[ ply:SteamID() ] = { month = month, day = net.ReadUInt( 5 ) }
 end )
 
-net.Receive( "lambdaplayers_getlambdavisuals", function( len, ply )
+net.Receive( "lambdaplayers_getlambdavisuals", function()
     local lambda = net.ReadEntity()
     if !IsValid( lambda ) then return end
 
@@ -55,5 +55,14 @@ net.Receive( "lambdaplayers_getlambdavisuals", function( len, ply )
         net.WriteUInt( lambda:GetSkin(), 5 )
         net.WriteTable( mdlBGs )
         net.WriteVector( lambda:WorldSpaceCenter() )
+    net.Broadcast()
+end )
+
+net.Receive( "lambdaplayers_server_getpos", function()
+    local ent = net.ReadEntity()
+    if !IsValid( ent ) then return end
+
+    net.Start( "lambdaplayers_server_sendpos" )
+        net.WriteVector( ent:GetPos() )
     net.Broadcast()
 end )
