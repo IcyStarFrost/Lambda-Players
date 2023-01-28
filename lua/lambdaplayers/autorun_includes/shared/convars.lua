@@ -54,10 +54,9 @@ local function AddSourceConVarToSettings( cvarname, desc, settingstbl )
 end
 
 function CreateLambdaColorConvar( name, defaultcolor, isclient, userinfo, desc, settingstbl )
-    CreateLambdaConvar( name .. "_r", defaultcolor.r, true, isclient, userinfo, desc, 0, 255, nil )
-    CreateLambdaConvar( name .. "_g", defaultcolor.g, true, isclient, userinfo, desc, 0, 255, nil )
-    CreateLambdaConvar( name .. "_b", defaultcolor.b, true, isclient, userinfo, desc, 0, 255, nil )
-
+    local red = CreateLambdaConvar( name .. "_r", defaultcolor.r, true, isclient, userinfo, desc, 0, 255, nil )
+    local green = CreateLambdaConvar( name .. "_g", defaultcolor.g, true, isclient, userinfo, desc, 0, 255, nil )
+    local blue = CreateLambdaConvar( name .. "_b", defaultcolor.b, true, isclient, userinfo, desc, 0, 255, nil )
 
     if CLIENT then
         settingstbl.red = name .. "_r"
@@ -72,6 +71,8 @@ function CreateLambdaColorConvar( name, defaultcolor, isclient, userinfo, desc, 
         settingstbl.max = max
         table_insert( _LAMBDAConVarSettings, settingstbl )
     end
+
+    return red, green, blue
 end
 
 
