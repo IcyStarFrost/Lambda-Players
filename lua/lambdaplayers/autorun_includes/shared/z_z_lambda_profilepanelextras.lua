@@ -20,13 +20,3 @@ callback( createdpanel, parentpanel )  | Function |  The function that will be c
 function LambdaCreateProfileSetting( panelclass, variablename, category, callback )
     table_insert( LambdaPlayersProfileExternalpanels, { panelclass, variablename, category, callback } )
 end
-
--- Called when the Profile Panel code exists
--- This hook can be used to add settings onto the panel with LambdaCreateProfileSetting() of specific variables that will be applied onto a Lambda's Entity table
-if !LambdaFilesReloaded then -- This is so when the game is loading, the hook is created and if we are already in-game and reload the lua files, the hook will be forced to run
-    hook.Add( "PreGamemodeLoaded", "lambdaprofilepanelinit", function()
-        hook.Run( "LambdaOnProfilePanelLoaded" )
-    end )
-else
-    hook.Run( "LambdaOnProfilePanelLoaded" )
-end

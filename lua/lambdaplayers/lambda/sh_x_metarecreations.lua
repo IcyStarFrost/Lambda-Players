@@ -318,6 +318,7 @@ local QuickTrace = util.QuickTrace
 function ENT:PlayStepSound( volume )
     local result = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32600, self )
     local stepsounds = _LAMBDAPLAYERSFootstepMaterials[ result.MatType ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ]
+    local snd = stepsounds[ random( #stepsounds ) ]
     self:EmitSound( snd, 75, 100, volume )
 end
 
@@ -590,6 +591,7 @@ function ENT:GetPlayerInfo()
         friendid = random( 1, 1000000 ),
         userid = self:EntIndex(),
     }
+    return info
 end
 
 

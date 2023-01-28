@@ -2,8 +2,6 @@ local table_remove = table.remove
 local table_insert = table.insert
 local IsValid = IsValid
 local ipairs = ipairs
-local pairs = pairs
-
 -- This is a nice and easy way of setting up a limit like Prop Limits, NPC limits, and ect
 
 -- Gets the limit

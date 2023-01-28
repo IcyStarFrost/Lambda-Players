@@ -40,7 +40,6 @@ end
     local random = math.random
     local rand = math.Rand
     local SortTable = table.sort
-    local aidisable = GetConVar( "ai_disabled" )
     local developer = GetConVar( "developer" )
     local isfunction = isfunction
     local Lerp = Lerp
@@ -51,13 +50,11 @@ end
     local IsValid = IsValid
     local coroutine = coroutine
     local debugoverlay = debugoverlay
-    local table_Random = table.Random
     local table_GetKeys = table.GetKeys
     local voicepitchmin = GetConVar( "lambdaplayers_voice_voicepitchmin" )
     local voicepitchmax = GetConVar( "lambdaplayers_voice_voicepitchmax" )
     local drawflashlight = GetConVar( "lambdaplayers_drawflashlights" )
     local profilechance = GetConVar( "lambdaplayers_lambda_profileusechance" )
-    local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
     local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
     local onlyaddonmodels = GetConVar( "lambdaplayers_lambda_onlyaddonmodels" ) 
     local ents_Create = ents and ents.Create or nil
@@ -72,7 +69,6 @@ end
     local InSinglePlayer = game.SinglePlayer
     local Clamp = math.Clamp
     local min = math.min
-    local IsInWorld = util.IsInWorld
     local isvector = isvector
     local color_white = color_white
     local RandomPairs = RandomPairs
@@ -84,7 +80,6 @@ end
     local zerovector = Vector()
     local RealTime = RealTime
     local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
-    local tracetable = {}
     local collisionmins = Vector( -16, -16, 0 )
     local standingcollisionmaxs = Vector( 16, 16, 72 )
     local crouchingcollisionmaxs = Vector( 16, 16, 36 )
@@ -528,7 +523,7 @@ function ENT:Think()
         -- UA, Universal Actions
         -- See sv_x_universalactions.lua
         if CurTime() > self.l_nextUA and !self:IsDisabled() then
-            local UAfunc = self.l_UniversalActions[ random( #self.l_UniversalActions ) ]
+            local UAfunc = LambdaUniversalActions[ random( #LambdaUniversalActions ) ]
             UAfunc( self )
             self.l_nextUA = CurTime() + rand( 1, 15 )
         end
@@ -682,25 +677,25 @@ function ENT:Think()
             local aimangle = ( pos - self:GetAttachmentPoint( "eyes" ).Pos ):Angle()
 
             local loca = self:WorldToLocalAngles( aimangle )
-            local approachy = Lerp( 5 * FrameTime(), self:GetPoseParameter('head_yaw'), loca[2] )
-            local approachp = Lerp( 5 * FrameTime(), self:GetPoseParameter('head_pitch'), loca[1] )
-            local approachaimy = Lerp( 5 * FrameTime(), self:GetPoseParameter('aim_yaw'), loca[2] )
-            local approachaimp = Lerp( 5 * FrameTime(), self:GetPoseParameter('aim_pitch'), loca[1] )
+            local approachy = Lerp( 5 * FrameTime(), self:GetPoseParameter("head_yaw"), loca[2] )
+            local approachp = Lerp( 5 * FrameTime(), self:GetPoseParameter("head_pitch"), loca[1] )
+            local approachaimy = Lerp( 5 * FrameTime(), self:GetPoseParameter("aim_yaw"), loca[2] )
+            local approachaimp = Lerp( 5 * FrameTime(), self:GetPoseParameter("aim_pitch"), loca[1] )
 
-            self:SetPoseParameter( 'head_yaw', approachy )
-            self:SetPoseParameter( 'head_pitch', approachp )
-            self:SetPoseParameter( 'aim_yaw', approachaimy )
-            self:SetPoseParameter( 'aim_pitch', approachaimp )
+            self:SetPoseParameter( "head_yaw", approachy )
+            self:SetPoseParameter( "head_pitch", approachp )
+            self:SetPoseParameter( "aim_yaw", approachaimy )
+            self:SetPoseParameter( "aim_pitch", approachaimp )
         else
-            local approachy = Lerp( 4 * FrameTime(), self:GetPoseParameter('head_yaw'), 0 )
-            local approachp = Lerp( 4 * FrameTime(), self:GetPoseParameter('head_pitch'), 0 )
-            local approachaimy = Lerp( 4 * FrameTime(), self:GetPoseParameter('aim_yaw'), 0 )
-            local approachaimp = Lerp( 4 * FrameTime(), self:GetPoseParameter('aim_pitch'), 0 )
+            local approachy = Lerp( 4 * FrameTime(), self:GetPoseParameter("head_yaw"), 0 )
+            local approachp = Lerp( 4 * FrameTime(), self:GetPoseParameter("head_pitch"), 0 )
+            local approachaimy = Lerp( 4 * FrameTime(), self:GetPoseParameter("aim_yaw"), 0 )
+            local approachaimp = Lerp( 4 * FrameTime(), self:GetPoseParameter("aim_pitch"), 0 )
 
-            self:SetPoseParameter( 'head_yaw', approachy )
-            self:SetPoseParameter( 'head_pitch', approachp )
-            self:SetPoseParameter( 'aim_yaw', approachaimy )
-            self:SetPoseParameter( 'aim_pitch', approachaimp )
+            self:SetPoseParameter( "head_yaw", approachy )
+            self:SetPoseParameter( "head_pitch", approachp )
+            self:SetPoseParameter( "aim_yaw", approachaimy )
+            self:SetPoseParameter( "aim_pitch", approachaimp )
         end
 
 

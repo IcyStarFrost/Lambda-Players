@@ -7,7 +7,6 @@ local IsValid = IsValid
 local math_Clamp = math.Clamp
 local random = math.random
 local sub = string.sub
-local Left = string.Left
 local cam = cam
 local net = net
 local hook = hook

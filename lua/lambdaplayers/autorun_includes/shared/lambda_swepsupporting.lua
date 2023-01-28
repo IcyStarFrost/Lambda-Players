@@ -1,5 +1,3 @@
-local table_insert = table.insert
-
 LambdaSupportedSweps = {}
 _LAMBDAWEAPONCLASSANDPRINTS = {}
 
@@ -47,7 +45,6 @@ end
 -- These functions are called when the weapon is equipped. We use this to pretty much configure the Lambda's combat 
 local function HandleARCCW( self, wep )
 
-    local min, max, delay = wep:GetNPCBurstSettings() -- Get the fire rate
     -- The variables below are important
 
     self.l_HasLethal = true -- If the weapon is lethal
@@ -76,6 +73,8 @@ local function HandleM9k( self, wep )
     self.l_swepspread = wep.Primary.Spread + 2
     
 end
+
+
 local canmerge = GetConVar( "lambdaplayers_lambda_allowswepmerging" )
 local function LoadSWEPS()
 
@@ -95,8 +94,6 @@ local function LoadSWEPS()
     
 end
 
-if !LambdaFilesReloaded then
-    hook.Add( "InitPostEntity", "lambdaregisterSWEPs", LoadSWEPS )
-else
-    LoadSWEPS()
-end
+
+LoadSWEPS()
+

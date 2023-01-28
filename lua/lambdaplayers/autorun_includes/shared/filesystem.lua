@@ -8,7 +8,6 @@ local table_RemoveByValue = table.RemoveByValue
 local ipairs = ipairs
 local table_HasValue = table.HasValue
 local table_Add = table.Add
-local table_GetKeys = table.GetKeys
 local mergevoicelines = GetConVar( "lambdaplayers_voice_mergeaddonvoicelines" )
 local mergedefaulttextlines = GetConVar( "lambdaplayers_text_usedefaultlines" )
 local mergeaddontextlines = GetConVar( "lambdaplayers_text_useaddonlines" )
@@ -344,13 +343,3 @@ end
 
 
 
-LambdaPersonalProfiles = LambdaPersonalProfiles or file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
-LambdaPlayerNames = LambdaPlayerNames or LAMBDAFS:GetNameTable()
-LambdaPlayerProps = LambdaPlayerProps or LAMBDAFS:GetPropTable()
-LambdaPlayerMaterials = LambdaPlayerMaterials or LAMBDAFS:GetMaterialTable()
-Lambdaprofilepictures = Lambdaprofilepictures or LAMBDAFS:GetProfilePictures()
-LambdaVoiceLinesTable = LambdaVoiceLinesTable or LAMBDAFS:GetVoiceLinesTable()
-LambdaVoiceProfiles = LambdaVoiceProfiles or LAMBDAFS:GetVoiceProfiles()
-LambdaPlayerSprays = LambdaPlayerSprays or LAMBDAFS:GetSprays()
-LambdaTextTable = LambdaTextTable or LAMBDAFS:GetTextTable()
-LambdaTextProfiles = LambdaTextProfiles or LAMBDAFS:GetTextProfiles()
