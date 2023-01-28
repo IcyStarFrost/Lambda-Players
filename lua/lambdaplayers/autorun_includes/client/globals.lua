@@ -11,6 +11,7 @@ local table_remove = table.remove
 
 _LAMBDAPLAYERS_ClientSideEnts = {}
 _LAMBDAPLAYERS_Voicechannels = {}
+_LAMBDAPLAYERS_ClientSideRagdolls = {}
 
 -- Physgun color proxy
 matproxy.Add({
