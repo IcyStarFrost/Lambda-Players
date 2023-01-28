@@ -312,7 +312,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                     local leftC, rightC = snd:GetLevel()
                     local voiceLvl = ((leftC + rightC) / 2)
 
-                    local voicelvlent = ( tickent.IsLambdaPlayer and tickent or ( IsValid( tickent.LambdaOwner ) and tickent.LambdaOwner or tickent ) )
+                    local voicelvlent = ( tickent.IsLambdaPlayer and tickent or ( IsValid( tickent.LambdaOwner ) and tickent.LambdaOwner ) )
                     if IsValid( voicelvlent ) then voicelvlent:SetVoiceLevel( voiceLvl ) end
 
                     snd:SetPos( tickent:GetPos() ) 
