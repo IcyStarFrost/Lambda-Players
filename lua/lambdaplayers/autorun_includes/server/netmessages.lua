@@ -43,8 +43,8 @@ end )
 net.Receive( "lambdaplayers_getlambdavisuals", function( len, ply )
     local lambda = net.ReadEntity()
     if !IsValid( lambda ) then return end
-        
-    local groupID, mdlBGs = {}
+
+    local mdlBGs, groupID = {}
     for _, v in ipairs( lambda:GetBodyGroups() ) do
         groupID = v.id
         mdlBGs[ groupID ] = lambda:GetBodygroup( groupID )
