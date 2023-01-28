@@ -4,8 +4,8 @@ local ents_FindInSphere = ents.FindInSphere
 local ipairs = ipairs
 local random = math.random
 local IsValid = IsValid
-local distance = GetConVar('lambdaplayers_force_radius')
-local spawnatplayerpoints = GetConVar( "lambdaplayers_lambda_spawnatplayerspawns" )
+local distance = GetConVar( "lambdaplayers_force_radius" )
+
 
 -- The reason this lua file has a d_ in its filename is because of the order on how lua files are loaded.
 -- If we didn't do this, we wouldn't have _LAMBDAConVarSettings 
@@ -16,7 +16,11 @@ function CreateLambdaConsoleCommand( name, func, isclient, helptext, settingstbl
     
     if isclient and SERVER then return end
 
-    concommand.Add( name, func, nil, helptext )
+    if isclient then
+        concommand.Add( name, func, nil, helptext )
+    elseif !isclient and SERVER then
+        concommand.Add( name, func, nil, helptext )
+    end
 
     if CLIENT and settingstbl then
         settingstbl.concmd = name
@@ -100,7 +104,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply 
 
     if !spawnatplayerpoints:GetBool() then
 
-        //need a cleaner way for this navmesh stuff
+        -- need a cleaner way for this navmesh stuff
 
         area = areas[ random( #areas ) ]
         if !area or !area:IsValid() then
@@ -203,16 +207,3 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedisplaycolor", function( pl
     _LambdaDisplayColor = Color( r:GetInt(), g:GetInt(), b:GetInt() )
 
 end, true, "Applies any changes done to Display Color", { name = "Update Display Color", category = "Misc" } )
-
-
--- Calls this hook when all default console commands have been created.
--- This hook can be used to ensure the CreateLambdaConsoleCommand() function exists so custom console commands can be made
-if !LambdaFilesReloaded then
-    hook.Add( "PreGamemodeLoaded", "lambdaconcommandinit", function()
-        hook.Run( "LambdaOnConCommandsCreated" )
-    end )
-else
-    hook.Run( "LambdaOnConCommandsCreated" )
-end
-
-

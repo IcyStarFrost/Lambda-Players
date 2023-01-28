@@ -114,13 +114,3 @@ AddBuildFunctionToLambdaBuildingFunctions( "npc", "Allow NPC Spawning", "If Lamb
 AddBuildFunctionToLambdaBuildingFunctions( "entity", "Allow Entity Spawning", "If Lambda Players are allowed to spawn Entities", SpawnEntity )
 AddBuildFunctionToLambdaBuildingFunctions( "spray", "Allow Sprays", "If Lambda Players are allowed to place Sprays", Spray )
 table_insert( LambdaBuildingFunctions, { "prop", GetConVar( "lambdaplayers_building_allowprop" ), SpawnAPropandPickUp } ) -- Pretty much made this be connected to the prop spawning option
-
--- Called when all default building functions above have been loaded.
--- This hook can be used to add more building functions with AddBuildFunctionToLambdaBuildingFunctions()
-if !LambdaFilesReloaded then -- This is so when the game is loading, the hook is created and if we are already in-game and reload the lua files, the hook will be forced to run
-    hook.Add( "PreGamemodeLoaded", "lambdabuildingfuncsinit", function()
-        hook.Run( "LambdaOnBuildFunctionsLoaded" )
-    end )
-else
-    hook.Run( "LambdaOnBuildFunctionsLoaded" )
-end

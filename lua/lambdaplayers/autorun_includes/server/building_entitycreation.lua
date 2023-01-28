@@ -48,27 +48,20 @@ end
 function LambdaSpawn_SENT( ply, EntityName, tr )
 
 	local entity = nil
-	local PrintName = nil
 	local sent = scripted_ents.GetStored( EntityName )
 
 	if ( sent ) then
 
 		local sent = sent.t
 
-		ClassName = EntityName
+		local SpawnFunction = scripted_ents.GetMember( EntityName, "SpawnFunction" )
+		if ( !SpawnFunction ) then return end -- Fallback to default behavior below?
 
-			local SpawnFunction = scripted_ents.GetMember( EntityName, "SpawnFunction" )
-			if ( !SpawnFunction ) then return end -- Fallback to default behavior below?
+		entity = SpawnFunction( sent, ply, tr, EntityName )
 
-			entity = SpawnFunction( sent, ply, tr, EntityName )
-
-			if ( IsValid( entity ) ) then
-				entity:SetCreator( ply )
-			end
-
-		ClassName = nil
-
-		PrintName = sent.PrintName
+		if ( IsValid( entity ) ) then
+			entity:SetCreator( ply )
+		end
 
 	else
 
@@ -78,8 +71,6 @@ function LambdaSpawn_SENT( ply, EntityName, tr )
 
 		local EntTable = SpawnableEntities[ EntityName ]
 		if ( !EntTable ) then return end
-
-		PrintName = EntTable.PrintName
 
 		local SpawnPos = tr.HitPos + tr.HitNormal * 16
 		if ( EntTable.NormalOffset ) then SpawnPos = SpawnPos + tr.HitNormal * EntTable.NormalOffset end

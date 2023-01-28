@@ -1,6 +1,4 @@
 local table_insert = table.insert
-local pairs = pairs
-local table_GetKeys = table.GetKeys
 
 -- Will be used for presets
 _LAMBDAPLAYERSCONVARS = {}
@@ -27,7 +25,7 @@ function CreateLambdaConvar( name, val, shouldsave, isclient, userinfo, desc, mi
     if isclient then
         convar = CreateClientConVar( name, tostring( val ), shouldsave, userinfo, desc, min, max )
     else
-        convar = CreateConVar( name, tostring( val ), shouldsave and FCVAR_ARCHIVE or FCVAR_NONE, desc, min, max )
+        convar = CreateConVar( name, tostring( val ), shouldsave and ( FCVAR_ARCHIVE + FCVAR_REPLICATED ) or ( FCVAR_NONE + FCVAR_REPLICATED ), desc, min, max )
     end
 
     
@@ -77,8 +75,6 @@ function CreateLambdaColorConvar( name, defaultcolor, isclient, userinfo, desc, 
 end
 
 
--- Why not?
-local CreateLambdaConvar = CreateLambdaConvar 
 
 -- These Convar Functions are capable of creating spawnmenu settings automatically.
 
@@ -108,7 +104,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_allowkillbind", 0, true, false, false,
 CreateLambdaConvar( "lambdaplayers_lambda_fakeisplayer", 0, true, false, false, "If the addon should make Lua think Lambda Players are real players. This is required for SWEP support! This will make addons think Lambdas are real players. WARNING!!!! THIS MAY OR MAY NOT WORK AS INTENDED AND THIS MAY CAUSE ISSUES WITH OTHER ADDONS. IF YOU ENCOUNTER ISSUES WITH THIS, DO NOT BE SURPRISED. THIS IS DOING THE BEST IT CAN!", 0, 1, { type = "Bool", name = "Fake IsPlayer", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_allowswepmerging", 0, true, false, false, "If the addon should add registered SWEPs to Lambda's weapons. You must have Fake IsPlayer turned on! You must restart the server for changes to take effect! WARNING!!!! THIS MAY OR MAY NOT WORK AS INTENDED. IF YOU ENCOUNTER ISSUES WITH THIS, DO NOT BE SURPRISED. THIS IS DOING THE BEST IT CAN!", 0, 1, { type = "Bool", name = "Merge Registered SWEPs", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_allowrandomaddonsmodels", 0, true, false, false, "If Lambda Players can use random addon playermodels", 0, 1, { type = "Bool", name = "Addon Playermodels", category = "Lambda Server Settings" } )
-CreateLambdaConvar( "lambdaplayers_lambda_allowrandomskinsandbodygroups", 0, true, false, false, "If Lambda Players can have their model's skins and bodygroups randomized", 0, 1, { type = "Bool", name = "Addon Random Skins & Bodygroups", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_allowrandomskinsandbodygroups", 0, true, false, false, "If Lambda Players can have their model's skins and bodygroups randomized", 0, 1, { type = "Bool", name = "Random Skins & Bodygroups", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_voiceprofileusechance", 0, true, false, false, "The chance a Lambda Player will use a random Voice Profile if one exists. Set to 0 to disable", 0, 100, { type = "Slider", decimals = 0, name = "VP Use Chance", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_textprofileusechance", 0, true, false, false, "The chance a Lambda Player will use a random Text Profile if one exists. Set to 0 to disable", 0, 100, { type = "Slider", decimals = 0, name = "TP Use Chance", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_profileusechance", 0, true, false, false, "The chance a Lambda will spawn with a profile that isn't being used. Normally profile Lambda Players only spawn when a Lambda Player has the profile's name. This chance can make profiles appear more often. Do not confuse this with Voice Profiles!", 0, 100, { type = "Slider", decimals = 0, name = "Profile Use Chance", category = "Lambda Server Settings" } )
@@ -168,16 +164,5 @@ CreateLambdaConvar( "lambdaplayers_lambda_spawnatplayerspawns", 0, true, false, 
 CreateLambdaConvar( "lambdaplayers_debug", 0, false, false, false, "Enables the debugging features", 0, 1, { type = "Bool", name = "Enable Debug", category = "Debugging" } )
 AddSourceConVarToSettings( "developer", "Enables Source's Developer mode", { type = "Bool", name = "Developer", category = "Debugging" } )
 --
-
--- Calls this hook when all default convars have been created.
--- This hook can be used to ensure the CreateLambdaConvar() function exists so custom convars can be made
-
-if !LambdaFilesReloaded then -- This is so when the game is loading, the hook is created and if we are already in-game and reload the lua files, the hook will be forced to run
-    hook.Add( "PreGamemodeLoaded", "lambdaconvarinit", function()
-        hook.Run( "LambdaOnConvarsCreated" )
-    end )
-else
-    hook.Run( "LambdaOnConvarsCreated" )
-end
 
 -- Note, Weapon allowing convars are located in the shared/globals.lua

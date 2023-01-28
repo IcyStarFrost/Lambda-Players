@@ -1,4 +1,3 @@
-local table_insert = table.insert
 local pairs = pairs
 local string_find = string.find
 local tostring = tostring
@@ -194,7 +193,7 @@ function LambdaHijackGmodEntity( ent, lambda )
     
         -- See if the player has left the server then rejoined
         local ply = lambda
-        if ( not IsValid( ply ) ) then
+        if ( !IsValid( ply ) ) then
     
             -- Oh well
             return NULL
@@ -245,11 +244,6 @@ end
 local meta = FindMetaTable( "Entity" )
 
 
-local oldnet = net.Send
-function net.Send( ply )
-    if ply.IsLambdaPlayer then ply = RecipientFilter( true ) end
-    oldnet( ply )
-end
 
 
 local oldisplayer = meta.IsPlayer

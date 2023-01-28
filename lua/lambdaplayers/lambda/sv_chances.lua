@@ -1,6 +1,5 @@
 local ipairs = ipairs
 local random = math.random
-local VectorRand = VectorRand
 local rand = math.Rand
 
 local function Get100Percents( tbl )

@@ -1,4 +1,3 @@
-local table_Merge = table.Merge
 local ipairs = ipairs
 
 -- Toolgun tools are made in autorun_includes/shared/lambda_toolguntools.lua

@@ -3,10 +3,8 @@ local IsValid = IsValid
 local ipairs = ipairs
 local table_remove = table.remove
 local RealTime = RealTime
-local ScreenScale = ScreenScale
 local LambdaScreenScale = LambdaScreenScale
 local Left = string.Left
-local placeholdercolor = Color( 255, 136, 0 )
 
 if SERVER then
 

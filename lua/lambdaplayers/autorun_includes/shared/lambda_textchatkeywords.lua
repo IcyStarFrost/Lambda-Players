@@ -1,10 +1,8 @@
 local table_Add = table.Add
-local random = math.random
 local player_GetAll = player.GetAll
 local pairs = pairs
 local string_find = string.find
 local RandomPairs = RandomPairs
-local gmatch = string.gmatch
 local IsValid = IsValid
 local table_Count = table.Count
 local unpack = unpack
@@ -333,13 +331,3 @@ LambdaAddConditionalKeyWord( "|4thjuly|", Is4thofJuly )
 LambdaAddConditionalKeyWord( "|easter|", IsEaster )
 ------------------------------------------------------
 
-
-
--- LambdaAddKeyWords hook allows you to use LambdaAddTextChatKeyWord() and LambdaAddConditionalKeyWord() externally
-if !LambdaFilesReloaded then
-    hook.Add( "PreGamemodeLoaded", "lambdakeywordinit", function()
-        hook.Run( "LambdaAddKeyWords" )
-    end )
-else
-    hook.Run( "LambdaAddKeyWords" )
-end

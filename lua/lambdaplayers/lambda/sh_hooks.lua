@@ -1,11 +1,8 @@
 
-local SimpleTimer = timer.Simple
 local random = math.random
-local ents_Create = ents.Create
 local tobool = tobool
 local undo = undo
 local ents_GetAll = ents.GetAll
-local table_Merge = table.Merge
 local isfunction = isfunction
 local ipairs = ipairs
 local bor = bit.bor
@@ -18,7 +15,6 @@ local rand = math.Rand
 local deathdir = GetConVar( "lambdaplayers_voice_deathdir" )
 local killdir = GetConVar( "lambdaplayers_voice_killdir" )
 local debugvar = GetConVar( "lambdaplayers_debug" )
-local voicevar = GetConVar( "lambdaplayers_personality_voicechance" )
 local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 local callnpchook = GetConVar( "lambdaplayers_lambda_callonnpckilledhook" )
 local idledir = GetConVar( "lambdaplayers_voice_idledir" )
@@ -158,7 +154,6 @@ if SERVER then
 
         -- If we killed the victim
         if attacker == self then
-            local killlines = LambdaVoiceLinesTable.kill
             self:DebugPrint( "killed ", victim )
             self:SetFrags( self:GetFrags() + 1 )
 
@@ -175,8 +170,6 @@ if SERVER then
             end
 
             if !victim.IsLambdaPlayer then LambdaKillFeedAdd( victim, info:GetAttacker(), info:GetInflictor() ) end
-        else -- Someone else killed the victim
-
         end
 
         if victim == self:GetEnemy() then
@@ -325,7 +318,6 @@ if SERVER then
     } 
 
     
-    local allowrespawn = GetConVar( "lambdaplayers_lambda_allownonadminrespawn" )
     function ENT:OnSpawnedByPlayer( ply )
         local respawn = tobool( ply:GetInfoNum( "lambdaplayers_lambda_shouldrespawn", 0 ) )
         local weapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )

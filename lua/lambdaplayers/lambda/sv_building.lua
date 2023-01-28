@@ -6,7 +6,6 @@ local table_insert = table.insert
 local table_remove = table.remove
 local tobool = tobool
 local Angle = Angle
-local table_Merge = table.Merge
 local table_RemoveByValue = table.RemoveByValue
 local table_GetKeys = table.GetKeys
 local caneditworld = GetConVar( "lambdaplayers_building_caneditworld" )
