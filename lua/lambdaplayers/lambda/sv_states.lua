@@ -213,7 +213,7 @@ function ENT:RetreatFromCombat()
     self:MoveToPos( rndPos, retreatOptions )
 
     local target = self.l_RetreatTarget
-    if !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 500 ) then 
+    if !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 500 ) or CurTime() > self.l_retreatendtime then 
         self:SetState( "Idle" ) 
         self.l_RetreatTarget = NULL
     end

@@ -150,6 +150,7 @@ if SERVER then
             if self:Health() < hpThreshold then
                 self:CancelMovement()
                 self:SetEnemy( NULL )
+                self.l_retreatendtime = CurTime() + random( 5, 15 )
                 self.l_RetreatTarget = attacker
                 self:SetState( "RetreatFromCombat" )
                 return
