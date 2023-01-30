@@ -53,10 +53,10 @@ end
     local table_GetKeys = table.GetKeys
     local voicepitchmin = GetConVar( "lambdaplayers_voice_voicepitchmin" )
     local voicepitchmax = GetConVar( "lambdaplayers_voice_voicepitchmax" )
-    local idledir = GetConVar( "lambdaplayers_voice_idledir" )
     local drawflashlight = GetConVar( "lambdaplayers_drawflashlights" )
     local profilechance = GetConVar( "lambdaplayers_lambda_profileusechance" )
     local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
+    local onlyaddonmodels = GetConVar( "lambdaplayers_lambda_onlyaddonmodels" ) 
     local ents_Create = ents and ents.Create or nil
     local navmesh_GetNavArea = navmesh and navmesh.GetNavArea or nil
     local navmesh_Find = navmesh and navmesh.Find or nil 
@@ -103,10 +103,13 @@ function ENT:Initialize()
     self:BuildPersonalityTable() -- Builds all personality chances from autorun_includes/shared/lambda_personalityfuncs.lua for use in chance testing and creates Get/Set functions for each one
 
     if SERVER then
-    
-
-        self:SetModel( allowaddonmodels:GetBool() and _LAMBDAPLAYERS_Allplayermodels[ random( #_LAMBDAPLAYERS_Allplayermodels ) ] or _LAMBDAPLAYERSDEFAULTMDLS[ random( #_LAMBDAPLAYERSDEFAULTMDLS ) ] )
-
+        
+        local mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels
+        if allowaddonmodels:GetBool() then
+            mdlTbl = ( onlyaddonmodels:GetBool() and _LAMBDAPLAYERS_AddonPlayermodels or _LAMBDAPLAYERS_AllPlayermodels )
+            if #mdlTbl == 0 then mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels end
+        end    
+        self:SetModel( mdlTbl[ random( #mdlTbl ) ] )
 
         self.l_SpawnedEntities = {} -- The table holding every entity we have spawned
         self.l_ExternalVars = {} -- The table holding any custom variables external addons want saved onto the Lambda so it can exported along with other Lambda Info
@@ -154,6 +157,7 @@ function ENT:Initialize()
         self.l_nextswimposupdate = 0 -- the next time we will update our swimming position
         self.l_ladderfailtimer = CurTime() + 15 -- The time until we are removed and recreated due to Gmod issues with nextbots and ladders. Thanks Facepunch
         self.l_NextWeaponThink = 0 -- The next time we will run the currenly held weapon's think callback
+        self.l_CurrentPlayedGesture = -1 -- Gesture ID that is assigned when the ENT:PlayGestureAndWait( id ) function is ran
 
 
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
@@ -425,7 +429,7 @@ function ENT:Think()
         if !self:IsDisabled() and !self:GetIsTyping() and CurTime() > self.l_nextidlesound then
             
             if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() then
-                self:PlaySoundFile( idledir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "idle" ), true )
+                self:PlaySoundFile( self:GetVoiceLine( "idle" ), true )
             elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
                 self:TypeMessage( self:GetTextLine( "idle" ) )
             end

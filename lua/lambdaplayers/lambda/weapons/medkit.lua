@@ -39,7 +39,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 self:UseWeapon( self ) 
             elseif self:GetState() == "Idle" and self.l_Clip >= 20 and random( 1, 2 ) == 1 and random( 1, 100 ) > self:GetCombatChance() then
                 local nearby = self:FindInSphere( self:GetPos(), 500, function( ent ) 
-                    return ( self:CanTarget( ent ) and ent:Health() < ent:GetMaxHealth() ) 
+                    return ( ent:Health() < ent:GetMaxHealth() and self:CanTarget( ent ) and self:CanSee( ent ) ) 
                 end )
                 local rndEnt = nearby[ random( #nearby ) ]
                 if IsValid( rndEnt ) then

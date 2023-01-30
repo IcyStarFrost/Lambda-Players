@@ -183,5 +183,11 @@ elseif CLIENT then
         end
     end )
 
+    -- Removes ragdolls that are were created while not drawn in clientside
+    hook.Add( "PreCleanupMap", "LambdaPlayers_OnPreCleanupMap", function()
+        for _, v in ipairs( _LAMBDAPLAYERS_ClientSideRagdolls ) do
+            if IsValid( v ) then v:Remove() end
+        end
+    end )
 
 end

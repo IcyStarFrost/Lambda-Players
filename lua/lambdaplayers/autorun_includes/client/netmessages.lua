@@ -1,8 +1,10 @@
 
 local LambdaIsValid = LambdaIsValid
 local table_insert = table.insert
+local timer_Simple = timer.Simple
 local RealTime = RealTime
 local IsValid = IsValid
+local CurTime = CurTime
 local math_Clamp = math.Clamp
 local random = math.random
 local sub = string.sub
@@ -11,6 +13,11 @@ local net = net
 local hook = hook
 local surface = surface
 local LocalPlayer = LocalPlayer
+local ipairs = ipairs
+local ClientsideRagdoll = ClientsideRagdoll
+local EyeAngles = EyeAngles
+local sound_PlayFile = sound.PlayFile
+local coroutine_yield = coroutine.yield
 local origin = Vector()
 local cleanuptime = GetConVar( "lambdaplayers_corpsecleanuptime" )
 local cleaneffect = GetConVar( "lambdaplayers_corpsecleanupeffect" )
@@ -19,90 +26,132 @@ local globalvoice = GetConVar(  "lambdaplayers_voice_globalvoice" )
 local stereowarn = GetConVar( "lambdaplayers_voice_warnvoicestereo" )
 local voicevolume = GetConVar( "lambdaplayers_voice_voicevolume" )
 local usegmodpopups = GetConVar( "lambdaplayers_voice_usegmodvoicepopups" )
+local removeCorpse = GetConVar( "lambdaplayers_removecorpseonrespawn" )
+
+-- Applies all values to clientside ragdoll
+local function InitializeRagdoll( ragdoll, color, lambda, force, offset )
+    ragdoll:SetNoDraw( false )
+    ragdoll:DrawShadow( true )
+    ragdoll.GetPlayerColor = function() return color end
+
+    ragdoll.LambdaOwner = lambda
+    lambda.ragdoll = ragdoll
+    table_insert( _LAMBDAPLAYERS_ClientSideEnts, ragdoll )
+
+    for i = 1, 3 do
+        local phys = ragdoll:GetPhysicsObjectNum( i )
+        if IsValid( phys ) then phys:ApplyForceOffset( force, offset ) end
+    end
+
+    if cleanuptime:GetInt() != 0 then 
+        local startTime = CurTime()
+        LambdaCreateThread( function()
+            while ( CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and CurTime() < lambda:GetLastSpeakingTime() ) do 
+                if !IsValid( ragdoll ) then return end
+                coroutine_yield() 
+            end
+            if !IsValid( ragdoll ) then return end
+
+            if cleaneffect:GetBool() then ragdoll:LambdaDisintegrate() return end 
+            ragdoll:Remove()
+        end ) 
+    end
+end
 
 -- Net sent from ENT:OnKilled()
 net.Receive( "lambdaplayers_becomeragdoll", function() 
     local ent = net.ReadEntity()
-    local force = net.ReadVector()
-    local offset = net.ReadVector()
-    local colvec = net.ReadVector()
-
     if !IsValid( ent ) then return end
 
-    local ragdoll = ent:BecomeRagdollOnClient()
-    ragdoll:DrawShadow( true )
-    ragdoll.GetPlayerColor = function() return colvec end
+    local plyColor = net.ReadVector()
+    local force = net.ReadVector()
+    local offset = net.ReadVector()
 
-    ragdoll.LambdaOwner = ent
-    ent.ragdoll = ragdoll
+    if ent:IsBeingDrawn() then -- If we are drawn, do it in normal way
+        local ragdoll = ent:BecomeRagdollOnClient()
+        InitializeRagdoll( ragdoll, plyColor, ent, force, offset )
+    else -- If we are not drawn, do some networking
+        net.Start( "lambdaplayers_getlambdavisuals" ) -- Get the Lambda's visuals from the server
+            net.WriteEntity( ent )
+        net.SendToServer()
 
-    local time = cleanuptime:GetInt()
+        net.Receive( "lambdaplayers_sendlambdavisuals", function() -- Is successful, receive and create a standalone ragdoll entity
+            local ragdoll = ClientsideRagdoll( net.ReadString() )
+            ragdoll:SetSkin( net.ReadUInt( 5 ) )
+            for k, v in ipairs( net.ReadTable() ) do ragdoll:SetBodygroup( k, v ) end
 
-    if time != 0 then 
-        timer.Simple( time , function()
-            if cleaneffect:GetBool() and IsValid( ragdoll ) then
-                ragdoll:LambdaDisintegrate()
-            elseif IsValid( ragdoll ) then 
-                ragdoll:Remove()
-            end 
-        end ) 
+            -- GetPos() doesn't work, so we instead use ragdoll's physics objects
+            local entPos = net.ReadVector()
+            for i = 0, ragdoll:GetPhysicsObjectCount() - 1 do
+                local phys = ragdoll:GetPhysicsObjectNum( i )
+                if IsValid( phys ) then phys:SetPos( entPos, true ) end
+            end
+
+            table_insert( _LAMBDAPLAYERS_ClientSideRagdolls, ragdoll ) -- These ragdolls don't get removed on map cleanup, so we instead store them and delete in map cleanup's hook
+            InitializeRagdoll( ragdoll, plyColor, ent, force, offset )
+        end )
     end
-
-    table_insert( _LAMBDAPLAYERS_ClientSideEnts, ragdoll )
-
-    for i=1, 3 do
-        local phys = ent.ragdoll:GetPhysicsObjectNum( i )
-
-        if IsValid( phys ) then
-            phys:ApplyForceOffset( force, offset )
-        end
-
-    end
-
 end )
 
 net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     local ent = net.ReadEntity()
-    local force = net.ReadVector()
-    local offset = net.ReadVector()
-    local colvec = net.ReadVector()
-    local wepName = net.ReadString()
-
     if !IsValid( ent ) then return end
 
     local cs_prop = ents.CreateClientProp( ent:GetModel() )
-    cs_prop:SetPos( ent:GetPos() )
+    
+    local lambda = net.ReadEntity()
+    if IsValid( lambda ) and !lambda:IsBeingDrawn() then
+        net.Start( "lambdaplayers_server_getpos" )
+            net.WriteEntity( ent )
+        net.SendToServer()
+
+        net.Receive( "lambdaplayers_server_sendpos", function()
+            cs_prop:SetPos( net.ReadVector() )
+        end )
+    else
+        cs_prop:SetPos( ent:GetPos() )
+    end
+
     cs_prop:SetAngles( ent:GetAngles() )
     cs_prop:SetSkin( ent:GetSkin() )
     cs_prop:SetSubMaterial( 1, ent:GetSubMaterial( 1 ) )
+
+    local colvec = net.ReadVector()
     cs_prop:SetNW2Vector( "lambda_weaponcolor", colvec )
+
     cs_prop:Spawn()
 
+    if IsValid( lambda ) then lambda.cs_prop = cs_prop end 
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, cs_prop )
 
-    local dropFunc = _LAMBDAPLAYERSWEAPONS[ wepName ].OnDrop
-    if isfunction( dropFunc ) then dropFunc( cs_prop ) end
+    local wpnName = net.ReadString()
+    if isstring( wpnName ) then
+        local dropFunc = _LAMBDAPLAYERSWEAPONS[ wpnName ].OnDrop
+        if isfunction( dropFunc ) then dropFunc( cs_prop ) end
+    end
 
     local phys = cs_prop:GetPhysicsObject()
-
     if IsValid( phys ) then
-        phys:SetMass( 20 )
+        local force = net.ReadVector()
         force = force / 2
-        phys:ApplyForceOffset( force, offset )
+
+        phys:SetMass( 20 )
+        phys:ApplyForceOffset( force, net.ReadVector() )
     end
 
-    local time = cleanuptime:GetInt()
+    if cleanuptime:GetInt() != 0 then 
+        local startTime = CurTime()
+        LambdaCreateThread( function()
+            while ( CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and CurTime() < lambda:GetLastSpeakingTime() ) do 
+                if !IsValid( cs_prop ) then return end
+                coroutine_yield() 
+            end
+            if !IsValid( cs_prop ) then return end
 
-    if time != 0 then 
-        timer.Simple( time , function()
-            if cleaneffect:GetBool() and IsValid( cs_prop ) then
-                cs_prop:LambdaDisintegrate()
-            elseif IsValid( cs_prop ) then 
-                cs_prop:Remove()
-            end 
+            if cleaneffect:GetBool() then cs_prop:LambdaDisintegrate() return end 
+            cs_prop:Remove()
         end ) 
     end
-
 end )
 
 local Material = Material
@@ -129,7 +178,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
     local flag = ( is3d and "3d mono noplay" or "mono noplay" )
 
-    sound.PlayFile( "sound/" .. soundname, flag, function( snd, ID, errorname )
+    sound_PlayFile( "sound/" .. soundname, flag, function( snd, ID, errorname )
         if ID == 21 then
             if stereowarn:GetBool() then print( "Lambda Players Voice Chat Warning: Sound file " ..soundname .. " has a stereo track and won't be played in 3d. Sound will continue to play. You can disable these warnings in Lambda Player>Utilities" ) end
             PlaySoundFile( ent, soundname, index, shouldstoponremove, false )
@@ -167,6 +216,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                 if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
                 if RealTime() > RealTime() + length then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
                 if !IsValid( followEnt ) then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
+                if followEnt.IsLambdaPlayer and !followEnt:IsBeingDrawn() then return end
 
                 local ang = EyeAngles()
                 local pos = followEnt:GetPos() + Vector( 0, 0, 80 )
@@ -226,12 +276,13 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                 if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then if usegmodpopups:GetBool() then hook.Run( "PlayerEndVoice", ent ) end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
                 if RealTime() > RealTime() + length then if usegmodpopups:GetBool() then hook.Run( "PlayerEndVoice", ent ) end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
 
-                tickent = LambdaIsValid( ent ) and ent or IsValid( ent.ragdoll ) and ent.ragdoll or tickent
-                snd:Set3DEnabled( ( !globalvoice:GetBool() and is3d ) )
+                tickent = ( LambdaIsValid( ent ) and ent or ( IsValid( ent.ragdoll ) and ent.ragdoll or tickent ) )
+                local globalVC = globalvoice:GetBool()
+                snd:Set3DEnabled( ( !globalVC and is3d ) )
 
-                if !globalvoice:GetBool() and !is3d then
+                if !globalVC and !is3d then
                     local ply = LocalPlayer()
-                    lastpos = IsValid( tickent ) and tickent:GetPos() or lastpos or origin
+                    lastpos = ( IsValid( tickent ) and tickent:GetPos() or ( lastpos and lastpos or origin ) )
 
                     local dist = ply:GetPos():DistToSqr( lastpos )
                     if dist < ( 2000 * 2000 ) then
@@ -240,43 +291,42 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                         volume = 0
                     end
                 else
-                    lastpos = IsValid( tickent ) and tickent:GetPos() or lastpos or origin
+                    lastpos = ( IsValid( tickent ) and tickent:GetPos() or ( lastpos and lastpos or origin ) )
                     snd:SetPos( lastpos )
-                    volume = voicevolume:GetFloat()
+                    
+                    if !globalVC and IsValid( tickent ) and tickent.IsLambdaPlayer and !tickent:IsBeingDrawn() then
+                        volume = 0
+                    else
+                        volume = voicevolume:GetFloat()
+                    end
                 end
 
                 snd:SetVolume( volume )
 
-
                 if LambdaIsValid( tickent ) then 
-
                     local leftC, rightC = snd:GetLevel()
                     local voiceLvl = ((leftC + rightC) / 2)
 
-                    local voicelvlent = tickent.IsLambdaPlayer and tickent or IsValid( tickent.LambdaOwner ) and tickent.LambdaOwner
+                    local voicelvlent = ( tickent.IsLambdaPlayer and tickent or ( IsValid( tickent.LambdaOwner ) and tickent.LambdaOwner ) )
                     if IsValid( voicelvlent ) then voicelvlent:SetVoiceLevel( voiceLvl ) end
 
                     snd:SetPos( tickent:GetPos() ) 
 
                     num = num or 0.0
-                    realtime = realtime or RealTime()
                     num2 = num2 or 0.0
+                    realtime = realtime or RealTime()
                     
-                    if RealTime() <= realtime then
-                        if voiceLvl > num then
-                            num = voiceLvl 
-                        end
-                    else
+                    if RealTime() > realtime then
                         num = 0.0
                         realtime = RealTime() + 1
+                    elseif voiceLvl > num then
+                        num = voiceLvl 
                     end
 
                     num2 = ( num <= 0.2 and num2 or ( voiceLvl / num ) )
                     tickent:LambdaMoveMouth( num2 )
                 end
-
-            end )    
-
+            end )
         end
     end)
 end
@@ -294,10 +344,30 @@ end)
 
 net.Receive( "lambdaplayers_invalidateragdoll", function()
     local ent = net.ReadEntity()
-
     if !IsValid( ent ) then return end
 
-    ent.ragdoll = nil
+    if removeCorpse:GetBool() then
+        local ragdoll = ent.ragdoll
+        if IsValid( ragdoll ) then
+            if cleaneffect:GetBool() then 
+                ragdoll:LambdaDisintegrate()
+            else
+                ragdoll:Remove()
+            end
+        end
+
+        local cs_prop = ent.cs_prop
+        if IsValid( cs_prop ) then
+            if cleaneffect:GetBool() then 
+                cs_prop:LambdaDisintegrate()
+            else
+                cs_prop:Remove()
+            end
+        end
+    end
+
+    ent.ragdoll = NULL
+    ent.cs_prop = NULL
 end )
 
 
