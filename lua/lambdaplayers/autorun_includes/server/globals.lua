@@ -517,3 +517,10 @@ function LambdaGetPlayerBirthday( ply, callback )
         callback( ply, month, day )
     end )
 end
+
+-- Called when Lambda's state is changed.
+function LambdaPlayers_OnStateChanged( lambda, name, oldState, newState )
+    if newState == oldState then return end
+    lambda:DebugPrint( "Changed state from " .. oldState .. " to " .. newState )
+    lambda:SetLastState( oldState )
+end
