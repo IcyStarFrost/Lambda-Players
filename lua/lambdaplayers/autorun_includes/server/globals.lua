@@ -28,11 +28,16 @@ _LAMBDAPLAYERS_DefaultPlayermodels = {
     "models/player/odessa.mdl",
     "models/player/phoenix.mdl",
     "models/player/police.mdl",
+    "models/player/police_fem.mdl",
     "models/player/riot.mdl",
     "models/player/skeleton.mdl",
     "models/player/soldier_stripped.mdl",
     "models/player/swat.mdl",
     "models/player/urban.mdl",
+    "models/player/hostage/hostage_01.mdl",
+    "models/player/hostage/hostage_02.mdl",
+    "models/player/hostage/hostage_03.mdl",
+    "models/player/hostage/hostage_04.mdl",
     "models/player/Group01/female_01.mdl",
     "models/player/Group01/female_02.mdl",
     "models/player/Group01/female_03.mdl",
@@ -88,6 +93,7 @@ _LAMBDAPLAYERS_DefaultPlayermodels = {
     "models/player/mossman_arctic.mdl",
     "models/player/magnusson.mdl",
     "models/player/monk.mdl",
+    "models/player/zombie_classic.mdl",
     "models/player/zombie_fast.mdl"
 }
 
