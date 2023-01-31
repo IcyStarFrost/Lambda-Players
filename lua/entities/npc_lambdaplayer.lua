@@ -40,7 +40,7 @@ end
     local random = math.random
     local rand = math.Rand
     local SortTable = table.sort
-    local developer = GetConVar( "developer" )
+    local eyetracing = GetConVar( "lambdaplayers_debug_eyetracing" )
     local isfunction = isfunction
     local Lerp = Lerp
     local LerpVector = LerpVector
@@ -535,7 +535,7 @@ function ENT:Think()
         end
 
         -- Eye tracing
-        if developer:GetBool() then
+        if eyetracing:GetBool() then
             local attach = self:GetAttachmentPoint( "eyes" )
             debugoverlay.Line( attach.Pos, self:GetEyeTrace().HitPos, 0.1, color_white, true  )
         end
