@@ -36,14 +36,16 @@ local GetLambdaPlayers = GetLambdaPlayers
 local color_white = color_white
 local ents_Create = ents and ents.Create or nil
 local red = Color( 255, 0, 0 )
-local tauntdir = GetConVar( "lambdaplayers_voice_tauntdir" )
+local GetConVar = GetConVar
 local aidisable = GetConVar( "ai_disabled" )
 local debugcvar = GetConVar( "lambdaplayers_debug" )
+local chatAllowed = GetConVar( "lambdaplayers_text_enabled" )
 local chatlimit = GetConVar( "lambdaplayers_text_chatlimit" )
 local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
 local shouldsentencemix = GetConVar( "lambdaplayers_text_sentencemixing" )
 local player_GetAll = player.GetAll
+local Rand = math.Rand
 
 ---- Anything Shared can go here ----
 
@@ -430,14 +432,13 @@ if SERVER then
     -- If the we can target the ent
     function ENT:CanTarget( ent )
         if hook.Run( "LambdaCanTarget", self, ent ) then return false end
-        return self:Visible( ent ) and ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() and ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 1 and ent:Alive() )
+        return ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() and ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 1 and ent:Alive() )
     end
 
     -- Attacks the specified entity
     function ENT:AttackTarget( ent )
         if !IsValid( ent ) then return end
-        
-        if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( tauntdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "taunt" ), true ) end
+        if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( self:GetVoiceLine( "taunt" ), true ) end
         self:SetEnemy( ent )
         self:SetState( "Combat" )
         self:CancelMovement()
@@ -446,9 +447,11 @@ if SERVER then
 
     function ENT:LaughAt( pos )
         pos = ( isentity( pos ) and IsValid( pos ) and pos:GetPos() or pos)
-        self:LookTo( pos, 2 )
-        self:CancelMovement()
-        self:SetState( "Laughing" )
+        self:LookTo( pos, 3 )
+        self:SimpleTimer( Rand( 0.2, 0.66 ), function()
+            self:CancelMovement()
+            self:SetState( "Laughing" )
+        end )
     end
 
     function ENT:PlayGestureAndWait( id, speed )
@@ -457,6 +460,7 @@ if SERVER then
         if !self:IsValidLayer( layer ) then return end
 
         self.l_UpdateAnimations = false
+        self.l_CurrentPlayedGesture = id
 
         local len = self:GetLayerDuration( layer )
         speed = speed or 1
@@ -473,6 +477,7 @@ if SERVER then
         end
 
         self.l_UpdateAnimations = true
+        self.l_CurrentPlayedGesture = -1
     
     end
 
@@ -740,8 +745,11 @@ if SERVER then
                 end
             end
         end
-        local tbl = LambdaVoiceLinesTable[ voicetype ]
 
+        local voiceDir = GetConVar( "lambdaplayers_voice_" .. voicetype .. "dir" )
+        if voiceDir and voiceDir:GetString() == "randomengine" then return self:GetRandomSound() end
+
+        local tbl = LambdaVoiceLinesTable[ voicetype ]
         return tbl[ random( #tbl ) ] 
     end
 
@@ -897,6 +905,7 @@ if SERVER then
 
     -- Returns if we can type a message
     function ENT:CanType()
+        if !chatAllowed:GetBool() then return false end
         if chatlimit:GetInt() == 0 then return true end
         local count = 0
         for k, v in ipairs( GetLambdaPlayers() ) do

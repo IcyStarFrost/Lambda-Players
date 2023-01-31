@@ -175,9 +175,8 @@ function ENT:PushButton()
     self:SetState( "Idle" )
 end
 
-local laughdir = GetConVar( "lambdaplayers_voice_laughdir" )
 function ENT:Laughing()
-    self:PlaySoundFile( laughdir:GetString() == "randomengine" and self:GetRandomSound() or self:GetVoiceLine( "laugh" ), true )
+    self:PlaySoundFile( self:GetVoiceLine( "laugh" ), true )
     self:PlayGestureAndWait( ACT_GMOD_TAUNT_LAUGH )
     self:SetState( "Idle" )
 end
@@ -204,4 +203,18 @@ function ENT:TBaggingPosition()
     end
 
     self:SetState( "Idle" )
+end
+
+local retreatOptions = { run = true }
+function ENT:RetreatFromCombat()
+    self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
+
+    local rndPos = self:GetRandomPosition( nil, 4000 )
+    self:MoveToPos( rndPos, retreatOptions )
+
+    local target = self.l_RetreatTarget
+    if !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 500 ) or CurTime() > self.l_retreatendtime then 
+        self:SetState( "Idle" ) 
+        self.l_RetreatTarget = NULL
+    end
 end
