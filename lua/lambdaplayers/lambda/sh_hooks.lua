@@ -1,7 +1,6 @@
 
 local random = math.random
 local tobool = tobool
-local undo = undo
 local ents_GetAll = ents.GetAll
 local isfunction = isfunction
 local ipairs = ipairs
