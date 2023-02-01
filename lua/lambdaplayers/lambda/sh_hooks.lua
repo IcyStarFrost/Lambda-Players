@@ -56,13 +56,6 @@ if SERVER then
         self.WeaponEnt:DrawShadow( false )
         self:LookTo( nil )
 
-        if IsValid( self:GetSWEPWeaponEnt() ) then
-            local swep = self:GetSWEPWeaponEnt()
-            self:ClientSideNoDraw( swep, true )
-            swep:SetNoDraw( true )
-            swep:DrawShadow( false )
-        end
-
         self:GetPhysicsObject():EnableCollisions( false )
 
         -- Restart our coroutine thread
@@ -91,7 +84,7 @@ if SERVER then
 
         if !self:IsWeaponMarkedNodraw() then
             net.Start( "lambdaplayers_createclientsidedroppedweapon" )
-                net.WriteEntity( ( IsValid( self:GetSWEPWeaponEnt() ) and self:GetSWEPWeaponEnt() or self.WeaponEnt ) )
+                net.WriteEntity( self.WeaponEnt )
                 net.WriteEntity( self )
                 net.WriteVector( self:GetPhysColor() )
                 net.WriteString( self:GetWeaponName() )

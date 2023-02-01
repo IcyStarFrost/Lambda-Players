@@ -34,11 +34,6 @@ if SERVER then
         if ent.l_godmode then return true end
     end )
 
-    -- This is for SWEP support 
-    hook.Add("PlayerCanPickupWeapon", "Lambdacanpickupwep", function( ply, wep )
-        return !wep.IsLambdaWeapon
-    end )
-
     -- Updates the map's spawn points when we clean the map
     hook.Add( "PostCleanupMap", "LambdaResetSpawnPoints", function()
         LambdaSpawnPoints = LambdaGetPossibleSpawns()

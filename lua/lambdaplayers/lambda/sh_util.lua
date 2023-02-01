@@ -606,19 +606,10 @@ if SERVER then
         self:SetNoDraw( false )
         self:DrawShadow( true )
 
+        self:ClientSideNoDraw( self.WeaponEnt, self:IsWeaponMarkedNodraw() )
+        self.WeaponEnt:SetNoDraw( self:IsWeaponMarkedNodraw() )
+        self.WeaponEnt:DrawShadow( !self:IsWeaponMarkedNodraw() )
 
-
-        local swep = self:GetSWEPWeaponEnt()
-
-        if IsValid( swep ) then
-            self:ClientSideNoDraw( swep, false )
-            swep:SetNoDraw( false )
-            swep:DrawShadow( true )
-        else
-            self:ClientSideNoDraw( self.WeaponEnt, self:IsWeaponMarkedNodraw() )
-            self.WeaponEnt:SetNoDraw( self:IsWeaponMarkedNodraw() )
-            self.WeaponEnt:DrawShadow( !self:IsWeaponMarkedNodraw() )
-        end
 
         self.l_UpdateAnimations = true
 
