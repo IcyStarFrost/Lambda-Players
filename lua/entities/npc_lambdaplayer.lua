@@ -336,14 +336,12 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", 5, "Run" )
     self:NetworkVar( "Bool", 6, "NoClip" )
     self:NetworkVar( "Bool", 7, "FlashlightOn" )
-    self:NetworkVar( "Bool", 8, "UsingSWEP" )
-    self:NetworkVar( "Bool", 9, "IsFiring" )
-    self:NetworkVar( "Bool", 10, "IsTyping" )
-    self:NetworkVar( "Bool", 11, "IsUnderwater" )
+    self:NetworkVar( "Bool", 8, "IsFiring" )
+    self:NetworkVar( "Bool", 9, "IsTyping" )
+    self:NetworkVar( "Bool", 10, "IsUnderwater" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )
-    self:NetworkVar( "Entity", 2, "SWEPWeaponEnt" )
 
     self:NetworkVar( "Vector", 0, "PlyColor" )
     self:NetworkVar( "Vector", 1, "PhysColor" )
@@ -503,16 +501,10 @@ function ENT:Think()
         end
 
         -- Reload randomly when we aren't shooting
-        if !self:GetUsingSWEP() then
-            if self.l_Clip < self.l_MaxClip and random( 100 ) == 1 and CurTime() > self.l_WeaponUseCooldown + 1 then
-                self:ReloadWeapon()
-            end
-        else
-            local swep = self:GetSWEPWeaponEnt()
-            if swep:Clip1() < swep:GetMaxClip1() and random( 100 ) == 1 and CurTime() > swep:GetNextPrimaryFire() + 1 then
-                self:ReloadWeapon()
-            end
+        if self.l_Clip < self.l_MaxClip and random( 100 ) == 1 and CurTime() > self.l_WeaponUseCooldown + 1 then
+            self:ReloadWeapon()
         end
+
         
         -- Out of Bounds Fail Safe --
         if !self:IsInWorld() and CurTime() > self.l_outboundsreset then 
