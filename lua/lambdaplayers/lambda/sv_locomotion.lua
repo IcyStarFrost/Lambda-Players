@@ -191,7 +191,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
         self.loco:FaceTowards( self:GetPos() + climbNormal )
 
         if !self:IsDisabled() and CurTime() > self.l_moveWaitTime or climbState != 2 then
-            climbFract = climbFract + ( self:GetLadderClimbSpeed() * FrameTime() )
+            climbFract = climbFract + ( 200 * FrameTime() )
 
             if climbFract >= climbDist then
                 if climbState == 1 then

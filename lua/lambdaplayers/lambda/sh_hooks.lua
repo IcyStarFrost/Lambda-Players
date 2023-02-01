@@ -1,7 +1,6 @@
 
 local random = math.random
 local tobool = tobool
-local undo = undo
 local ents_GetAll = ents.GetAll
 local isfunction = isfunction
 local ipairs = ipairs
@@ -56,13 +55,6 @@ if SERVER then
         self.WeaponEnt:DrawShadow( false )
         self:LookTo( nil )
 
-        if IsValid( self:GetSWEPWeaponEnt() ) then
-            local swep = self:GetSWEPWeaponEnt()
-            self:ClientSideNoDraw( swep, true )
-            swep:SetNoDraw( true )
-            swep:DrawShadow( false )
-        end
-
         self:GetPhysicsObject():EnableCollisions( false )
 
         -- Restart our coroutine thread
@@ -91,7 +83,7 @@ if SERVER then
 
         if !self:IsWeaponMarkedNodraw() then
             net.Start( "lambdaplayers_createclientsidedroppedweapon" )
-                net.WriteEntity( ( IsValid( self:GetSWEPWeaponEnt() ) and self:GetSWEPWeaponEnt() or self.WeaponEnt ) )
+                net.WriteEntity( self.WeaponEnt )
                 net.WriteEntity( self )
                 net.WriteVector( self:GetPhysColor() )
                 net.WriteString( self:GetWeaponName() )
@@ -176,7 +168,12 @@ if SERVER then
             elseif witnessChance == 2 then
                 self:LookTo( victimPos, random( 1, 3 ) )
                 self:SimpleTimer( rand( 0.1, 1.0 ), function()
-                    self:PlaySoundFile( self:GetVoiceLine( "witness" ), true )
+                    if ( victim:IsPlayer() or victim.IsLambdaPlayer ) and random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
+                        self.l_keyentity = victim
+                        self:TypeMessage( self:GetTextLine( "witness" ) )
+                    elseif self:GetVoiceChance() > 0 then
+                        self:PlaySoundFile( self:GetVoiceLine( "witness" ), true )
+                    end
                 end )
             end
         end
@@ -336,8 +333,8 @@ if SERVER then
             tbl[ "Build" ] = 5
             tbl[ "Combat" ] = 80
             tbl[ "Tool" ] = 5
-            self:SetVoiceChance( 30 )
-            self:SetTextChance( 30 )
+            self:SetVoiceChance( 60 )
+            self:SetTextChance( 60 )
             return tbl
         end,
         [ "builder" ] = function( ply, self ) -- Focused on Building
@@ -348,8 +345,8 @@ if SERVER then
             tbl[ "Build" ] = 80
             tbl[ "Combat" ] = 5
             tbl[ "Tool" ] = 80
-            self:SetVoiceChance( 30 )
-            self:SetTextChance( 30 )
+            self:SetVoiceChance( 60 )
+            self:SetTextChance( 60 )
             return tbl
         end
     } 

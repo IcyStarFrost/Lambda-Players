@@ -41,6 +41,15 @@ for k, v in pairs( _LAMBDAPLAYERSWEAPONS ) do
     end
 end
 
+_LAMBDAWEAPONCLASSANDPRINTS = {}
+
+for k, v in pairs( _LAMBDAPLAYERSWEAPONS ) do
+    _LAMBDAWEAPONCLASSANDPRINTS[ v.prettyname ] = k
+end
+
+CreateLambdaConvar( "lambdaplayers_lambda_spawnweapon", "physgun", true, true, true, "The weapon Lambda Players will spawn with only if the specified weapon is allowed", 0, 1, { type = "Combo", options = _LAMBDAWEAPONCLASSANDPRINTS, name = "Spawn Weapon", category = "Lambda Player Settings" } )
+
+
 -- One part of the duplicator support
 -- Register the Lambdas so the duplicator knows how to handle these guys
 duplicator.RegisterEntityClass( "npc_lambdaplayer", function( ply, Pos, Ang, info )
@@ -240,27 +249,3 @@ function LambdaCreateThread( func )
         end
     end )
 end
-
-local meta = FindMetaTable( "Entity" )
-
-
-
-
-local oldisplayer = meta.IsPlayer
-function meta:IsPlayer()
-    if self.IsLambdaPlayer and GetConVar( "lambdaplayers_lambda_fakeisplayer" ):GetBool() then return true elseif self.IsLambdaPlayer and !GetConVar( "lambdaplayers_lambda_fakeisplayer" ):GetBool() then return false end
-    return oldisplayer( self )
-end
-
-local oldeyeangles = meta.EyeAngles
-function meta:EyeAngles()
-    if !self.IsLambdaPlayer then return oldeyeangles( self ) end
-
-    if IsValid( self:GetEnemy() ) and self:GetUsingSWEP() then
-        return ( ( ( isfunction( self:GetEnemy().EyePos ) and self:GetEnemy():EyePos() or self:GetEnemy():WorldSpaceCenter() ) - self:GetAttachmentPoint( "eyes" ).Pos ):Angle() + AngleRand( -self.l_swepspread, self.l_swepspread ) )
-    elseif IsValid( self:GetEnemy() ) then
-        return ( ( isfunction( self:GetEnemy().EyePos ) and self:GetEnemy():EyePos() or self:GetEnemy():WorldSpaceCenter() ) - self:GetAttachmentPoint( "eyes" ).Pos ):Angle()
-    end 
-    return self:GetAttachmentPoint( "eyes" ).Ang
-end
-
