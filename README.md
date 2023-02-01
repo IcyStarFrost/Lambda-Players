@@ -60,15 +60,6 @@ Yes this is a Find function but the point stays the same
 
 - Lambda Players are **module** which means addons can extend upon Lambda unlike the Zeta's hard coded code
 
-
-- Lambda Players can be set to make the game think they are players. THIS COULD CAUSE ISSUES WHICH IS WHY IT IS OFF BY DEFAULT
-
-![image](https://user-images.githubusercontent.com/109770359/206065281-b8b76419-59f3-424b-afa1-f01366849fa7.png)
-
-- Lambda Players can use SWEPs that are registered. By default ArcCW and M9K weapons are registered. THIS IS NOT A PERFECT SYSTEM. THIS COULD CAUSE ISSUES WHICH IS WHY IT IS OFF BY DEFAULT
-
-![image](https://user-images.githubusercontent.com/109770359/206065306-b0d33649-b842-4448-9d10-259259eeb4b4.png)
-
 - Lambda Players can appear in the default scoreboard
 
 ![image](https://user-images.githubusercontent.com/109770359/206065497-463e6fde-4655-4723-92ae-19a9629e0bdd.png)
@@ -89,7 +80,6 @@ If you are new to Lambda, you will be surprised on the memorable moments you can
 - Highly customizable
 - Proper Multiplayer support
 - Optimized
-- Somewhat stable SWEP support
 - Voice Chat
 - Text Chat
 - Fun 
