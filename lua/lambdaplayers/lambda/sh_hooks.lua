@@ -168,7 +168,7 @@ if SERVER then
             elseif witnessChance == 2 then
                 self:LookTo( victimPos, random( 1, 3 ) )
                 self:SimpleTimer( rand( 0.1, 1.0 ), function()
-                    if ( victim:IsPlayer(), or victim.IsLambdaPlayer ) and random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
+                    if ( victim:IsPlayer() or victim.IsLambdaPlayer ) and random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
                         self.l_keyentity = victim
                         self:TypeMessage( self:GetTextLine( "witness" ) )
                     elseif self:GetVoiceChance() > 0 then
