@@ -3,7 +3,7 @@ local maxlambdacount = CreateLambdaConvar( "lambdaplayers_mws_maxlambdas", 5, tr
 local spawnrate = CreateLambdaConvar( "lambdaplayers_mws_spawnrate", 2, true, false, false, "Time in seconds before each Lambda Player is spawned", 0.1, 500, { type = "Slider", decimals = 1, name = "Spawn Rate", category = "MWS"} )
 local randomspawnrate = CreateLambdaConvar( "lambdaplayers_mws_randomspawnrate", 0, true, false, false, "If the spawn rate should be randomized between 0.1 and what ever Spawn Rate is set to", 0, 1, { type = "Bool", name = "Randomized Spawn Rate", category = "MWS"} )
 local respawn = CreateLambdaConvar( "lambdaplayers_mws_respawning", 1, true, false, false, "If Lambda Players spawned by MWS should respawn", 0, 1, { type = "Bool", name = "Respawn", category = "MWS"} )
-
+local navmeshspawning = CreateLambdaConvar( "lambdaplayers_mws_spawnonnavmesh", 1, true, false, false, "If Lambda Players spawned by MWS should spawn randomly on the map using the navmesh. Remember that the (Respawn At Player Spawns) option in Lambda Server Settings will make them respawn at player spawn points", 0, 1, { type = "Bool", name = "Random Navmesh Spawn Points", category = "MWS"} )
 
 local table_insert = table.insert
 local rand = math.Rand
@@ -89,21 +89,34 @@ end, true, "Opens a panel to allow you to create custom preset personalities and
 
 if CLIENT then return end
 
+
+
 local CurTime = CurTime
 local ipairs = ipairs
 local table_remove = table.remove
 local IsValid = IsValid
-
-local navmesh_GetAllNavAreas = navmesh.GetAllNavAreas
 
 local SpawnedLambdaPlayers = {}
 local shutdown = false
 local pause = false
 local failtimes = 0
 local nextspawn = 0
+
+
+
+-- Returns a random spawn point on the navmesh
+local function GetRandomSpawnPoint()
+    local navareas = navmesh.GetAllNavAreas()
+    local areas = {}
+    for k, v in ipairs( navareas ) do
+        if IsValid( v ) and v:GetSizeX() > 50 and v:GetSizeY() > 50 and !v:IsUnderwater() then areas[ #areas + 1 ] = v end
+    end
+    for k, v in RandomPairs( areas ) do if IsValid( v ) then return v:GetRandomPoint() end end
+end
+
 hook.Add( "Tick", "lambdaplayers_MWS", function()
     if CurTime() < 5 then return end
-    if shutdown then return end
+    if shutdown then return end    
 
     -- Remove all spawned Lambdas and remain dormant
     if !enabled:GetBool() then
@@ -120,36 +133,23 @@ hook.Add( "Tick", "lambdaplayers_MWS", function()
         return
     end
 
+    if navmeshspawning:GetBool() and !navmesh.IsLoaded() then return end
+    if !navmeshspawning:GetBool() and failtimes > 100 then return end
     if pause then return end
-
+    
     if CurTime() > nextspawn and #SpawnedLambdaPlayers < maxlambdacount:GetInt() then
-        local spawns = LambdaGetPossibleSpawns()
-        local point = spawns[ random( #spawns ) ]
         local pos
         local ang
 
-        -- Massive fallback chain
-        if IsValid( point ) then 
-            pos = point:GetPos()
-            ang = point:GetAngles()
+        -- Spawning at player spawn points
+        if !navmeshspawning:GetBool() then
+            local spawns = LambdaGetPossibleSpawns()
+            local point = spawns[ random( #spawns ) ]
+            if !IsValid( point ) then failtimes = failtimes + 1 return end
+            pos = point
         else
-            local navareas = navmesh_GetAllNavAreas()
-            local area = navareas[ random( #navareas ) ]
-
-            if IsValid( area ) then
-                pos = area:GetRandomPoint()
-                ang = Angle( 0, random( 360 ), 0 )
-            else
-                failtimes = failtimes + 1
-                pos = Vector( 0, 0, 0 )
-                ang = Angle( 0, random( 360 ), 0 )
-
-                -- We failed too many times trying to set a proper position. Shutdown.
-                if failtimes >= 7 then
-                    shutdown = true
-                    ErrorNoHalt( "Lambda Players MWS: Couldn't find a proper place for Lambdas to spawn " .. failtimes .. " times! Either play a map that has spawn points/has a Navigation Mesh or just manually spawn Lambda Players. MWS will now shutdown for the rest of the session." )
-                end
-            end
+            pos = GetRandomSpawnPoint()
+            ang = Angle( 0, random( -180, 180 ), 0 )
         end
 
         local lambda = ents.Create( "npc_lambdaplayer" )
