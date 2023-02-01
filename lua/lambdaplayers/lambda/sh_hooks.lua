@@ -329,8 +329,8 @@ if SERVER then
             tbl[ "Build" ] = 5
             tbl[ "Combat" ] = 80
             tbl[ "Tool" ] = 5
-            self:SetVoiceChance( 30 )
-            self:SetTextChance( 30 )
+            self:SetVoiceChance( 60 )
+            self:SetTextChance( 60 )
             return tbl
         end,
         [ "builder" ] = function( ply, self ) -- Focused on Building
@@ -341,8 +341,8 @@ if SERVER then
             tbl[ "Build" ] = 80
             tbl[ "Combat" ] = 5
             tbl[ "Tool" ] = 80
-            self:SetVoiceChance( 30 )
-            self:SetTextChance( 30 )
+            self:SetVoiceChance( 60 )
+            self:SetTextChance( 60 )
             return tbl
         end
     } 
