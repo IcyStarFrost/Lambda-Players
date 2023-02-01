@@ -1,6 +1,7 @@
 
 local LambdaIsValid = LambdaIsValid
 local table_insert = table.insert
+local timer_Simple = timer.Simple
 local RealTime = RealTime
 local IsValid = IsValid
 local CurTime = CurTime

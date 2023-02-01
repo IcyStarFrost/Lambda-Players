@@ -10,16 +10,8 @@ function ENT:Nick()
 end
 
 -- Returns our eye position
-function ENT:EyePos2()
+function ENT:EyePos()
     return self:GetAttachmentPoint( "eyes" ).Pos
-end
-
--- Returns our eye angles
-function ENT:EyeAngles2()
-    if IsValid( self:GetEnemy() ) then
-        return ( ( isfunction( self:GetEnemy().EyePos ) and self:GetEnemy():EyePos() or self:GetEnemy():WorldSpaceCenter() ) - self:GetAttachmentPoint( "eyes" ).Pos ):Angle()
-    end 
-    return self:GetAttachmentPoint( "eyes" ).Ang
 end
 
 -- Our team
@@ -39,7 +31,9 @@ end
 
 -- Returns the direction we are looking to
 function ENT:GetAimVector()
-    if IsValid( self:GetEnemy() ) then
+    if IsValid( self:GetEnemy() ) and self:GetUsingSWEP() then
+        return ( ( ( isfunction( self:GetEnemy().EyePos ) and self:GetEnemy():EyePos() or self:GetEnemy():WorldSpaceCenter() ) - self:GetAttachmentPoint( "eyes" ).Pos ):Angle() + AngleRand( -self.l_swepspread, self.l_swepspread ) ):Forward()
+    elseif IsValid( self:GetEnemy() ) then
         return ( ( isfunction( self:GetEnemy().EyePos ) and self:GetEnemy():EyePos() or self:GetEnemy():WorldSpaceCenter() ) - self:GetAttachmentPoint( "eyes" ).Pos ):GetNormalized()
     end 
     return self:GetAttachmentPoint( "eyes" ).Ang:Forward()
@@ -51,7 +45,7 @@ function ENT:Armor()
 end
 
 function ENT:GetActiveWeapon()
-    return self:GetWeaponENT()
+    return IsValid( self:GetSWEPWeaponEnt() ) and self:GetSWEPWeaponEnt() or self:GetWeaponENT()
 end
 
 local keydownsmove = {
@@ -401,7 +395,7 @@ function ENT:GetUserGroup()
 end
 
 function ENT:GetViewModel()
-    return self:GetWeaponENT()
+    return self:GetSWEPWeaponEnt()
 end
 
 function ENT:GetViewOffset()
