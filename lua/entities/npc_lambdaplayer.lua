@@ -368,9 +368,6 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
     self:NetworkVar( "Float", 1, "VoiceLevel" )
 
-    if ( SERVER ) then
-        self:NetworkVarNotify( "State", LambdaPlayers_OnStateChanged )
-    end
 end
 
 function ENT:Draw()
