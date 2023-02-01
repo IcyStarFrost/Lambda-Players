@@ -340,7 +340,7 @@ if CLIENT then
                 self.Avatar:SetPlayer( ply )
             end
     
-            self.Color = team.GetColor( ply:Team() )
+            self.Color = team.GetColor( ply:IsPlayer() and ply:Team() or 0 )
             
             self:InvalidateLayout()
         
