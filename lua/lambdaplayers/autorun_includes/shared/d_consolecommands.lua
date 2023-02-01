@@ -5,6 +5,8 @@ local ipairs = ipairs
 local random = math.random
 local IsValid = IsValid
 local distance = GetConVar( "lambdaplayers_force_radius" )
+local spawnatplayerpoints = GetConVar( "lambdaplayers_lambda_spawnatplayerspawns" )
+local LambdaSpawnBehavior = GetConVar( "lambdaplayers_force_spawnbehavior" )
 
 
 -- The reason this lua file has a d_ in its filename is because of the order on how lua files are loaded.
@@ -133,6 +135,13 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply 
 	lambda:SetAngles( Angle( 0, random( 0, 360, 0 ), 0 ) )
 	lambda:Spawn()
 
+	if LambdaSpawnBehavior:GetInt() == 1 then
+		lambda:AttackTarget( ply )
+	elseif LambdaSpawnBehavior:GetInt() == 2 then
+		local npcs = lambda:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() ) end )
+		lambda:AttackTarget( npcs[ random( #npcs ) ] )
+	end
+
 	undo.Create( "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
 		undo.SetPlayer( ply )
 		undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
@@ -166,12 +175,12 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombatlambda", function( ply
 
     for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance:GetInt() ) ) do
         if IsValid( v ) and v.IsLambdaPlayer then
-			local npcs = v:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() ) end)
+			local npcs = v:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() ) end )
 			v:AttackTarget( npcs[ random( #npcs ) ] )
 		end
     end
 
-end, false, "Forces all Lambda Players attack anything", { name = "Lambda Players Attack Anything", category = "Force Menu" } )
+end, false, "Forces all Lambda Players to attack anything", { name = "Lambda Players Attack Anything", category = "Force Menu" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcekill", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
