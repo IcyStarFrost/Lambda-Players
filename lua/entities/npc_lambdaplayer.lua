@@ -83,6 +83,11 @@ end
     local collisionmins = Vector( -16, -16, 0 )
     local standingcollisionmaxs = Vector( 16, 16, 72 )
     local crouchingcollisionmaxs = Vector( 16, 16, 36 )
+    local maxHealth = GetConVar( "lambdaplayers_lambda_maxhealth" )
+    local spawnHealth = GetConVar( "lambdaplayers_lambda_spawnhealth" )
+    local maxArmor = GetConVar( "lambdaplayers_lambda_maxarmor" )
+    local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
+    local collisionPly = GetConVar( "lambdaplayers_lambda_noplycollisions" )
 --
 
 if CLIENT then
@@ -172,12 +177,12 @@ function ENT:Initialize()
         self:SetLambdaName( self:GetOpenName() )
         self:SetProfilePicture( #Lambdaprofilepictures > 0 and Lambdaprofilepictures[ random( #Lambdaprofilepictures ) ] or "spawnicons/".. sub( self:GetModel(), 1, #self:GetModel() - 4 ).. ".png" )
 
-        self:SetMaxHealth( 100 )
-        self:SetNWMaxHealth( 100 )
-        self:SetHealth( 100 )
+        self:SetMaxHealth( maxHealth:GetInt() )
+        self:SetNWMaxHealth( maxHealth:GetInt() )
+        self:SetHealth( spawnHealth:GetInt() )
 
-        self:SetArmor( 0 ) -- Our current armor
-        self:SetMaxArmor( 100 ) -- Our maximum armor
+        self:SetArmor( spawnArmor:GetInt() ) -- Our current armor
+        self:SetMaxArmor( maxArmor:GetInt() ) -- Our maximum armor
 
         self:SetPlyColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
         self:SetPhysColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
@@ -241,7 +246,13 @@ function ENT:Initialize()
 
         self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
         self:PhysicsInitShadow()
-        self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
+
+        if !collisionPly:GetBool() then
+            self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
+        else
+            self:SetCollisionGroup(COLLISION_GROUP_PASSABLE_DOOR)
+        end
+
         self:SetSolidMask( MASK_PLAYERSOLID )
         self:AddCallback( "PhysicsCollide", function( self, data )
             self:HandleCollision( data )
