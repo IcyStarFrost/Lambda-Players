@@ -161,6 +161,18 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombat", function( ply )
 
 end, false, "Forces all Lambda Players to attack you", { name = "Lambda Players Attack You", category = "Force Menu" } )
 
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombatlambda", function( ply ) 
+    if IsValid( ply ) and !ply:IsSuperAdmin() then return end
+
+    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance:GetInt() ) ) do
+        if IsValid( v ) and v.IsLambdaPlayer then
+			local npcs = v:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() ) end)
+			v:AttackTarget( npcs[ random( #npcs ) ] )
+		end
+    end
+
+end, false, "Forces all Lambda Players attack anything", { name = "Lambda Players Attack Anything", category = "Force Menu" } )
+
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcekill", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
