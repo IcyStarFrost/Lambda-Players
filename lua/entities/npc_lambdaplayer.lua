@@ -192,7 +192,8 @@ function ENT:Initialize()
         self:SetTextPerMinute( 400 ) -- The amount of characters we can type within a minute
         self:SetNW2String( "lambda_steamid", "STEAM_0:0:" .. random( 1, 200000000 ) )
         self:SetNW2String( "lambda_ip", "192." .. random( 10, 200 ) .. "." .. random( 10 ).. "." .. random( 10, 200 ) .. ":27005" )
-        self:SetState( "Idle" )
+        self:SetNW2String( "lambda_state", "Idle" )
+        self:SetNW2String( "lambda_laststate", "Idle" )
         
         self.l_BodyGroupData = {}
         if rndBodyGroups:GetBool() then

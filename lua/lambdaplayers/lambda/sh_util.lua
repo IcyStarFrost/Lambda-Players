@@ -537,16 +537,18 @@ if SERVER then
         self:DebugPrint( "Changed state from " .. self.l_State .. " to " .. state )
         self.l_LastState = self.l_State
         self.l_State = state
+        self:SetNW2String( "lambda_laststate", self.l_LastState )
+        self:SetNW2String( "lambda_state", state )
     end
 
     -- Obviously returns the current state
     function ENT:GetState()
-        return self.l_State
+        return self:GetNW2String( "lambda_state", "Idle" )
     end
     
     -- Returns the last state we were in
     function ENT:GetLastState()
-        return self.l_LastState
+        return self:GetNW2String( "lambda_laststate", "Idle")
     end
 
     -- If we currently are fighting
