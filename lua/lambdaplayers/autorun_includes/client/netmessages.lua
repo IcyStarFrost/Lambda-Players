@@ -1,7 +1,6 @@
 
 local LambdaIsValid = LambdaIsValid
 local table_insert = table.insert
-local timer_Simple = timer.Simple
 local RealTime = RealTime
 local IsValid = IsValid
 local CurTime = CurTime
@@ -97,10 +96,14 @@ end )
 net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     local ent = net.ReadEntity()
     if !IsValid( ent ) then return end
+    local lambda = net.ReadEntity()
+    local colvec = net.ReadVector()
+    local wpnName = net.ReadString()
+    local force = net.ReadVector()
+    local dmgpos = net.ReadVector()
 
     local cs_prop = ents.CreateClientProp( ent:GetModel() )
     
-    local lambda = net.ReadEntity()
     if IsValid( lambda ) and lambda:IsDormant() then
         net.Start( "lambdaplayers_server_getpos" )
             net.WriteEntity( ent )
@@ -117,7 +120,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     cs_prop:SetSkin( ent:GetSkin() )
     cs_prop:SetSubMaterial( 1, ent:GetSubMaterial( 1 ) )
 
-    local colvec = net.ReadVector()
+    
     cs_prop:SetNW2Vector( "lambda_weaponcolor", colvec )
 
     cs_prop:Spawn()
@@ -125,19 +128,18 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     if IsValid( lambda ) then lambda.cs_prop = cs_prop end 
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, cs_prop )
 
-    local wpnData = _LAMBDAPLAYERSWEAPONS[ net.ReadString() ]
-    if istable( wpnData ) then
-        local dropFunc = wpnData.OnDrop
+    
+    if isstring( wpnName ) then
+        local dropFunc = _LAMBDAPLAYERSWEAPONS[ wpnName ].OnDrop
         if isfunction( dropFunc ) then dropFunc( cs_prop ) end
     end
 
     local phys = cs_prop:GetPhysicsObject()
     if IsValid( phys ) then
-        local force = net.ReadVector()
         force = force / 2
 
         phys:SetMass( 20 )
-        phys:ApplyForceOffset( force, net.ReadVector() )
+        phys:ApplyForceOffset( force, dmgpos )
     end
 
     if cleanuptime:GetInt() != 0 then 
