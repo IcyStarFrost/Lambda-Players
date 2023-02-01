@@ -156,7 +156,7 @@ if CLIENT then
                 --
                 -- Connecting players go at the very bottom
                 --
-                if ( self.Player:Team() == TEAM_CONNECTING ) then
+                if ( self.Player:IsPlayer() and self.Player:Team() == TEAM_CONNECTING ) then
                     self:SetZPos( 2000 + self.Player:EntIndex() )
                     return
                 end
@@ -180,7 +180,7 @@ if CLIENT then
                 -- We draw our background a different colour based on the status of the player
                 --
         
-                if ( self.Player:Team() == TEAM_CONNECTING ) then
+                if ( self.Player:IsPlayer() and self.Player:Team() == TEAM_CONNECTING ) then
                     draw.RoundedBox( 4, 0, 0, w, h, Color( 200, 200, 200, 200 ) )
                     return
                 end
@@ -190,7 +190,7 @@ if CLIENT then
                     return
                 end
         
-                if ( self.Player:IsAdmin() ) then
+                if ( self.Player:IsPlayer() and self.Player:IsAdmin() ) then
                     draw.RoundedBox( 4, 0, 0, w, h, Color( 230, 255, 230, 255 ) )
                     return
                 end
