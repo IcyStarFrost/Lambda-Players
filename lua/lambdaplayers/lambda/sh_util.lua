@@ -531,6 +531,24 @@ if SERVER then
         return isfunction( self[ state ] )
     end
 
+    -- Sets our state
+    function ENT:SetState( state )
+        if state == self.l_State then return end
+        self:DebugPrint( "Changed state from " .. self.l_State .. " to " .. state )
+        self.l_LastState = self.l_State
+        self.l_State = state
+    end
+
+    -- Obviously returns the current state
+    function ENT:GetState()
+        return self.l_State
+    end
+    
+    -- Returns the last state we were in
+    function ENT:GetLastState()
+        return self.l_LastState
+    end
+
     -- If we currently are fighting
     function ENT:InCombat()
         return ( self:GetState() == "Combat" and LambdaIsValid( self:GetEnemy() ) )

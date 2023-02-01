@@ -119,6 +119,8 @@ function ENT:Initialize()
             self[ "l_Spawned" .. name ] = {}
         end
 
+        self.l_State = "Idle" -- The current state we are in
+        self.l_LastState = "Idle" -- The last state we were in
         self.l_Weapon = "" -- The weapon we currently have
         self.l_queuedtext = nil -- The text that we want to send in chat
         self.l_typedtext = nil -- The current text we have typed out so far
@@ -326,8 +328,6 @@ function ENT:SetupDataTables()
     self:NetworkVar( "String", 0, "LambdaName" ) -- Player name
     self:NetworkVar( "String", 1, "WeaponName" )
     self:NetworkVar( "String", 2, "ProfilePicture" )
-    self:NetworkVar( "String", 3, "State" ) -- The state we are in. See sv_states.lua
-    self:NetworkVar( "String", 4, "LastState" ) -- The last state we were in before we switched to current one
  
     self:NetworkVar( "Bool", 0, "Crouch" )
     self:NetworkVar( "Bool", 1, "IsDead" )
