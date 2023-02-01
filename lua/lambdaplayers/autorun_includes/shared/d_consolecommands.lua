@@ -90,61 +90,56 @@ end, false, "Removes all entities that were spawned by Lambda Players", { name =
 
 AddConsoleCommandToLambdaSettings( "r_cleardecals", true, "Removes all decals in the map for yourself. This does not remove decals premade in the map", { name = "Clean Decals", category = "Utilities" } )
 
-
-
-
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply ) 
-    if IsValid( ply ) and !ply:IsSuperAdmin() then return end
+	if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
-    local areas = navmesh.GetAllNavAreas()
-    local area
-    local point
+	local areas = navmesh.GetAllNavAreas()
+	local area
+	local point
 
-    local spawns = LambdaGetPossibleSpawns()
+	local spawns = LambdaGetPossibleSpawns()
 
-    if !spawnatplayerpoints:GetBool() then
+	if !spawnatplayerpoints:GetBool() then
 
-        -- need a cleaner way for this navmesh stuff
+		area = areas[ random( #areas ) ]
+		if !area or !area:IsValid() then
+			areas = navmesh.GetAllNavAreas()
+			area = areas[ random( #areas ) ]
+		end
 
-        area = areas[ random( #areas ) ]
-        if !area or !area:IsValid() then
-            areas = navmesh.GetAllNavAreas()
-            area = areas[ random( #areas ) ]
-        end
+		if !area or !area:IsValid() then
+			return
+		end
+		
+		if area:IsUnderwater() then return end
+		point = area:GetRandomPoint()
+	else
+		spawns = LambdaGetPossibleSpawns()
 
-        if !area or !area:IsValid() then
-            return
-        end
-        
-        if area:IsUnderwater() then return end
-        point = area:GetRandomPoint()
-    else
-        spawns = LambdaGetPossibleSpawns()
+		local spawn = spawns[ random( #spawns ) ]
+		if IsValid( spawn ) then
+			point = spawn:GetPos()
+		else
+			print( "RANDOM LAMBDA SPAWN: Player Spawn Is not Valid!" )
+			ply:EmitSound( "buttons/button8.wav", 50 )
+			PrintMessage( HUD_PRINTTALK, "Spawn Failed! Check Console" )
+			print( "Can't find info_player_start on map. Using random navmesh area." )
+			return
+		end
+	end
 
-        local spawn = spawns[ random( #spawns ) ]
-        if IsValid( spawn ) then
-            point = spawn:GetPos()
-        else
-            print( "RANDOM LAMBDA SPAWN: Player Spawn Is not Valid!" )
-            ply:EmitSound( "buttons/button8.wav", 50 )
-            PrintMessage( HUD_PRINTTALK, "Spawn Failed! Check Console" )
-            print( "Player Spawns not valid. Couldn't find any info_player_start on map. Using random navmesh area." )
-            return
-        end
-    end
+	local lambda = ents.Create( "npc_lambdaplayer" )
+	lambda:SetPos( point )
+	lambda:SetAngles( Angle( 0, random( 0, 360, 0 ), 0 ) )
+	lambda:Spawn()
 
-    local lambda = ents.Create( "npc_lambdaplayer" )
-    lambda:SetPos( point )
-    lambda:SetAngles( Angle( 0, random( 0, 360, 0 ), 0 ) )
-    lambda:Spawn()
+	undo.Create( "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
+		undo.SetPlayer( ply )
+		undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
+		undo.AddEntity( lambda )
+	undo.Finish( "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
 
-    undo.Create( "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
-        undo.SetPlayer( ply )
-        undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
-        undo.AddEntity( lambda )
-    undo.Finish( "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
-    
-    local dynLight = ents.Create( "light_dynamic" )
+	local dynLight = ents.Create( "light_dynamic" )
 	dynLight:SetKeyValue( "brightness", "2" )
 	dynLight:SetKeyValue( "distance", "90" )
 	dynLight:SetPos( lambda:GetPos() )
@@ -155,7 +150,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply 
 	dynLight:Fire( "TurnOn", "", 0 )
 	dynLight:Fire( "Kill", "", 0.75 )
 
-end, false, "Spawns a random Lambda Player at a random Navmesh area", { name = "Spawn Random Lambda Player", category = "Force Menu" } )
+end, false, "Spawns a Lambda Player at a random area", { name = "Spawn Lambda Player At Random Area", category = "Force Menu" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombat", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
@@ -165,6 +160,18 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombat", function( ply )
     end
 
 end, false, "Forces all Lambda Players to attack you", { name = "Lambda Players Attack You", category = "Force Menu" } )
+
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombatlambda", function( ply ) 
+    if IsValid( ply ) and !ply:IsSuperAdmin() then return end
+
+    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance:GetInt() ) ) do
+        if IsValid( v ) and v.IsLambdaPlayer then
+			local npcs = v:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() ) end)
+			v:AttackTarget( npcs[ random( #npcs ) ] )
+		end
+    end
+
+end, false, "Forces all Lambda Players attack anything", { name = "Lambda Players Attack Anything", category = "Force Menu" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcekill", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
