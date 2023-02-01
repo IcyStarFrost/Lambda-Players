@@ -16,6 +16,7 @@ local LocalPlayer = LocalPlayer
 local ipairs = ipairs
 local ClientsideRagdoll = ClientsideRagdoll
 local EyeAngles = EyeAngles
+local istable = istable
 local sound_PlayFile = sound.PlayFile
 local coroutine_yield = coroutine.yield
 local origin = Vector()
@@ -124,9 +125,9 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     if IsValid( lambda ) then lambda.cs_prop = cs_prop end 
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, cs_prop )
 
-    local wpnName = net.ReadString()
-    if isstring( wpnName ) then
-        local dropFunc = _LAMBDAPLAYERSWEAPONS[ wpnName ].OnDrop
+    local wpnData = _LAMBDAPLAYERSWEAPONS[ net.ReadString() ]
+    if istable( wpnData ) then
+        local dropFunc = wpnData.OnDrop
         if isfunction( dropFunc ) then dropFunc( cs_prop ) end
     end
 
