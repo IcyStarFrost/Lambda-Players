@@ -85,6 +85,12 @@ local function Map( self )
     return game.GetMap()
 end
 
+-- Returns a random map name
+local function RandomMap( self )
+    local maps = file.Find( "maps/gm_*", "GAME", "namedesc" )
+    return string.StripExtension( maps[ math.random( #maps ) ] )
+end
+
 -- Return the Server's name
 local function ServerName( self )
     return GetHostName()
@@ -185,6 +191,7 @@ end
 
 -- Key words that will be replaced with some text --
 LambdaAddTextChatKeyWord( "/rndply/", RandomPlayerKeyword )
+LambdaAddTextChatKeyWord( "/rndmap/", RandomMap )
 LambdaAddTextChatKeyWord( "/keyent/", Keyentity )
 LambdaAddTextChatKeyWord( "/birthdayply/", BirthdayPlayer )
 LambdaAddTextChatKeyWord( "/self/", Selfname )
