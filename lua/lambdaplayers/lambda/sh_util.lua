@@ -606,6 +606,9 @@ if SERVER then
         self:SetNoDraw( false )
         self:DrawShadow( true )
 
+
+
+
         self:ClientSideNoDraw( self.WeaponEnt, self:IsWeaponMarkedNodraw() )
         self.WeaponEnt:SetNoDraw( self:IsWeaponMarkedNodraw() )
         self.WeaponEnt:DrawShadow( !self:IsWeaponMarkedNodraw() )

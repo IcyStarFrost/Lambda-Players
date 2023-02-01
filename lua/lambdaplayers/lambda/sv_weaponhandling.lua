@@ -8,9 +8,6 @@ local CurTime = CurTime
 local string_find = string.find
 local origin = Vector()
 local angle_zero = Angle()
-local isplayerfaked = GetConVar( "lambdaplayers_lambda_fakeisplayer" )
-
-
 
 function ENT:WeaponDataExists( weaponname )
     return _LAMBDAPLAYERSWEAPONS[ weaponname ] != nil
@@ -23,6 +20,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
 
     if !self:WeaponDataExists( weaponname ) then return end
 
+    local wepent = self:GetWeaponENT()
     local weapondata = _LAMBDAPLAYERSWEAPONS[ weaponname ]
     local oldwepdata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
 
@@ -60,11 +58,11 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self:ClientSideNoDraw( self.WeaponEnt, weapondata.nodraw )
     self:SetHasCustomDrawFunction( isfunction( weapondata.Draw ) )
     self:SetWeaponName( weaponname )
-    self.WeaponEnt:SetNoDraw( weapondata.nodraw )
-    self.WeaponEnt:DrawShadow( !weapondata.nodraw )
+    wepent:SetNoDraw( weapondata.nodraw )
+    wepent:DrawShadow( !weapondata.nodraw )
 
-    self.WeaponEnt:SetLocalPos( weapondata.offpos or origin )
-    self.WeaponEnt:SetLocalAngles( weapondata.offang or angle_zero )
+    wepent:SetLocalPos( weapondata.offpos or origin )
+    wepent:SetLocalAngles( weapondata.offang or angle_zero )
 
     wepent:SetModel( weapondata.model )
     
@@ -72,7 +70,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self.l_WeaponThinkFunction = weapondata.OnThink
     if isfunction( weapondata.OnEquip ) then weapondata.OnEquip( self, wepent ) end
 
-    hook.Run( "LambdaOnSwitchWeapon", self, self.WeaponEnt, weapondata )
+    hook.Run( "LambdaOnSwitchWeapon", self, wepent, weapondata )
 
 end
 

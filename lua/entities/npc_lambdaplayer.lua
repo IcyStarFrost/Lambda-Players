@@ -504,7 +504,6 @@ function ENT:Think()
         if self.l_Clip < self.l_MaxClip and random( 100 ) == 1 and CurTime() > self.l_WeaponUseCooldown + 1 then
             self:ReloadWeapon()
         end
-
         
         -- Out of Bounds Fail Safe --
         if !self:IsInWorld() and CurTime() > self.l_outboundsreset then 

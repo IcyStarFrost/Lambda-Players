@@ -22,6 +22,8 @@ function ENT:EyeAngles2()
     return self:GetAttachmentPoint( "eyes" ).Ang
 end
 
+
+
 -- Our team
 function ENT:Team()
     return TEAM_UNASSIGNED
