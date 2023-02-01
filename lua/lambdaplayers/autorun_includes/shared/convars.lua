@@ -103,8 +103,6 @@ CreateLambdaColorConvar( "lambdaplayers_displaycolor", Color( 255, 136, 0 ), tru
 CreateLambdaConvar( "lambdaplayers_lambda_infwanderdistance", 0, true, false, false, "If Lambda Players should be able to walk anywhere on the navmesh instead of only walking within 1500 source units", 0, 1, { type = "Bool", name = "Unlimited Walk Distance", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_allownoclip", 1, true, false, false, "If Lambda Players are allowed to Noclip", 0, 1, { type = "Bool", name = "Allow Noclip", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_allowkillbind", 0, true, false, false, "If Lambda Players are allowed to randomly use their Killbind", 0, 1, { type = "Bool", name = "Allow Killbind", category = "Lambda Server Settings" } )
-CreateLambdaConvar( "lambdaplayers_lambda_fakeisplayer", 0, true, false, false, "If the addon should make Lua think Lambda Players are real players. This is required for SWEP support! This will make addons think Lambdas are real players. WARNING!!!! THIS MAY OR MAY NOT WORK AS INTENDED AND THIS MAY CAUSE ISSUES WITH OTHER ADDONS. IF YOU ENCOUNTER ISSUES WITH THIS, DO NOT BE SURPRISED. THIS IS DOING THE BEST IT CAN!", 0, 1, { type = "Bool", name = "Fake IsPlayer", category = "Lambda Server Settings" } )
-CreateLambdaConvar( "lambdaplayers_lambda_allowswepmerging", 0, true, false, false, "If the addon should add registered SWEPs to Lambda's weapons. You must have Fake IsPlayer turned on! You must restart the server for changes to take effect! WARNING!!!! THIS MAY OR MAY NOT WORK AS INTENDED. IF YOU ENCOUNTER ISSUES WITH THIS, DO NOT BE SURPRISED. THIS IS DOING THE BEST IT CAN!", 0, 1, { type = "Bool", name = "Merge Registered SWEPs", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_allowrandomaddonsmodels", 0, true, false, false, "If Lambda Players can use random addon playermodels", 0, 1, { type = "Bool", name = "Addon Playermodels", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_onlyaddonmodels", 0, true, false, false, "If Lambda Players should only use playermodels that are from addons. Addon Playermodels should be enabled to work.", 0, 1, { type = "Bool", name = "Only Addon Playermodels", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_allowrandomskinsandbodygroups", 0, true, false, false, "If Lambda Players can have their model's skins and bodygroups randomized", 0, 1, { type = "Bool", name = "Random Skins & Bodygroups", category = "Lambda Server Settings" } )
@@ -119,6 +117,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_obeynavmeshattributes", 0, true, false
 CreateLambdaConvar( "lambdaplayers_lambda_overridegamemodehooks", 1, true, false, false, "If the addon is allowed to override the following GAMEMODE hooks to support Lambda Players: GM:PlayerDeath() GM:PlayerStartVoice() GM:PlayerEndVoice() GM:OnNPCKilled() Default SandBox Scoreboard : Changing this requires you to restart the server/game for the changes to apply!", 0, 1, { type = "Bool", name = "Override Gamemode Hooks", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_callonnpckilledhook", 0, true, false, false, "If killed Lambda Players should call the OnNPCKilled hook. Best used with the Override Gamemode Hooks option!", 0, 1, { type = "Bool", name = "Call OnNPCKilled Hook On Death", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_singleplayerthinkdelay", 0, true, false, false, "The amount of seconds Lambda Players will execute their next Think. 0.1 is a good value. Increasing this will increase performance at the cost of delays and decreasing this may decrease performance but have less delays. This only applies to singleplayer since multiplayer automatically adjusts think time", 0, 0.24, { type = "Slider", decimals = 2, name = "Think Delay", category = "Lambda Server Settings" } )
+//CreateLambdaConvar( "lambdaplayers_lambda_useserversideragdolls", 0, true, false, false, "If Lambda Players corpses should be Server-Side", 0, 1, { type = "Bool", name = "Server-Side Corpses", category = "Lambda Server Settings" } )
 --
 
 -- Combat Convars 
@@ -164,7 +163,7 @@ CreateLambdaConvar( "lambdaplayers_text_sentencemixing", 0, true, false, false, 
 --
 
 -- Force Related Convars
-CreateLambdaConvar( "lambdaplayers_force_radius", 750, true, false, false, "Radius for forcing certain actions on Lambda Players", 250, 10000, { type = "Slider", name = "Force Radius", decimals = 0, category = "Force Menu" } )
+CreateLambdaConvar( "lambdaplayers_force_radius", 750, true, false, false, "The Distance for which Lambda Players are affected by Force Menu options.", 250, 25000, { type = "Slider", name = "Force Radius", decimals = 0, category = "Force Menu" } )
 CreateLambdaConvar( "lambdaplayers_lambda_spawnatplayerspawns", 0, true, false, false, "If spawned Lambda Players should spawn at player spawn points", 0, 1, { type = "Bool", name = "Spawn at Player Spawns", category = "Force Menu" } )
 --
 
