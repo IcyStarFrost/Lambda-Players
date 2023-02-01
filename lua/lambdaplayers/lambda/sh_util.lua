@@ -526,32 +526,14 @@ if SERVER then
         self.l_Faceend = time and CurTime() + time or nil
     end
 
-    -- Sets our state
-    function ENT:SetState( state )
-        if state == self.l_State then return end
-        self:DebugPrint( "Changed state from " .. self.l_State .. " to " .. state )
-        self.l_LastState = self.l_State
-        self.l_State = state
-    end
-
     -- Returns if the provided state exists
     function ENT:StateExists( state )
         return isfunction( self[ state ] )
     end
 
-    -- Obviously returns the current state
-    function ENT:GetState()
-        return self.l_State
-    end
-
     -- If we currently are fighting
     function ENT:InCombat()
-        return self:GetState() == "Combat"
-    end
-
-    -- Returns the last state we were in
-    function ENT:GetLastState()
-        return self.l_LastState
+        return ( self:GetState() == "Combat" and LambdaIsValid( self:GetEnemy() ) )
     end
 
     -- Returns if our ai is disabled

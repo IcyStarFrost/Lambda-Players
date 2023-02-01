@@ -15,6 +15,7 @@ local LocalPlayer = LocalPlayer
 local ipairs = ipairs
 local ClientsideRagdoll = ClientsideRagdoll
 local EyeAngles = EyeAngles
+local istable = istable
 local sound_PlayFile = sound.PlayFile
 local coroutine_yield = coroutine.yield
 local origin = Vector()
@@ -66,10 +67,10 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
     local force = net.ReadVector()
     local offset = net.ReadVector()
 
-    if ent:IsBeingDrawn() then -- If we are drawn, do it in normal way
+    if !ent:IsDormant() then -- If we are currenly tracked in client realm, do it in normal way
         local ragdoll = ent:BecomeRagdollOnClient()
         InitializeRagdoll( ragdoll, plyColor, ent, force, offset )
-    else -- If we are not drawn, do some networking
+    else -- If not, do some networking
         net.Start( "lambdaplayers_getlambdavisuals" ) -- Get the Lambda's visuals from the server
             net.WriteEntity( ent )
         net.SendToServer()
@@ -103,8 +104,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
 
     local cs_prop = ents.CreateClientProp( ent:GetModel() )
     
-    
-    if IsValid( lambda ) and !lambda:IsBeingDrawn() then
+    if IsValid( lambda ) and lambda:IsDormant() then
         net.Start( "lambdaplayers_server_getpos" )
             net.WriteEntity( ent )
         net.SendToServer()
@@ -297,7 +297,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                     lastpos = ( IsValid( tickent ) and tickent:GetPos() or ( lastpos and lastpos or origin ) )
                     snd:SetPos( lastpos )
                     
-                    if !globalVC and IsValid( tickent ) and tickent.IsLambdaPlayer and !tickent:IsBeingDrawn() then
+                    if !globalVC and IsValid( tickent ) and tickent.IsLambdaPlayer and tickent:IsDormant() then
                         volume = 0
                     else
                         volume = voicevolume:GetFloat()
