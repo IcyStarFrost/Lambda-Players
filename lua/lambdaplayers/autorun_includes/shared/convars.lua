@@ -175,6 +175,8 @@ CreateLambdaConvar( "lambdaplayers_lambda_spawnatplayerspawns", 0, true, false, 
 
 -- DEBUGGING CONVARS. Server-side only
 CreateLambdaConvar( "lambdaplayers_debug", 0, false, false, false, "Enables the debugging features", 0, 1, { type = "Bool", name = "Enable Debug", category = "Debugging" } )
+CreateLambdaConvar( "lambdaplayers_debug_path", 0, false, false, false, "Draws Lambda Player's current path they're moving through.", 0, 1, { type = "Bool", name = "Enable Path Drawing", category = "Debugging" } )
+CreateLambdaConvar( "lambdaplayers_debug_eyetracing", 0, false, false, false, "Draws a line from Lambda Player's eye position to where they're looking at. Developer mode should be enabled.", 0, 1, { type = "Bool", name = "Enable Eyetracing Line", category = "Debugging" } )
 AddSourceConVarToSettings( "developer", "Enables Source's Developer mode", { type = "Bool", name = "Developer", category = "Debugging" } )
 --
 
