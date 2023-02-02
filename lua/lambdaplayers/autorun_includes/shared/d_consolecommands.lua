@@ -102,18 +102,10 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply 
 	local spawns = LambdaGetPossibleSpawns()
 
 	if !spawnatplayerpoints:GetBool() then
-
 		area = areas[ random( #areas ) ]
-		if !area or !area:IsValid() then
-			areas = navmesh.GetAllNavAreas()
-			area = areas[ random( #areas ) ]
-		end
 
-		if !area or !area:IsValid() then
-			return
-		end
+        if area:IsUnderwater() then return end
 		
-		if area:IsUnderwater() then return end
 		point = area:GetRandomPoint()
 	else
 		spawns = LambdaGetPossibleSpawns()

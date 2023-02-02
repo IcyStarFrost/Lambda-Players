@@ -88,6 +88,8 @@ end
     local maxArmor = GetConVar( "lambdaplayers_lambda_maxarmor" )
     local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
     local collisionPly = GetConVar( "lambdaplayers_lambda_noplycollisions" )
+    local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
+    local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
 --
 
 if CLIENT then
@@ -242,9 +244,9 @@ function ENT:Initialize()
         self.l_LookAheadDistance = 0
         self.loco:SetGravity( -physenv.GetGravity().z ) -- Makes us fall at the same speed as the real players do
 
-        self:SetRunSpeed( 400 )
+        self:SetRunSpeed( runningSpeed:GetInt() )
         self:SetCrouchSpeed( 60 )
-        self:SetWalkSpeed( 200 )
+        self:SetWalkSpeed( walkingSpeed:GetInt() )
 
         self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
         self:PhysicsInitShadow()
