@@ -90,6 +90,7 @@ end
     local collisionPly = GetConVar( "lambdaplayers_lambda_noplycollisions" )
     local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
     local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
+    local LambdaSpawnBehavior = GetConVar( "lambdaplayers_force_spawnbehavior" )
 --
 
 if CLIENT then
@@ -262,7 +263,13 @@ function ENT:Initialize()
             self:HandleCollision( data )
         end)
 
-        
+        if LambdaSpawnBehavior:GetInt() == 1 then
+            local plys = self:FindInSphere( nil, 25000, function( ent ) return ( ent:IsPlayer()) end )
+            self:AttackTarget( plys[ random( #plys ) ] )
+        elseif LambdaSpawnBehavior:GetInt() == 2 then
+            local npcs = self:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() ) end )
+            self:AttackTarget( npcs[ random( #npcs ) ] )
+        end
 
         self:SetLagCompensated( true )
         self:AddFlags( FL_OBJECT + FL_NPC )

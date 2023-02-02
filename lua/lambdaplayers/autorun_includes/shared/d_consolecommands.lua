@@ -6,8 +6,6 @@ local random = math.random
 local IsValid = IsValid
 local distance = GetConVar( "lambdaplayers_force_radius" )
 local spawnatplayerpoints = GetConVar( "lambdaplayers_lambda_spawnatplayerspawns" )
-local LambdaSpawnBehavior = GetConVar( "lambdaplayers_force_spawnbehavior" )
-
 
 -- The reason this lua file has a d_ in its filename is because of the order on how lua files are loaded.
 -- If we didn't do this, we wouldn't have _LAMBDAConVarSettings 
@@ -126,13 +124,6 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply 
 	lambda:SetPos( point )
 	lambda:SetAngles( Angle( 0, random( 0, 360, 0 ), 0 ) )
 	lambda:Spawn()
-
-	if LambdaSpawnBehavior:GetInt() == 1 then
-		lambda:AttackTarget( ply )
-	elseif LambdaSpawnBehavior:GetInt() == 2 then
-		local npcs = lambda:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() ) end )
-		lambda:AttackTarget( npcs[ random( #npcs ) ] )
-	end
 
 	undo.Create( "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
 		undo.SetPlayer( ply )
