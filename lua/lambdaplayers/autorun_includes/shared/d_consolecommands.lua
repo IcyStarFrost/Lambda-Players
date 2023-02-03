@@ -93,25 +93,32 @@ AddConsoleCommandToLambdaSettings( "r_cleardecals", true, "Removes all decals in
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply ) 
 	if IsValid( ply ) and !ply:IsSuperAdmin() then return end
+    if !navmesh.IsLoaded() then return end
 
     local function GetRandomNavmesh()
-        local getallnavareas = navmesh.GetAllNavAreas()
-        local getallareas = {}
-        local findnavareasnearply = navmesh.Find(ply:GetPos(), plyradius:GetInt(), 0, 0)
-        local navspawnnearply = findnavareasnearply[ ( random( #findnavareasnearply ) - 1 ) + 1 ]
+        local FindAllNavMesh_NearPly = navmesh.Find( ply:GetPos(), plyradius:GetInt(), 30, 50 )
+        local NavMesh_NearPly = FindAllNavMesh_NearPly[ random( #FindAllNavMesh_NearPly ) ]
+
+        local FindAllNavMesh_Random = navmesh.Find( ply:GetPos(), random( 250, 99999 ), 30, 50 )
+        local NavMesh_Random = FindAllNavMesh_Random[ random( #FindAllNavMesh_Random ) ]
         
-        for k, v in ipairs( getallnavareas ) do
-            if IsValid( v ) and v:GetSizeX() > 25 and v:GetSizeY() > 25 and !v:IsUnderwater() then getallareas[ #getallareas + 1 ] = v end
-        end
-        
-        for k, v in RandomPairs( getallareas ) do
-            if IsValid( v ) then
-                return navspawnnearply:GetRandomPoint()
+        -- Once we got all nearby NavMesh areas near the player, pick out a random
+        -- navmesh spot to spawn around with the set radius.
+        -- BUG: it doesn't get different heights, unless our player is on that level
+        if plyradius:GetInt() > 1 then
+            for k, v in ipairs( FindAllNavMesh_NearPly ) do
+                if IsValid( v ) and v:GetSizeX() > 35 and v:GetSizeY() > 35 then -- We don't want to spawn them in smaller nav areas, or water.
+                    return NavMesh_NearPly:GetRandomPoint() -- We found a suitable location, spawn it!
+                end
+            end
+        else -- If the radius is 0, find a random navmesh around the player at any range
+            for k, v in ipairs( FindAllNavMesh_Random ) do
+                if IsValid( v ) and v:GetSizeX() > 35 and v:GetSizeY() > 35 then
+                    return NavMesh_Random:GetRandomPoint()
+                end
             end
         end
     end
-
-    if !navmesh.IsLoaded() then return end
 
     local pos
     local ang
