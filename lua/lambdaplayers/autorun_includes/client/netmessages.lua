@@ -66,13 +66,14 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
     local plyColor = net.ReadVector()
     local force = net.ReadVector()
     local offset = net.ReadVector()
+    local overrideEnt = net.ReadEntity()
 
     if !ent:IsDormant() then -- If we are currenly tracked in client realm, do it in normal way
-        local ragdoll = ent:BecomeRagdollOnClient()
+        local ragdoll = ( IsValid( overrideEnt ) and overrideEnt or ent ):BecomeRagdollOnClient()
         InitializeRagdoll( ragdoll, plyColor, ent, force, offset )
     else -- If not, do some networking
         net.Start( "lambdaplayers_getlambdavisuals" ) -- Get the Lambda's visuals from the server
-            net.WriteEntity( ent )
+            net.WriteEntity( IsValid( overrideEnt ) and overrideEnt or ent )
         net.SendToServer()
 
         net.Receive( "lambdaplayers_sendlambdavisuals", function() -- Is successful, receive and create a standalone ragdoll entity

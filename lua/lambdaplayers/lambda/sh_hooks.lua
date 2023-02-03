@@ -79,7 +79,10 @@ if SERVER then
             net.WriteVector( self:GetPlyColor() )
             net.WriteVector( info:GetDamageForce() )
             net.WriteVector( info:GetDamagePosition() )
+            net.WriteEntity( self.l_BecomeRagdollEntity )
         net.Broadcast()
+
+        self.l_BecomeRagdollEntity = NULL
 
         if !self:IsWeaponMarkedNodraw() then
             net.Start( "lambdaplayers_createclientsidedroppedweapon" )
