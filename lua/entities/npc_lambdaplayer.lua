@@ -90,7 +90,7 @@ end
     local collisionPly = GetConVar( "lambdaplayers_lambda_noplycollisions" )
     local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
     local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
-    local LambdaSpawnBehavior = GetConVar( "lambdaplayers_force_spawnbehavior" )
+    local LambdaSpawnBehavior = GetConVar( "lambdaplayers_combat_spawnbehavior" )
 --
 
 if CLIENT then

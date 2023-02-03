@@ -6,6 +6,7 @@ local random = math.random
 local IsValid = IsValid
 local distance = GetConVar( "lambdaplayers_force_radius" )
 local spawnatplayerpoints = GetConVar( "lambdaplayers_lambda_spawnatplayerspawns" )
+local plyradius = GetConVar( "lambdaplayers_force_spawnradiusply" )
 
 -- The reason this lua file has a d_ in its filename is because of the order on how lua files are loaded.
 -- If we didn't do this, we wouldn't have _LAMBDAConVarSettings 
@@ -93,36 +94,45 @@ AddConsoleCommandToLambdaSettings( "r_cleardecals", true, "Removes all decals in
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply ) 
 	if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
-	local areas = navmesh.GetAllNavAreas()
-	local area
-	local point
+    local function GetRandomNavmesh()
+        local getallnavareas = navmesh.GetAllNavAreas()
+        local getallareas = {}
+        local findnavareasnearply = navmesh.Find(ply:GetPos(), plyradius:GetInt(), 0, 0)
+        local navspawnnearply = findnavareasnearply[ ( random( #findnavareasnearply ) - 1 ) + 1 ]
+        
+        for k, v in ipairs( getallnavareas ) do
+            if IsValid( v ) and v:GetSizeX() > 25 and v:GetSizeY() > 25 and !v:IsUnderwater() then getallareas[ #getallareas + 1 ] = v end
+        end
+        
+        for k, v in RandomPairs( getallareas ) do
+            if IsValid( v ) then
+                return navspawnnearply:GetRandomPoint()
+            end
+        end
+    end
 
-	local spawns = LambdaGetPossibleSpawns()
+    if !navmesh.IsLoaded() then return end
 
-	if !spawnatplayerpoints:GetBool() then
-		area = areas[ random( #areas ) ]
+    local pos
+    local ang
+    local spawns
 
-        if area:IsUnderwater() then return end
-		
-		point = area:GetRandomPoint()
-	else
+    -- Spawning at player spawn points
+    if spawnatplayerpoints:GetBool() then
 		spawns = LambdaGetPossibleSpawns()
-
 		local spawn = spawns[ random( #spawns ) ]
-		if IsValid( spawn ) then
-			point = spawn:GetPos()
-		else
-			print( "RANDOM LAMBDA SPAWN: Player Spawn Is not Valid!" )
-			ply:EmitSound( "buttons/button8.wav", 50 )
-			PrintMessage( HUD_PRINTTALK, "Spawn Failed! Check Console" )
-			print( "Can't find info_player_start on map. Using random navmesh area." )
-			return
-		end
-	end
+        
+        pos = spawn:GetPos()
+        ang = Angle( 0, random( -180, 180 ), 0 )
+    else -- We spawn at a random navmesh
+        pos = GetRandomNavmesh()
+        ang = Angle( 0, random( -180, 180 ), 0 )
+    end
+
 
 	local lambda = ents.Create( "npc_lambdaplayer" )
-	lambda:SetPos( point )
-	lambda:SetAngles( Angle( 0, random( 0, 360, 0 ), 0 ) )
+	lambda:SetPos( pos )
+	lambda:SetAngles( ang )
 	lambda:Spawn()
 
 	undo.Create( "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
