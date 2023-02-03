@@ -19,7 +19,7 @@ AddUActionToLambdaUA( function( self )
     if random( 1, 3 ) != 1 then return end
     if self:GetState() == "Idle" then
         self:SwitchToRandomWeapon()
-    elseif self:GetState() == "Combat" then
+    elseif self:InCombat() then
         self:SwitchToLethalWeapon()
     end
 end )

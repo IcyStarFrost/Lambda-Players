@@ -1,6 +1,6 @@
 
--- State functions will now be called according to the self.l_State ( self:GetState() ) variable.
--- For example self.l_State = "Idle" will make the Lambda Player to call the Idle() function
+-- State functions will now be called according to the self:GetState() variable.
+-- For example, if Lambda Player's self:GetState() is equal to "Idle" then it will call the Idle() function
 -- Definitely a lot more cleaner this way
 
 local CurTime = CurTime

@@ -1,7 +1,7 @@
 
 
 local LambdaIsValid = LambdaIsValid
-local dev = GetConVar( "developer" )
+local dev = GetConVar( "lambdaplayers_debug_path" )
 local IsValid = IsValid
 local math_max = math.max
 local color_white = color_white

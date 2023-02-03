@@ -40,7 +40,7 @@ end
     local random = math.random
     local rand = math.Rand
     local SortTable = table.sort
-    local developer = GetConVar( "developer" )
+    local eyetracing = GetConVar( "lambdaplayers_debug_eyetracing" )
     local isfunction = isfunction
     local Lerp = Lerp
     local LerpVector = LerpVector
@@ -119,7 +119,8 @@ function ENT:Initialize()
             self[ "l_Spawned" .. name ] = {}
         end
 
-        self.l_State = "Idle" -- The state we are in. See sv_states.lua
+        self.l_State = "Idle" -- The current state we are in
+        self.l_LastState = "Idle" -- The last state we were in
         self.l_Weapon = "" -- The weapon we currently have
         self.l_queuedtext = nil -- The text that we want to send in chat
         self.l_typedtext = nil -- The current text we have typed out so far
@@ -191,7 +192,8 @@ function ENT:Initialize()
         self:SetTextPerMinute( 400 ) -- The amount of characters we can type within a minute
         self:SetNW2String( "lambda_steamid", "STEAM_0:0:" .. random( 1, 200000000 ) )
         self:SetNW2String( "lambda_ip", "192." .. random( 10, 200 ) .. "." .. random( 10 ).. "." .. random( 10, 200 ) .. ":27005" )
-        
+        self:SetNW2String( "lambda_state", "Idle" )
+        self:SetNW2String( "lambda_laststate", "Idle" )
         
         self.l_BodyGroupData = {}
         if rndBodyGroups:GetBool() then
@@ -365,6 +367,7 @@ function ENT:SetupDataTables()
 
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
     self:NetworkVar( "Float", 1, "VoiceLevel" )
+
 end
 
 function ENT:Draw()
@@ -521,7 +524,7 @@ function ENT:Think()
         end
 
         -- Eye tracing
-        if developer:GetBool() then
+        if eyetracing:GetBool() then
             local attach = self:GetAttachmentPoint( "eyes" )
             debugoverlay.Line( attach.Pos, self:GetEyeTrace().HitPos, 0.1, color_white, true  )
         end
