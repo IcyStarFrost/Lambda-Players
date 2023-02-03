@@ -172,7 +172,7 @@ CreateLambdaConvar( "lambdaplayers_text_sentencemixing", 0, true, false, false, 
 
 -- Force Related Convars
 CreateLambdaConvar( "lambdaplayers_force_radius", 750, true, false, false, "The Distance for which Lambda Players are affected by Force Menu options.", 250, 25000, { type = "Slider", name = "Force Radius", decimals = 0, category = "Force Menu" } )
-CreateLambdaConvar( "lambdaplayers_force_spawnradiusply", 1500, true, false, false, "The Distance for which Lambda Players can spawn around the player. Set to 0 to disable.", 0, 25000, { type = "Slider", name = "Spawn Around Player Radius", decimals = 0, category = "Force Menu" } )
+CreateLambdaConvar( "lambdaplayers_force_spawnradiusply", 3000, true, false, false, "The Distance for which Lambda Players can spawn around the player. Set to 0 to disable.", 0, 25000, { type = "Slider", name = "Spawn Around Player Radius", decimals = 0, category = "Force Menu" } )
 CreateLambdaConvar( "lambdaplayers_lambda_spawnatplayerspawns", 0, true, false, false, "If spawned Lambda Players should spawn at player spawn points", 0, 1, { type = "Bool", name = "Spawn at Player Spawns", category = "Force Menu" } )
 --
 
