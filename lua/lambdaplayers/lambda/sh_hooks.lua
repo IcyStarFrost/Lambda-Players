@@ -137,17 +137,15 @@ if SERVER then
     function ENT:OnInjured( info )
         local attacker = info:GetAttacker()
 
-        if self:GetState() != "RetreatFromCombat" and attacker != self and random( 1, 2 ) == 1 and LambdaIsValid( attacker ) and allowRetreat:GetBool() then
+        if self:GetState() != "Retreat" and attacker != self and random( 1, 2 ) == 1 and LambdaIsValid( attacker ) and allowRetreat:GetBool() then
             local hpThreshold = ( 100 - self:GetCombatChance() )
-            if hpThreshold > 33 then hpThreshold = hpThreshold / random( 2, 3 ) end
-            if hpThreshold <= 10 then hpThreshold = hpThreshold * random( 1, 3 ) end
+            if hpThreshold > 33 then hpThreshold = hpThreshold / random( 2, 4 ) end
+            if hpThreshold <= 10 then hpThreshold = hpThreshold * random( 1, 2 ) end
 
             if self:Health() < hpThreshold then
                 self:CancelMovement()
                 self:SetEnemy( NULL )
-                self.l_retreatendtime = CurTime() + random( 5, 15 )
-                self.l_RetreatTarget = attacker
-                self:SetState( "RetreatFromCombat" )
+                self:RetreatFrom( attacker )
                 return
             end
         end

@@ -206,15 +206,15 @@ function ENT:TBaggingPosition()
 end
 
 local retreatOptions = { run = true }
-function ENT:RetreatFromCombat()
+function ENT:Retreat()
     self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
 
     local rndPos = self:GetRandomPosition( nil, 4000 )
     self:MoveToPos( rndPos, retreatOptions )
 
     local target = self.l_RetreatTarget
-    if !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 500 ) or CurTime() > self.l_retreatendtime then 
+    if CurTime() > self.l_retreatendtime or target != nil and ( !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 600 ) ) then 
         self:SetState( "Idle" ) 
-        self.l_RetreatTarget = NULL
+        self.l_RetreatTarget = nil
     end
 end
