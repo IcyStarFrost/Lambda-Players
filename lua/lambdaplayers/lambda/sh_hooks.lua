@@ -19,7 +19,7 @@ local callnpchook = GetConVar( "lambdaplayers_lambda_callonnpckilledhook" )
 local deathAlways = GetConVar( "lambdaplayers_voice_alwaysplaydeathsnds" )
 local respawnTime = GetConVar( "lambdaplayers_lambda_respawntime" )
 local respawnSpeech = GetConVar( "lambdaplayers_lambda_dontrespawnifspeaking" )
-local allowRetreat = GetConVar( "lambdaplayers_combat_allowretreating" )
+local retreatLowHP = GetConVar( "lambdaplayers_combat_retreatonlowhealth" )
 
 if SERVER then
 
@@ -137,7 +137,7 @@ if SERVER then
     function ENT:OnInjured( info )
         local attacker = info:GetAttacker()
 
-        if self:GetState() != "Retreat" and attacker != self and random( 1, 2 ) == 1 and LambdaIsValid( attacker ) and allowRetreat:GetBool() then
+        if self:GetState() != "Retreat" and attacker != self and random( 1, 2 ) == 1 and LambdaIsValid( attacker ) and retreatLowHP:GetBool() then
             local hpThreshold = ( 100 - self:GetCombatChance() )
             if hpThreshold > 33 then hpThreshold = hpThreshold / random( 2, 4 ) end
             if hpThreshold <= 10 then hpThreshold = hpThreshold * random( 1, 2 ) end
