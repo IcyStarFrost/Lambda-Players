@@ -6,6 +6,7 @@ local Rand = math.Rand
 local bor = bit.bor
 
 local useReworkedVariant = CreateLambdaConvar( "lambdaplayers_weapons_fistsreworked", 0, true, false, true, "If Lambda Player's fists should use their reworked stats instead of default Gmod ones.", 0, 1, { type = "Bool", name = "Fists - Use Reworked Stats", category = "Weapon Utilities" } )
+local useAltSounds = CreateLambdaConvar( "lambdaplayers_weapons_fistsaltsounds", 0, true, false, true, "If Lambda Player's fists should use alternate sounds instead of Half-Life 2 sounds.", 0, 1, { type = "Bool", name = "Fists - Use Alternate Sounds", category = "Weapon Utilities" } )
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
     fists = {
@@ -53,7 +54,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:SimpleTimer( 0.2, function() self:RemoveGesture( ACT_HL2MP_FIST_BLOCK ) end, true )
 
             dmginfo:ScaleDamage( Rand( 0.66, 0.8 ) )
-            wepent:EmitSound( "Flesh.ImpactHard" )
+            if !useAltSounds:GetBool() then wepent:EmitSound( "Flesh.ImpactHard" ) end
+            if useAltSounds:GetBool() then wepent:EmitSound( "lambdaplayers/weapons/fist/strike_faceblow_".. random( 1, 3 ).. ".mp3", 80 ) end
             self.l_WeaponUseCooldown = self.l_WeaponUseCooldown + Rand( 0.25, 0.33 )
         end,
 
@@ -64,7 +66,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self.l_WeaponUseCooldown = CurTime() + ( reworkStats and Rand( 0.55, 0.75 ) or 0.9 )
             wepent.FistComboTime = self.l_WeaponUseCooldown + ( reworkStats and 0.25 or 0.1 )
 
-            wepent:EmitSound( "WeaponFrag.Throw" )
+            if !useAltSounds:GetBool() then wepent:EmitSound( "WeaponFrag.Throw" ) end
+            if useAltSounds:GetBool() then wepent:EmitSound( "lambdaplayers/weapons/fist/whoosh_street_".. random( 1, 5 ).. ".mp3", 80 ) end
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_FIST )
             local fistSeqID = self:LookupSequence( "range_fists_" .. ( random( 1, 2 ) == 1 and "r" or "l" ) )
@@ -94,7 +97,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 dmginfo:SetDamageForce( attackForce )
 
                 target:TakeDamageInfo( dmginfo )
-                wepent:EmitSound( "Flesh.ImpactHard" )
+                if !useAltSounds:GetBool() then wepent:EmitSound( "Flesh.ImpactHard" ) end
+                if useAltSounds:GetBool() then wepent:EmitSound( "lambdaplayers/weapons/fist/strike_faceblow_".. random( 1, 3 ).. ".mp3", 80 ) end
             end)
 
             return true
