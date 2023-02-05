@@ -1,5 +1,4 @@
 local IsValid = IsValid
-local isfunction = isfunction
 local GetConVar = GetConVar
 local net = net
 local print = print

@@ -61,6 +61,9 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedata", function( ply )
 
     LambdaPlayers_Notify( ply, "Updated Lambda Data", 3, "buttons/button15.wav" )
 
+    net.Start( "lambdaplayers_updatedata" )
+    net.Broadcast()
+
     cooldown = CurTime() + 3
 
     hook.Run( "LambdaOnDataUpdate" )

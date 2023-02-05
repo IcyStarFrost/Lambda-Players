@@ -335,6 +335,20 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
     end)
 end
 
+net.Receive( "lambdaplayers_updatedata", function()
+    LambdaPlayerNames = LAMBDAFS:GetNameTable()
+    LambdaPlayerProps = LAMBDAFS:GetPropTable()
+    LambdaPlayerMaterials = LAMBDAFS:GetMaterialTable()
+    Lambdaprofilepictures = LAMBDAFS:GetProfilePictures()
+    LambdaVoiceLinesTable = LAMBDAFS:GetVoiceLinesTable()
+    LambdaVoiceProfiles = LAMBDAFS:GetVoiceProfiles()
+    LambdaPlayerSprays = LAMBDAFS:GetSprays()
+    LambdaTextTable = LAMBDAFS:GetTextTable()
+    LambdaTextProfiles = LAMBDAFS:GetTextProfiles()
+    LambdaPersonalProfiles = file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
+    chat.AddText( "Lambda Data was updated by the Server" )
+end )
+
 net.Receive("lambdaplayers_playsoundfile", function()
     local lambda = net.ReadEntity()
     local soundname = net.ReadString()
