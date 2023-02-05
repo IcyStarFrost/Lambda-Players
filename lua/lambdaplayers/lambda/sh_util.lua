@@ -457,6 +457,7 @@ if SERVER then
         end
     end
 
+    -- Makes the Lambda laugh towards a position/entity
     function ENT:LaughAt( pos )
         pos = ( isentity( pos ) and IsValid( pos ) and pos:GetPos() or pos)
         self:LookTo( pos, 3 )
@@ -466,6 +467,7 @@ if SERVER then
         end )
     end
 
+    -- PlaySequenceAndWait but without t-posing
     function ENT:PlayGestureAndWait( id, speed )
 
         local layer = self:AddGesture( id )
