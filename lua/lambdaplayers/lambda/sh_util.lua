@@ -436,13 +436,21 @@ if SERVER then
     end
 
     -- Attacks the specified entity
-    function ENT:AttackTarget( ent )
-        if !IsValid( ent ) then return end
+    function ENT:AttackTarget( ent, forceAttack )
+        if !IsValid( ent ) or !forceAttack and self:GetState() == "Retreat" then return end
         if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( self:GetVoiceLine( "taunt" ), true ) end
         self:SetEnemy( ent )
         self:SetState( "Combat" )
         self:CancelMovement()
         hook.Run( "LambdaOnAttackTarget", self, ent )
+    end
+
+    -- Retreats from entity target
+    -- If the target is not specified, then Lambda will stop retreating only when time runs out
+    function ENT:RetreatFrom( target, timeout )
+        self.l_retreatendtime = CurTime() + ( timeout or random( 5, 15 ) )
+        self.l_RetreatTarget = target
+        self:SetState( "Retreat" )
     end
 
     function ENT:LaughAt( pos )
