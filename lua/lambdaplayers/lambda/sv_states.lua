@@ -207,7 +207,9 @@ end
 
 local retreatOptions = { run = true }
 function ENT:Retreat()
-    self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
+    if self:GetVoiceChance() != 0 then
+        self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
+    end
 
     local rndPos = self:GetRandomPosition( nil, 4000 )
     self:MoveToPos( rndPos, retreatOptions )

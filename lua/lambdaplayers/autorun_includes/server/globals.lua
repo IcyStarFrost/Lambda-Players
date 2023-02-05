@@ -327,6 +327,16 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         reload = ACT_HL2MP_GESTURE_RELOAD_CROSSBOW,
         swimIdle = ACT_HL2MP_SWIM_IDLE_CROSSBOW,
         swimMove = ACT_HL2MP_SWIM_CROSSBOW
+    },
+    ["panic"] = {
+        idle = ACT_HL2MP_IDLE_SCARED,
+        run = ACT_HL2MP_RUN_PANICKED,
+        walk = ACT_HL2MP_RUN_PANICKED,
+        jump = ACT_HL2MP_JUMP_SLAM,
+        crouchIdle = ACT_HL2MP_IDLE_SCARED,
+        crouchWalk = ACT_HL2MP_RUN_PANICKED,
+        swimIdle = ACT_HL2MP_SWIM_IDLE,
+        swimMove = ACT_HL2MP_SWIM
     }
 }
 

@@ -451,6 +451,10 @@ if SERVER then
         self.l_retreatendtime = CurTime() + ( timeout or random( 5, 15 ) )
         self.l_RetreatTarget = target
         self:SetState( "Retreat" )
+
+        if self:GetVoiceChance() != 0 then
+            self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
+        end
     end
 
     function ENT:LaughAt( pos )
