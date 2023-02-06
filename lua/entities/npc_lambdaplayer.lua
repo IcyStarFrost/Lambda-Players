@@ -83,6 +83,14 @@ end
     local collisionmins = Vector( -16, -16, 0 )
     local standingcollisionmaxs = Vector( 16, 16, 72 )
     local crouchingcollisionmaxs = Vector( 16, 16, 36 )
+    local maxHealth = GetConVar( "lambdaplayers_lambda_maxhealth" )
+    local spawnHealth = GetConVar( "lambdaplayers_lambda_spawnhealth" )
+    local maxArmor = GetConVar( "lambdaplayers_lambda_maxarmor" )
+    local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
+    local collisionPly = GetConVar( "lambdaplayers_lambda_noplycollisions" )
+    local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
+    local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
+    local LambdaSpawnBehavior = GetConVar( "lambdaplayers_combat_spawnbehavior" )
 --
 
 if CLIENT then
@@ -173,12 +181,12 @@ function ENT:Initialize()
         self:SetLambdaName( self:GetOpenName() )
         self:SetProfilePicture( #Lambdaprofilepictures > 0 and Lambdaprofilepictures[ random( #Lambdaprofilepictures ) ] or "spawnicons/".. sub( self:GetModel(), 1, #self:GetModel() - 4 ).. ".png" )
 
-        self:SetMaxHealth( 100 )
-        self:SetNWMaxHealth( 100 )
-        self:SetHealth( 100 )
+        self:SetMaxHealth( maxHealth:GetInt() )
+        self:SetNWMaxHealth( maxHealth:GetInt() )
+        self:SetHealth( spawnHealth:GetInt() )
 
-        self:SetArmor( 0 ) -- Our current armor
-        self:SetMaxArmor( 100 ) -- Our maximum armor
+        self:SetArmor( spawnArmor:GetInt() ) -- Our current armor
+        self:SetMaxArmor( maxArmor:GetInt() ) -- Our maximum armor
 
         self:SetPlyColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
         self:SetPhysColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
@@ -237,19 +245,31 @@ function ENT:Initialize()
         self.l_LookAheadDistance = 0
         self.loco:SetGravity( -physenv.GetGravity().z ) -- Makes us fall at the same speed as the real players do
 
-        self:SetRunSpeed( 400 )
+        self:SetRunSpeed( runningSpeed:GetInt() )
         self:SetCrouchSpeed( 60 )
-        self:SetWalkSpeed( 200 )
+        self:SetWalkSpeed( walkingSpeed:GetInt() )
 
         self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
         self:PhysicsInitShadow()
-        self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
+
+        if !collisionPly:GetBool() then
+            self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
+        else
+            self:SetCollisionGroup(COLLISION_GROUP_PASSABLE_DOOR)
+        end
+
         self:SetSolidMask( MASK_PLAYERSOLID )
         self:AddCallback( "PhysicsCollide", function( self, data )
             self:HandleCollision( data )
         end)
 
-        
+        if LambdaSpawnBehavior:GetInt() == 1 then
+            local plys = self:FindInSphere( nil, 25000, function( ent ) return ( ent:IsPlayer()) end )
+            self:AttackTarget( plys[ random( #plys ) ] )
+        elseif LambdaSpawnBehavior:GetInt() == 2 then
+            local npcs = self:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() ) end )
+            self:AttackTarget( npcs[ random( #npcs ) ] )
+        end
 
         self:SetLagCompensated( true )
         self:AddFlags( FL_OBJECT + FL_NPC )
@@ -637,7 +657,8 @@ function ENT:Think()
 
         -- Animations --
         if self.l_UpdateAnimations then
-            local anims = _LAMBDAPLAYERSHoldTypeAnimations[ self.l_HoldType ]
+            local holdtype = self:GetState() == "Retreat" and "panic" or self.l_HoldType
+            local anims = _LAMBDAPLAYERSHoldTypeAnimations[ holdtype ]
 
             if self:IsOnGround() then
                 if self.loco:GetVelocity():IsZero() then

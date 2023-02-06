@@ -286,7 +286,7 @@ end
 function LAMBDAFS:GetVoiceProfiles()
     local LambdaVoiceProfiles = {}
 
-    local _,voiceprofiles  = file.Find( "sound/lambdaplayers/voiceprofiles/*", "GAME", "nameasc" )
+    local _, voiceprofiles  = file.Find( "sound/lambdaplayers/voiceprofiles/*", "GAME", "nameasc" )
 
     for i, profile in ipairs( voiceprofiles ) do
         LambdaVoiceProfiles[ profile ] = {} 
@@ -298,6 +298,29 @@ function LAMBDAFS:GetVoiceProfiles()
                 LambdaVoiceProfiles[ profile ][ v[ 1 ] ] = {}
                 for index, voiceline in ipairs( voicelines ) do
                     table_insert( LambdaVoiceProfiles[ profile ][ v[ 1 ] ], "lambdaplayers/voiceprofiles/" .. profile .. "/" .. v[ 1 ] .. "/" .. voiceline )
+                end
+            else
+                LambdaVoiceProfiles[ profile ][ v[ 1 ] ] = LambdaVoiceLinesTable[ v[ 1 ] ]
+            end
+
+        end
+
+    end
+
+
+    -- Zeta vp support I guess
+    local _, zetavp  = file.Find( "sound/zetaplayer/custom_vo/vp_*", "GAME", "nameasc" )
+
+    for i, profile in ipairs( zetavp ) do
+        LambdaVoiceProfiles[ profile ] = {} 
+
+        for k, v in ipairs( LambdaValidVoiceTypes ) do 
+            local voicelines  = file.Find( "sound/zetaplayer/custom_vo/" .. profile .. "/" .. v[ 1 ] .. "/*", "GAME", "nameasc" )
+
+            if voicelines and #voicelines > 0 then
+                LambdaVoiceProfiles[ profile ][ v[ 1 ] ] = {}
+                for index, voiceline in ipairs( voicelines ) do
+                    table_insert( LambdaVoiceProfiles[ profile ][ v[ 1 ] ], "zetaplayer/custom_vo/" .. profile .. "/" .. v[ 1 ] .. "/" .. voiceline )
                 end
             else
                 LambdaVoiceProfiles[ profile ][ v[ 1 ] ] = LambdaVoiceLinesTable[ v[ 1 ] ]

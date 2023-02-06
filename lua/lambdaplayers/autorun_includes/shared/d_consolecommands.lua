@@ -5,7 +5,8 @@ local ipairs = ipairs
 local random = math.random
 local IsValid = IsValid
 local distance = GetConVar( "lambdaplayers_force_radius" )
-
+local spawnatplayerpoints = GetConVar( "lambdaplayers_lambda_spawnatplayerspawns" )
+local plyradius = GetConVar( "lambdaplayers_force_spawnradiusply" )
 
 -- The reason this lua file has a d_ in its filename is because of the order on how lua files are loaded.
 -- If we didn't do this, we wouldn't have _LAMBDAConVarSettings 
@@ -61,6 +62,9 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedata", function( ply )
 
     LambdaPlayers_Notify( ply, "Updated Lambda Data", 3, "buttons/button15.wav" )
 
+    net.Start( "lambdaplayers_updatedata" )
+    net.Broadcast()
+
     cooldown = CurTime() + 3
 
     hook.Run( "LambdaOnDataUpdate" )
@@ -92,46 +96,57 @@ AddConsoleCommandToLambdaSettings( "r_cleardecals", true, "Removes all decals in
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply ) 
 	if IsValid( ply ) and !ply:IsSuperAdmin() then return end
+    if !navmesh.IsLoaded() then return end
 
-	local areas = navmesh.GetAllNavAreas()
-	local area
-	local point
+    local function GetRandomNavmesh()
+        local FindAllNavMesh_NearPly = navmesh.Find( ply:GetPos(), plyradius:GetInt(), 30, 50 )
+        local NavMesh_NearPly = FindAllNavMesh_NearPly[ random( #FindAllNavMesh_NearPly ) ]
 
-	local spawns = LambdaGetPossibleSpawns()
+        local FindAllNavMesh_Random = navmesh.Find( ply:GetPos(), random( 250, 99999 ), 30, 50 )
+        local NavMesh_Random = FindAllNavMesh_Random[ random( #FindAllNavMesh_Random ) ]
+        
+        -- Once we got all nearby NavMesh areas near the player, pick out a random
+        -- navmesh spot to spawn around with the set radius.
+        -- BUG: it doesn't get different heights, unless our player is on that level
+        if plyradius:GetInt() > 1 then
+            for k, v in ipairs( FindAllNavMesh_NearPly ) do
+                if IsValid( v ) and v:GetSizeX() > 35 and v:GetSizeY() > 35 then -- We don't want to spawn them in smaller nav areas, or water.
+                    return NavMesh_NearPly:GetRandomPoint() -- We found a suitable location, spawn it!
+                end
+            end
+        else -- If the radius is 0, find a random navmesh around the player at any range
+            for k, v in ipairs( FindAllNavMesh_Random ) do
+                if IsValid( v ) and v:GetSizeX() > 35 and v:GetSizeY() > 35 then
+                    return NavMesh_Random:GetRandomPoint()
+                end
+            end
+        end
+    end
 
-	if !spawnatplayerpoints:GetBool() then
+    local pos
+    local ang
+    local spawns
 
-		area = areas[ random( #areas ) ]
-		if !area or !area:IsValid() then
-			areas = navmesh.GetAllNavAreas()
-			area = areas[ random( #areas ) ]
-		end
-
-		if !area or !area:IsValid() then
-			return
-		end
-		
-		if area:IsUnderwater() then return end
-		point = area:GetRandomPoint()
-	else
+    -- Spawning at player spawn points
+    if spawnatplayerpoints:GetBool() then
 		spawns = LambdaGetPossibleSpawns()
-
 		local spawn = spawns[ random( #spawns ) ]
-		if IsValid( spawn ) then
-			point = spawn:GetPos()
-		else
-			print( "RANDOM LAMBDA SPAWN: Player Spawn Is not Valid!" )
-			ply:EmitSound( "buttons/button8.wav", 50 )
-			PrintMessage( HUD_PRINTTALK, "Spawn Failed! Check Console" )
-			print( "Can't find info_player_start on map. Using random navmesh area." )
-			return
-		end
-	end
+        
+        pos = spawn:GetPos()
+        ang = Angle( 0, random( -180, 180 ), 0 )
+    else -- We spawn at a random navmesh
+        pos = GetRandomNavmesh()
+        ang = Angle( 0, random( -180, 180 ), 0 )
+    end
+
 
 	local lambda = ents.Create( "npc_lambdaplayer" )
-	lambda:SetPos( point )
-	lambda:SetAngles( Angle( 0, random( 0, 360, 0 ), 0 ) )
+	lambda:SetPos( pos )
+	lambda:SetAngles( ang )
 	lambda:Spawn()
+
+    local weapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )
+    if lambda:WeaponDataExists( weapon ) then lambda:SwitchWeapon( weapon ) lambda.l_SpawnWeapon = weapon end
 
 	undo.Create( "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
 		undo.SetPlayer( ply )
@@ -166,12 +181,12 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombatlambda", function( ply
 
     for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance:GetInt() ) ) do
         if IsValid( v ) and v.IsLambdaPlayer then
-			local npcs = v:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() ) end)
+			local npcs = v:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() ) end )
 			v:AttackTarget( npcs[ random( #npcs ) ] )
 		end
     end
 
-end, false, "Forces all Lambda Players attack anything", { name = "Lambda Players Attack Anything", category = "Force Menu" } )
+end, false, "Forces all Lambda Players to attack anything", { name = "Lambda Players Attack Anything", category = "Force Menu" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcekill", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
