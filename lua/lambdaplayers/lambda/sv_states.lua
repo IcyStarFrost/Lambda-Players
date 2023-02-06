@@ -207,16 +207,16 @@ end
 
 local retreatOptions = { run = true }
 function ENT:Retreat()
+    local target = self.l_RetreatTarget
+    if CurTime() > self.l_retreatendtime or target != nil and ( !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 600 ) ) then 
+        self:SetState( "Idle" ) 
+        self.l_RetreatTarget = nil
+    end
+
     if self:GetVoiceChance() != 0 then
         self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
     end
 
     local rndPos = self:GetRandomPosition( nil, 4000 )
     self:MoveToPos( rndPos, retreatOptions )
-
-    local target = self.l_RetreatTarget
-    if CurTime() > self.l_retreatendtime or target != nil and ( !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 600 ) ) then 
-        self:SetState( "Idle" ) 
-        self.l_RetreatTarget = nil
-    end
 end

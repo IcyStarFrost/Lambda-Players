@@ -185,6 +185,9 @@ function ENT:ReloadWeapon()
     if self.l_HasMelee or self.l_Clip == self.l_MaxClip or self:GetIsReloading() then return end
     local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
 
+    local onReloadFunc = weapondata.OnReload
+    if isfunction( onReloadFunc ) and onReloadFunc( self, wep ) == true then return end
+
     self:SetIsReloading( true )
 
     local wep = self:GetWeaponENT()
@@ -205,9 +208,6 @@ function ENT:ReloadWeapon()
         local id = self:AddGesture( anim )
         self:SetLayerPlaybackRate( id, animspeed )
     end
-
-    local onReloadFunc = weapondata.OnReload
-    if isfunction( onReloadFunc ) then onReloadFunc( self, wep ) end
 
     self:NamedTimer( "Reload", time, 1, function()
         if !self:GetIsReloading() then return end
