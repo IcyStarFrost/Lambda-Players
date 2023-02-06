@@ -124,13 +124,14 @@ CreateLambdaConvar( "lambdaplayers_lambda_overridegamemodehooks", 1, true, false
 CreateLambdaConvar( "lambdaplayers_lambda_callonnpckilledhook", 0, true, false, false, "If killed Lambda Players should call the OnNPCKilled hook. Best used with the Override Gamemode Hooks option!", 0, 1, { type = "Bool", name = "Call OnNPCKilled Hook On Death", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_singleplayerthinkdelay", 0, true, false, false, "The amount of seconds Lambda Players will execute their next Think. 0.1 is a good value. Increasing this will increase performance at the cost of delays and decreasing this may decrease performance but have less delays. This only applies to singleplayer since multiplayer automatically adjusts think time", 0, 0.24, { type = "Slider", decimals = 2, name = "Think Delay", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_noplycollisions", 0, true, false, false, "If Lambda Players can pass through players (Useful in small corridors/areas)", 0, 1, { type = "Bool", name = "Disable Player Collisions", category = "Lambda Server Settings" } )
-//CreateLambdaConvar( "lambdaplayers_lambda_useserversideragdolls", 0, true, false, false, "If Lambda Players corpses should be Server-Side", 0, 1, { type = "Bool", name = "Server-Side Corpses", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_panicanimations", 0, true, false, false, "If panicking Lambda Players should use Panic Animations", 0, 1, { type = "Bool", name = "Use Panic Animations", category = "Lambda Server Settings" } )
 --
 
 -- Combat Convars 
 CreateLambdaConvar( "lambdaplayers_combat_allowtargetyou", 1, true, true, true, "If Lambda Players are allowed to attack you", 0, 1, { type = "Bool", name = "Target You", category = "Combat" } )
-CreateLambdaConvar( "lambdaplayers_combat_allowretreating", 1, true, false, false, "If Lambda Players are allowed to retreat from enemy if they're low on health", 0, 1, { type = "Bool", name = "Allow Retreating", category = "Combat" } )
+CreateLambdaConvar( "lambdaplayers_combat_retreatonlowhealth", 1, true, false, false, "If Lambda Players should start retreating if they are low on health", 0, 1, { type = "Bool", name = "Retreat On Low Health", category = "Combat" } )
 CreateLambdaConvar( "lambdaplayers_combat_spawnbehavior", 0, true, false, false, "If Lambda Players should  behavior when spawned. 0 - Nothing, 1 - Attack you, 2 - Attack random Lambda/NPC", 0 , 2, { type = "Slider", decimals = 0, name = "Spawn Behavior Modifier", category = "Combat" } )
+
 --
 
 -- Lambda Player Convars

@@ -66,13 +66,14 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
     local plyColor = net.ReadVector()
     local force = net.ReadVector()
     local offset = net.ReadVector()
+    local overrideEnt = net.ReadEntity()
 
     if !ent:IsDormant() then -- If we are currenly tracked in client realm, do it in normal way
-        local ragdoll = ent:BecomeRagdollOnClient()
+        local ragdoll = ( IsValid( overrideEnt ) and overrideEnt or ent ):BecomeRagdollOnClient()
         InitializeRagdoll( ragdoll, plyColor, ent, force, offset )
     else -- If not, do some networking
         net.Start( "lambdaplayers_getlambdavisuals" ) -- Get the Lambda's visuals from the server
-            net.WriteEntity( ent )
+            net.WriteEntity( IsValid( overrideEnt ) and overrideEnt or ent )
         net.SendToServer()
 
         net.Receive( "lambdaplayers_sendlambdavisuals", function() -- Is successful, receive and create a standalone ragdoll entity
@@ -334,6 +335,20 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
         end
     end)
 end
+
+net.Receive( "lambdaplayers_updatedata", function()
+    LambdaPlayerNames = LAMBDAFS:GetNameTable()
+    LambdaPlayerProps = LAMBDAFS:GetPropTable()
+    LambdaPlayerMaterials = LAMBDAFS:GetMaterialTable()
+    Lambdaprofilepictures = LAMBDAFS:GetProfilePictures()
+    LambdaVoiceLinesTable = LAMBDAFS:GetVoiceLinesTable()
+    LambdaVoiceProfiles = LAMBDAFS:GetVoiceProfiles()
+    LambdaPlayerSprays = LAMBDAFS:GetSprays()
+    LambdaTextTable = LAMBDAFS:GetTextTable()
+    LambdaTextProfiles = LAMBDAFS:GetTextProfiles()
+    LambdaPersonalProfiles = file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
+    chat.AddText( "Lambda Data was updated by the Server" )
+end )
 
 net.Receive("lambdaplayers_playsoundfile", function()
     local lambda = net.ReadEntity()

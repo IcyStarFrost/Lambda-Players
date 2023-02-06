@@ -436,8 +436,8 @@ if SERVER then
     end
 
     -- Attacks the specified entity
-    function ENT:AttackTarget( ent )
-        if !IsValid( ent ) then return end
+    function ENT:AttackTarget( ent, forceAttack )
+        if !IsValid( ent ) or !forceAttack and self:GetState() == "Retreat" then return end
         if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( self:GetVoiceLine( "taunt" ), true ) end
         self:SetEnemy( ent )
         self:SetState( "Combat" )
@@ -445,6 +445,19 @@ if SERVER then
         hook.Run( "LambdaOnAttackTarget", self, ent )
     end
 
+    -- Retreats from entity target
+    -- If the target is not specified, then Lambda will stop retreating only when time runs out
+    function ENT:RetreatFrom( target, timeout )
+        self.l_retreatendtime = CurTime() + ( timeout or random( 5, 15 ) )
+        self.l_RetreatTarget = target
+        self:SetState( "Retreat" )
+
+        if self:GetVoiceChance() != 0 then
+            self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
+        end
+    end
+
+    -- Makes the Lambda laugh towards a position/entity
     function ENT:LaughAt( pos )
         pos = ( isentity( pos ) and IsValid( pos ) and pos:GetPos() or pos)
         self:LookTo( pos, 3 )
@@ -454,6 +467,7 @@ if SERVER then
         end )
     end
 
+    -- PlaySequenceAndWait but without t-posing
     function ENT:PlayGestureAndWait( id, speed )
 
         local layer = self:AddGesture( id )

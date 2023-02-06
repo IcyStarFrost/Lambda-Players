@@ -669,7 +669,8 @@ function ENT:Think()
 
         -- Animations --
         if self.l_UpdateAnimations then
-            local anims = _LAMBDAPLAYERSHoldTypeAnimations[ self.l_HoldType ]
+            local holdtype = self:GetState() == "Retreat" and "panic" or self.l_HoldType
+            local anims = _LAMBDAPLAYERSHoldTypeAnimations[ holdtype ]
 
             if self:IsOnGround() then
                 if self.loco:GetVelocity():IsZero() then

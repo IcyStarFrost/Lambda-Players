@@ -146,7 +146,8 @@ hook.Add( "Tick", "lambdaplayers_MWS", function()
             local spawns = LambdaGetPossibleSpawns()
             local point = spawns[ random( #spawns ) ]
             if !IsValid( point ) then failtimes = failtimes + 1 return end
-            pos = point
+            pos = point:GetPos()
+            ang = point:GetAngles()
         else
             pos = GetRandomSpawnPoint()
             ang = Angle( 0, random( -180, 180 ), 0 )
