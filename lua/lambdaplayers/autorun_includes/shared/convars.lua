@@ -129,8 +129,8 @@ CreateLambdaConvar( "lambdaplayers_lambda_panicanimations", 0, true, false, fals
 
 -- Combat Convars 
 CreateLambdaConvar( "lambdaplayers_combat_allowtargetyou", 1, true, true, true, "If Lambda Players are allowed to attack you", 0, 1, { type = "Bool", name = "Target You", category = "Combat" } )
-CreateLambdaConvar( "lambdaplayers_combat_retreatonlowhealth", 1, true, false, false, "If Lambda Players should start retreating if they are low on health", 0, 1, { type = "Bool", name = "Retreat On Low Health", category = "Combat" } )
-CreateLambdaConvar( "lambdaplayers_combat_spawnbehavior", 0, true, false, false, "If Lambda Players should  behavior when spawned. 0 - Nothing, 1 - Attack you, 2 - Attack random Lambda/NPC", 0 , 2, { type = "Slider", decimals = 0, name = "Spawn Behavior Modifier", category = "Combat" } )
+CreateLambdaConvar( "lambdaplayers_combat_retreatonlowhealth", 1, true, false, false, "If Lambda Players should start retreating if they are low on health, or witnessed/committed RDM", 0, 1, { type = "Bool", name = "Retreat On Low Health", category = "Combat" } )
+CreateLambdaConvar( "lambdaplayers_combat_spawnbehavior", 0, true, false, false, "If Lambda Players should  behavior when spawned. 0 - Nothing, 1 - Attack you, 2 - Random", 0 , 2, { type = "Slider", decimals = 0, name = "Spawn Behavior Modifier", category = "Combat" } )
 
 --
 

@@ -204,6 +204,17 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcekill", function( ply )
 
 end, false, "Kill any Lambda Players in the radius set", { name = "Kill Nearby Lambda Players", category = "Force Menu" } )
 
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcepanic", function( ply ) 
+    if IsValid( ply ) and !ply:IsSuperAdmin() then return end
+
+    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance:GetInt() ) ) do
+        if v.IsLambdaPlayer then
+            v:RetreatFrom( ply )
+        end
+    end
+
+end, false, "Forces any Lambda Players around will panic", { name = "Lambda Players Panic Nearby", category = "Force Menu" } )
+
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_debugtogglegod", function( ply ) 
     if IsValid( ply ) and !ply:IsAdmin() then return end
 

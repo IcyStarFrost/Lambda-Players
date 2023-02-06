@@ -452,8 +452,16 @@ if SERVER then
         self.l_RetreatTarget = target
         self:SetState( "Retreat" )
 
+        self:CancelMovement()
+        self:SetEnemy( NULL )
+
         if self:GetVoiceChance() != 0 then
             self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
+        end
+
+        if CurTime() > self.l_retreatendtime or target != nil and ( !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 600 ) ) then 
+            self:SetState( "Idle" ) 
+            self.l_RetreatTarget = nil
         end
     end
 
@@ -568,6 +576,11 @@ if SERVER then
     -- If we currently are fighting
     function ENT:InCombat()
         return ( self:GetState() == "Combat" and LambdaIsValid( self:GetEnemy() ) )
+    end
+
+    -- If we are panicking
+    function ENT:IsPanicking()
+        return ( self:GetState() == "Retreat" )
     end
 
     -- Returns if our ai is disabled

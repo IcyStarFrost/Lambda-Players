@@ -159,6 +159,7 @@ function ENT:Initialize()
         self.debuginitstart = SysTime() -- Debug time from initialize to ENT:RunBehaviour()
         self.l_nextidlesound = CurTime() + 5 -- The next time we will play a idle sound
         self.l_nextcombatsound = CurTime() + 5 -- The next time we will play a combat sound
+        self.l_nextpanicsound = CurTime() + 5 -- The next time we will play a combat sound
         self.l_outboundsreset = CurTime() + 5 -- The time until we get teleported back to spawn because we are out of bounds
         self.l_nextnpccheck = CurTime() + 1 -- The next time we will check for surrounding NPCs
         self.l_nextnoclipheightchange = 0 -- The next time we will change our height while in noclip
@@ -269,8 +270,8 @@ function ENT:Initialize()
             local plys = self:FindInSphere( nil, 25000, function( ent ) return ( ent:IsPlayer()) end )
             self:AttackTarget( plys[ random( #plys ) ] )
         elseif LambdaSpawnBehavior:GetInt() == 2 then
-            local random = self:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignorePlys:GetBool() and ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 1 and ent:Alive() ) end )
-            self:AttackTarget( random[ random( #random ) ] )
+            local randomtarg = self:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignorePlys:GetBool() and ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 1 and ent:Alive() ) end )
+            self:AttackTarget( randomtarg[ random( #randomtarg ) ] )
         end
 
         self:SetLagCompensated( true )
@@ -452,9 +453,9 @@ function ENT:Think()
         -- Play random Idle lines
         if !self:IsDisabled() and !self:GetIsTyping() and CurTime() > self.l_nextidlesound then
             
-            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() and !self:InCombat() then
+            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() and !self:InCombat() and !self:IsPanicking() then
                 self:PlaySoundFile( self:GetVoiceLine( "idle" ), true )
-            elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
+            elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                 self:TypeMessage( self:GetTextLine( "idle" ) )
             end
 
@@ -469,6 +470,16 @@ function ENT:Think()
             end
 
             self.l_nextcombatsound = CurTime() + 5
+        end
+
+        -- Play random panic lines when retreating/panicking
+        if !self:IsDisabled() and !self:GetIsTyping() and CurTime() > self.l_nextpanicsound then
+            
+            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() and self:IsPanicking() then
+                self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
+            end
+
+            self.l_nextpanicsound = CurTime() + 5
         end
 
         -- Update our speed after some time
