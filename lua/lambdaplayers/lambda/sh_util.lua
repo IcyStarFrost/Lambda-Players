@@ -46,6 +46,7 @@ local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
 local shouldsentencemix = GetConVar( "lambdaplayers_text_sentencemixing" )
 local player_GetAll = player.GetAll
 local Rand = math.Rand
+local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
 
 ---- Anything Shared can go here ----
 
@@ -633,7 +634,7 @@ if SERVER then
         self.l_UpdateAnimations = true
 
         self:SetHealth( self:GetMaxHealth() )
-        self:SetArmor( 0 )
+        self:SetArmor( spawnArmor:GetInt() )
         self:AddFlags( FL_OBJECT )
         self:SwitchWeapon( self.l_SpawnWeapon )
         self:UpdateHealthDisplay()
