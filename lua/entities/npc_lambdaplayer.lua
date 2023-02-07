@@ -342,7 +342,7 @@ function ENT:Initialize()
 
     self:LambdaMoveMouth( 0 )
 
-    hook.Run( "LambdaOnInitialize", self, self:GetWeaponENT() )
+    LambdaRunHook( "LambdaOnInitialize", self, self:GetWeaponENT() )
 end
 
 
@@ -424,7 +424,7 @@ function ENT:Think()
     if self:GetIsDead() then return end
 
     -- Allow addons to add stuff to Lambda's Think
-    hook.Run( "LambdaOnThink", self, self:GetWeaponENT() )
+    LambdaRunHook( "LambdaOnThink", self, self:GetWeaponENT() )
     
     if SERVER then
         -- Run our weapon's think callback if possible
@@ -445,7 +445,7 @@ function ENT:Think()
             local result = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32600, self )
             local stepsounds = _LAMBDAPLAYERSFootstepMaterials[ result.MatType ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ]
             local snd = stepsounds[ random( #stepsounds ) ]
-            local result = hook.Run( "LambdaFootStep", self, self:GetPos(), result.MatType )
+            local result = LambdaRunHook( "LambdaFootStep", self, self:GetPos(), result.MatType )
             if result != true then self:EmitSound( snd, 75, 100, 0.5 ) end
             self.l_nextfootsteptime = CurTime() + min(0.25 * (self:GetRunSpeed() / desSpeed), 0.35)
         end
@@ -536,7 +536,7 @@ function ENT:Think()
         if CurTime() > self.l_NextPickupCheck then
             for _, v in ipairs( self:FindInSphere( self:GetPos(), 58 ) ) do
                 local pickFunc = _LAMBDAPLAYERSItemPickupFunctions[ v:GetClass() ]
-                if isfunction( pickFunc ) and self:Visible( v ) then hook.Run( "LambdaOnPickupEnt", self, v ) pickFunc( self, v ) end
+                if isfunction( pickFunc ) and self:Visible( v ) then LambdaRunHook( "LambdaOnPickupEnt", self, v ) pickFunc( self, v ) end
             end
             self.l_NextPickupCheck = CurTime() + 0.1
         end
@@ -856,7 +856,7 @@ end
 function ENT:RunBehaviour()
     self:DebugPrint( "Initialized their AI in ", SysTime() - self.debuginitstart, " seconds" )
 
-    if !self.l_initialized then hook.Run( "LambdaAIInitialize", self ) self.l_initialized = true end
+    if !self.l_initialized then LambdaRunHook( "LambdaAIInitialize", self ) self.l_initialized = true end
 
     if IsValid( self:GetCreator() ) then
         undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )

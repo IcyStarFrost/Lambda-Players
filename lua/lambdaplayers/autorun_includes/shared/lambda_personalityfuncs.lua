@@ -29,7 +29,7 @@ local function Chance_Build( self )
 
     for index, buildtable in RandomPairs( LambdaBuildingFunctions ) do
         if !buildtable[ 2 ]:GetBool() then continue end
-        if hook.Run( "LambdaOnUseBuildFunction", self, buildtable[ 1 ] ) == true then return end
+        if LambdaRunHook( "LambdaOnUseBuildFunction", self, buildtable[ 1 ] ) == true then return end
         local result 
 
         local ok, msg = pcall( function() result = buildtable[ 3 ]( self ) end )
@@ -56,7 +56,7 @@ local function Chance_Tool( self )
     
     for index, tooltable in RandomPairs( LambdaToolGunTools ) do
         if !tooltable[ 2 ]:GetBool() then continue end -- If the tool is allowed
-        if hook.Run( "LambdaOnToolUse", self, tooltable[ 1 ] ) == true then return end
+        if LambdaRunHook( "LambdaOnToolUse", self, tooltable[ 1 ] ) == true then return end
         local result
         
         local ok, msg = pcall( function() result = tooltable[ 3 ]( self, target ) end )

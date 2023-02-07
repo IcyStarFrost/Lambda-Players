@@ -57,7 +57,7 @@ function ENT:MoveToPos( pos, options )
 
     local stepH = self.loco:GetStepHeight()
 
-    hook.Run( "LambdaOnBeginMove", self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), true )
+    LambdaRunHook( "LambdaOnBeginMove", self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), true )
 
 	while ( path:IsValid() ) do
         if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end
@@ -246,7 +246,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
     self:SetRun( options.run or false )
     self.l_issmoving = true
 
-    hook.Run( "LambdaOnBeginMove", self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), false )
+    LambdaRunHook( "LambdaOnBeginMove", self, ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos ), false )
 
     while IsValid( self ) do 
         if !isvector( self.l_movepos ) and !LambdaIsValid( self.l_movepos ) then return "invalid" end
@@ -315,7 +315,7 @@ function ENT:HandleStuck()
     self.l_stucktimereset = CurTime() + 10
 
     -- Allow external addons to control our stuck process. We assume whoever made that hook and returns "stop" or "continue" will handle the unstuck behaviour
-    local result = hook.Run( "LambdaOnStuck", self, self.l_stucktimes )
+    local result = LambdaRunHook( "LambdaOnStuck", self, self.l_stucktimes )
     if result == "stop" then return false elseif result == "continue" then return true end
 
     if self.l_stucktimes == 3 then self.l_unstuck = true return true elseif self.l_stucktimes == 4 then self.l_unstuck = true return false end
