@@ -1,4 +1,6 @@
-
+local string = string
+local table = table
+local math = math
 local RandomPairs = RandomPairs
 local LambdaIsValid = LambdaIsValid
 local ipairs = ipairs
@@ -43,7 +45,7 @@ local chatAllowed = GetConVar( "lambdaplayers_text_enabled" )
 local chatlimit = GetConVar( "lambdaplayers_text_chatlimit" )
 local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
-local shouldsentencemix = GetConVar( "lambdaplayers_text_sentencemixing" )
+local usemarkovgenerator = GetConVar( "lambdaplayers_text_markovgenerate" )
 local player_GetAll = player.GetAll
 local Rand = math.Rand
 
@@ -765,7 +767,7 @@ if SERVER then
 
 
     -- Combines a table of strings into one string
-    local function CombineStringTable( tbl )
+--[[     local function CombineStringTable( tbl )
         local strin = ""
      
          for k, v in ipairs( tbl ) do
@@ -807,10 +809,78 @@ if SERVER then
          end
     
          return mod
-     end
+     end ]]
 
+     -- Markov Chain Generator --
+     -- Source code from https://github.com/hay/markov
+     -- I simply got it converted from PHP to GLua
+     local function generate_markov_table( text, look_forward )
+      look_forward = look_forward or 4
+      local charactertable = {}
+    
+      for i = 1, #text do
+        local char = string.sub( text, i, i + look_forward - 1 )
+        if not charactertable[ char ] then charactertable[ char ] = {} end
+      end
+    
+      for i = 1, #text - look_forward do
+        local char_index = string.sub( text, i, i + look_forward - 1 )
+        local char_count = string.sub( text, i + look_forward, i + look_forward * 2 - 1 )
+    
+        if charactertable[ char_index][ char_count ] then
+          charactertable[ char_index ][ char_count ] = charactertable[ char_index ][ char_count ] + 1
+        else
+          charactertable[ char_index ][ char_count ] = 1
+        end
+      end
+    
+      return charactertable
+    end
+    
+    local function return_weighted_char( array )
+      if not next( array ) then return false end
+    
+      local items = {}
+      local total = 0
+    
+      for item, weight in pairs( array ) do
+        items[ #items + 1 ] = item
+        total = total + weight
+      end
 
+      local rand = random( total )
+      for i, item in ipairs( items ) do
+        local weight = array[ item ]
+        if rand <= weight then return item end
+        rand = rand - weight
+      end
+    end
+    
+    local function generate_markov_text(length, markov_table, look_forward)
+      look_forward = look_forward or 4
+      local char = next( markov_table )
+      local o = char
+    
+      for i = 1, math.floor(length / look_forward) do
+        local newchar = return_weighted_char( markov_table[ char ] )
+    
+        if newchar then
+          char = newchar
+          o = o .. newchar
+        else
+          char = next( markov_table )
+        end
+      end
+    
+      return o
+    end
 
+    local function GetRandomMarkovLine( tbl )
+        local markovtable = generate_markov_table( table.concat( tbl, "\n" ), 4 )
+        local generated = generate_markov_text( 1000, markovtable, 4 )
+        local lines = string.Explode( "\n", generated )
+        return lines[ random( #lines ) ]
+    end
 
     -- Literally the same thing as :GetVoiceLine() but for Text Lines
     function ENT:GetTextLine( texttype )
@@ -820,7 +890,7 @@ if SERVER then
                 if texttable and #texttable > 0 then
                     
                     for k, textline in RandomPairs( texttable ) do
-                        local line = shouldsentencemix:GetBool() and sentencemixing( textline, texttable ) or textline
+                        local line = usemarkovgenerator:GetBool() and GetRandomMarkovLine( texttable ) or textline
                         local condition, modifiedline = LambdaConditionalKeyWordCheck( self, line )
                         if condition then
                             return modifiedline
@@ -835,7 +905,7 @@ if SERVER then
         if !tbl then return "" end
 
         for k, textline in RandomPairs( tbl ) do
-            local line = shouldsentencemix:GetBool() and sentencemixing( textline, tbl ) or textline
+            local line = usemarkovgenerator:GetBool() and GetRandomMarkovLine( tbl ) or textline
             local condition, modifiedline = LambdaConditionalKeyWordCheck( self, line )
             if condition then
                 return modifiedline
