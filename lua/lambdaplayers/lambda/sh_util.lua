@@ -48,6 +48,7 @@ local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
 local usemarkovgenerator = GetConVar( "lambdaplayers_text_markovgenerate" )
 local player_GetAll = player.GetAll
 local Rand = math.Rand
+local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
 
 ---- Anything Shared can go here ----
 
@@ -453,10 +454,6 @@ if SERVER then
         self.l_retreatendtime = CurTime() + ( timeout or random( 5, 15 ) )
         self.l_RetreatTarget = target
         self:SetState( "Retreat" )
-
-        if self:GetVoiceChance() != 0 then
-            self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
-        end
     end
 
     -- Makes the Lambda laugh towards a position/entity
@@ -635,7 +632,7 @@ if SERVER then
         self.l_UpdateAnimations = true
 
         self:SetHealth( self:GetMaxHealth() )
-        self:SetArmor( 0 )
+        self:SetArmor( spawnArmor:GetInt() )
         self:AddFlags( FL_OBJECT )
         self:SwitchWeapon( self.l_SpawnWeapon )
         self:UpdateHealthDisplay()

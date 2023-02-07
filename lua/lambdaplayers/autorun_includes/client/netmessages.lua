@@ -221,7 +221,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                 if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
                 if RealTime() > RealTime() + length then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
                 if !IsValid( followEnt ) then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
-                if followEnt.IsLambdaPlayer and !followEnt:IsBeingDrawn() then return end
+                if IsValid( ent ) and ent:IsDormant() then return end
 
                 local ang = EyeAngles()
                 local pos = followEnt:GetPos() + Vector( 0, 0, 80 )
@@ -299,7 +299,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
                     lastpos = ( IsValid( tickent ) and tickent:GetPos() or ( lastpos and lastpos or origin ) )
                     snd:SetPos( lastpos )
                     
-                    if !globalVC and IsValid( tickent ) and tickent.IsLambdaPlayer and tickent:IsDormant() then
+                    if !globalVC and IsValid( ent ) and ent:IsDormant() then
                         volume = 0
                     else
                         volume = voicevolume:GetFloat()

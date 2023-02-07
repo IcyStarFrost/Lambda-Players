@@ -6,8 +6,8 @@ local EffectData = EffectData
 local DamageInfo = DamageInfo
 local random = math.random
 local CreateSound = CreateSound
---local Rand = math.Rand
---local ipairs = ipairs
+local Rand = math.Rand
+local ipairs = ipairs
 
 local busterMode = CreateLambdaConvar( "lambdaplayers_weapons_paigsentrybuster", 0, true, false, true, "If Lambda that spawn with the PAIG have the ability to act like the Sentry Buster from TF2.", 0, 1, { type = "Bool", name = "PAIG - Enable Sentry Buster Mode", category = "Weapon Utilities" } )
 
@@ -72,18 +72,11 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 end
             end
 
-            --[[
             for _, v in ipairs( GetLambdaPlayers() ) do
-                if LambdaIsValid( v ) and v != self and v:IsInRange( self, 400 ) and v:Visible( self ) then
-
-                    v:SimpleTimer( Rand( 0.1, 0.5 ), function()
-                        -- Play random scream
-                        v:SetState( "Panic" )
-                        v:GetRandomSound()
-                    end)
+                if v != self and LambdaIsValid( v ) and v:IsInRange( self, 400 ) and v:CanTarget( self ) and ( wepent.SentryBusterMode or v:CanSee( self ) ) then
+                    v:SimpleTimer( Rand( 0.0, 0.25 ), function() v:RetreatFrom( self, 1.0 + detonateTime ) end)
                 end
             end
-            ]]
 
             self.l_WeaponUseCooldown = CurTime() + 1 + detonateTime
 
