@@ -179,7 +179,7 @@ end
 local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
     if speaklimit:GetInt() > 0 and #_LAMBDAPLAYERS_Voicechannels >= speaklimit:GetInt() or ent.l_ismuted then return end
 
-    if IsValid( ent.l_VoiceSnd ) then if usegmodpopups:GetBool() then hook.Run( "PlayerEndVoice", ent ) end ent.l_VoiceSnd:Stop() end
+    if IsValid( ent.l_VoiceSnd ) then if usegmodpopups:GetBool() then LambdaRunHook( "PlayerEndVoice", ent ) end ent.l_VoiceSnd:Stop() end
 
     local flag = ( is3d and "3d mono noplay" or "mono noplay" )
 
@@ -212,7 +212,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
 
             snd:SetVolume( volume )
             snd:Play()
-            if usegmodpopups:GetBool() then hook.Run( "PlayerStartVoice", ent ) end
+            if usegmodpopups:GetBool() then LambdaRunHook( "PlayerStartVoice", ent ) end
 
             -- Render the voice icon
             hook.Add( "PreDrawEffects", "lambdavoiceicon" .. id,function()
@@ -277,9 +277,9 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             -- Right now this code seems to work just as I think I want it to. Unsure if it could be optimized better but to me it looks as good as it is gonna get
 
             hook.Add( "Tick", "lambdaplayersvoicetick" .. index, function()
-                if !LambdaIsValid( ent ) and shouldstoponremove then if usegmodpopups:GetBool() then hook.Run( "PlayerEndVoice", ent ) end snd:Stop() return end
-                if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then if usegmodpopups:GetBool() then hook.Run( "PlayerEndVoice", ent ) end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
-                if RealTime() > RealTime() + length then if usegmodpopups:GetBool() then hook.Run( "PlayerEndVoice", ent ) end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
+                if !LambdaIsValid( ent ) and shouldstoponremove then if usegmodpopups:GetBool() then LambdaRunHook( "PlayerEndVoice", ent ) end snd:Stop() return end
+                if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then if usegmodpopups:GetBool() then LambdaRunHook( "PlayerEndVoice", ent ) end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
+                if RealTime() > RealTime() + length then if usegmodpopups:GetBool() then LambdaRunHook( "PlayerEndVoice", ent ) end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
 
                 tickent = ( LambdaIsValid( ent ) and ent or ( IsValid( ent.ragdoll ) and ent.ragdoll or tickent ) )
                 local globalVC = globalvoice:GetBool()

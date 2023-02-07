@@ -322,11 +322,11 @@ end
 local useplycolorasdisplay = GetConVar( "lambdaplayers_useplayermodelcolorasdisplaycolor" )
 function ENT:GetDisplayColor( ply )
     if CLIENT then
-        local overridecolor = hook.Run( "LambdaGetDisplayColor", self, LocalPlayer() )
+        local overridecolor = LambdaRunHook( "LambdaGetDisplayColor", self, LocalPlayer() )
         return overridecolor != nil and overridecolor or useplycolorasdisplay:GetBool() and self:GetPlyColor():ToColor() or _LambdaDisplayColor
     elseif SERVER then
         local useplycolorasdisplay = tobool( ply:GetInfoNum( "lambdaplayers_useplayermodelcolorasdisplaycolor", 0 ) )
-        local overridecolor = hook.Run( "LambdaGetDisplayColor", self, ply )
+        local overridecolor = LambdaRunHook( "LambdaGetDisplayColor", self, ply )
         return overridecolor != nil and overridecolor or useplycolorasdisplay and self:GetPlyColor():ToColor() or Color( ply:GetInfoNum( "lambdaplayers_displaycolor_r", 255 ), ply:GetInfoNum( "lambdaplayers_displaycolor_g", 136 ), ply:GetInfoNum( "lambdaplayers_displaycolor_b", 0 ) )
     end
 end
@@ -431,7 +431,7 @@ if SERVER then
     
     -- If the we can target the ent
     function ENT:CanTarget( ent )
-        if hook.Run( "LambdaCanTarget", self, ent ) then return false end
+        if LambdaRunHook( "LambdaCanTarget", self, ent ) then return false end
         return ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() and ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 1 and ent:Alive() )
     end
 
@@ -442,7 +442,7 @@ if SERVER then
         self:SetEnemy( ent )
         self:SetState( "Combat" )
         self:CancelMovement()
-        hook.Run( "LambdaOnAttackTarget", self, ent )
+        LambdaRunHook( "LambdaOnAttackTarget", self, ent )
     end
 
     -- Retreats from entity target
@@ -530,7 +530,7 @@ if SERVER then
         if info then
             self:ApplyLambdaInfo( info )
             self.l_usingaprofile = true
-            self:SimpleTimer( 0, function() hook.Run( "LambdaOnProfileApplied", self, info ) end, true )
+            self:SimpleTimer( 0, function() LambdaRunHook( "LambdaOnProfileApplied", self, info ) end, true )
         end
     end
 
@@ -592,7 +592,7 @@ if SERVER then
 
     -- Enter or exit Noclip. Calls a hook to be able to block the event
     function ENT:NoClipState( bool )
-        local result = hook.Run( "LambdaOnNoclip", self, bool )
+        local result = LambdaRunHook( "LambdaOnNoclip", self, bool )
         if !result then self:SetNoClip( bool ) end
     end
     
@@ -646,13 +646,13 @@ if SERVER then
         net.WriteEntity( self )
         net.Broadcast()
 
-        hook.Run( "LambdaOnRespawn", self )
+        LambdaRunHook( "LambdaOnRespawn", self )
     end
 
     -- Delete ourself and spawn a recreation of ourself.
     -- If ignoreprehook is true, the LambdaPreRecreated hook won't run meaning addons won't be able to stop this 
     function ENT:Recreate( ignoreprehook )
-        local shouldblock = hook.Run( "LambdaPreRecreated", self )
+        local shouldblock = LambdaRunHook( "LambdaPreRecreated", self )
 
         self:SimpleTimer( 0.1, function() self:Remove() end, true )
         if !ignoreprehook and shouldblock == true then return end
@@ -675,7 +675,7 @@ if SERVER then
             undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
         end
 
-        self:SimpleTimer( 0, function() hook.Run( "LambdaPostRecreated", newlambda ) end, true )
+        self:SimpleTimer( 0, function() LambdaRunHook( "LambdaPostRecreated", newlambda ) end, true )
     end
 
     -- Returns a sequential table full of nav areas near the position
@@ -876,7 +876,7 @@ if SERVER then
     -- teamOnly is just so this function is compatible with addons basically
     -- recipients is optional 
     function ENT:Say( text, teamOnly, recipients )
-        local replacement = hook.Run( "LambdaPlayerSay", self, text, ( teamOnly or false ) )
+        local replacement = LambdaRunHook( "LambdaPlayerSay", self, text, ( teamOnly or false ) )
         text = isstring( replacement ) and replacement or text
         if text == "" then return end
         text = LambdaKeyWordModify( self, text )
