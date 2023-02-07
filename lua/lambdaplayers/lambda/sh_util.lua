@@ -878,7 +878,7 @@ if SERVER then
     local function GetRandomMarkovLine( tbl )
         tbl = table_Copy( tbl )
 
-        for keyword, func in ipairs( LambdaConditionalKeyWords ) do  
+        for keyword, func in pairs( LambdaConditionalKeyWords ) do  
             for i = 1, #tbl do tbl[ i ] = string.Replace( tbl[ i ], keyword, "" ) end
         end
 
