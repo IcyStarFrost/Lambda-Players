@@ -70,7 +70,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self.l_WeaponThinkFunction = weapondata.OnThink
     if isfunction( weapondata.OnEquip ) then weapondata.OnEquip( self, wepent ) end
 
-    hook.Run( "LambdaOnSwitchWeapon", self, wepent, weapondata )
+    LambdaRunHook( "LambdaOnSwitchWeapon", self, wepent, weapondata )
 
 end
 
@@ -265,7 +265,7 @@ end
 
 function ENT:SwitchToRandomWeapon()
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if self:CanEquipWeapon( k ) and k != self.l_Weapon and !hook.Run( "LambdaCanSwitchWeapon", self, k, v ) then
+        if self:CanEquipWeapon( k ) and k != self.l_Weapon and !LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then
             self:SwitchWeapon( k )
             return
         end
@@ -275,7 +275,7 @@ end
 
 function ENT:SwitchToLethalWeapon()
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if v.islethal and self:CanEquipWeapon( k ) and k != self.l_Weapon and !hook.Run( "LambdaCanSwitchWeapon", self, k, v ) then
+        if v.islethal and self:CanEquipWeapon( k ) and k != self.l_Weapon and !LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then
             self:SwitchWeapon( k )
             return
         end
