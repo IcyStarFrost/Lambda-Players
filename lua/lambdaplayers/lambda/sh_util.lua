@@ -1,4 +1,6 @@
-
+local string = string
+local table = table
+local math = math
 local RandomPairs = RandomPairs
 local LambdaIsValid = LambdaIsValid
 local ipairs = ipairs
@@ -43,7 +45,7 @@ local chatAllowed = GetConVar( "lambdaplayers_text_enabled" )
 local chatlimit = GetConVar( "lambdaplayers_text_chatlimit" )
 local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
-local shouldsentencemix = GetConVar( "lambdaplayers_text_sentencemixing" )
+local usemarkovgenerator = GetConVar( "lambdaplayers_text_markovgenerate" )
 local player_GetAll = player.GetAll
 local Rand = math.Rand
 
@@ -322,11 +324,11 @@ end
 local useplycolorasdisplay = GetConVar( "lambdaplayers_useplayermodelcolorasdisplaycolor" )
 function ENT:GetDisplayColor( ply )
     if CLIENT then
-        local overridecolor = hook.Run( "LambdaGetDisplayColor", self, LocalPlayer() )
+        local overridecolor = LambdaRunHook( "LambdaGetDisplayColor", self, LocalPlayer() )
         return overridecolor != nil and overridecolor or useplycolorasdisplay:GetBool() and self:GetPlyColor():ToColor() or _LambdaDisplayColor
     elseif SERVER then
         local useplycolorasdisplay = tobool( ply:GetInfoNum( "lambdaplayers_useplayermodelcolorasdisplaycolor", 0 ) )
-        local overridecolor = hook.Run( "LambdaGetDisplayColor", self, ply )
+        local overridecolor = LambdaRunHook( "LambdaGetDisplayColor", self, ply )
         return overridecolor != nil and overridecolor or useplycolorasdisplay and self:GetPlyColor():ToColor() or Color( ply:GetInfoNum( "lambdaplayers_displaycolor_r", 255 ), ply:GetInfoNum( "lambdaplayers_displaycolor_g", 136 ), ply:GetInfoNum( "lambdaplayers_displaycolor_b", 0 ) )
     end
 end
@@ -431,7 +433,7 @@ if SERVER then
     
     -- If the we can target the ent
     function ENT:CanTarget( ent )
-        if hook.Run( "LambdaCanTarget", self, ent ) then return false end
+        if LambdaRunHook( "LambdaCanTarget", self, ent ) then return false end
         return ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() and ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 1 and ent:Alive() )
     end
 
@@ -442,7 +444,7 @@ if SERVER then
         self:SetEnemy( ent )
         self:SetState( "Combat" )
         self:CancelMovement()
-        hook.Run( "LambdaOnAttackTarget", self, ent )
+        LambdaRunHook( "LambdaOnAttackTarget", self, ent )
     end
 
     -- Retreats from entity target
@@ -530,7 +532,7 @@ if SERVER then
         if info then
             self:ApplyLambdaInfo( info )
             self.l_usingaprofile = true
-            self:SimpleTimer( 0, function() hook.Run( "LambdaOnProfileApplied", self, info ) end, true )
+            self:SimpleTimer( 0, function() LambdaRunHook( "LambdaOnProfileApplied", self, info ) end, true )
         end
     end
 
@@ -592,7 +594,7 @@ if SERVER then
 
     -- Enter or exit Noclip. Calls a hook to be able to block the event
     function ENT:NoClipState( bool )
-        local result = hook.Run( "LambdaOnNoclip", self, bool )
+        local result = LambdaRunHook( "LambdaOnNoclip", self, bool )
         if !result then self:SetNoClip( bool ) end
     end
     
@@ -646,13 +648,13 @@ if SERVER then
         net.WriteEntity( self )
         net.Broadcast()
 
-        hook.Run( "LambdaOnRespawn", self )
+        LambdaRunHook( "LambdaOnRespawn", self )
     end
 
     -- Delete ourself and spawn a recreation of ourself.
     -- If ignoreprehook is true, the LambdaPreRecreated hook won't run meaning addons won't be able to stop this 
     function ENT:Recreate( ignoreprehook )
-        local shouldblock = hook.Run( "LambdaPreRecreated", self )
+        local shouldblock = LambdaRunHook( "LambdaPreRecreated", self )
 
         self:SimpleTimer( 0.1, function() self:Remove() end, true )
         if !ignoreprehook and shouldblock == true then return end
@@ -675,7 +677,7 @@ if SERVER then
             undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
         end
 
-        self:SimpleTimer( 0, function() hook.Run( "LambdaPostRecreated", newlambda ) end, true )
+        self:SimpleTimer( 0, function() LambdaRunHook( "LambdaPostRecreated", newlambda ) end, true )
     end
 
     -- Returns a sequential table full of nav areas near the position
@@ -765,7 +767,7 @@ if SERVER then
 
 
     -- Combines a table of strings into one string
-    local function CombineStringTable( tbl )
+--[[     local function CombineStringTable( tbl )
         local strin = ""
      
          for k, v in ipairs( tbl ) do
@@ -807,10 +809,78 @@ if SERVER then
          end
     
          return mod
-     end
+     end ]]
 
+     -- Markov Chain Generator --
+     -- Source code from https://github.com/hay/markov
+     -- I simply got it converted from PHP to GLua
+     local function generate_markov_table( text, look_forward )
+      look_forward = look_forward or 4
+      local charactertable = {}
+    
+      for i = 1, #text do
+        local char = string.sub( text, i, i + look_forward - 1 )
+        if not charactertable[ char ] then charactertable[ char ] = {} end
+      end
+    
+      for i = 1, #text - look_forward do
+        local char_index = string.sub( text, i, i + look_forward - 1 )
+        local char_count = string.sub( text, i + look_forward, i + look_forward * 2 - 1 )
+    
+        if charactertable[ char_index][ char_count ] then
+          charactertable[ char_index ][ char_count ] = charactertable[ char_index ][ char_count ] + 1
+        else
+          charactertable[ char_index ][ char_count ] = 1
+        end
+      end
+    
+      return charactertable
+    end
+    
+    local function return_weighted_char( array )
+      if not next( array ) then return false end
+    
+      local items = {}
+      local total = 0
+    
+      for item, weight in pairs( array ) do
+        items[ #items + 1 ] = item
+        total = total + weight
+      end
 
+      local rand = random( total )
+      for i, item in ipairs( items ) do
+        local weight = array[ item ]
+        if rand <= weight then return item end
+        rand = rand - weight
+      end
+    end
+    
+    local function generate_markov_text(length, markov_table, look_forward)
+      look_forward = look_forward or 4
+      local char = next( markov_table )
+      local o = char
+    
+      for i = 1, math.floor(length / look_forward) do
+        local newchar = return_weighted_char( markov_table[ char ] )
+    
+        if newchar then
+          char = newchar
+          o = o .. newchar
+        else
+          char = next( markov_table )
+        end
+      end
+    
+      return o
+    end
 
+    local function GetRandomMarkovLine( tbl )
+        local markovtable = generate_markov_table( table.concat( tbl, "\n" ), 4 )
+        local generated = generate_markov_text( 1000, markovtable, 4 )
+        local lines = string.Explode( "\n", generated )
+        return lines[ random( #lines ) ]
+    end
 
     -- Literally the same thing as :GetVoiceLine() but for Text Lines
     function ENT:GetTextLine( texttype )
@@ -820,7 +890,7 @@ if SERVER then
                 if texttable and #texttable > 0 then
                     
                     for k, textline in RandomPairs( texttable ) do
-                        local line = shouldsentencemix:GetBool() and sentencemixing( textline, texttable ) or textline
+                        local line = usemarkovgenerator:GetBool() and GetRandomMarkovLine( texttable ) or textline
                         local condition, modifiedline = LambdaConditionalKeyWordCheck( self, line )
                         if condition then
                             return modifiedline
@@ -835,7 +905,7 @@ if SERVER then
         if !tbl then return "" end
 
         for k, textline in RandomPairs( tbl ) do
-            local line = shouldsentencemix:GetBool() and sentencemixing( textline, tbl ) or textline
+            local line = usemarkovgenerator:GetBool() and GetRandomMarkovLine( tbl ) or textline
             local condition, modifiedline = LambdaConditionalKeyWordCheck( self, line )
             if condition then
                 return modifiedline
@@ -876,7 +946,7 @@ if SERVER then
     -- teamOnly is just so this function is compatible with addons basically
     -- recipients is optional 
     function ENT:Say( text, teamOnly, recipients )
-        local replacement = hook.Run( "LambdaPlayerSay", self, text, ( teamOnly or false ) )
+        local replacement = LambdaRunHook( "LambdaPlayerSay", self, text, ( teamOnly or false ) )
         text = isstring( replacement ) and replacement or text
         if text == "" then return end
         text = LambdaKeyWordModify( self, text )

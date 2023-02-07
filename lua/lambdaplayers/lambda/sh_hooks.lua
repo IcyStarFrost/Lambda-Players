@@ -66,7 +66,7 @@ if SERVER then
         self.l_UpdateAnimations = true
 
         LambdaKillFeedAdd( self, info:GetAttacker(), info:GetInflictor() )
-        if callnpchook:GetBool() then hook.Run( "OnNPCKilled", self, info:GetAttacker(), info:GetInflictor() ) end
+        if callnpchook:GetBool() then LambdaRunHook( "OnNPCKilled", self, info:GetAttacker(), info:GetInflictor() ) end
         self:SetDeaths( self:GetDeaths() + 1 )
 
         for k, v in ipairs( self.l_Hooks ) do if !v[ 3 ] then self:RemoveHook( v[ 1 ], v[ 2 ] ) end end -- Remove all non preserved hooks
@@ -95,7 +95,7 @@ if SERVER then
             net.Broadcast()
         end
 
-        hook.Run( "LambdaOnKilled", self, info )
+        LambdaRunHook( "LambdaOnKilled", self, info )
         --hook.Run( "PlayerDeath", self, info:GetInflictor(), info:GetAttacker() )
 
 
@@ -158,7 +158,7 @@ if SERVER then
     end
 
     function ENT:OnOtherKilled( victim, info )
-        hook.Run( "LambdaOnOtherKilled", self, victim, info )
+        LambdaRunHook( "LambdaOnOtherKilled", self, victim, info )
 
         local attacker = info:GetAttacker()
 
@@ -389,7 +389,7 @@ if SERVER then
         self:AddGesture( ACT_LAND )
 
         --hook.Run( "OnPlayerHitGround", self, self:GetPos():IsUnderwater(), false, self.l_FallVelocity )
-        hook.Run( "LambdaOnLandOnGround", self, ent )
+        LambdaRunHook( "LambdaOnLandOnGround", self, ent )
 
         if !self:GetPos():IsUnderwater() then
             local damage = 0
@@ -418,7 +418,7 @@ if SERVER then
     end
 
     function ENT:OnLeaveGround( ent ) 
-        hook.Run( "LambdaOnLeaveGround", self, ent )
+        LambdaRunHook( "LambdaOnLeaveGround", self, ent )
         
         -- Fall Voiceline Handling
         local deathDist = 800
@@ -451,7 +451,7 @@ end
 ------ SHARED ------
 
 function ENT:OnRemove()
-    hook.Run( "LambdaOnRemove", self )
+    LambdaRunHook( "LambdaOnRemove", self )
     if SERVER then
         self:RemoveTimers()
         self:CleanSpawnedEntities()
@@ -471,7 +471,7 @@ function ENT:InitializeMiniHooks()
 
         self:Hook( "PostEntityTakeDamage", "OnOtherInjured", function( target, info, tookdamage )
             if target == self or ( !target:IsNPC() and !target:IsNextBot() and !target:IsPlayer() ) then return end
-            hook.Run( "LambdaOnOtherInjured", self, target, info, tookdamage )
+            LambdaRunHook( "LambdaOnOtherInjured", self, target, info, tookdamage )
         end, true )
 
         -- Hoookay so interesting stuff here. When a nextbot actually dies by reaching 0 or below hp, no matter how high you set their health after the fact, they will no longer take damage.
@@ -480,7 +480,7 @@ function ENT:InitializeMiniHooks()
             if target != self then return end
             if self.l_godmode then return true end
 
-            local result = hook.Run( "LambdaOnInjured", self, info )
+            local result = LambdaRunHook( "LambdaOnInjured", self, info )
             if result == true then return true end
 
             -- Armor Damage Reduction
