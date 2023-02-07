@@ -48,6 +48,7 @@ local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
 local usemarkovgenerator = GetConVar( "lambdaplayers_text_markovgenerate" )
 local player_GetAll = player.GetAll
 local Rand = math.Rand
+local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
 
 ---- Anything Shared can go here ----
 
@@ -453,18 +454,6 @@ if SERVER then
         self.l_retreatendtime = CurTime() + ( timeout or random( 5, 15 ) )
         self.l_RetreatTarget = target
         self:SetState( "Retreat" )
-
-        self:CancelMovement()
-        self:SetEnemy( NULL )
-
-        if self:GetVoiceChance() != 0 then
-            self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
-        end
-
-        if CurTime() > self.l_retreatendtime or target != nil and ( !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 600 ) ) then 
-            self:SetState( "Idle" ) 
-            self.l_RetreatTarget = nil
-        end
     end
 
     -- Makes the Lambda laugh towards a position/entity
@@ -648,7 +637,7 @@ if SERVER then
         self.l_UpdateAnimations = true
 
         self:SetHealth( self:GetMaxHealth() )
-        self:SetArmor( 0 )
+        self:SetArmor( spawnArmor:GetInt() )
         self:AddFlags( FL_OBJECT )
         self:SwitchWeapon( self.l_SpawnWeapon )
         self:UpdateHealthDisplay()
@@ -889,6 +878,12 @@ if SERVER then
     end
 
     local function GetRandomMarkovLine( tbl )
+        tbl = table_Copy( tbl )
+
+        for keyword, func in pairs( LambdaConditionalKeyWords ) do  
+            for i = 1, #tbl do tbl[ i ] = string.Replace( tbl[ i ], keyword, "" ) end
+        end
+
         local markovtable = generate_markov_table( table.concat( tbl, "\n" ), 4 )
         local generated = generate_markov_text( 1000, markovtable, 4 )
         local lines = string.Explode( "\n", generated )

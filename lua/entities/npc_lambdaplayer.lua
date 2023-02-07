@@ -92,6 +92,7 @@ end
     local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
     local LambdaSpawnBehavior = GetConVar( "lambdaplayers_combat_spawnbehavior" )
     local ignorePlys = GetConVar( "ai_ignoreplayers" )
+    local panicAnimations = GetConVar( "lambdaplayers_lambda_panicanimations" )
 --
 
 if CLIENT then
@@ -680,7 +681,7 @@ function ENT:Think()
 
         -- Animations --
         if self.l_UpdateAnimations then
-            local holdtype = self:GetState() == "Retreat" and "panic" or self.l_HoldType
+            local holdtype = ( self:GetState() == "Retreat" and panicAnimations:GetBool() and "panic" or self.l_HoldType )
             local anims = _LAMBDAPLAYERSHoldTypeAnimations[ holdtype ]
 
             if self:IsOnGround() then

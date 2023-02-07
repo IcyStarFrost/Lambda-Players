@@ -8,6 +8,7 @@ local RandomPairs = RandomPairs
 local random = math.random
 local Rand = math.Rand
 local ceil = math.ceil
+local min = math.min
 local IsValid = IsValid
 local bit_band = bit.band
 local IsInWorld = util.IsInWorld
@@ -207,16 +208,17 @@ end
 
 local retreatOptions = { run = true }
 function ENT:Retreat()
-    if self:GetVoiceChance() != 0 then
+    local target = self.l_RetreatTarget
+    if CurTime() > self.l_retreatendtime or target != nil and ( !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 600 ) ) then 
+        self:SetState( "Idle" ) 
+        self.l_RetreatTarget = nil
+        return
+    end
+
+    if random( 1, 100 ) <= min( 100, self:GetVoiceChance() * 1.75 ) then
         self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
     end
 
     local rndPos = self:GetRandomPosition( nil, 4000 )
     self:MoveToPos( rndPos, retreatOptions )
-
-    local target = self.l_RetreatTarget
-    if CurTime() > self.l_retreatendtime or target != nil and ( !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 600 ) ) then 
-        self:SetState( "Idle" ) 
-        self.l_RetreatTarget = nil
-    end
 end
