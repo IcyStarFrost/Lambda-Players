@@ -876,6 +876,12 @@ if SERVER then
     end
 
     local function GetRandomMarkovLine( tbl )
+        tbl = table_Copy( tbl )
+
+        for keyword, func in ipairs( LambdaConditionalKeyWords ) do  
+            for i = 1, #tbl do tbl[ i ] = string.Replace( tbl[ i ], keyword, "" ) end
+        end
+
         local markovtable = generate_markov_table( table.concat( tbl, "\n" ), 4 )
         local generated = generate_markov_text( 1000, markovtable, 4 )
         local lines = string.Explode( "\n", generated )
