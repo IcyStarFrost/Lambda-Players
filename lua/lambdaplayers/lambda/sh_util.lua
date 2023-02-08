@@ -454,6 +454,17 @@ if SERVER then
         self.l_retreatendtime = CurTime() + ( timeout or random( 5, 15 ) )
         self.l_RetreatTarget = target
         self:SetState( "Retreat" )
+        self:CancelMovement()
+        self:SetEnemy( NULL )
+
+        if self:GetVoiceChance() != 0 and !self:IsSpeaking() then
+            self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
+        end
+
+        if CurTime() > self.l_retreatendtime or target != nil and ( !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 600 ) ) then 
+            self:SetState( "Idle" ) 
+            self.l_RetreatTarget = nil
+        end
     end
 
     -- Makes the Lambda laugh towards a position/entity

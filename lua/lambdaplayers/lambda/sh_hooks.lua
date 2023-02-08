@@ -203,7 +203,7 @@ if SERVER then
                     self.l_tbagpos = victim:GetPos(); self:SetState( "TBaggingPosition" )
                 elseif killerActionChance == 2 and !self:IsSpeaking() and retreatLowHP:GetBool() then
                     self:DebugPrint( "I'm running away, I killed someone." )
-                    self:RetreatFrom( )
+                    self:RetreatFrom()
                     self:SetEnemy( NULL )
                     self:CancelMovement()
                 end
