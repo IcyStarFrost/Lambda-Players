@@ -4,6 +4,8 @@ local draw = draw
 local render = render 
 local ipairs = ipairs 
 local ents = ents
+local table = table
+local string = string
 
 local function AddTextToQueue( tbl, text, color )
     tbl[ #tbl + 1 ] = { text, color }
@@ -19,6 +21,14 @@ hook.Add( "PreDrawEffects", "lambdaplayers-debughelper", function()
 
     for k, lambda in ipairs( ents.FindByClass( "npc_lambdaplayer" ) ) do 
         if IsValid( lambda ) and lambda:GetPos():DistToSqr( LocalPlayer():GetPos() ) < 2000 ^ 2 then
+
+            if !lambda.l_debughelperspawndelay then
+                lambda.l_debughelperspawndelay = SysTime() + 0.1
+                continue
+            elseif SysTime() < lambda.l_debughelperspawndelay then
+                continue
+            end
+
             local ang = EyeAngles()
             local pos = lambda:GetPos() + lambda:GetUp() * ( lambda:GetModelRadius()  * 1.2 )
             local queue = {}
@@ -32,19 +42,40 @@ hook.Add( "PreDrawEffects", "lambdaplayers-debughelper", function()
             render.DepthRange( 0, 0 )
             cam.Start3D2D( pos, ang, 0.1 )
 
+                -- Trace back
+                local tracestring = lambda:GetNW2String( "lambda_threadtrace", "{ UNAVAILABLE }" )
+
+                if tracestring != { UNAVAILABLE } then
+                    local split = string.Explode( "\t", tracestring )
+                    split = table.Reverse( split )
+                    for i = 1, #split do
+                        AddTextToQueue( queue, "LAMBDA COROUTINE TRACE: " .. split[ i ] , color_white )
+                    end
+                
+
+                end
+
+                -- Bools
                 AddTextToQueue( queue, "LAMBDA IS CROUCHING: " .. tostring( lambda:GetCrouch() ), boolcol )
                 AddTextToQueue( queue, "LAMBDA IS DEAD: " .. tostring( lambda:GetIsDead() ), boolcol )
                 AddTextToQueue( queue, "LAMBDA IS TYPING: " .. tostring( lambda:GetIsTyping() ), boolcol )
                 AddTextToQueue( queue, "LAMBDA IS RELOADING: " .. tostring( lambda:GetIsReloading() ), boolcol )
                 AddTextToQueue( queue, "LAMBDA IS NOCLIPPING: " .. tostring( lambda:GetNoClip() ), boolcol )
+
+                -- Strings
                 AddTextToQueue( queue, "LAMBDA FAKE STEAMID: " .. lambda:GetNW2String( "lambda_steamid", "{ UNAVAILABLE }" ), stringcol )
                 AddTextToQueue( queue, "LAMBDA TEXT PROFILE: " .. lambda:GetNW2String( "lambda_tp", "{ UNAVAILABLE }" ), stringcol )
                 AddTextToQueue( queue, "LAMBDA VOICE PROFILE: " .. lambda:GetNW2String( "lambda_vp", "{ UNAVAILABLE }" ), stringcol )
                 AddTextToQueue( queue, "LAMBDA LAST STATE: " .. lambda:GetNW2String( "lambda_laststate", "{ UNAVAILABLE }" ), stringcol )
                 AddTextToQueue( queue, "LAMBDA STATE: " .. lambda:GetNW2String( "lambda_state", "{ UNAVAILABLE }" ), stringcol )
+                AddTextToQueue( queue, "LAMBDA COROUTINE STATUS: " .. lambda:GetNW2String( "lambda_threadstatus", "{ UNAVAILABLE }" ), stringcol )
                 AddTextToQueue( queue, "LAMBDA CURRENT PROFILE PICTURE: " .. lambda:GetProfilePicture(), stringcol )
                 AddTextToQueue( queue, "LAMBDA CURRENT WEAPON: " .. lambda:GetWeaponName(), stringcol )
+                
+                -- Entities
                 AddTextToQueue( queue, "LAMBDA ENEMY: " .. tostring( lambda:GetEnemy() ), entitycol )
+
+                -- Numbers
                 AddTextToQueue( queue, "LAMBDA TIME SINCE INITIALIZE: " .. string.NiceTime( math.Round( SysTime() - lambda.debuginitstart, 2 ) ), color_white )
                 AddTextToQueue( queue, "LAMBDA ENT INDEX: " .. lambda:EntIndex(), color_white )
                 AddTextToQueue( queue, "LAMBDA MAX ARMOR: " .. lambda:GetMaxArmor(), color_white )

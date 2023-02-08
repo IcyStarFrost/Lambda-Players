@@ -84,6 +84,7 @@ end
     local standingcollisionmaxs = Vector( 16, 16, 72 )
     local crouchingcollisionmaxs = Vector( 16, 16, 36 )
     local maxHealth = GetConVar( "lambdaplayers_lambda_maxhealth" )
+    local debugmode = GetConVar( "lambdaplayers_debug" )
     local spawnHealth = GetConVar( "lambdaplayers_lambda_spawnhealth" )
     local maxArmor = GetConVar( "lambdaplayers_lambda_maxarmor" )
     local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
@@ -158,6 +159,7 @@ function ENT:Initialize()
         self.l_WeaponUseCooldown = 0 -- The time before we can use our weapon again
         self.l_noclipheight = 0 -- The height we will float off the ground from
         self.l_FallVelocity = 0 -- How fast we are falling
+        self.l_debugupdate = 0 -- The next time the networked debug vars will be updated
         self.l_nextidlesound = CurTime() + 5 -- The next time we will play a idle sound
         self.l_nextcombatsound = CurTime() + 5 -- The next time we will play a combat sound
         self.l_nextpanicsound = CurTime() + 5 -- The next time we will play a combat sound
@@ -429,6 +431,14 @@ function ENT:Think()
     LambdaRunHook( "LambdaOnThink", self, self:GetWeaponENT() )
     
     if SERVER then
+
+        if debugmode:GetBool() and CurTime() > self.l_debugupdate then 
+            self:SetNW2String( "lambda_threadstatus", coroutine.status( self.BehaveThread ) )
+            self:SetNW2String( "lambda_threadtrace", debug.traceback( self.BehaveThread ) )
+            self.l_debugupdate = CurTime() + 0.1
+        end
+
+
         -- Run our weapon's think callback if possible
         if CurTime() > self.l_NextWeaponThink then
             local wepThinkFunc = self.l_WeaponThinkFunction
