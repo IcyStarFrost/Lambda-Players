@@ -465,11 +465,11 @@ function ENT:Think()
             if !self:IsDisabled() and !self:GetIsTyping() and !self:IsSpeaking() then
                 if random( 1, 100 ) <= self:GetVoiceChance() then
                     if self:IsPanicking() then
-                        self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
+                        self:PlaySoundFile( self:GetVoiceLine( "panic" ) )
                     elseif self:InCombat() then
-                        self:PlaySoundFile( self:GetVoiceLine( "taunt" ), true )
+                        self:PlaySoundFile( self:GetVoiceLine( "taunt" ) )
                     else
-                        self:PlaySoundFile( self:GetVoiceLine( "idle" ), true )
+                        self:PlaySoundFile( self:GetVoiceLine( "idle" ) )
                     end
                 elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                     self:TypeMessage( self:GetTextLine( "idle" ) )

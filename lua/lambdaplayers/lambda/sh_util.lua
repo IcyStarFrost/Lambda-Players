@@ -441,7 +441,7 @@ if SERVER then
     -- Attacks the specified entity
     function ENT:AttackTarget( ent, forceAttack )
         if !IsValid( ent ) or !forceAttack and self:IsPanicking() then return end
-        if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( self:GetVoiceLine( "taunt" ), true ) end
+        if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( self:GetVoiceLine( "taunt" ) ) end
         self:SetEnemy( ent )
         self:SetState( "Combat" )
         self:CancelMovement()
@@ -459,7 +459,7 @@ if SERVER then
         self:SetState( "Retreat" )
 
         if self:GetVoiceChance() > 0 and !self:IsSpeaking() then
-            self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
+            self:PlaySoundFile( self:GetVoiceLine( "panic" ) )
         end
     end
 

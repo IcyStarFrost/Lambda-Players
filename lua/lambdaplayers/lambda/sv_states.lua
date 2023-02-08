@@ -177,7 +177,7 @@ function ENT:PushButton()
 end
 
 function ENT:Laughing()
-    self:PlaySoundFile( self:GetVoiceLine( "laugh" ), true )
+    self:PlaySoundFile( self:GetVoiceLine( "laugh" ) )
     self:PlayGestureAndWait( ACT_GMOD_TAUNT_LAUGH )
     self:SetState( "Idle" )
 end

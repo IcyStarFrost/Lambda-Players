@@ -68,7 +68,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                 wepent:EmitSound( "lambdaplayers/weapons/paig/sb_spin.mp3", 80 )
                 if random( 1, 100 ) <= self:GetVoiceChance() then 
-                    self:PlaySoundFile( self:GetVoiceLine( random( 1, 2 ) == 1 and "taunt" or "kill" ), true ) 
+                    self:PlaySoundFile( self:GetVoiceLine( random( 1, 2 ) == 1 and "taunt" or "kill" ) ) 
                 end
             end
 
