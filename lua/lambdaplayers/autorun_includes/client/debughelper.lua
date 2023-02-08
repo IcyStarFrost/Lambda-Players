@@ -1,4 +1,5 @@
 local debugmode = GetConVar( "lambdaplayers_debug" )
+local scale = GetConVar( "lambdaplayers_debughelper_drawscale" )
 local cam = cam
 local draw = draw 
 local render = render 
@@ -29,7 +30,7 @@ hook.Add( "PreDrawEffects", "lambdaplayers-debughelper", function()
                 continue
             end
 
-            local ang = EyeAngles()
+            local ang = ( lambda:GetPos() - LocalPlayer():GetPos() ):Angle()
             local pos = lambda:GetPos() + lambda:GetUp() * ( lambda:GetModelRadius()  * 1.2 )
             local queue = {}
             local hp = lambda:GetNW2Float( "lambda_health", "NAN" )
@@ -40,7 +41,7 @@ hook.Add( "PreDrawEffects", "lambdaplayers-debughelper", function()
             
 
             render.DepthRange( 0, 0 )
-            cam.Start3D2D( pos, ang, 0.1 )
+            cam.Start3D2D( pos, ang, scale:GetFloat() )
 
                 -- Trace back
                 local tracestring = lambda:GetNW2String( "lambda_threadtrace", "{ UNAVAILABLE }" )
