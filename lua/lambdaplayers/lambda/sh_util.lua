@@ -545,8 +545,10 @@ if SERVER then
     end
 
     -- Makes the Lambda face the position or a entity if provided
-    function ENT:LookTo( pos, time )
+    -- if poseonly is true, then the Lambda will not change its angles and will only change it's pose params
+    function ENT:LookTo( pos, time, poseonly )
         self.Face = pos
+        self.l_PoseOnly = poseonly or false
         self.l_Faceend = time and CurTime() + time or nil
     end
 
