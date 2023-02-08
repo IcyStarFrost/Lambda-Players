@@ -84,6 +84,7 @@ end
     local standingcollisionmaxs = Vector( 16, 16, 72 )
     local crouchingcollisionmaxs = Vector( 16, 16, 36 )
     local maxHealth = GetConVar( "lambdaplayers_lambda_maxhealth" )
+    local debugmode = GetConVar( "lambdaplayers_debug" )
     local spawnHealth = GetConVar( "lambdaplayers_lambda_spawnhealth" )
     local maxArmor = GetConVar( "lambdaplayers_lambda_maxarmor" )
     local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
@@ -91,6 +92,7 @@ end
     local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
     local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
     local LambdaSpawnBehavior = GetConVar( "lambdaplayers_combat_spawnbehavior" )
+    local ignorePlys = GetConVar( "ai_ignoreplayers" )
     local panicAnimations = GetConVar( "lambdaplayers_lambda_panicanimations" )
 --
 
@@ -107,6 +109,7 @@ function ENT:Initialize()
     self.l_Hooks = {} -- The table holding all our created hooks
     self.l_Timers = {} -- The table holding all named timers
     self.l_SimpleTimers = {} -- The table holding all simple timers
+    self.debuginitstart = SysTime() -- Debug time from initialize to ENT:RunBehaviour()
     
     -- Has to be here so the client can run this too. Originally was under Personal Stats
     self:BuildPersonalityTable() -- Builds all personality chances from autorun_includes/shared/lambda_personalityfuncs.lua for use in chance testing and creates Get/Set functions for each one
@@ -156,8 +159,10 @@ function ENT:Initialize()
         self.l_WeaponUseCooldown = 0 -- The time before we can use our weapon again
         self.l_noclipheight = 0 -- The height we will float off the ground from
         self.l_FallVelocity = 0 -- How fast we are falling
-        self.debuginitstart = SysTime() -- Debug time from initialize to ENT:RunBehaviour()
+        self.l_debugupdate = 0 -- The next time the networked debug vars will be updated
         self.l_nextidlesound = CurTime() + 5 -- The next time we will play a idle sound
+        self.l_nextcombatsound = CurTime() + 5 -- The next time we will play a combat sound
+        self.l_nextpanicsound = CurTime() + 5 -- The next time we will play a combat sound
         self.l_outboundsreset = CurTime() + 5 -- The time until we get teleported back to spawn because we are out of bounds
         self.l_nextnpccheck = CurTime() + 1 -- The next time we will check for surrounding NPCs
         self.l_nextnoclipheightchange = 0 -- The next time we will change our height while in noclip
@@ -185,6 +190,7 @@ function ENT:Initialize()
         self:SetMaxHealth( maxHealth:GetInt() )
         self:SetNWMaxHealth( maxHealth:GetInt() )
         self:SetHealth( spawnHealth:GetInt() )
+        self:UpdateHealthDisplay()
 
         self:SetArmor( spawnArmor:GetInt() ) -- Our current armor
         self:SetMaxArmor( maxArmor:GetInt() ) -- Our maximum armor
@@ -268,8 +274,8 @@ function ENT:Initialize()
             local plys = self:FindInSphere( nil, 25000, function( ent ) return ( ent:IsPlayer()) end )
             self:AttackTarget( plys[ random( #plys ) ] )
         elseif LambdaSpawnBehavior:GetInt() == 2 then
-            local npcs = self:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() ) end )
-            self:AttackTarget( npcs[ random( #npcs ) ] )
+            local randomtarg = self:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignorePlys:GetBool() and ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 1 and ent:Alive() ) end )
+            self:AttackTarget( randomtarg[ random( #randomtarg ) ] )
         end
 
         self:SetLagCompensated( true )
@@ -425,6 +431,14 @@ function ENT:Think()
     LambdaRunHook( "LambdaOnThink", self, self:GetWeaponENT() )
     
     if SERVER then
+
+        if debugmode:GetBool() and CurTime() > self.l_debugupdate and self.BehaveThread then 
+            self:SetNW2String( "lambda_threadstatus", coroutine.status( self.BehaveThread ) )
+            self:SetNW2String( "lambda_threadtrace", debug.traceback( self.BehaveThread ) )
+            self.l_debugupdate = CurTime() + 0.1
+        end
+
+
         -- Run our weapon's think callback if possible
         if CurTime() > self.l_NextWeaponThink then
             local wepThinkFunc = self.l_WeaponThinkFunction
@@ -451,13 +465,33 @@ function ENT:Think()
         -- Play random Idle lines
         if !self:IsDisabled() and !self:GetIsTyping() and CurTime() > self.l_nextidlesound then
             
-            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() then
+            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() and !self:InCombat() and !self:IsPanicking() then
                 self:PlaySoundFile( self:GetVoiceLine( "idle" ), true )
-            elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
+            elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                 self:TypeMessage( self:GetTextLine( "idle" ) )
             end
 
             self.l_nextidlesound = CurTime() + 5
+        end
+
+        -- Play random Combat Chatter lines
+        if !self:IsDisabled() and !self:GetIsTyping() and CurTime() > self.l_nextcombatsound then
+            
+            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() and self:InCombat() then
+                self:PlaySoundFile( self:GetVoiceLine( "taunt" ), true )
+            end
+
+            self.l_nextcombatsound = CurTime() + 5
+        end
+
+        -- Play random panic lines when retreating/panicking
+        if !self:IsDisabled() and !self:GetIsTyping() and CurTime() > self.l_nextpanicsound then
+            
+            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() and self:IsPanicking() then
+                self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
+            end
+
+            self.l_nextpanicsound = CurTime() + 5
         end
 
         -- Update our speed after some time
@@ -465,12 +499,6 @@ function ENT:Think()
             local speed = ( self:GetCrouch() and self:GetCrouchSpeed() or self:GetRun() and self:GetRunSpeed() or self:GetWalkSpeed() ) * self.l_WeaponSpeedMultiplier
             self.loco:SetDesiredSpeed( speed )
             self.l_nextspeedupdate = CurTime() + 0.5
-        end
-        
-        -- Update our networked health
-        if CurTime() > self.l_NexthealthUpdate then
-            self:UpdateHealthDisplay()
-            self.l_NexthealthUpdate = CurTime() + 0.1
         end
 
         -- Attack nearby NPCs
@@ -684,11 +712,14 @@ function ENT:Think()
 
         -- Handles facing positions or entities
         if self.Face then
-            if self.l_Faceend and CurTime() > self.l_Faceend then self.l_Faceend = nil self.Face = nil return end
+            if self.l_Faceend and CurTime() > self.l_Faceend then self.l_Faceend = nil self.l_PoseOnly = nil self.Face = nil return end
             if isentity( self.Face ) and !IsValid( self.Face ) then self.Face = nil return end
             local pos = ( isentity( self.Face ) and ( isfunction( self.Face.EyePos ) and self.Face:EyePos() or self.Face:WorldSpaceCenter() ) or self.Face )
-            self.loco:FaceTowards( pos )
-            self.loco:FaceTowards( pos )
+
+            if !self.l_PoseOnly then
+                self.loco:FaceTowards( pos )
+                self.loco:FaceTowards( pos )
+            end
 
 
             local aimangle = ( pos - self:GetAttachmentPoint( "eyes" ).Pos ):Angle()
