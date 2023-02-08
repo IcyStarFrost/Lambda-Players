@@ -137,7 +137,7 @@ if SERVER then
     function ENT:OnInjured( info )
         local attacker = info:GetAttacker()
 
-        if self:GetState() != "Retreat" and attacker != self and random( 1, 2 ) == 1 and LambdaIsValid( attacker ) and retreatLowHP:GetBool() then
+        if !self:IsPanicking() and attacker != self and random( 1, 2 ) == 1 and LambdaIsValid( attacker ) and retreatLowHP:GetBool() then
             local hpThreshold = ( 100 - self:GetCombatChance() )
             if hpThreshold > 33 then hpThreshold = hpThreshold / random( 2, 4 ) end
             if hpThreshold <= 10 then hpThreshold = hpThreshold * random( 1, 2 ) end

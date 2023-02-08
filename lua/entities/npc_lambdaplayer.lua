@@ -161,8 +161,6 @@ function ENT:Initialize()
         self.l_FallVelocity = 0 -- How fast we are falling
         self.l_debugupdate = 0 -- The next time the networked debug vars will be updated
         self.l_nextidlesound = CurTime() + 5 -- The next time we will play a idle sound
-        self.l_nextcombatsound = CurTime() + 5 -- The next time we will play a combat sound
-        self.l_nextpanicsound = CurTime() + 5 -- The next time we will play a combat sound
         self.l_outboundsreset = CurTime() + 5 -- The time until we get teleported back to spawn because we are out of bounds
         self.l_nextnpccheck = CurTime() + 1 -- The next time we will check for surrounding NPCs
         self.l_nextnoclipheightchange = 0 -- The next time we will change our height while in noclip
@@ -461,37 +459,24 @@ function ENT:Think()
             if result != true then self:EmitSound( snd, 75, 100, 0.5 ) end
             self.l_nextfootsteptime = CurTime() + min(0.25 * (self:GetRunSpeed() / desSpeed), 0.35)
         end
-        
-        -- Play random Idle lines
-        if !self:IsDisabled() and !self:GetIsTyping() and CurTime() > self.l_nextidlesound then
-            
-            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() and !self:InCombat() and !self:IsPanicking() then
-                self:PlaySoundFile( self:GetVoiceLine( "idle" ), true )
-            elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
-                self:TypeMessage( self:GetTextLine( "idle" ) )
+
+        -- Play random Idle lines depending on current state
+        if CurTime() > self.l_nextidlesound then
+            if !self:IsDisabled() and !self:GetIsTyping() and !self:IsSpeaking() then
+                if random( 1, 100 ) <= self:GetVoiceChance() then
+                    if self:IsPanicking() then
+                        self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
+                    elseif self:InCombat() then
+                        self:PlaySoundFile( self:GetVoiceLine( "taunt" ), true )
+                    else
+                        self:PlaySoundFile( self:GetVoiceLine( "idle" ), true )
+                    end
+                elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
+                    self:TypeMessage( self:GetTextLine( "idle" ) )
+                end
             end
 
             self.l_nextidlesound = CurTime() + 5
-        end
-
-        -- Play random Combat Chatter lines
-        if !self:IsDisabled() and !self:GetIsTyping() and CurTime() > self.l_nextcombatsound then
-            
-            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() and self:InCombat() then
-                self:PlaySoundFile( self:GetVoiceLine( "taunt" ), true )
-            end
-
-            self.l_nextcombatsound = CurTime() + 5
-        end
-
-        -- Play random panic lines when retreating/panicking
-        if !self:IsDisabled() and !self:GetIsTyping() and CurTime() > self.l_nextpanicsound then
-            
-            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() and self:IsPanicking() then
-                self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
-            end
-
-            self.l_nextpanicsound = CurTime() + 5
         end
 
         -- Update our speed after some time
@@ -686,7 +671,7 @@ function ENT:Think()
 
         -- Animations --
         if self.l_UpdateAnimations then
-            local holdtype = ( self:GetState() == "Retreat" and panicAnimations:GetBool() and "panic" or self.l_HoldType )
+            local holdtype = ( ( self:IsPanicking() and panicAnimations:GetBool() ) and "panic" or self.l_HoldType )
             local anims = _LAMBDAPLAYERSHoldTypeAnimations[ holdtype ]
 
             if self:IsOnGround() then

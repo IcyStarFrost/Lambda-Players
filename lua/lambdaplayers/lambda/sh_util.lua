@@ -440,7 +440,7 @@ if SERVER then
 
     -- Attacks the specified entity
     function ENT:AttackTarget( ent, forceAttack )
-        if !IsValid( ent ) or !forceAttack and self:GetState() == "Retreat" then return end
+        if !IsValid( ent ) or !forceAttack and self:IsPanicking() then return end
         if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( self:GetVoiceLine( "taunt" ), true ) end
         self:SetEnemy( ent )
         self:SetState( "Combat" )
@@ -451,19 +451,15 @@ if SERVER then
     -- Retreats from entity target
     -- If the target is not specified, then Lambda will stop retreating only when time runs out
     function ENT:RetreatFrom( target, timeout )
+        self:CancelMovement()
+        self:SetEnemy( NULL )
+        
         self.l_retreatendtime = CurTime() + ( timeout or random( 5, 15 ) )
         self.l_RetreatTarget = target
         self:SetState( "Retreat" )
-        self:CancelMovement()
-        self:SetEnemy( NULL )
 
-        if self:GetVoiceChance() != 0 and !self:IsSpeaking() then
+        if self:GetVoiceChance() > 0 and !self:IsSpeaking() then
             self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
-        end
-
-        if CurTime() > self.l_retreatendtime or target != nil and ( !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 600 ) ) then 
-            self:SetState( "Idle" ) 
-            self.l_RetreatTarget = nil
         end
     end
 
