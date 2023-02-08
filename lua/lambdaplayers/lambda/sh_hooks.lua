@@ -155,6 +155,7 @@ if SERVER then
             self:AttackTarget( attacker )
         end
 
+        self:UpdateHealthDisplay()
     end
 
     function ENT:OnOtherKilled( victim, info )
