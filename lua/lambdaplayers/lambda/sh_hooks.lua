@@ -155,6 +155,7 @@ if SERVER then
             self:AttackTarget( attacker )
         end
 
+        self:UpdateHealthDisplay()
     end
 
     function ENT:OnOtherKilled( victim, info )
@@ -176,11 +177,17 @@ if SERVER then
                         self:PlaySoundFile( self:GetVoiceLine( "witness" ), true )
                     end
                 end )
+            elseif witnessChance == 3 and retreatLowHP:GetBool() then
+                self:DebugPrint( "I'm running away, I saw someone die." )
+                self:RetreatFrom()
+                self:SetEnemy( NULL )
+                self:CancelMovement()
             end
         end
 
         -- If we killed the victim
         if attacker == self then
+            local killerActionChance = random( 1, 10 )
             self:DebugPrint( "killed ", victim )
             self:SetFrags( self:GetFrags() + 1 )
 
@@ -193,7 +200,14 @@ if SERVER then
                     self:TypeMessage( self:GetTextLine( "kill" ) )
                 end
 
-                if random( 1, 10 ) == 1 then self.l_tbagpos = victim:GetPos(); self:SetState( "TBaggingPosition" ) end
+                if killerActionChance == 1 then 
+                    self.l_tbagpos = victim:GetPos(); self:SetState( "TBaggingPosition" )
+                elseif killerActionChance == 2 and !self:IsSpeaking() and retreatLowHP:GetBool() then
+                    self:DebugPrint( "I'm running away, I killed someone." )
+                    self:RetreatFrom()
+                    self:SetEnemy( NULL )
+                    self:CancelMovement()
+                end
             end
 
             if !victim.IsLambdaPlayer then LambdaKillFeedAdd( victim, info:GetAttacker(), info:GetInflictor() ) end

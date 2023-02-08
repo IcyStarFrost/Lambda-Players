@@ -129,9 +129,10 @@ CreateLambdaConvar( "lambdaplayers_lambda_panicanimations", 0, true, false, fals
 
 -- Combat Convars 
 CreateLambdaConvar( "lambdaplayers_combat_allowtargetyou", 1, true, true, true, "If Lambda Players are allowed to attack you", 0, 1, { type = "Bool", name = "Target You", category = "Combat" } )
-CreateLambdaConvar( "lambdaplayers_combat_retreatonlowhealth", 1, true, false, false, "If Lambda Players should start retreating if they are low on health", 0, 1, { type = "Bool", name = "Retreat On Low Health", category = "Combat" } )
-CreateLambdaConvar( "lambdaplayers_combat_spawnbehavior", 0, true, false, false, "If Lambda Players should  behavior when spawned. 0 - Nothing, 1 - Attack you, 2 - Attack random Lambda/NPC", 0 , 2, { type = "Slider", decimals = 0, name = "Spawn Behavior Modifier", category = "Combat" } )
-
+CreateLambdaConvar( "lambdaplayers_combat_retreatonlowhealth", 1, true, false, false, "If Lambda Players should start retreating if they are low on health, or witnessed/committed RDM", 0, 1, { type = "Bool", name = "Retreat On Low Health", category = "Combat" } )
+CreateLambdaConvar( "lambdaplayers_combat_spawnbehavior", 0, true, false, false, "If Lambda Players should  behavior when spawned. 0 - Nothing, 1 - Attack you, 2 - Random", 0 , 2, { type = "Slider", decimals = 0, name = "Spawn Behavior Modifier", category = "Combat" } )
+CreateLambdaConvar( "lambdaplayers_combat_spawnmedkits", 1, true, false, false, "If Lambda Players are allowed to spawn medkits to heal themselves when low on health. Make sure that 'Allow Entity Spawning' setting is enabled", 0 , 1, { type = "Bool", name = "Spawn Medkits", category = "Combat" } )
+CreateLambdaConvar( "lambdaplayers_combat_spawnbatteries", 1, true, false, false, "If Lambda Players are allowed to spawn armor batteries to themselves when low on armor. Make sure that 'Allow Entity Spawning' setting is enabled", 0 , 1, { type = "Bool", name = "Spawn Armor Batteries", category = "Combat" } )
 --
 
 -- Lambda Player Convars
@@ -179,6 +180,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_spawnatplayerspawns", 0, true, false, 
 
 -- DEBUGGING CONVARS. Server-side only
 CreateLambdaConvar( "lambdaplayers_debug", 0, false, false, false, "Enables the debugging features", 0, 1, { type = "Bool", name = "Enable Debug", category = "Debugging" } )
+CreateLambdaConvar( "lambdaplayers_debughelper_drawscale", 0.1, true, true, false, "The Scale the Debug Helper should size at", 0, 1, { type = "Slider", decimals = 2, name = "Debug Helper Scale", category = "Debugging" } )
 CreateLambdaConvar( "lambdaplayers_debug_path", 0, false, false, false, "Draws Lambda Player's current path they're moving through.", 0, 1, { type = "Bool", name = "Enable Path Drawing", category = "Debugging" } )
 CreateLambdaConvar( "lambdaplayers_debug_eyetracing", 0, false, false, false, "Draws a line from Lambda Player's eye position to where they're looking at. Developer mode should be enabled.", 0, 1, { type = "Bool", name = "Enable Eyetracing Line", category = "Debugging" } )
 AddSourceConVarToSettings( "developer", "Enables Source's Developer mode", { type = "Bool", name = "Developer", category = "Debugging" } )
