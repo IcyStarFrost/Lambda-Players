@@ -432,7 +432,7 @@ function ENT:Think()
     
     if SERVER then
 
-        if debugmode:GetBool() and CurTime() > self.l_debugupdate then 
+        if debugmode:GetBool() and CurTime() > self.l_debugupdate and self.BehaveThread then 
             self:SetNW2String( "lambda_threadstatus", coroutine.status( self.BehaveThread ) )
             self:SetNW2String( "lambda_threadtrace", debug.traceback( self.BehaveThread ) )
             self.l_debugupdate = CurTime() + 0.1
