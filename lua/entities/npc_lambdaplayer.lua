@@ -108,6 +108,7 @@ function ENT:Initialize()
     self.l_Hooks = {} -- The table holding all our created hooks
     self.l_Timers = {} -- The table holding all named timers
     self.l_SimpleTimers = {} -- The table holding all simple timers
+    self.debuginitstart = SysTime() -- Debug time from initialize to ENT:RunBehaviour()
     
     -- Has to be here so the client can run this too. Originally was under Personal Stats
     self:BuildPersonalityTable() -- Builds all personality chances from autorun_includes/shared/lambda_personalityfuncs.lua for use in chance testing and creates Get/Set functions for each one
@@ -157,7 +158,6 @@ function ENT:Initialize()
         self.l_WeaponUseCooldown = 0 -- The time before we can use our weapon again
         self.l_noclipheight = 0 -- The height we will float off the ground from
         self.l_FallVelocity = 0 -- How fast we are falling
-        self.debuginitstart = SysTime() -- Debug time from initialize to ENT:RunBehaviour()
         self.l_nextidlesound = CurTime() + 5 -- The next time we will play a idle sound
         self.l_nextcombatsound = CurTime() + 5 -- The next time we will play a combat sound
         self.l_nextpanicsound = CurTime() + 5 -- The next time we will play a combat sound
@@ -188,6 +188,7 @@ function ENT:Initialize()
         self:SetMaxHealth( maxHealth:GetInt() )
         self:SetNWMaxHealth( maxHealth:GetInt() )
         self:SetHealth( spawnHealth:GetInt() )
+        self:UpdateHealthDisplay()
 
         self:SetArmor( spawnArmor:GetInt() ) -- Our current armor
         self:SetMaxArmor( maxArmor:GetInt() ) -- Our maximum armor
@@ -489,12 +490,6 @@ function ENT:Think()
             self.loco:SetDesiredSpeed( speed )
             self.l_nextspeedupdate = CurTime() + 0.5
         end
-        
-        -- Update our networked health
-        if CurTime() > self.l_NexthealthUpdate then
-            self:UpdateHealthDisplay()
-            self.l_NexthealthUpdate = CurTime() + 0.1
-        end
 
         -- Attack nearby NPCs
         if CurTime() > self.l_nextnpccheck and self:GetState() != "Combat" then
@@ -707,11 +702,14 @@ function ENT:Think()
 
         -- Handles facing positions or entities
         if self.Face then
-            if self.l_Faceend and CurTime() > self.l_Faceend then self.l_Faceend = nil self.Face = nil return end
+            if self.l_Faceend and CurTime() > self.l_Faceend then self.l_Faceend = nil self.l_PoseOnly = nil self.Face = nil return end
             if isentity( self.Face ) and !IsValid( self.Face ) then self.Face = nil return end
             local pos = ( isentity( self.Face ) and ( isfunction( self.Face.EyePos ) and self.Face:EyePos() or self.Face:WorldSpaceCenter() ) or self.Face )
-            self.loco:FaceTowards( pos )
-            self.loco:FaceTowards( pos )
+
+            if !self.l_PoseOnly then
+                self.loco:FaceTowards( pos )
+                self.loco:FaceTowards( pos )
+            end
 
 
             local aimangle = ( pos - self:GetAttachmentPoint( "eyes" ).Pos ):Angle()
