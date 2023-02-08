@@ -914,7 +914,7 @@ if SERVER then
 
     -- Makes the Lambda say the specified file or file path.
     -- Random sound files for example, something/idle/*
-    function ENT:PlaySoundFile( filepath, stoponremove )
+    function ENT:PlaySoundFile( filepath )
         local isdir = string_find( filepath or "", "/*" )
 
         self:SetLastSpeakingTime( CurTime() + 4 )
@@ -932,7 +932,6 @@ if SERVER then
         net.Start( "lambdaplayers_playsoundfile" )
             net.WriteEntity( self )
             net.WriteString( filepath )
-            net.WriteBool( stoponremove )
             net.WriteUInt( self:GetCreationID(), 32 )
         net.Broadcast()
     end

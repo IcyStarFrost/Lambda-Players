@@ -61,7 +61,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         OnEquip = function( lambda, wepent )
             wepent:SetSkin( 1 )
-            wepent:SetSubMaterial( 1, "lambdaplayers/physgun/w_physics_sheet2")
+            wepent:SetSubMaterial( 1, "models/lambdaplayers/weapons/physgun/w_physics_sheet2")
 
             
             if allowphysgunuse:GetBool() then

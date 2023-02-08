@@ -33,7 +33,7 @@ local timer_Remove = timer.Remove
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
     katana = {
-        model = "models/lambdaplayers/katana/w_katana.mdl",
+        model = "models/lambdaplayers/weapons/w_katana.mdl",
         origin = "Misc",
         prettyname = "Katana",
         holdtype = "katana_unready_docile",

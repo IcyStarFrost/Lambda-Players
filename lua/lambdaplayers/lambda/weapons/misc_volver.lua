@@ -15,7 +15,7 @@ local bulletData = {
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     volver = {
-        model = "models/lambdaplayers/volver/w_volver.mdl",
+        model = "models/lambdaplayers/weapons/w_volver.mdl",
         origin = "Misc",
         prettyname = "Volver",
         holdtype = "crossbow",
@@ -23,6 +23,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = false,
         keepdistance = 600,
         attackrange = 4000,
+        bonemerge = true,
 
         callback = function( self, wepent, target )
             self.l_WeaponUseCooldown = CurTime() + 5

@@ -154,7 +154,6 @@ if SERVER then
             if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
             self:AttackTarget( attacker )
         end
-
     end
 
     function ENT:OnOtherKilled( victim, info )
@@ -521,7 +520,7 @@ function ENT:InitializeMiniHooks()
                 return true
             end
         
-
+            self:SimpleTimer( 0, function() self:UpdateHealthDisplay() end, true )
         end, true )
 
 

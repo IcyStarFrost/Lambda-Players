@@ -151,7 +151,7 @@ function ENT:Initialize()
         self.l_stucktimes = 0 -- How many times did we get stuck in the past 10 seconds
         self.l_stucktimereset = 0 -- The time until l_stucktimes gets reset to 0
         self.l_nextfootsteptime = 0 -- The next time we play a footstep sound
-        self.l_nextdoorcheck = 0 -- The next time we will check for doors to open
+        self.l_nextobstaclecheck = 0 -- The next time we will check for obstacles on our path
         self.l_nextphysicsupdate = 0 -- The next time we will update our Physics Shadow
         self.l_WeaponUseCooldown = 0 -- The time before we can use our weapon again
         self.l_noclipheight = 0 -- The height we will float off the ground from
@@ -514,7 +514,7 @@ function ENT:Think()
         if CurTime() > self.l_NextPickupCheck then
             for _, v in ipairs( self:FindInSphere( self:GetPos(), 58 ) ) do
                 local pickFunc = _LAMBDAPLAYERSItemPickupFunctions[ v:GetClass() ]
-                if isfunction( pickFunc ) and self:Visible( v ) then LambdaRunHook( "LambdaOnPickupEnt", self, v ) pickFunc( self, v ) end
+                if isfunction( pickFunc ) and v:Visible( self ) then LambdaRunHook( "LambdaOnPickupEnt", self, v ) pickFunc( self, v ) end
             end
             self.l_NextPickupCheck = CurTime() + 0.1
         end

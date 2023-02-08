@@ -5,7 +5,7 @@ local DamageInfo = DamageInfo
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
     l4d2_golfclub = {
-        model = "models/lambdaplayers/left4dead2_laststand/w_golfclub.mdl",
+        model = "models/lambdaplayers/weapons/w_golfclub.mdl",
         origin = "Left 4 Dead 2",
         prettyname = "Golf Club",
         holdtype = "melee2",
@@ -13,6 +13,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         ismelee = true,
         keepdistance = 10,
         attackrange = 70,
+        bonemerge = true,
 
         OnEquip = function( self, wepent )
             wepent:EmitSound( "lambdaplayers/weapons/left4dead2/generic_melee_equip.mp3", 65 )

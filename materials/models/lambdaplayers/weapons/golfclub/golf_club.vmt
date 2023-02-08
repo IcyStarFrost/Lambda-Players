@@ -1,0 +1,15 @@
+VertexLitGeneric
+{
+$baseTexture "models/lambdaplayers/weapons/golfclub/Golf_club"
+$bumpmap "models/lambdaplayers/weapons/golfclub/Golf_club_normal"
+$phong 1
+$phongboost 1
+$phongexponent 1
+$phongfresnelranges "[.1 .4 2]"
+
+$normalmapalphaenvmapmask 1
+
+$envmap env_cubemap
+$envmapfresnel 1
+$envmapFresnelMinMaxExp "[0 5 .4]"
+}

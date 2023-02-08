@@ -3,9 +3,8 @@ local random = math.random
 local CurTime = CurTime
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
-
-    pan = {
-        model = "models/lambdaplayers/pan/w_pan.mdl",
+    misc_pan = {
+        model = "models/lambdaplayers/weapons/w_pan.mdl",
         origin = "Misc",
         prettyname = "Frying Pan",
         holdtype = "melee",
