@@ -848,16 +848,19 @@ end
 
 
 function ENT:RunBehaviour()
-    self:DebugPrint( "Initialized their AI in ", SysTime() - self.debuginitstart, " seconds" )
+    if !self.l_initialized then 
+        LambdaRunHook( "LambdaAIInitialize", self ) 
+        self:DebugPrint( "Initialized their AI in ", SysTime() - self.debuginitstart, " seconds" )
 
-    if !self.l_initialized then LambdaRunHook( "LambdaAIInitialize", self ) self.l_initialized = true end
+        if IsValid( self:GetCreator() ) then
+            undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+                undo.SetPlayer( self:GetCreator() )
+                undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+                undo.AddEntity( self )
+            undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+        end
 
-    if IsValid( self:GetCreator() ) then
-        undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
-            undo.SetPlayer( self:GetCreator() )
-            undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. self:GetLambdaName() .. " )" )
-            undo.AddEntity( self )
-        undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+        self.l_initialized = true 
     end
 
     while true do
