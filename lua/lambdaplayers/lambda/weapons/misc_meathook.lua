@@ -5,8 +5,8 @@ local Rand = math.Rand
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
-    meathook = {
-        model = "models/lambdaplayers/meathook/w_meathook.mdl",
+    misc_meathook = {
+        model = "models/lambdaplayers/weapons/w_meathook.mdl",
         origin = "Misc",
         prettyname = "Meat Hook",
         holdtype = "melee2",

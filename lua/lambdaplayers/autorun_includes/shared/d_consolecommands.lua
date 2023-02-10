@@ -23,22 +23,26 @@ function CreateLambdaConsoleCommand( name, func, isclient, helptext, settingstbl
         concommand.Add( name, func, nil, helptext )
     end
 
-    if CLIENT and settingstbl then
+    if CLIENT and settingstbl and !_LAMBDAConVarNames[ name ] then
         settingstbl.concmd = name
         settingstbl.isclient = isclient
         settingstbl.type = "Button"
         settingstbl.desc = ( isclient and "Client-Side | " or "Server-Side | " ) .. helptext .. "\nConsole Command: " .. name
+        
+        _LAMBDAConVarNames[ name ] = true
         table_insert( _LAMBDAConVarSettings, settingstbl )
     end
 
 end
 
 function AddConsoleCommandToLambdaSettings( cmd, isclient, helptext, settingstbl )
-    if SERVER then return end
+    if SERVER or _LAMBDAConVarNames[ cmd ] then return end
     settingstbl.concmd = cmd
     settingstbl.isclient = isclient
     settingstbl.type = "Button"
     settingstbl.desc = ( isclient and "Client-Side | " or "Server-Side | " ) .. helptext .. "\nConsole Command: " .. cmd
+
+    _LAMBDAConVarNames[ cmd ] = true
     table_insert( _LAMBDAConVarSettings, settingstbl )
 end
 

@@ -137,7 +137,7 @@ if SERVER then
     function ENT:OnInjured( info )
         local attacker = info:GetAttacker()
 
-        if self:GetState() != "Retreat" and attacker != self and random( 1, 2 ) == 1 and LambdaIsValid( attacker ) and retreatLowHP:GetBool() then
+        if !self:IsPanicking() and attacker != self and random( 1, 2 ) == 1 and LambdaIsValid( attacker ) and retreatLowHP:GetBool() then
             local hpThreshold = ( 100 - self:GetCombatChance() )
             if hpThreshold > 33 then hpThreshold = hpThreshold / random( 2, 4 ) end
             if hpThreshold <= 10 then hpThreshold = hpThreshold * random( 1, 2 ) end
@@ -154,8 +154,6 @@ if SERVER then
             if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
             self:AttackTarget( attacker )
         end
-
-        self:UpdateHealthDisplay()
     end
 
     function ENT:OnOtherKilled( victim, info )
@@ -174,7 +172,7 @@ if SERVER then
                         self.l_keyentity = victim
                         self:TypeMessage( self:GetTextLine( "witness" ) )
                     elseif self:GetVoiceChance() > 0 then
-                        self:PlaySoundFile( self:GetVoiceLine( "witness" ), true )
+                        self:PlaySoundFile( self:GetVoiceLine( "witness" ) )
                     end
                 end )
             elseif witnessChance == 3 and retreatLowHP:GetBool() then
@@ -194,7 +192,7 @@ if SERVER then
             if victim == self:GetEnemy() then
 
                 if random( 1, 100 ) <= self:GetVoiceChance() then
-                    self:PlaySoundFile( self:GetVoiceLine( "kill" ), true )
+                    self:PlaySoundFile( self:GetVoiceLine( "kill" ) )
                 elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
                     self.l_keyentity = victim
                     self:TypeMessage( self:GetTextLine( "kill" ) )
@@ -216,7 +214,7 @@ if SERVER then
                 self:LookTo( attacker, 1 )
                 self:SimpleTimer( rand( 0.1, 1.0 ), function()
                     if !IsValid( attacker ) then return end
-                    self:PlaySoundFile( self:GetVoiceLine( "assist" ), true )
+                    self:PlaySoundFile( self:GetVoiceLine( "assist" ) )
                 end )
             end
         end
@@ -447,7 +445,7 @@ if SERVER then
             
         fallTrTbl.endpos = ( fallTrTbl.start - self:GetUp() * 32756 )
         if TraceHull( fallTrTbl ).HitPos:IsUnderwater() then return end
-        self:PlaySoundFile( self:GetVoiceLine( "fall" ), true )
+        self:PlaySoundFile( self:GetVoiceLine( "fall" ) )
     end
 
 
@@ -535,7 +533,7 @@ function ENT:InitializeMiniHooks()
                 return true
             end
         
-
+            self:SimpleTimer( 0, function() self:UpdateHealthDisplay() end, true )
         end, true )
 
 
@@ -567,7 +565,7 @@ function ENT:InitializeMiniHooks()
         self:Hook( "PlayerSay", "lambdarespondtoplayertextchat", function( ply, text )
             
             if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() and self:IsInRange( ply, 300 ) then
-                self:PlaySoundFile( self:GetVoiceLine( "idle" ), true )
+                self:PlaySoundFile( self:GetVoiceLine( "idle" ) )
             elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
                 self.l_keyentity = ply
                 self:TypeMessage( self:GetTextLine( "response" ) )
@@ -579,7 +577,7 @@ function ENT:InitializeMiniHooks()
             if !self:IsInRange( ply, 300 ) then return end
             
             if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() then
-                self:PlaySoundFile( self:GetVoiceLine( "idle" ), true )
+                self:PlaySoundFile( self:GetVoiceLine( "idle" ) )
             elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
                 self.l_keyentity = ply
                 self:TypeMessage( self:GetTextLine( "response" ) )

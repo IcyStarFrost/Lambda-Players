@@ -1,67 +1,82 @@
 local table_insert = table.insert
+local GetConVar = GetConVar
+local tostring = tostring
+local CreateConVar = CreateConVar
+local CreateClientConVar = CreateClientConVar
+local defDisplayClr = Color( 255, 136, 0 )
 
 -- Will be used for presets
 _LAMBDAPLAYERSCONVARS = {}
 
 if CLIENT then
+    _LAMBDAConVarNames = {}
     _LAMBDAConVarSettings = {}
 elseif SERVER then
     _LAMBDAEntLimits = {}
 end
 
-
-
 -- A multi purpose function for both client and server convars
 function CreateLambdaConvar( name, val, shouldsave, isclient, userinfo, desc, min, max, settingstbl )
-    isclient = isclient == nil and false or isclient
-    shouldsave = shouldsave == nil and true or shouldsave
-    local convar
-
-    _LAMBDAPLAYERSCONVARS[ name ] = tostring( val )
-
+    isclient = isclient or false
     if isclient and SERVER then return end
 
+    local strVar = tostring( val )
+    if !_LAMBDAPLAYERSCONVARS[ name ] then _LAMBDAPLAYERSCONVARS[ name ] = strVar end
 
-    if isclient then
-        convar = CreateClientConVar( name, tostring( val ), shouldsave, userinfo, desc, min, max )
-    else
-        convar = CreateConVar( name, tostring( val ), shouldsave and ( FCVAR_ARCHIVE + FCVAR_REPLICATED ) or ( FCVAR_NONE + FCVAR_REPLICATED ), desc, min, max )
+    local convar = GetConVar( name ) 
+    if !convar then
+        shouldsave = shouldsave or true
+        if isclient then
+            convar = CreateClientConVar( name, strVar, shouldsave, userinfo, desc, min, max )
+        else
+            convar = CreateConVar( name, strVar, ( shouldsave and ( FCVAR_ARCHIVE + FCVAR_REPLICATED ) or ( FCVAR_NONE + FCVAR_REPLICATED ) ), desc, min, max )
+        end
     end
 
-    
-
-    if CLIENT and settingstbl then
+    if CLIENT and settingstbl and !_LAMBDAConVarNames[ name ] then
         settingstbl.convar = name
         settingstbl.min = min
         settingstbl.default = val
         settingstbl.isclient = isclient
         settingstbl.desc = ( isclient and "Client-Side | " or "Server-Side | " ) .. desc .. ( isclient and "" or "\nConVar: " .. name )
         settingstbl.max = max
+
+        _LAMBDAConVarNames[ name ] = true
         table_insert( _LAMBDAConVarSettings, settingstbl )
     end
 
     return convar
 end
 
-
 local function AddSourceConVarToSettings( cvarname, desc, settingstbl )
-    if CLIENT and settingstbl then
+    if CLIENT and settingstbl and !_LAMBDAConVarNames[ cvarname ] then
         settingstbl.convar = cvarname
         settingstbl.isclient = false
         settingstbl.desc = "Server-Side | " .. desc .. "\nConVar: " .. cvarname
+
+        _LAMBDAConVarNames[ cvarname ] = true
         table_insert( _LAMBDAConVarSettings, settingstbl )
     end
 end
 
 function CreateLambdaColorConvar( name, defaultcolor, isclient, userinfo, desc, settingstbl )
-    local red = CreateLambdaConvar( name .. "_r", defaultcolor.r, true, isclient, userinfo, desc, 0, 255, nil )
-    local green = CreateLambdaConvar( name .. "_g", defaultcolor.g, true, isclient, userinfo, desc, 0, 255, nil )
-    local blue = CreateLambdaConvar( name .. "_b", defaultcolor.b, true, isclient, userinfo, desc, 0, 255, nil )
+    local nameR = name .. "_r"
+    local nameG = name .. "_g"
+    local nameB = name .. "_b"
 
-    if CLIENT then
-        settingstbl.red = name .. "_r"
-        settingstbl.green = name .. "_g"
-        settingstbl.blue = name .. "_b"
+    local redCvar = GetConVar( nameR )
+    if !redCvar then redCvar = CreateLambdaConvar( nameR, defaultcolor.r, true, isclient, userinfo, desc, 0, 255, nil ) end
+
+    local greenCvar = GetConVar( nameG )
+    if !greenCvar then greenCvar = CreateLambdaConvar( nameG, defaultcolor.r, true, isclient, userinfo, desc, 0, 255, nil ) end
+
+    local blueCvar = GetConVar( nameB )
+    if !blueCvar then blueCvar = CreateLambdaConvar( nameB, defaultcolor.r, true, isclient, userinfo, desc, 0, 255, nil ) end
+
+    if CLIENT and !_LAMBDAConVarNames[ name ] then
+        settingstbl.red = nameR
+        settingstbl.green = nameG
+        settingstbl.blue = nameB
 
         settingstbl.default = "Red = " .. tostring( defaultcolor.r ) .. " | " .. "Green = " .. tostring( defaultcolor.g ) .. " | " .. "Blue = " .. tostring( defaultcolor.b )
         settingstbl.type = "Color"
@@ -69,13 +84,13 @@ function CreateLambdaColorConvar( name, defaultcolor, isclient, userinfo, desc, 
         settingstbl.isclient = isclient
         settingstbl.desc = ( isclient and "Client-Side | " or "Server-Side | " ) .. desc .. ( isclient and "" or "\nConVar: " .. name )
         settingstbl.max = max
+
+        _LAMBDAConVarNames[ name ] = true
         table_insert( _LAMBDAConVarSettings, settingstbl )
     end
 
-    return red, green, blue
+    return redCvar, greenCvar, blueCvar
 end
-
-
 
 -- These Convar Functions are capable of creating spawnmenu settings automatically.
 
@@ -96,7 +111,7 @@ CreateLambdaConvar( "lambdaplayers_voice_warnvoicestereo", 0, true, true, false,
 CreateLambdaConvar( "lambdaplayers_displayarmor", 0, true, true, false, "If Lambda Player's current armor should be displayed when we're looking at it and it's above zero", 0, 1, { type = "Bool", name = "Display Armor", category = "Lambda Player Settings" } )
 
 CreateLambdaConvar( "lambdaplayers_useplayermodelcolorasdisplaycolor", 0, true, true, true, "If Lambda Player's Playermodel Color should be its Display Color. This has priority over the Display Color below", 0, 1, { type = "Bool", name = "Playermodel Color As Display Color", category = "Misc" } )
-CreateLambdaColorConvar( "lambdaplayers_displaycolor", Color( 255, 136, 0 ), true, true, "The display color to use for Name Display and others", { name = "Display Color", category = "Misc" } )
+CreateLambdaColorConvar( "lambdaplayers_displaycolor", defDisplayClr, true, true, "The display color to use for Name Display and others", { name = "Display Color", category = "Misc" } )
 --
 
 -- Lambda Player Server Convars

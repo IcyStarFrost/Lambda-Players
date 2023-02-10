@@ -70,7 +70,7 @@ function ENT:MoveToPos( pos, options )
         if !self:IsDisabled() and CurTime() > self.l_moveWaitTime then
             if callback and isfunction( callback ) then callback( goal ) end 
             path:Update( self )
-            self:DoorCheck()
+            self:ObstacleCheck()
 
             -- Close up jumping
             local aheadNormal = ( goal.pos - self:GetPos() ):GetNormalized(); aheadNormal.z = 0
@@ -259,7 +259,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
             local approchpos = ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos )
             self.loco:FaceTowards( approchpos )
             self.loco:Approach( approchpos, 1 )
-            self:DoorCheck()
+            self:ObstacleCheck()
         end
 
         self.l_CurrentPath = ( !isvector( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos )
@@ -386,9 +386,9 @@ local doorClasses = {
     ["func_door_rotating"] = true
 }
 
--- Fires a trace in front of the player that will open doors if it hits a door
-function ENT:DoorCheck()
-    if CurTime() < self.l_nextdoorcheck then return end
+-- Fires a trace in front of the player that will open doors if it hits a door and shoot at breakable obstacles
+function ENT:ObstacleCheck()
+    if CurTime() < self.l_nextobstaclecheck then return end
 
     tracetable.start = self:WorldSpaceCenter()
     tracetable.endpos = ( tracetable.start + self:GetForward() * 50 )
@@ -398,7 +398,6 @@ function ENT:DoorCheck()
     if IsValid( ent ) then
         local class = ent:GetClass()
         if doorClasses[ class ] and ent.Fire then
-
             -- Back up when opening a door
             if ent:GetInternalVariable( "m_eDoorState" ) != 0 or ent:GetInternalVariable( "m_toggle_state" ) != 0 then
                 self:Approach( self:GetPos() - self:GetForward() * 50, 0.8 )
@@ -413,8 +412,12 @@ function ENT:DoorCheck()
             else
                 ent:Fire( "Open" )
             end
+        elseif ent.Health and ent:Health() > 0 and !ent:IsPlayer() and !ent:IsNPC() and !ent:IsNextBot() then
+            if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
+            self:LookTo( ent, 1.0 )
+            self:UseWeapon( ent )
         end
     end
 
-    self.l_nextdoorcheck = CurTime() + 0.2
+    self.l_nextobstaclecheck = CurTime() + 0.1
 end

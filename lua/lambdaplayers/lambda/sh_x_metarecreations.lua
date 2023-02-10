@@ -16,10 +16,14 @@ end
 
 -- Returns our eye angles
 function ENT:EyeAngles2()
-    if IsValid( self:GetEnemy() ) then
-        return ( ( isfunction( self:GetEnemy().EyePos ) and self:GetEnemy():EyePos() or self:GetEnemy():WorldSpaceCenter() ) - self:GetAttachmentPoint( "eyes" ).Pos ):Angle()
+    local eyeAttach = self:GetAttachmentPoint( "eyes" )
+
+    local ene = self:GetEnemy()
+    if IsValid( ene ) then
+        return ( ( ene.IsLambdaPlayer and ene:GetAttachmentPoint( "eyes" ).Pos or ( isfunction( ene.EyePos ) and ene:EyePos() or ene:WorldSpaceCenter() ) ) - eyeAttach.Pos ):Angle()
     end 
-    return self:GetAttachmentPoint( "eyes" ).Ang
+
+    return eyeAttach.Ang
 end
 
 -- If we are alive
@@ -29,10 +33,7 @@ end
 
 -- Returns the direction we are looking to
 function ENT:GetAimVector()
-    if IsValid( self:GetEnemy() ) then
-        return ( ( isfunction( self:GetEnemy().EyePos ) and self:GetEnemy():EyePos() or self:GetEnemy():WorldSpaceCenter() ) - self:GetAttachmentPoint( "eyes" ).Pos ):GetNormalized()
-    end 
-    return self:GetAttachmentPoint( "eyes" ).Ang:Forward()
+    return self:EyeAngles2():Forward()
 end
 
 -- Returns our current armor value

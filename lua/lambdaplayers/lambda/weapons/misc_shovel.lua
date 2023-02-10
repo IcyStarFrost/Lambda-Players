@@ -6,7 +6,7 @@ local Rand = math.Rand
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     shovel = {
-        model = "models/lambdaplayers/shovel/w_shovel.mdl",
+        model = "models/lambdaplayers/weapons/w_shovel.mdl",
         origin = "Misc",
         prettyname = "Shovel",
         holdtype = "melee2",
