@@ -16,77 +16,77 @@ elseif SERVER then
 end
 
 -- A multi purpose function for both client and server convars
-function CreateLambdaConvar( name, val, shouldSave, isClient, userInfo, desc, min, max, settingsTbl )
-    isClient = isClient or false
-    if isClient and SERVER then return end
+function CreateLambdaConvar( name, val, shouldsave, isclient, userinfo, desc, min, max, settingstbl )
+    isclient = isclient or false
+    if isclient and SERVER then return end
 
     local strVar = tostring( val )
     if !_LAMBDAPLAYERSCONVARS[ name ] then _LAMBDAPLAYERSCONVARS[ name ] = strVar end
 
     local convar = GetConVar( name ) 
     if !convar then
-        shouldSave = shouldSave or true
-        if isClient then
-            convar = CreateClientConVar( name, strVar, shouldSave, userInfo, desc, min, max )
+        shouldsave = shouldsave or true
+        if isclient then
+            convar = CreateClientConVar( name, strVar, shouldsave, userinfo, desc, min, max )
         else
-            convar = CreateConVar( name, strVar, ( shouldSave and ( FCVAR_ARCHIVE + FCVAR_REPLICATED ) or ( FCVAR_NONE + FCVAR_REPLICATED ) ), desc, min, max )
+            convar = CreateConVar( name, strVar, ( shouldsave and ( FCVAR_ARCHIVE + FCVAR_REPLICATED ) or ( FCVAR_NONE + FCVAR_REPLICATED ) ), desc, min, max )
         end
     end
 
-    if CLIENT and settingsTbl and !_LAMBDAConVarNames[ name ] then
-        settingsTbl.convar = name
-        settingsTbl.min = min
-        settingsTbl.default = val
-        settingsTbl.isClient = isClient
-        settingsTbl.desc = ( isClient and "Client-Side | " or "Server-Side | " ) .. desc .. ( isClient and "" or "\nConVar: " .. name )
-        settingsTbl.max = max
+    if CLIENT and settingstbl and !_LAMBDAConVarNames[ name ] then
+        settingstbl.convar = name
+        settingstbl.min = min
+        settingstbl.default = val
+        settingstbl.isclient = isclient
+        settingstbl.desc = ( isclient and "Client-Side | " or "Server-Side | " ) .. desc .. ( isclient and "" or "\nConVar: " .. name )
+        settingstbl.max = max
 
         _LAMBDAConVarNames[ name ] = true
-        table_insert( _LAMBDAConVarSettings, settingsTbl )
+        table_insert( _LAMBDAConVarSettings, settingstbl )
     end
 
     return convar
 end
 
-local function AddSourceConVarToSettings( cvarname, desc, settingsTbl )
-    if CLIENT and settingsTbl and !_LAMBDAConVarNames[ cvarname ] then
-        settingsTbl.convar = cvarname
-        settingsTbl.isClient = false
-        settingsTbl.desc = "Server-Side | " .. desc .. "\nConVar: " .. cvarname
+local function AddSourceConVarToSettings( cvarname, desc, settingstbl )
+    if CLIENT and settingstbl and !_LAMBDAConVarNames[ cvarname ] then
+        settingstbl.convar = cvarname
+        settingstbl.isclient = false
+        settingstbl.desc = "Server-Side | " .. desc .. "\nConVar: " .. cvarname
 
         _LAMBDAConVarNames[ cvarname ] = true
-        table_insert( _LAMBDAConVarSettings, settingsTbl )
+        table_insert( _LAMBDAConVarSettings, settingstbl )
     end
 end
 
-function CreateLambdaColorConvar( name, defaultcolor, isClient, userInfo, desc, settingsTbl )
+function CreateLambdaColorConvar( name, defaultcolor, isclient, userinfo, desc, settingstbl )
     local nameR = name .. "_r"
     local nameG = name .. "_g"
     local nameB = name .. "_b"
 
     local redCvar = GetConVar( nameR )
-    if !redCvar then redCvar = CreateLambdaConvar( nameR, defaultcolor.r, true, isClient, userInfo, desc, 0, 255, nil ) end
+    if !redCvar then redCvar = CreateLambdaConvar( nameR, defaultcolor.r, true, isclient, userinfo, desc, 0, 255, nil ) end
 
     local greenCvar = GetConVar( nameG )
-    if !greenCvar then greenCvar = CreateLambdaConvar( nameG, defaultcolor.r, true, isClient, userInfo, desc, 0, 255, nil ) end
+    if !greenCvar then greenCvar = CreateLambdaConvar( nameG, defaultcolor.r, true, isclient, userinfo, desc, 0, 255, nil ) end
 
     local blueCvar = GetConVar( nameB )
-    if !blueCvar then blueCvar = CreateLambdaConvar( nameB, defaultcolor.r, true, isClient, userInfo, desc, 0, 255, nil ) end
+    if !blueCvar then blueCvar = CreateLambdaConvar( nameB, defaultcolor.r, true, isclient, userinfo, desc, 0, 255, nil ) end
 
     if CLIENT and !_LAMBDAConVarNames[ name ] then
-        settingsTbl.red = nameR
-        settingsTbl.green = nameG
-        settingsTbl.blue = nameB
+        settingstbl.red = nameR
+        settingstbl.green = nameG
+        settingstbl.blue = nameB
 
-        settingsTbl.default = "Red = " .. tostring( defaultcolor.r ) .. " | " .. "Green = " .. tostring( defaultcolor.g ) .. " | " .. "Blue = " .. tostring( defaultcolor.b )
-        settingsTbl.type = "Color"
+        settingstbl.default = "Red = " .. tostring( defaultcolor.r ) .. " | " .. "Green = " .. tostring( defaultcolor.g ) .. " | " .. "Blue = " .. tostring( defaultcolor.b )
+        settingstbl.type = "Color"
 
-        settingsTbl.isClient = isClient
-        settingsTbl.desc = ( isClient and "Client-Side | " or "Server-Side | " ) .. desc .. ( isClient and "" or "\nConVar: " .. name )
-        settingsTbl.max = max
+        settingstbl.isclient = isclient
+        settingstbl.desc = ( isclient and "Client-Side | " or "Server-Side | " ) .. desc .. ( isclient and "" or "\nConVar: " .. name )
+        settingstbl.max = max
 
         _LAMBDAConVarNames[ name ] = true
-        table_insert( _LAMBDAConVarSettings, settingsTbl )
+        table_insert( _LAMBDAConVarSettings, settingstbl )
     end
 
     return redCvar, greenCvar, blueCvar
