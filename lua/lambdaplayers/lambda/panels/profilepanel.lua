@@ -156,7 +156,7 @@ local function OpenProfilePanel( ply )
         for k, v in pairs( profiles ) do
             
             if v.model and !file.Exists( v.model, "GAME" ) then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a error playermodel! ( " .. v.model .. " )" ) end
-            if v.voiceprofile and !file.Exists( "sound/lambdaplayers/voiceprofiles/" .. v.voiceprofile, "GAME" ) then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a non existent Voice Profile! ( " .. v.voiceprofile .. " )" ) end
+            if v.voiceprofile and !file.Exists( "sound/lambdaplayers/voiceprofiles/" .. v.voiceprofile, "GAME" ) and !file.Exists( "sound/zetaplayer/custom_vo/" .. v.voiceprofile, "GAME" ) then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a non existent Voice Profile! ( " .. v.voiceprofile .. " )" ) end
             if v.spawnwep and !_LAMBDAPLAYERSWEAPONS[ v.spawnwep ] then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a non existent Spawn Weapon! ( " .. v.spawnwep .. " )" ) end
             if v.profilepicture and !file.Exists( "materials/" .. v.profilepicture, "GAME" ) then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a non existent Profile Picture! ( " .. v.profilepicture .. " )" ) end
 
@@ -252,9 +252,13 @@ local function OpenProfilePanel( ply )
     LAMBDAPANELS:CreateLabel( "Voice Profile", mainscroll, TOP )
     LAMBDAPANELS:CreateURLLabel( "Click here to learn about Voice Profiles", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#voice-profiles", mainscroll, TOP )
     local combotable = {}
-    for k, v in pairs( LAMBDAFS:GetVoiceProfiles() ) do
+
+    for k, v in pairs( LambdaVoiceProfiles ) do
         combotable[ k ] = k
     end
+
+
+
     combotable[ "No Voice Profile" ] = "/NIL"
     local voiceprofile = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, combotable )
 
