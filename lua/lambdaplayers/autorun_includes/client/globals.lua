@@ -51,7 +51,7 @@ end
 function EntMeta:LambdaDisintegrate()
     ClearInvalids( disintegratingents )
     if self.l_IsDisintegrating then return end
-    if #disintegratingents > 8 then self:Remove() return end -- The effect is limitted so we don't overload the emitters
+    if #disintegratingents > 8 then if self.isclientside then self:Remove() end return end -- The effect is limitted so we don't overload the emitters
 
     local id = random( 1, 10000000 )
     local curpos
@@ -68,7 +68,7 @@ function EntMeta:LambdaDisintegrate()
     
     hook.Add( "Think", "lambdadisintegrateeffect" .. id, function()
         if !IsValid( self ) then hook.Remove( "Think", "lambdadisintegrateeffect" .. id ) return end
-        if RealTime() > endtime then self:Remove() hook.Remove( "Think", "lambdadisintegrateeffect" .. id ) return end
+        if RealTime() > endtime then if self.isclientside then self:Remove() end hook.Remove( "Think", "lambdadisintegrateeffect" .. id ) return end
         
 
         local uppos = self:GetPos() + norm * ( self:GetModelRadius() - 25 )

@@ -20,6 +20,7 @@ local deathAlways = GetConVar( "lambdaplayers_voice_alwaysplaydeathsnds" )
 local respawnTime = GetConVar( "lambdaplayers_lambda_respawntime" )
 local respawnSpeech = GetConVar( "lambdaplayers_lambda_dontrespawnifspeaking" )
 local retreatLowHP = GetConVar( "lambdaplayers_combat_retreatonlowhealth" )
+local serversidecleanup = GetConVar( "lambdaplayers_lambda_serversideragdollcleanuptime" )
 
 if SERVER then
 
@@ -30,6 +31,46 @@ if SERVER then
         if debugvar:GetBool() then ErrorNoHaltWithStack( "WARNING! ", self:GetLambdaName(), " was killed on a engine level! The entity will be recreated!" ) end
         self:Recreate()
         self.l_internalkilled = true
+    end
+
+    local function CreateServersideRagdoll( lambda, info )
+        local ragdoll = ents.Create( "prop_ragdoll" )
+        ragdoll:SetModel( lambda:GetModel() )
+        ragdoll:SetPos( lambda:GetPos() )
+        ragdoll:SetOwner( lambda )
+        ragdoll:AddEffects( EF_BONEMERGE ) -- Pretty much sets up the bones for us
+        ragdoll:SetParent( lambda )
+        ragdoll:Spawn()
+        ragdoll:SetCollisionGroup( COLLISION_GROUP_DEBRIS )
+        ragdoll.LambdaOwner = lambda
+        lambda.ragdoll = ragdoll
+        ragdoll.IsLambdaSpawned = true
+
+        lambda:SetNW2Entity( "lambda_serversideragdoll", ragdoll )
+    
+        ragdoll:SetParent()
+        ragdoll:RemoveEffects( EF_BONEMERGE )
+    
+        ragdoll:TakePhysicsDamage( info )
+
+        net.Start( "lambdaplayers_initserversideragdoll" )
+        net.WriteEntity( ragdoll )
+        net.WriteVector( lambda:GetPlyColor() ) 
+        net.Broadcast()
+
+        if serversidecleanup:GetInt() != 0 then 
+            local startTime = CurTime()
+            LambdaCreateThread( function()
+                while ( CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( lambda ) and CurTime() < lambda:GetLastSpeakingTime() ) do 
+                    if !IsValid( ragdoll ) then return end
+                    coroutine.yield() 
+                end
+                if !IsValid( ragdoll ) then return end
+
+                coroutine.wait( 5 )
+                ragdoll:Remove()
+            end ) 
+        end
     end
 
     function ENT:LambdaOnKilled( info )
@@ -74,13 +115,17 @@ if SERVER then
         self:TerminateNonIgnoredDeadTimers()
         self:RemoveFlags( FL_OBJECT )
         
-        net.Start( "lambdaplayers_becomeragdoll" )
-            net.WriteEntity( self )
-            net.WriteVector( self:GetPlyColor() )
-            net.WriteVector( info:GetDamageForce() )
-            net.WriteVector( info:GetDamagePosition() )
-            net.WriteEntity( self.l_BecomeRagdollEntity )
-        net.Broadcast()
+        if !GetConVar( "lambdaplayers_lambda_serversideragdolls" ):GetBool() then
+            net.Start( "lambdaplayers_becomeragdoll" )
+                net.WriteEntity( self )
+                net.WriteVector( self:GetPlyColor() )
+                net.WriteVector( info:GetDamageForce() )
+                net.WriteVector( info:GetDamagePosition() )
+                net.WriteEntity( self.l_BecomeRagdollEntity )
+            net.Broadcast()
+        else
+            CreateServersideRagdoll( self, info )
+        end
 
         self.l_BecomeRagdollEntity = NULL
 
