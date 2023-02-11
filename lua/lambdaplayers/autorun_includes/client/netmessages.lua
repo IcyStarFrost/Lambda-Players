@@ -113,7 +113,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
         net.Receive( "lambdaplayers_server_sendpos", function()
             local svPos = net.ReadVector()
             if !svPos then cs_prop:Remove() return end
-            cs_prop:SetPos( net.ReadVector() )
+            cs_prop:SetPos( svPos )
         end )
     else
         cs_prop:SetPos( ent:GetPos() )
