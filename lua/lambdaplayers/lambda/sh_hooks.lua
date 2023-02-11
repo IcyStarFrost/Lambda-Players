@@ -101,16 +101,18 @@ if SERVER then
 
         self:Thread( function()
 
+            local deathTime = CurTime()
             local canRespawn = self:GetRespawn()
-            coroutine.wait( canRespawn and respawnTime:GetFloat() or 0.1 )
 
-            while self:GetIsTyping() or self:IsSpeaking() and respawnSpeech:GetBool() do coroutine.yield() end
-            if !canRespawn then
-                self:Remove()
-                return
+            while ( ( CurTime() - deathTime ) < ( canRespawn and respawnTime:GetFloat() or 0.1 ) or self:GetIsTyping() or self:IsSpeaking() and ( !canRespawn or respawnSpeech:GetBool() ) ) do
+                coroutine.yield() 
             end
 
-            self:LambdaRespawn()
+            if !canRespawn then
+                self:Remove()
+            else
+                self:LambdaRespawn()
+            end
 
         end, "DeathThread", true )
 
