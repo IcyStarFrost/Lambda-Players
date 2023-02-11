@@ -440,8 +440,8 @@ if SERVER then
 
     -- Attacks the specified entity
     function ENT:AttackTarget( ent, forceAttack )
-        if !IsValid( ent ) or !forceAttack and self:GetState() == "Retreat" then return end
-        if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( self:GetVoiceLine( "taunt" ), true ) end
+        if !IsValid( ent ) or !forceAttack and self:IsPanicking() then return end
+        if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( self:GetVoiceLine( "taunt" ) ) end
         self:SetEnemy( ent )
         self:SetState( "Combat" )
         self:CancelMovement()
@@ -451,19 +451,15 @@ if SERVER then
     -- Retreats from entity target
     -- If the target is not specified, then Lambda will stop retreating only when time runs out
     function ENT:RetreatFrom( target, timeout )
+        self:CancelMovement()
+        self:SetEnemy( NULL )
+        
         self.l_retreatendtime = CurTime() + ( timeout or random( 5, 15 ) )
         self.l_RetreatTarget = target
         self:SetState( "Retreat" )
-        self:CancelMovement()
-        self:SetEnemy( NULL )
 
-        if self:GetVoiceChance() != 0 and !self:IsSpeaking() then
-            self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
-        end
-
-        if CurTime() > self.l_retreatendtime or target != nil and ( !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 600 ) ) then 
-            self:SetState( "Idle" ) 
-            self.l_RetreatTarget = nil
+        if self:GetVoiceChance() > 0 and !self:IsSpeaking() then
+            self:PlaySoundFile( self:GetVoiceLine( "panic" ) )
         end
     end
 
@@ -625,11 +621,13 @@ if SERVER then
 
     -- Respawns the Lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time
     function ENT:LambdaRespawn()
+        LambdaSpawnPoints = LambdaSpawnPoints or LambdaGetPossibleSpawns()
+
         self:DebugPrint( "Respawned" )
         self:SetIsDead( false )
         self.l_Clip = self.l_MaxClip
         self:SetIsReloading( false )
-        self:SetPos( rasp:GetBool() and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos ) -- Rasp aka Respawn at Spawn Points
+        self:SetPos( rasp:GetBool() and ( LambdaSpawnPoints and #LambdaSpawnPoints > 0 ) and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos ) -- Rasp aka Respawn at Spawn Points
         self.loco:SetVelocity( Vector( 0, 0, 0 ) )
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
         self:GetPhysicsObject():EnableCollisions( true )
@@ -938,7 +936,7 @@ if SERVER then
 
     -- Makes the Lambda say the specified file or file path.
     -- Random sound files for example, something/idle/*
-    function ENT:PlaySoundFile( filepath, stoponremove )
+    function ENT:PlaySoundFile( filepath )
         local isdir = string_find( filepath or "", "/*" )
 
         self:SetLastSpeakingTime( CurTime() + 4 )
@@ -956,7 +954,6 @@ if SERVER then
         net.Start( "lambdaplayers_playsoundfile" )
             net.WriteEntity( self )
             net.WriteString( filepath )
-            net.WriteBool( stoponremove )
             net.WriteUInt( self:GetCreationID(), 32 )
         net.Broadcast()
     end

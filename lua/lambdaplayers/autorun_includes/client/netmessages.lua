@@ -111,6 +111,8 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
         net.SendToServer()
 
         net.Receive( "lambdaplayers_server_sendpos", function()
+            local svPos = net.ReadVector()
+            if !svPos then cs_prop:Remove() return end
             cs_prop:SetPos( net.ReadVector() )
         end )
     else
@@ -176,7 +178,7 @@ local function CreateProfilePictureMat( ent )
 end
 
 -- Voice icons, voice positioning, all that stuff will be handled in here.
-local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
+local function PlaySoundFile( ent, soundname, index, is3d )
     if speaklimit:GetInt() > 0 and #_LAMBDAPLAYERS_Voicechannels >= speaklimit:GetInt() or ent.l_ismuted then return end
 
     if IsValid( ent.l_VoiceSnd ) then if usegmodpopups:GetBool() then LambdaRunHook( "PlayerEndVoice", ent ) end ent.l_VoiceSnd:Stop() end
@@ -186,7 +188,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
     sound_PlayFile( "sound/" .. soundname, flag, function( snd, ID, errorname )
         if ID == 21 then
             if stereowarn:GetBool() then print( "Lambda Players Voice Chat Warning: Sound file " ..soundname .. " has a stereo track and won't be played in 3d. Sound will continue to play. You can disable these warnings in Lambda Player>Utilities" ) end
-            PlaySoundFile( ent, soundname, index, shouldstoponremove, false )
+            PlaySoundFile( ent, soundname, index, false )
             return
         elseif ID == 2 then
             print( "Lambda Players Voice Chat Error: Sound file " ..soundname .. " failed to open!" )
@@ -277,7 +279,7 @@ local function PlaySoundFile( ent, soundname, index, shouldstoponremove, is3d )
             -- Right now this code seems to work just as I think I want it to. Unsure if it could be optimized better but to me it looks as good as it is gonna get
 
             hook.Add( "Tick", "lambdaplayersvoicetick" .. index, function()
-                if !LambdaIsValid( ent ) and shouldstoponremove then if usegmodpopups:GetBool() then LambdaRunHook( "PlayerEndVoice", ent ) end snd:Stop() return end
+                if !IsValid( ent ) then if usegmodpopups:GetBool() then LambdaRunHook( "PlayerEndVoice", ent ) end snd:Stop() return end
                 if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then if usegmodpopups:GetBool() then LambdaRunHook( "PlayerEndVoice", ent ) end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
                 if RealTime() > RealTime() + length then if usegmodpopups:GetBool() then LambdaRunHook( "PlayerEndVoice", ent ) end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
 
@@ -353,12 +355,11 @@ end )
 net.Receive("lambdaplayers_playsoundfile", function()
     local lambda = net.ReadEntity()
     local soundname = net.ReadString()
-    local shouldstoponremove = net.ReadBool()
     local index = net.ReadUInt( 32 )
 
     if !IsValid(lambda) then return end
 
-    PlaySoundFile( lambda, soundname, index, shouldstoponremove, true )
+    PlaySoundFile( lambda, soundname, index, true )
 end)
 
 net.Receive( "lambdaplayers_invalidateragdoll", function()

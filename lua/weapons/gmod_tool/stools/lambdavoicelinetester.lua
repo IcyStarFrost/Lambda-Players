@@ -33,7 +33,7 @@ function TOOL:LeftClick( tr )
     if !IsValid( ent ) or !ent.IsLambdaPlayer then return end
 
     if SERVER then
-        ent:PlaySoundFile( ent:GetVoiceLine( self:GetClientInfo( "voicetype" ) ), true )
+        ent:PlaySoundFile( ent:GetVoiceLine( self:GetClientInfo( "voicetype" ) ) )
     end
 
     return true
@@ -46,7 +46,7 @@ function TOOL:RightClick( tr )
     if !IsValid( ent ) or !ent.IsLambdaPlayer then return end
 
     if SERVER then
-        ent:PlaySoundFile( self:GetClientInfo( "voicelinepath" ), true )
+        ent:PlaySoundFile( self:GetClientInfo( "voicelinepath" ) )
     end
 
     return true

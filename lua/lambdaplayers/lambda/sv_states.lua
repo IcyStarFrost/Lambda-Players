@@ -177,7 +177,7 @@ function ENT:PushButton()
 end
 
 function ENT:Laughing()
-    self:PlaySoundFile( self:GetVoiceLine( "laugh" ), true )
+    self:PlaySoundFile( self:GetVoiceLine( "laugh" ) )
     self:PlayGestureAndWait( ACT_GMOD_TAUNT_LAUGH )
     self:SetState( "Idle" )
 end
@@ -213,10 +213,6 @@ function ENT:Retreat()
         self:SetState( "Idle" ) 
         self.l_RetreatTarget = nil
         return
-    end
-
-    if random( 1, 100 ) <= min( 100, self:GetVoiceChance() * 1.75 ) then
-        self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
     end
 
     local rndPos = self:GetRandomPosition( nil, 4000 )

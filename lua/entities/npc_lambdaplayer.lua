@@ -154,15 +154,13 @@ function ENT:Initialize()
         self.l_stucktimes = 0 -- How many times did we get stuck in the past 10 seconds
         self.l_stucktimereset = 0 -- The time until l_stucktimes gets reset to 0
         self.l_nextfootsteptime = 0 -- The next time we play a footstep sound
-        self.l_nextdoorcheck = 0 -- The next time we will check for doors to open
+        self.l_nextobstaclecheck = 0 -- The next time we will check for obstacles on our path
         self.l_nextphysicsupdate = 0 -- The next time we will update our Physics Shadow
         self.l_WeaponUseCooldown = 0 -- The time before we can use our weapon again
         self.l_noclipheight = 0 -- The height we will float off the ground from
         self.l_FallVelocity = 0 -- How fast we are falling
         self.l_debugupdate = 0 -- The next time the networked debug vars will be updated
         self.l_nextidlesound = CurTime() + 5 -- The next time we will play a idle sound
-        self.l_nextcombatsound = CurTime() + 5 -- The next time we will play a combat sound
-        self.l_nextpanicsound = CurTime() + 5 -- The next time we will play a combat sound
         self.l_outboundsreset = CurTime() + 5 -- The time until we get teleported back to spawn because we are out of bounds
         self.l_nextnpccheck = CurTime() + 1 -- The next time we will check for surrounding NPCs
         self.l_nextnoclipheightchange = 0 -- The next time we will change our height while in noclip
@@ -461,37 +459,24 @@ function ENT:Think()
             if result != true then self:EmitSound( snd, 75, 100, 0.5 ) end
             self.l_nextfootsteptime = CurTime() + min(0.25 * (self:GetRunSpeed() / desSpeed), 0.35)
         end
-        
-        -- Play random Idle lines
-        if !self:IsDisabled() and !self:GetIsTyping() and CurTime() > self.l_nextidlesound then
-            
-            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() and !self:InCombat() and !self:IsPanicking() then
-                self:PlaySoundFile( self:GetVoiceLine( "idle" ), true )
-            elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
-                self:TypeMessage( self:GetTextLine( "idle" ) )
+
+        -- Play random Idle lines depending on current state
+        if CurTime() > self.l_nextidlesound then
+            if !self:IsDisabled() and !self:GetIsTyping() and !self:IsSpeaking() then
+                if random( 1, 100 ) <= self:GetVoiceChance() then
+                    if self:IsPanicking() then
+                        self:PlaySoundFile( self:GetVoiceLine( "panic" ) )
+                    elseif self:InCombat() then
+                        self:PlaySoundFile( self:GetVoiceLine( "taunt" ) )
+                    else
+                        self:PlaySoundFile( self:GetVoiceLine( "idle" ) )
+                    end
+                elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
+                    self:TypeMessage( self:GetTextLine( "idle" ) )
+                end
             end
 
             self.l_nextidlesound = CurTime() + 5
-        end
-
-        -- Play random Combat Chatter lines
-        if !self:IsDisabled() and !self:GetIsTyping() and CurTime() > self.l_nextcombatsound then
-            
-            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() and self:InCombat() then
-                self:PlaySoundFile( self:GetVoiceLine( "taunt" ), true )
-            end
-
-            self.l_nextcombatsound = CurTime() + 5
-        end
-
-        -- Play random panic lines when retreating/panicking
-        if !self:IsDisabled() and !self:GetIsTyping() and CurTime() > self.l_nextpanicsound then
-            
-            if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking() and self:IsPanicking() then
-                self:PlaySoundFile( self:GetVoiceLine( "panic" ), true )
-            end
-
-            self.l_nextpanicsound = CurTime() + 5
         end
 
         -- Update our speed after some time
@@ -542,7 +527,7 @@ function ENT:Think()
         if CurTime() > self.l_NextPickupCheck then
             for _, v in ipairs( self:FindInSphere( self:GetPos(), 58 ) ) do
                 local pickFunc = _LAMBDAPLAYERSItemPickupFunctions[ v:GetClass() ]
-                if isfunction( pickFunc ) and self:Visible( v ) then LambdaRunHook( "LambdaOnPickupEnt", self, v ) pickFunc( self, v ) end
+                if isfunction( pickFunc ) and v:Visible( self ) then LambdaRunHook( "LambdaOnPickupEnt", self, v ) pickFunc( self, v ) end
             end
             self.l_NextPickupCheck = CurTime() + 0.1
         end
@@ -686,14 +671,14 @@ function ENT:Think()
 
         -- Animations --
         if self.l_UpdateAnimations then
-            local holdtype = ( self:GetState() == "Retreat" and panicAnimations:GetBool() and "panic" or self.l_HoldType )
+            local holdtype = ( ( self:IsPanicking() and panicAnimations:GetBool() ) and "panic" or self.l_HoldType )
             local anims = _LAMBDAPLAYERSHoldTypeAnimations[ holdtype ]
 
             if self:IsOnGround() then
                 if self.loco:GetVelocity():IsZero() then
                     self:StartActivity( self:GetCrouch() and anims.crouchIdle or anims.idle )
                 else
-                    local moveAnim = ( self:GetCrouch() and anims.crouchWalk or anims.run )
+                    local moveAnim = ( self:GetCrouch() and anims.crouchWalk or self:GetRunSpeed() > 150 and anims.run or anims.walk )
                     if self:GetActivity() != moveAnim then self:StartActivity( moveAnim ) end
                 end
             elseif self:IsInNoClip() then
@@ -863,16 +848,19 @@ end
 
 
 function ENT:RunBehaviour()
-    self:DebugPrint( "Initialized their AI in ", SysTime() - self.debuginitstart, " seconds" )
+    if !self.l_initialized then 
+        LambdaRunHook( "LambdaAIInitialize", self ) 
+        self:DebugPrint( "Initialized their AI in ", SysTime() - self.debuginitstart, " seconds" )
 
-    if !self.l_initialized then LambdaRunHook( "LambdaAIInitialize", self ) self.l_initialized = true end
+        if IsValid( self:GetCreator() ) then
+            undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+                undo.SetPlayer( self:GetCreator() )
+                undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+                undo.AddEntity( self )
+            undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+        end
 
-    if IsValid( self:GetCreator() ) then
-        undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
-            undo.SetPlayer( self:GetCreator() )
-            undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. self:GetLambdaName() .. " )" )
-            undo.AddEntity( self )
-        undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+        self.l_initialized = true 
     end
 
     while true do

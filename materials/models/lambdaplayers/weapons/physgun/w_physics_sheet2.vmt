@@ -1,0 +1,23 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models/lambdaplayers/weapons/physgun/w_physics_sheet2"
+	"$selfillum" "1"
+	
+	// "$selfillumtint" "[0.3 1.8 2.1]" // Default
+	// "$selfillumtint" "[1.5 2.2 1.9]" // White
+	// "$selfillumtint" "[3.5 0.3 0.2]" // Red
+	// "$selfillumtint" "[2.8 1.7 0.4]" // Yellow
+	// "$selfillumtint" "[0.5 2.1 0.8]" // Green (medical)
+	// "$selfillumtint" "[1.0 2.4 0.4]" // Green (forest)
+	// "$selfillumtint" "[0.5 0.6 3.1]" // Blue (lavender)
+	// "$selfillumtint" "[1.4 0.6 2.5]" // Purple
+	// "$selfillumtint" "[1.9 0.6 1.1]" // Pink
+	
+	Proxies
+	{
+		LambdaPlayerWeaponColor
+		{
+			resultVar	$selfillumtint
+		}
+	}
+}
