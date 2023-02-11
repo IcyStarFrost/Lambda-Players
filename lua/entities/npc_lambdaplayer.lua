@@ -678,7 +678,7 @@ function ENT:Think()
                 if self.loco:GetVelocity():IsZero() then
                     self:StartActivity( self:GetCrouch() and anims.crouchIdle or anims.idle )
                 else
-                    local moveAnim = ( self:GetCrouch() and anims.crouchWalk or anims.run )
+                    local moveAnim = ( self:GetCrouch() and anims.crouchWalk or self:GetRunSpeed() > 150 and anims.run or anims.walk )
                     if self:GetActivity() != moveAnim then self:StartActivity( moveAnim ) end
                 end
             elseif self:IsInNoClip() then

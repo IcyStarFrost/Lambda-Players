@@ -621,11 +621,13 @@ if SERVER then
 
     -- Respawns the Lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time
     function ENT:LambdaRespawn()
+        LambdaSpawnPoints = LambdaSpawnPoints or LambdaGetPossibleSpawns()
+
         self:DebugPrint( "Respawned" )
         self:SetIsDead( false )
         self.l_Clip = self.l_MaxClip
         self:SetIsReloading( false )
-        self:SetPos( rasp:GetBool() and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos ) -- Rasp aka Respawn at Spawn Points
+        self:SetPos( rasp:GetBool() and ( LambdaSpawnPoints and #LambdaSpawnPoints > 0 ) and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos ) -- Rasp aka Respawn at Spawn Points
         self.loco:SetVelocity( Vector( 0, 0, 0 ) )
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
         self:GetPhysicsObject():EnableCollisions( true )
