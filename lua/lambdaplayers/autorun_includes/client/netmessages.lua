@@ -20,6 +20,7 @@ local sound_PlayFile = sound.PlayFile
 local coroutine_yield = coroutine.yield
 local origin = Vector()
 local cleanuptime = GetConVar( "lambdaplayers_corpsecleanuptime" )
+local serversidecleanup = GetConVar( "lambdaplayers_lambda_serversideragdollcleanuptime" )
 local cleaneffect = GetConVar( "lambdaplayers_corpsecleanupeffect" )
 local speaklimit = GetConVar( "lambdaplayers_voice_talklimit" )
 local globalvoice = GetConVar(  "lambdaplayers_voice_globalvoice" )
@@ -34,6 +35,7 @@ local function InitializeRagdoll( ragdoll, color, lambda, force, offset )
     ragdoll:DrawShadow( true )
     ragdoll.GetPlayerColor = function() return color end
 
+    ragdoll.isclientside = true
     ragdoll.LambdaOwner = lambda
     lambda.ragdoll = ragdoll
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, ragdoll )
@@ -57,6 +59,26 @@ local function InitializeRagdoll( ragdoll, color, lambda, force, offset )
         end ) 
     end
 end
+
+net.Receive( "lambdaplayers_initserversideragdoll", function()
+    local ragdoll = net.ReadEntity()
+    local color = net.ReadVector()
+
+    ragdoll.GetPlayerColor = function() return color end
+
+    if serversidecleanup:GetInt() != 0 then 
+        local startTime = CurTime()
+        LambdaCreateThread( function()
+            while ( CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( lambda ) and CurTime() < lambda:GetLastSpeakingTime() ) do 
+                if !IsValid( ragdoll ) then return end
+                coroutine_yield() 
+            end
+            if !IsValid( ragdoll ) then return end
+
+            if cleaneffect:GetBool() then ragdoll:LambdaDisintegrate() return end 
+        end ) 
+    end
+end )
 
 -- Net sent from ENT:OnKilled()
 net.Receive( "lambdaplayers_becomeragdoll", function() 
@@ -221,7 +243,7 @@ local function PlaySoundFile( ent, soundname, index, is3d )
 
             -- Render the voice icon
             hook.Add( "PreDrawEffects", "lambdavoiceicon" .. id,function()
-                followEnt = LambdaIsValid( ent ) and ent or IsValid( ent.ragdoll ) and ent.ragdoll or followEnt
+                followEnt = LambdaIsValid( ent ) and ent or IsValid( ent ) and IsValid( ent:GetNW2Entity( "lambda_serversideragdoll", nil ) ) and ent:GetNW2Entity( "lambda_serversideragdoll", nil ) or IsValid( ent.ragdoll ) and ent.ragdoll or followEnt
 
                 if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
                 if RealTime() > RealTime() + length then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
@@ -286,7 +308,7 @@ local function PlaySoundFile( ent, soundname, index, is3d )
                 if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then if usegmodpopups:GetBool() then LambdaRunHook( "PlayerEndVoice", ent ) end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
                 if RealTime() > RealTime() + length then if usegmodpopups:GetBool() then LambdaRunHook( "PlayerEndVoice", ent ) end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
 
-                tickent = ( LambdaIsValid( ent ) and ent or ( IsValid( ent.ragdoll ) and ent.ragdoll or tickent ) )
+                tickent = ( LambdaIsValid( ent ) and ent or IsValid( ent ) and IsValid( ent:GetNW2Entity( "lambda_serversideragdoll" ) ) and ent:GetNW2Entity( "lambda_serversideragdoll" ) or ( IsValid( ent.ragdoll ) and ent.ragdoll or tickent ) )
                 local globalVC = globalvoice:GetBool()
                 snd:Set3DEnabled( ( !globalVC and is3d ) )
 
@@ -367,9 +389,17 @@ end)
 
 net.Receive( "lambdaplayers_invalidateragdoll", function()
     local ent = net.ReadEntity()
+    local serversideragdoll = net.ReadEntity()
     if !IsValid( ent ) then return end
 
     if removeCorpse:GetBool() then
+
+        if IsValid( serversideragdoll ) then
+            if cleaneffect:GetBool() then 
+                serversideragdoll:LambdaDisintegrate()
+            end
+        end
+
         local ragdoll = ent.ragdoll
         if IsValid( ragdoll ) then
             if cleaneffect:GetBool() then 

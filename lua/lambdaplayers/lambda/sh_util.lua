@@ -45,6 +45,7 @@ local chatAllowed = GetConVar( "lambdaplayers_text_enabled" )
 local chatlimit = GetConVar( "lambdaplayers_text_chatlimit" )
 local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
+local serversidecleanup = GetConVar( "lambdaplayers_lambda_serversideremovecorpseonrespawn" )
 local usemarkovgenerator = GetConVar( "lambdaplayers_text_markovgenerate" )
 local player_GetAll = player.GetAll
 local Rand = math.Rand
@@ -657,9 +658,30 @@ if SERVER then
         self:SetCrouch( false )
         self:SetEnemy( nil )
 
+        
+        local ragdoll = self.ragdoll
+
         net.Start( "lambdaplayers_invalidateragdoll" )
         net.WriteEntity( self )
+        net.WriteEntity( serversidecleanup:GetBool() and ragdoll or NULL )
         net.Broadcast()
+
+        if serversidecleanup:GetBool() and IsValid( ragdoll ) then 
+
+            
+            LambdaCreateThread( function()
+
+                net.Start( "lambdaplayers_initserversideragdoll" )
+                net.WriteEntity( ragdoll )
+                net.WriteVector( self:GetPlyColor() ) 
+                net.Broadcast()
+
+                coroutine.wait( 5 )
+                if IsValid( ragdoll ) then ragdoll:Remove() end
+            end )
+        end
+
+        self.ragdoll = nil
 
         LambdaRunHook( "LambdaOnRespawn", self )
     end
