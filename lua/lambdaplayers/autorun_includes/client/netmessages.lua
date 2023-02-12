@@ -394,10 +394,8 @@ net.Receive( "lambdaplayers_invalidateragdoll", function()
 
     if removeCorpse:GetBool() then
 
-        if IsValid( serversideragdoll ) then
-            if cleaneffect:GetBool() then 
-                serversideragdoll:LambdaDisintegrate()
-            end
+        if IsValid( serversideragdoll ) and cleaneffect:GetBool() then
+            serversideragdoll:LambdaDisintegrate()
         end
 
         local ragdoll = ent.ragdoll
