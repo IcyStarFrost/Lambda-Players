@@ -1,16 +1,14 @@
 # Lambda Players
 
-A project to rewrite Zeta Players with the goal to be, clean, optimized, multiplayer friendly, and modular as possible.
+A sequel to Zeta Players with code that is designed to be more performant, module, and multiplayer friendly. Overall a massive upgrade from Zeta Players in every way.
 
-Currently the project will only be located here on Github and will be seen on the workshop when the addon is in a decent state
+Currently the project will only be located here on Github and will be seen on the workshop when the addon is considered complete by StarFrost
 
 ### If you would like to know how to add custom content for Lambda Players, code addons for Lambda Players, or upload any custom content to the workshop, please check out the wiki https://github.com/IcyStarFrost/Lambda-Players/wiki
 
 *** 
 
 # What is Lambda Players and what is their purpose? 
-
-*This next server requires bot intelligence. Consequently never satisfied by normal bots. That's where you come in. You know the Toolgun. You know the Physgun. You know how to play Sandbox. You'll be perfect.*
 
 Lambda Players are a complete rewrite of Zeta Players which are Nextbots designed to mimic Real Players in a regular Sandbox Server setting. `(This means they are meant to be in Sandbox and Sandbox only! Do not ask for them to support other gamemodes.)` Much like their Zeta counterparts, their core features are of the following:
 
@@ -46,7 +44,7 @@ Lambda Players are **your** players of **your** Server whether it is singleplaye
 - Lambda Player's way of handling custom content is much better than the Zeta's way
 - Lambda Players can work without a Navigation Mesh! However they won't be able to pathfind
 - Lambda Players has official support for Multiplayer. This means Clients can not harm the Server's custom content, Lambda's features are not targetted to only the first person (`Entity(1)`) in the server, you can make clients download things like Lambda Profile Pictures by using workshop addons so they can see Profile Pictures and such, and lastly to note all the convars and settings are properly labeled whether they are Client-Side or Server-Side.
-- Lambda Players have a much cleaner, optimized, and documented internal code. For example, Lambda's Initialize functions has a total of 1,119 less lines than what the Zetas have for their Initialize function! That's a big deal! Look at the difference between each one's code for finding if they have permission to edit something
+- Lambda Players have a much cleaner, optimized, and documented internal code. Look at the difference between each one's code for finding if they have permission to edit something
 
 *Lambda Code*
 
@@ -82,6 +80,7 @@ If you are new to Lambda, you will be surprised on the memorable moments you can
 - Optimized
 - Voice Chat
 - Text Chat
+- Spray Capability
 - Fun 
 
 ## Origins
