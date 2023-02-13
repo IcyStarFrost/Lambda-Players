@@ -68,6 +68,8 @@ if SERVER then
                 if !IsValid( ragdoll ) then return end
 
                 coroutine.wait( 5 )
+                if !IsValid( ragdoll ) then return end
+                
                 ragdoll:Remove()
             end ) 
         end

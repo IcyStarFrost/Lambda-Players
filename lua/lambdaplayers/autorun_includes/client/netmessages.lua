@@ -204,7 +204,7 @@ end
 
 -- Voice icons, voice positioning, all that stuff will be handled in here.
 local function PlaySoundFile( ent, soundname, index, is3d )
-    if speaklimit:GetInt() > 0 and #_LAMBDAPLAYERS_Voicechannels >= speaklimit:GetInt() or ent.l_ismuted then return end
+    if !ent.IsLambdaPlayer or speaklimit:GetInt() > 0 and #_LAMBDAPLAYERS_Voicechannels >= speaklimit:GetInt() or ent.l_ismuted then return end
 
     if IsValid( ent.l_VoiceSnd ) then if usegmodpopups:GetBool() then LambdaRunHook( "PlayerEndVoice", ent ) end ent.l_VoiceSnd:Stop() end
 
