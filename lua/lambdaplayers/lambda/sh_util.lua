@@ -628,7 +628,11 @@ if SERVER then
         self:SetIsDead( false )
         self.l_Clip = self.l_MaxClip
         self:SetIsReloading( false )
+
+        self:SetSolidMask( MASK_SOLID_BRUSHONLY ) -- This should maybe help with the issue where the nextbot can't set pos because it's in something
         self:SetPos( rasp:GetBool() and ( LambdaSpawnPoints and #LambdaSpawnPoints > 0 ) and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos ) -- Rasp aka Respawn at Spawn Points
+        self:SetSolidMask( MASK_PLAYERSOLID )
+
         self.loco:SetVelocity( Vector( 0, 0, 0 ) )
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
         self:GetPhysicsObject():EnableCollisions( true )
