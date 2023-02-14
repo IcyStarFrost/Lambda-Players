@@ -46,6 +46,7 @@ local chatlimit = GetConVar( "lambdaplayers_text_chatlimit" )
 local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
 local serversidecleanup = GetConVar( "lambdaplayers_lambda_serversideremovecorpseonrespawn" )
+local serversidecleanupeffect = GetConVar( "lambdaplayers_lambda_serversideragdollcleanupeffect" )
 local usemarkovgenerator = GetConVar( "lambdaplayers_text_markovgenerate" )
 local player_GetAll = player.GetAll
 local Rand = math.Rand
@@ -661,26 +662,24 @@ if SERVER then
         self:SetState( "Idle" )
         self:SetCrouch( false )
         self:SetEnemy( nil )
-
         
-        local ragdoll = self.ragdoll
-
         net.Start( "lambdaplayers_invalidateragdoll" )
-        net.WriteEntity( self )
-        net.WriteEntity( serversidecleanup:GetBool() and ragdoll or NULL )
+            net.WriteEntity( self )
         net.Broadcast()
 
-        if serversidecleanup:GetBool() and IsValid( ragdoll ) then 
-
+        local ragdoll = self.ragdoll
+        if IsValid( ragdoll ) and serversidecleanup:GetBool() then
+            local removeDelay = 0
             
-            LambdaCreateThread( function()
+            if serversidecleanupeffect:GetBool() then
+                removeDelay = 5
 
-                net.Start( "lambdaplayers_initserversideragdoll" )
-                net.WriteEntity( ragdoll )
-                net.WriteVector( self:GetPlyColor() ) 
+                net.Start( "lambdaplayers_disintegrationeffect" )
+                    net.WriteEntity( ragdoll )
                 net.Broadcast()
+            end
 
-                coroutine.wait( 5 )
+            timer_simple( removeDelay, function()
                 if IsValid( ragdoll ) then ragdoll:Remove() end
             end )
         end
