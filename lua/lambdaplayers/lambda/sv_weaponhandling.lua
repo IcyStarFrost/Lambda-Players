@@ -185,12 +185,12 @@ function ENT:ReloadWeapon()
     if self.l_HasMelee or self.l_Clip == self.l_MaxClip or self:GetIsReloading() then return end
     local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
 
+    local wep = self:GetWeaponENT()
     local onReloadFunc = weapondata.OnReload
     if isfunction( onReloadFunc ) and onReloadFunc( self, wep ) == true then return end
 
     self:SetIsReloading( true )
 
-    local wep = self:GetWeaponENT()
     local time = weapondata.reloadtime or 1
     local anim = weapondata.reloadanim
     local animspeed = weapondata.reloadanimspeed or 1
