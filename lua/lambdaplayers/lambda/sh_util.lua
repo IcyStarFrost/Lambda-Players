@@ -635,7 +635,9 @@ if SERVER then
 
         self.loco:SetVelocity( Vector( 0, 0, 0 ) )
         self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
-        self:GetPhysicsObject():EnableCollisions( true )
+
+        local phys = self:GetPhysicsObject()
+        if IsValid( phys ) then phys:EnableCollisions( true ) end
 
 
         self:ClientSideNoDraw( self, false )
