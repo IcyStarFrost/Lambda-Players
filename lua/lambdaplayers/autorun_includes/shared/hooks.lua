@@ -65,8 +65,10 @@ elseif CLIENT then
         local sw, sh = ScrW(), ScrH()
         local traceent = LocalPlayer():GetEyeTrace().Entity
 
-
         if LambdaIsValid( traceent ) and traceent.IsLambdaPlayer then
+            local result = LambdaRunHook( "LambdaShowNameDisplay", traceent )
+            if result == false then return end
+
             local name = traceent:GetLambdaName()
             local color = traceent:GetDisplayColor()
             local hp = traceent:GetNW2Float( "lambda_health", "NAN" )
