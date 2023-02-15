@@ -77,4 +77,4 @@ local function OpenNPCPanel( ply )
     end )
 
 end
-RegisterLambdaPanel( "NPC", "Opens a panel that allows you to choose what NPCs Lambdas are allowed to spawn. You must a Super Admin to use this Panel. YOU MUST UPDATE LAMBDA DATA AFTER ANY CHANGES!", OpenNPCPanel )
+RegisterLambdaPanel( "NPC", "Opens a panel that allows you to choose what NPCs Lambdas are allowed to spawn. You must a Super Admin to use this Panel.", OpenNPCPanel )
