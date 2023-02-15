@@ -364,5 +364,10 @@ function LAMBDAFS:GetTextProfiles()
 end
 
 
+if SERVER then
 
+    if !file.Exists( "lambdaplayers/npclist.json", "DATA" ) then 
+        LAMBDAFS:WriteFile( "lambdaplayers/npclist.json", LAMBDAFS:ReadFile( "materials/lambdaplayers/data/defaultnpcs.vmt", nil, "GAME", false ) ) 
+    end
 
+end

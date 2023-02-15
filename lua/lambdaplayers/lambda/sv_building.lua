@@ -98,13 +98,11 @@ function ENT:SpawnProp()
     return prop
 end
 
-local NPCList
 
 local function GetRandomNPCClassname()
-    NPCList = NPCList or list.Get( "NPC" )
-    local keys = table_GetKeys( NPCList )
-    table_RemoveByValue( keys, "npc_lambdaplayer" ) -- We don't want them spawning themselves
-    return keys[ random( #keys ) ]
+    local npclist = LAMBDAFS:ReadFile( "lambdaplayers/npclist.json", "json" )
+    if !npclist then return end
+    return npclist[ random( #npclist ) ]
 end
 
 
@@ -115,6 +113,7 @@ function ENT:SpawnNPC()
 
     local trace = self:GetEyeTrace()
     local class = GetRandomNPCClassname()
+    if !class then return end
 
     -- Internal function located at autorun_includes/server/building_npccreation.lua
     local NPC = LambdaInternalSpawnNPC( self, trace.HitPos, trace.HitNormal, class, false )
