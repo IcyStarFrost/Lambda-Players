@@ -592,4 +592,4 @@ local function OpenProfilePanel( ply )
 
 end
 
-RegisterLambdaPanel( "Profile", "Opens a panel that allows you to create profiles of specific names/Lambdas.", OpenProfilePanel )
+RegisterLambdaPanel( "Profile", "Opens a panel that allows you to create profiles of specific names/Lambdas. YOU MUST UPDATE LAMBDA DATA AFTER ANY CHANGES!", OpenProfilePanel )

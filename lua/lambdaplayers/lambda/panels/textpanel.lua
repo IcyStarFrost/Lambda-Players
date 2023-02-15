@@ -153,4 +153,4 @@ local function OpenTextPanel( ply )
 
 end
 
-RegisterLambdaPanel( "Text", "Opens a panel that allows you to create custom Text Lines for Lambda Players. You must be a Super Admin to use this Panel", OpenTextPanel )
+RegisterLambdaPanel( "Text", "Opens a panel that allows you to create custom Text Lines for Lambda Players. You must be a Super Admin to use this Panel. YOU MUST UPDATE LAMBDA DATA AFTER ANY CHANGES!", OpenTextPanel )

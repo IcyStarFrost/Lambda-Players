@@ -239,6 +239,10 @@ local function UseCreatorTool( self, target )
     local allowpropCvar = GetConVar( "lambdaplayers_building_allowprop" ):GetBool()
     if !self:IsUnderLimit( "Prop" ) or !allowpropCvar then return end
 
+    local mdl = LambdaPlayerProps[ random( #LambdaPlayerProps ) ]
+
+    if !mdl then return end
+
     local pos = self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) )
     pos = pos.HitPos
 
@@ -248,7 +252,6 @@ local function UseCreatorTool( self, target )
 
     self:UseWeapon( pos )
 
-    local mdl = LambdaPlayerProps[ random( #LambdaPlayerProps ) ]
 
     local prop = ents_Create( "prop_physics" )
     prop:SetPos( pos )
