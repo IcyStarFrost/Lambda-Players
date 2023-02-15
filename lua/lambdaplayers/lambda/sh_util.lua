@@ -437,6 +437,7 @@ if SERVER then
     -- If the we can target the ent
     function ENT:CanTarget( ent )
         if LambdaRunHook( "LambdaCanTarget", self, ent ) then return false end
+        if ent:IsNPC() and ent:GetClass() == "npc_turret_floor" and ent:GetInternalVariable( "m_lifeState" ) == 1 then return false end -- Prevent lambdas from attacking downed turrets
         return ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() and ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 1 and ent:Alive() )
     end
 
