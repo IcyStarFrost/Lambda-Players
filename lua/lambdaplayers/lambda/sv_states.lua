@@ -218,3 +218,41 @@ function ENT:Retreat()
     local rndPos = self:GetRandomPosition( nil, 4000 )
     self:MoveToPos( rndPos, retreatOptions )
 end
+
+local heal_options = { run = true, update = 0.33, tol = 48 }
+function ENT:HealSomeone()
+    if !LambdaIsValid( self.l_HealTarget ) or self.l_HealTarget:Health() >= self.l_HealTarget:GetMaxHealth() or self.l_HealTarget:InCombat() and self.l_HealTarget:GetEnemy() == self then
+        self:SetState( "Idle" ) 
+        return 
+    end
+
+    if self.l_Weapon != "gmod_medkit" then 
+        self:SwitchWeapon( "gmod_medkit" ) 
+    end
+
+    if self:IsInRange( self.l_HealTarget, 64 ) then
+        self:LookTo( self.l_HealTarget, 1 )
+        self:UseWeapon( self.l_HealTarget )
+
+        if self.l_HealTarget.IsLambdaPlayer and self.l_HealTarget:Health() >= self.l_HealTarget:GetMaxHealth() then
+            self.l_HealTarget:LookTo( self, 1 )
+            self.l_HealTarget:PlaySoundFile( self.l_HealTarget:GetVoiceLine( "assist" ) )
+        end
+    else
+        local cancelled = false
+        self:PreventWeaponSwitch( true )
+        
+        heal_options.callback = function()
+            if self:GetState() != "HealSomeone" or self:Health() < self:GetMaxHealth() then self:CancelMovement(); cancelled = true return end
+            if !LambdaIsValid( self.l_HealTarget ) then self:CancelMovement(); cancelled = true return end
+            if self.l_HealTarget:Health() >= self.l_HealTarget:GetMaxHealth() then self:CancelMovement(); cancelled = true return end
+            if self.l_HealTarget:InCombat() and self.l_HealTarget:GetEnemy() == self then self:CancelMovement(); cancelled = true return end
+            if self:IsInRange( self.l_HealTarget, 64 ) then self:CancelMovement() return end
+        end
+
+        self:MoveToPos( self.l_HealTarget, heal_options )
+        if cancelled and self:GetState() == "HealSomeone" then self:SetState( "Idle" ) end
+
+        self:PreventWeaponSwitch( false ) 
+    end
+end
