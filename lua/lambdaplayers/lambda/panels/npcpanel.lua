@@ -10,6 +10,10 @@ local function OpenNPCPanel( ply )
     local scroll = LAMBDAPANELS:CreateScrollPanel( leftpnl )
     local npclayout = vgui.Create( "DIconLayout", scroll )
     local npclistpanel = vgui.Create( "DListView", frame )
+    local resettodefault = vgui.Create( "DButton", npclistpanel )
+    
+    resettodefault:Dock( BOTTOM )
+    resettodefault:SetText( "Reset to Default List" )
 
     leftpnl:SetSize( 290, 1 )
     leftpnl:Dock( LEFT )
@@ -55,6 +59,19 @@ local function OpenNPCPanel( ply )
 
     for k, v in pairs( npclist ) do
         AddNPCpanel( v.Class )
+    end
+
+    function resettodefault:DoClick()
+        npclistpanel:Clear()
+        local defaultlist = LAMBDAFS:ReadFile( "materials/lambdaplayers/data/defaultnpcs.vmt", "json", "GAME", false )
+
+        for k, class in ipairs( defaultlist ) do
+            npclistpanel:AddLine( npclist[ class ].Name, class )
+
+            for _, pnl in pairs( npclayout:GetChildren() ) do
+                if pnl:GetNPC() == class then pnl:Remove() break end 
+            end
+        end
     end
 
     function frame:OnClose()
