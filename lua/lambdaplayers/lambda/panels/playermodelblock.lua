@@ -47,7 +47,7 @@ local function OpenPlayermodelBlockPanel( ply )
     function frame:OnClose()
         local mdls = {}
         for k, line in pairs( blockedlist:GetLines() ) do mdls[ #mdls + 1 ] = line:GetColumnText( 1 ) end
-        LAMBDAFS:WriteFile( "lambdaplayers/pmblockdata.json", mdls, "json", false ) 
+        LAMBDAPANELS:WriteServerFile( "lambdaplayers/pmblockdata.json", mdls, "json" ) 
     end
 
     LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/pmblockdata.json", "json", function( data )
