@@ -53,7 +53,6 @@ elseif CLIENT then
     local DrawText = draw.DrawText
     local tostring = tostring
     local uiscale = GetConVar( "lambdaplayers_uiscale" )
-    local string_find = string.find
     local IsSinglePlayer = game.SinglePlayer()
     local input_LookupBinding = input.LookupBinding
     local input_GetKeyCode = input.GetKeyCode
