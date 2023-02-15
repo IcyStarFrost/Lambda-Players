@@ -20,7 +20,6 @@ local sound_PlayFile = sound.PlayFile
 local coroutine_yield = coroutine.yield
 local origin = Vector()
 local cleanuptime = GetConVar( "lambdaplayers_corpsecleanuptime" )
-local serversidecleanup = GetConVar( "lambdaplayers_lambda_serversideragdollcleanuptime" )
 local cleaneffect = GetConVar( "lambdaplayers_corpsecleanupeffect" )
 local speaklimit = GetConVar( "lambdaplayers_voice_talklimit" )
 local globalvoice = GetConVar(  "lambdaplayers_voice_globalvoice" )
@@ -60,24 +59,12 @@ local function InitializeRagdoll( ragdoll, color, lambda, force, offset )
     end
 end
 
-net.Receive( "lambdaplayers_initserversideragdoll", function()
+net.Receive( "lambdaplayers_serversideragdollplycolor", function()
     local ragdoll = net.ReadEntity()
+    if !IsValid( ragdoll ) then return end
+
     local color = net.ReadVector()
-
     ragdoll.GetPlayerColor = function() return color end
-
-    if serversidecleanup:GetInt() != 0 then 
-        local startTime = CurTime()
-        LambdaCreateThread( function()
-            while ( CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( lambda ) and CurTime() < lambda:GetLastSpeakingTime() ) do 
-                if !IsValid( ragdoll ) then return end
-                coroutine_yield() 
-            end
-            if !IsValid( ragdoll ) then return end
-
-            if cleaneffect:GetBool() then ragdoll:LambdaDisintegrate() return end 
-        end ) 
-    end
 end )
 
 -- Net sent from ENT:OnKilled()
@@ -114,6 +101,12 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
             InitializeRagdoll( ragdoll, plyColor, ent, force, offset )
         end )
     end
+end )
+
+net.Receive( "lambdaplayers_disintegrationeffect", function()
+    local ent = net.ReadEntity()
+    if !IsValid( ent ) then return end
+    ent:LambdaDisintegrate()
 end )
 
 net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
@@ -155,7 +148,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
 
     if IsValid( lambda ) then lambda.cs_prop = cs_prop end 
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, cs_prop )
-
+    cs_prop.isclientside = true
     
     local wpnData = _LAMBDAPLAYERSWEAPONS[ wpnName ]
     if istable( wpnData ) then
@@ -389,15 +382,9 @@ end)
 
 net.Receive( "lambdaplayers_invalidateragdoll", function()
     local ent = net.ReadEntity()
-    local serversideragdoll = net.ReadEntity()
     if !IsValid( ent ) then return end
 
     if removeCorpse:GetBool() then
-
-        if IsValid( serversideragdoll ) and cleaneffect:GetBool() then
-            serversideragdoll:LambdaDisintegrate()
-        end
-
         local ragdoll = ent.ragdoll
         if IsValid( ragdoll ) then
             if cleaneffect:GetBool() then 

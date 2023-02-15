@@ -113,3 +113,10 @@ AddUActionToLambdaUA( function( self )
     dmginfo:SetInflictor( self )
     self:LambdaOnKilled( dmginfo )
 end )
+
+
+-- Equip and use medkit on myself if it's allowed, we are hurt and not in combat
+AddUActionToLambdaUA( function( self )
+    if self:Health() >= self:GetMaxHealth() or self:InCombat() or !self:CanEquipWeapon( "gmod_medkit" ) then return end
+    self:SwitchWeapon( "gmod_medkit" )
+end )

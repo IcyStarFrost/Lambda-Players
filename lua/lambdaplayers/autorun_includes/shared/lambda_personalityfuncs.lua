@@ -86,6 +86,21 @@ local function Chance_Combat( self )
     end
 end
 
+local ignorePlys = GetConVar( "ai_ignoreplayers" )
+local function Chance_Friendly( self )
+    if self:InCombat() or !self:CanEquipWeapon( "gmod_medkit" ) then return end
+
+    local nearbyEnts = self:FindInSphere( nil, 1000, function( ent )
+        if !LambdaIsValid( ent ) or !ent.Health or !ent:IsNPC() and !ent:IsNextBot() and ( !ent:IsPlayer() or !ent:Alive() or ignorePlys:GetBool() ) then return false end
+        return ( ent:Health() < ent:GetMaxHealth() and self:CanSee( ent ) )
+    end )
+    
+    if #nearbyEnts > 0 then
+        self.l_HealTarget = nearbyEnts[ random( #nearbyEnts ) ]
+        self:SetState( "HealSomeone" )
+    end
+end
+
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_opencustompersonalitypresetpanel", function( ply ) 
     local tbl = {}
     tbl[ "lambdaplayers_personality_voicechance" ] = 30
@@ -100,6 +115,7 @@ end, true, "Opens a panel to allow you to create custom preset personalities and
 LambdaCreatePersonalityType( "Build", Chance_Build )
 LambdaCreatePersonalityType( "Tool", Chance_Tool )
 LambdaCreatePersonalityType( "Combat", Chance_Combat )
+LambdaCreatePersonalityType( "Friendly", Chance_Friendly )
 CreateLambdaConvar( "lambdaplayers_personality_voicechance", 30, true, true, true, "The chance Voice will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = "Voice Chance", category = "Lambda Player Settings" } )
 CreateLambdaConvar( "lambdaplayers_personality_textchance", 30, true, true, true, "The chance Text will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = "Text Chance", category = "Lambda Player Settings" } )
 

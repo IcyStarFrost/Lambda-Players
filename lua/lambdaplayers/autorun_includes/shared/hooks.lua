@@ -53,7 +53,6 @@ elseif CLIENT then
     local DrawText = draw.DrawText
     local tostring = tostring
     local uiscale = GetConVar( "lambdaplayers_uiscale" )
-    local string_find = string.find
     local IsSinglePlayer = game.SinglePlayer()
     local input_LookupBinding = input.LookupBinding
     local input_GetKeyCode = input.GetKeyCode
@@ -66,8 +65,10 @@ elseif CLIENT then
         local sw, sh = ScrW(), ScrH()
         local traceent = LocalPlayer():GetEyeTrace().Entity
 
-
         if LambdaIsValid( traceent ) and traceent.IsLambdaPlayer then
+            local result = LambdaRunHook( "LambdaShowNameDisplay", traceent )
+            if result == false then return end
+
             local name = traceent:GetLambdaName()
             local color = traceent:GetDisplayColor()
             local hp = traceent:GetNW2Float( "lambda_health", "NAN" )

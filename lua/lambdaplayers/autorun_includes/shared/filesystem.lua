@@ -166,10 +166,9 @@ function LAMBDAFS:GetNameTable()
 end
 
 function LAMBDAFS:GetPropTable()
-    local customcontent = LAMBDAFS:ReadFile( "lambdaplayers/customprops.json", "json" ) or {}
-    local defaultcontent = LAMBDAFS:ReadFile( "materials/lambdaplayers/data/props.vmt", "json", "GAME" )
-    local mergedtable = table_Add( defaultcontent, customcontent )
-    return mergedtable
+    local content = LAMBDAFS:ReadFile( "lambdaplayers/proplist.json", "json" )
+    if #content == 0 then print( "LAMBDA PLAYERS WARNING: THERE ARE NO PROPS REGISTERED!" ) end
+    return content
 end
 
 function LAMBDAFS:GetMaterialTable()
@@ -364,5 +363,18 @@ function LAMBDAFS:GetTextProfiles()
 end
 
 
+if SERVER then
 
+    if !file.Exists( "lambdaplayers/npclist.json", "DATA" ) then 
+        LAMBDAFS:WriteFile( "lambdaplayers/npclist.json", LAMBDAFS:ReadFile( "materials/lambdaplayers/data/defaultnpcs.vmt", nil, "GAME", false ) ) 
+    end
 
+    if !file.Exists( "lambdaplayers/entitylist.json", "DATA" ) then 
+        LAMBDAFS:WriteFile( "lambdaplayers/entitylist.json", LAMBDAFS:ReadFile( "materials/lambdaplayers/data/defaultentities.vmt", nil, "GAME", false ) ) 
+    end
+
+    if !file.Exists( "lambdaplayers/proplist.json", "DATA" ) then 
+        LAMBDAFS:WriteFile( "lambdaplayers/proplist.json", LAMBDAFS:ReadFile( "materials/lambdaplayers/data/props.vmt", nil, "GAME", false ) ) 
+    end
+
+end

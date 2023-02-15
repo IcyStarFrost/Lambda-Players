@@ -21,6 +21,7 @@ local respawnTime = GetConVar( "lambdaplayers_lambda_respawntime" )
 local respawnSpeech = GetConVar( "lambdaplayers_lambda_dontrespawnifspeaking" )
 local retreatLowHP = GetConVar( "lambdaplayers_combat_retreatonlowhealth" )
 local serversidecleanup = GetConVar( "lambdaplayers_lambda_serversideragdollcleanuptime" )
+local serversidecleanupeffect = GetConVar( "lambdaplayers_lambda_serversideragdollcleanupeffect" )
 
 if SERVER then
 
@@ -33,13 +34,15 @@ if SERVER then
         self.l_internalkilled = true
     end
 
-    local function CreateServersideRagdoll( lambda, info )
+    local function CreateServersideRagdoll( lambda, info, overrideEnt )
         local ragdoll = ents.Create( "prop_ragdoll" )
-        ragdoll:SetModel( lambda:GetModel() )
-        ragdoll:SetPos( lambda:GetPos() )
+        local visualEnt = ( IsValid( overrideEnt ) and overrideEnt or lambda )
+
+        ragdoll:SetModel( visualEnt:GetModel() )
+        ragdoll:SetPos( visualEnt:GetPos() )
         ragdoll:SetOwner( lambda )
         ragdoll:AddEffects( EF_BONEMERGE ) -- Pretty much sets up the bones for us
-        ragdoll:SetParent( lambda )
+        ragdoll:SetParent( visualEnt )
         ragdoll:Spawn()
         ragdoll:SetCollisionGroup( COLLISION_GROUP_DEBRIS )
         ragdoll.LambdaOwner = lambda
@@ -48,28 +51,40 @@ if SERVER then
 
         lambda:SetNW2Entity( "lambda_serversideragdoll", ragdoll )
     
+        ragdoll:SetSkin( visualEnt:GetSkin() )
+        for k, v in ipairs( visualEnt:GetBodyGroups() ) do 
+            ragdoll:SetBodygroup( v.id, visualEnt:GetBodygroup( v.id ) )
+        end
+
         ragdoll:SetParent()
         ragdoll:RemoveEffects( EF_BONEMERGE )
     
         ragdoll:TakePhysicsDamage( info )
 
-        net.Start( "lambdaplayers_initserversideragdoll" )
-        net.WriteEntity( ragdoll )
-        net.WriteVector( lambda:GetPlyColor() ) 
+        net.Start( "lambdaplayers_serversideragdollplycolor" )
+            net.WriteEntity( ragdoll )
+            net.WriteVector( lambda:GetPlyColor() ) 
         net.Broadcast()
 
         if serversidecleanup:GetInt() != 0 then 
             local startTime = CurTime()
+
             LambdaCreateThread( function()
-                while ( CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( lambda ) and CurTime() < lambda:GetLastSpeakingTime() ) do 
+                while ( CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( lambda ) and lambda:IsSpeaking() ) do 
                     if !IsValid( ragdoll ) then return end
                     coroutine.yield() 
                 end
-                if !IsValid( ragdoll ) then return end
-
-                coroutine.wait( 5 )
-                if !IsValid( ragdoll ) then return end
                 
+                if !IsValid( ragdoll ) then return end
+                if serversidecleanupeffect:GetBool() then
+                    net.Start( "lambdaplayers_disintegrationeffect" )
+                        net.WriteEntity( ragdoll )
+                    net.Broadcast()
+
+                    coroutine.wait( 5 )
+                end
+
+                if !IsValid( ragdoll ) then return end
                 ragdoll:Remove()
             end ) 
         end
@@ -126,7 +141,7 @@ if SERVER then
                 net.WriteEntity( self.l_BecomeRagdollEntity )
             net.Broadcast()
         else
-            CreateServersideRagdoll( self, info )
+            CreateServersideRagdoll( self, info, self.l_BecomeRagdollEntity )
         end
 
         self.l_BecomeRagdollEntity = NULL
@@ -203,6 +218,10 @@ if SERVER then
             if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
             self:AttackTarget( attacker )
         end
+    end
+    
+    function ENT:OnTraceAttack( dmginfo, dir, trace )
+        hook.Run( "ScalePlayerDamage", self, trace.HitGroup, dmginfo )
     end
 
     function ENT:OnOtherKilled( victim, info )
