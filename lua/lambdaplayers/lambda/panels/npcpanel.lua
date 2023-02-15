@@ -43,10 +43,10 @@ local function OpenNPCPanel( ply )
         img:SetSize( 1, 64 )
         img:Dock( TOP )
         img:SetMaterial( Material( "entities/" .. class .. ".png" ) )
-        LAMBDAPANELS:CreateLabel( npclist[ class ].Name, pnl, TOP )
+        LAMBDAPANELS:CreateLabel( ( npclist[ class ] and npclist[ class ].Name or class ), pnl, TOP )
         
         function img:DoClick()
-            npclistpanel:AddLine( npclist[ class ].Name, class )
+            npclistpanel:AddLine( ( npclist[ class ] and npclist[ class ].Name or class ), class )
             pnl:Remove()
         end
 
@@ -67,7 +67,7 @@ local function OpenNPCPanel( ply )
         local defaultlist = LAMBDAFS:ReadFile( "materials/lambdaplayers/data/defaultnpcs.vmt", "json", "GAME", false )
 
         for k, class in ipairs( defaultlist ) do
-            npclistpanel:AddLine( npclist[ class ].Name, class )
+            npclistpanel:AddLine( ( npclist[ class ] and npclist[ class ].Name or class ), class )
 
             for _, pnl in pairs( npclayout:GetChildren() ) do
                 if pnl:GetNPC() == class then pnl:Remove() break end 
@@ -85,7 +85,7 @@ local function OpenNPCPanel( ply )
         if !data then return end
 
         for k, class in ipairs( data ) do
-            npclistpanel:AddLine( npclist[ class ].Name, class )
+            npclistpanel:AddLine( ( npclist[ class ] and npclist[ class ].Name or class ), class )
 
             for _, pnl in pairs( npclayout:GetChildren() ) do
                 if pnl:GetNPC() == class then pnl:Remove() break end 
