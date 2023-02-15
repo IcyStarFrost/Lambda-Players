@@ -4,13 +4,14 @@ local function OpenEntityPanel( ply )
     if !ply:IsSuperAdmin() then notification.AddLegacy( "You must be a Super Admin in order to use this!", 1, 4) surface.PlaySound( "buttons/button10.wav" ) return end
 
     local frame = LAMBDAPANELS:CreateFrame( "Entity Panel", 600, 500 )
+    local resettodefault = vgui.Create( "DButton", frame )
     LAMBDAPANELS:CreateLabel( "Click on a Entity on the left to register it for use. Right click a row to the right to unregister it for use", frame, TOP )
     local leftpnl = vgui.Create( "DPanel", frame )
     LAMBDAPANELS:CreateLabel( "Entities", leftpnl, TOP )
     local scroll = LAMBDAPANELS:CreateScrollPanel( leftpnl )
     local entitylayout = vgui.Create( "DIconLayout", scroll )
     local entitylistpanel = vgui.Create( "DListView", frame )
-    local resettodefault = vgui.Create( "DButton", entitylistpanel )
+    
     
     resettodefault:Dock( BOTTOM )
     resettodefault:SetText( "Reset to Default List" )
