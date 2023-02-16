@@ -221,7 +221,7 @@ end
 
 local heal_options = { run = true, update = 0.33, tol = 48 }
 function ENT:HealSomeone()
-    if !LambdaIsValid( self.l_HealTarget ) or self.l_HealTarget:Health() >= self.l_HealTarget:GetMaxHealth() or self.l_HealTarget:InCombat() and self.l_HealTarget:GetEnemy() == self then
+    if !LambdaIsValid( self.l_HealTarget ) or self.l_HealTarget:Health() >= self.l_HealTarget:GetMaxHealth() or self.l_HealTarget.IsLambdaPlayer and self.l_HealTarget:InCombat() and self.l_HealTarget:GetEnemy() == self then
         self:SetState( "Idle" ) 
         return 
     end
@@ -246,7 +246,7 @@ function ENT:HealSomeone()
             if self:GetState() != "HealSomeone" or self:Health() < self:GetMaxHealth() then self:CancelMovement(); cancelled = true return end
             if !LambdaIsValid( self.l_HealTarget ) then self:CancelMovement(); cancelled = true return end
             if self.l_HealTarget:Health() >= self.l_HealTarget:GetMaxHealth() then self:CancelMovement(); cancelled = true return end
-            if self.l_HealTarget:InCombat() and self.l_HealTarget:GetEnemy() == self then self:CancelMovement(); cancelled = true return end
+            if self.l_HealTarget.IsLambdaPlayer and self.l_HealTarget:InCombat() and self.l_HealTarget:GetEnemy() == self then self:CancelMovement(); cancelled = true return end
             if self:IsInRange( self.l_HealTarget, 64 ) then self:CancelMovement() return end
         end
 
