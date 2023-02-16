@@ -450,14 +450,23 @@ function ENT:Think()
 
         -- Footstep sounds
         if CurTime() > self.l_nextfootsteptime and self:IsOnGround() and !self.loco:GetVelocity():IsZero() then
-            
-            local desSpeed = self.loco:GetDesiredSpeed()
-            local result = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32600, self )
-            local stepsounds = _LAMBDAPLAYERSFootstepMaterials[ result.MatType ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ]
-            local snd = stepsounds[ random( #stepsounds ) ]
-            local result = LambdaRunHook( "LambdaFootStep", self, self:GetPos(), result.MatType )
-            if result != true then self:EmitSound( snd, 75, 100, 0.5 ) end
-            self.l_nextfootsteptime = CurTime() + min(0.25 * (self:GetRunSpeed() / desSpeed), 0.35)
+            local stepMat = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32756, self ).MatType
+            if LambdaRunHook( "LambdaFootStep", self, self:GetPos(), stepMat ) != true then
+                local stepSnds = ( _LAMBDAPLAYERSFootstepMaterials[ stepMat ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ] )
+                self:EmitSound( stepSnds[ random( #stepSnds ) ], 75, 100, 0.5 )
+
+                local stepTime = 0.35
+                if self:WaterLevel() <= 1 then
+                    local maxSpeed = self.loco:GetDesiredSpeed()
+                    stepTime = ( maxSpeed <= 100 and 0.4 or maxSpeed <= 300 and 0.35 or 0.25 )
+                elseif self:WaterLevel() == 2 then
+                    stepTime = 0.6
+                end
+                if self:GetCrouch() then
+                    stepTime = stepTime + 0.05
+                end
+                self.l_nextfootsteptime = CurTime() + stepTime
+            end
         end
 
         -- Play random Idle lines depending on current state
@@ -678,7 +687,7 @@ function ENT:Think()
                 if self.loco:GetVelocity():IsZero() then
                     self:StartActivity( self:GetCrouch() and anims.crouchIdle or anims.idle )
                 else
-                    local moveAnim = ( self:GetCrouch() and anims.crouchWalk or self:GetRunSpeed() > 150 and anims.run or anims.walk )
+                    local moveAnim = ( self:GetCrouch() and anims.crouchWalk or self.loco:GetVelocity():Length() > 150 and anims.run or anims.walk )
                     if self:GetActivity() != moveAnim then self:StartActivity( moveAnim ) end
                 end
             elseif self:IsInNoClip() then
