@@ -83,6 +83,7 @@ for k, luafile in ipairs( clientsidefiles ) do
 end
 
 print( "Lambda Players: Loaded all External Addon Lua Files!")
+hook.Run( "LambdaOnModulesLoaded" )
 --
 
 
