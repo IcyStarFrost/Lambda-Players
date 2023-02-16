@@ -123,10 +123,12 @@ function EntMeta:RemoveLambdaHookTick( name )
     hook.Remove( "Tick", "lambdaplayers_hooktick" .. name .. id )
 end
 
-_LambdaOldEntitySetHealth = _LambdaOldEntitySetHealth or EntMeta.SetHealth
-function EntMeta:SetHealth( newHealth )
-    if self.IsLambdaPlayer then self:UpdateHealthDisplay( newHealth ) end
-    _LambdaOldEntitySetHealth( self, newHealth )
+if SERVER then
+    _LambdaOldEntitySetHealth = _LambdaOldEntitySetHealth or EntMeta.SetHealth
+    function EntMeta:SetHealth( newHealth )
+        if self.IsLambdaPlayer then self:UpdateHealthDisplay( newHealth ) end
+        _LambdaOldEntitySetHealth( self, newHealth )
+    end
 end
 
 local VecMeta = FindMetaTable( "Vector" )
