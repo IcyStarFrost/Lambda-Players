@@ -102,7 +102,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 if !wepent.SentryBusterMode then
                     BlastDamage( wepent, self, blowPos, 400, 1000 )
                 elseif wepent.SentryBusterMode then
-                    BlastDamage( wepent, self, blowPos, 750, 600 ) // Sentrybuster does 600 damage, and has a larger radius
+                    BlastDamage( wepent, self, blowPos, 750, 600 ) -- Sentrybuster does 600 damage, and has a larger radius
                 end
 
                 local selfDmg = DamageInfo()
