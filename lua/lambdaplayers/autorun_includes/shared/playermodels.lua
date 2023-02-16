@@ -1,3 +1,5 @@
+if ( CLIENT ) then return end
+
 local table_remove = table.remove
 local table_Copy = table.Copy
 local table_ClearKeys = table.ClearKeys

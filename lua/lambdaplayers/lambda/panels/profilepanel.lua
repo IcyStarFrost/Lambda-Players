@@ -419,8 +419,10 @@ local function OpenProfilePanel( ply )
         skinslider = LAMBDAPANELS:CreateNumSlider( sbscroll, TOP, 0, "Skin", 0, ent:SkinCount() - 1, 0 )
 
         function skinslider:OnValueChanged( val ) ent:SetSkin( round( val, 0 ) ) end
+
+        local groups = ent:GetBodyGroups() or {}
         
-        for _, v in ipairs( ent:GetBodyGroups() ) do
+        for _, v in ipairs( groups ) do
             local smds = #v.submodels
             if smds == 0 then continue end 
 

@@ -120,10 +120,11 @@ end
 
 local QuickTrace = util.QuickTrace
 function ENT:PlayStepSound( volume )
-    local result = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32600, self )
-    local stepsounds = _LAMBDAPLAYERSFootstepMaterials[ result.MatType ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ]
-    local snd = stepsounds[ random( #stepsounds ) ]
-    self:EmitSound( snd, 75, 100, volume )
+    local stepMat = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32756, self ).MatType
+    if LambdaRunHook( "LambdaFootStep", self, self:GetPos(), stepMat ) == true then return end
+
+    local stepSnds = ( _LAMBDAPLAYERSFootstepMaterials[ stepMat ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ] )
+    self:EmitSound( stepSnds[ random( #stepSnds ) ], 75, 100, volume or 0.5 )
 end
 
 function ENT:Name()

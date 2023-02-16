@@ -437,6 +437,7 @@ if SERVER then
     -- If the we can target the ent
     function ENT:CanTarget( ent )
         if LambdaRunHook( "LambdaCanTarget", self, ent ) then return false end
+        if ent:IsNPC() and ent:GetClass() == "npc_turret_floor" and ent:GetInternalVariable( "m_lifeState" ) == 1 then return false end -- Prevent lambdas from attacking downed turrets
         return ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() and ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 1 and ent:Alive() )
     end
 
@@ -505,9 +506,10 @@ if SERVER then
 
     -- Updates our networked health
     -- We use both NW2 and NW because in multiplayer NW2 sometimes fails so we use NW as a backup
-    function ENT:UpdateHealthDisplay()
-        self:SetNW2Float( "lambda_health", self:Health() )
-        self:SetNWFloat( "lambda_health", self:Health() )
+    function ENT:UpdateHealthDisplay( overrideHP )
+        overrideHP = overrideHP or self:Health()
+        self:SetNW2Float( "lambda_health", overrideHP )
+        self:SetNWFloat( "lambda_health", overrideHP )
     end
 
     -- Gets a name that is currently not being used.
@@ -654,6 +656,7 @@ if SERVER then
 
 
         self.l_UpdateAnimations = true
+        self:PreventWeaponSwitch( false )
 
         self:SetHealth( self:GetMaxHealth() )
         self:SetArmor( spawnArmor:GetInt() )
