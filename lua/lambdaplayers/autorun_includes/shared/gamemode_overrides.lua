@@ -467,7 +467,9 @@ end
 
 
 if CLIENT then return end
+
 local canoverride = GetConVar( "lambdaplayers_lambda_overridegamemodehooks" )
+_LambdaGamemodeHooksOverriden = _LambdaGamemodeHooksOverriden or false
 
 hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function() 
 
@@ -598,6 +600,18 @@ hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function()
             net.Broadcast()
         
         end
+
+        function GAMEMODE:CreateEntityRagdoll( entity, ragdoll )
+        
+            if entity.IsLambdaPlayer then return end
+
+            -- Replace the entity with the ragdoll in cleanups etc
+            undo.ReplaceEntity( entity, ragdoll )
+            cleanup.ReplaceEntity( entity, ragdoll )
+        
+        end
+
+        _LambdaGamemodeHooksOverriden = true
 
     end
 end )
