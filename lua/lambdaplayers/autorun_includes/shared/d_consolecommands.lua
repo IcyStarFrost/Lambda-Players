@@ -104,7 +104,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cacheplayermodels", function( ply
 
     for k,v in pairs(player_manager.AllValidModels()) do util.PrecacheModel(v) end
     LambdaPlayers_Notify( ply, "Playermodels cached!", 0, "plats/elevbell1.wav" )
-end, false, "WARNING: Your game will freeze for a few seconds. This will vary on the ammount of playermodels you have installed.", { name = "Cache Playermodels", category = "Utilities" } )
+end, false, "WARNING: Your game will freeze for a few seconds. This will vary on the amount of playermodels you have installed.", { name = "Cache Playermodels", category = "Utilities" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply ) 
 	if IsValid( ply ) and !ply:IsSuperAdmin() then return end
