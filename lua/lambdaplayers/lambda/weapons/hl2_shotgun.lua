@@ -1,5 +1,6 @@
 local CurTime = CurTime
 local random = math.random
+local coroutine_wait = coroutine.wait
 local bulletData = {
     Damage = 8,
     Force = 8,
@@ -21,11 +22,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 500,
 
         clip = 6,
-
-        reloadtime = 3,
-        reloadanim = ACT_HL2MP_GESTURE_RELOAD_SHOTGUN,
-        reloadanimspeed = 1,
-
         callback = function( self, wepent, target )
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
 
@@ -62,7 +58,42 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             return true
         end,
 
-        islethal = true,
-    }
+        OnReload = function( self, wepent )
+            local animID = self:LookupSequence( "reload_shotgun_base_layer" )
+            if animID != -1 then 
+                self:AddGestureSequence( animID ) 
+            else 
+                self:AddGesture( ACT_HL2MP_GESTURE_RELOAD_SHOTGUN )
+            end
 
-})
+            self:SetIsReloading( true )
+            self:Thread( function()
+
+                coroutine_wait( 0.5 )
+
+                while ( self.l_Clip < self.l_MaxClip ) do
+                    local ene = self:GetEnemy()
+                    if self.l_Clip > 0 and random( 1, 2 ) == 1 and self:InCombat() and self:IsInRange( ene, 512 ) and self:CanSee( ene ) then break end
+                    self.l_Clip = self.l_Clip + 1
+                    wepent:EmitSound( "Weapon_Shotgun.Reload" )
+                    coroutine_wait( 0.5 )
+                end
+
+                local ene = self:GetEnemy()
+                if self.l_Clip > 0 and random( 1, 2 ) == 1 and self:InCombat() and self:IsInRange( ene, 512 ) and self:CanSee( ene ) then 
+                    wepent:EmitSound( "Weapon_Shotgun.Special1" )
+                else
+                    coroutine_wait( 0.4 )
+                end
+
+                self:RemoveGesture( ACT_HL2MP_GESTURE_RELOAD_SHOTGUN )
+                self:SetIsReloading( false )
+            
+            end, "HL2_ShotgunReload" )
+
+            return true
+        end,
+
+        islethal = true
+    }
+} )

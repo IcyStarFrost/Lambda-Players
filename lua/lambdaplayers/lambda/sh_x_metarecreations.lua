@@ -19,7 +19,7 @@ function ENT:EyeAngles2()
     local eyeAttach = self:GetAttachmentPoint( "eyes" )
 
     local ene = self:GetEnemy()
-    if IsValid( ene ) then
+    if IsValid( ene ) and self:GetNW2String( "lambda_state", "Idle" ) == "Combat" then
         return ( ( ene.IsLambdaPlayer and ene:GetAttachmentPoint( "eyes" ).Pos or ( isfunction( ene.EyePos ) and ene:EyePos() or ene:WorldSpaceCenter() ) ) - eyeAttach.Pos ):Angle()
     end 
 
@@ -183,6 +183,9 @@ function ENT:Crouching()
     return self:GetCrouch()
 end
 
+function ENT:Team()
+    return self:GetTeam()
+end
 
 function ENT:Armor()
     return self:GetArmor()

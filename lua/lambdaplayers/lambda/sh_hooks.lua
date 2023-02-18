@@ -58,6 +58,11 @@ if SERVER then
 
         ragdoll:SetParent()
         ragdoll:RemoveEffects( EF_BONEMERGE )
+
+        -- Required for other addons to detect and get Lambda's ragdoll
+        if _LambdaGamemodeHooksOverriden then
+            hook.Run( "CreateEntityRagdoll", lambda, ragdoll )
+        end
     
         ragdoll:TakePhysicsDamage( info )
 
@@ -316,7 +321,7 @@ if SERVER then
 
         [ NAV_MESH_RUN ] = function( self ) self:SetRun( true ) end,
         [ NAV_MESH_WALK ] = function( self ) self:SetRun( false ) end,
-        [ NAV_MESH_JUMP ] = function( self ) self.loco:Jump() end
+        [ NAV_MESH_JUMP ] = function( self ) self:LambdaJump() end
     }
 
     local attributes = NAV_MESH_CROUCH + NAV_MESH_WALK + NAV_MESH_RUN + NAV_MESH_JUMP
@@ -495,6 +500,13 @@ if SERVER then
                 --hook.Run( "GetFallDamage", self, self.l_FallVelocity )
             end
         end
+
+        if self.l_FallVelocity > 300 then
+            self:PlayStepSound( 0.85 )
+            self.l_nextfootsteptime = CurTime() + self:GetStepSoundTime()
+        end
+
+        self.l_FallVelocity = 0
     end
 
     function ENT:OnLeaveGround( ent ) 

@@ -7,7 +7,6 @@ local ipairs = ipairs
 local pairs = pairs
 local IsValid = IsValid
 local file_Find = file.Find
-local string_find = string.find
 local random = math.random
 local FindInSphere = ents.FindInSphere
 local file_Find = file.Find
@@ -19,7 +18,6 @@ local table_Copy = table.Copy
 local ents_GetAll = ents.GetAll
 local VectorRand = VectorRand
 local SortTable = table.sort
-local string_Explode = string.Explode
 local timer_simple = timer.Simple
 local timer_create = timer.Create
 local timer_Remove = timer.Remove
@@ -28,7 +26,6 @@ local coroutine = coroutine
 local Trace = util.TraceLine
 local EndsWith = string.EndsWith
 local tobool = tobool
-local string_Replace = string.Replace
 local table_insert = table.insert
 local isfunction = isfunction
 local tostring = tostring
@@ -673,20 +670,18 @@ if SERVER then
         net.Broadcast()
 
         local ragdoll = self.ragdoll
-        if IsValid( ragdoll ) and serversidecleanup:GetBool() then
-            local removeDelay = 0
-            
+        if IsValid( ragdoll ) and serversidecleanup:GetBool() then             
             if serversidecleanupeffect:GetBool() then
-                removeDelay = 5
-
                 net.Start( "lambdaplayers_disintegrationeffect" )
                     net.WriteEntity( ragdoll )
                 net.Broadcast()
+                
+                self:SimpleTimer( removeDelay, function()
+                    if IsValid( ragdoll ) then ragdoll:Remove() end
+                end )
+            else
+                ragdoll:Remove()
             end
-
-            timer_simple( removeDelay, function()
-                if IsValid( ragdoll ) then ragdoll:Remove() end
-            end )
         end
 
         self.ragdoll = nil
@@ -777,7 +772,7 @@ if SERVER then
 
             if #files > 0 and ( i != 10 and random( 1, 2 ) ==  1 ) then
                 local selectedfile = files[ random( #files ) ]
-                if selectedfile and EndsWith( selectedfile, ".mp3" ) or selectedfile and EndsWith( selectedfile, ".wav" ) then return dir .. selectedfile end
+                if selectedfile and EndsWith( selectedfile, ".mp3" ) or selectedfile and EndsWith( selectedfile, ".wav" ) then return string.Replace( dir .. selectedfile, "sound/", "" ) end
             else
                 local rnd = directories[ random( #directories ) ]
                 if rnd then
@@ -792,12 +787,10 @@ if SERVER then
 
     -- Retrieves a voice line from our Voice Profile or the Voicelines table
     function ENT:GetVoiceLine( voicetype )
-        if self.l_VoiceProfile then
-            if LambdaVoiceProfiles[ self.l_VoiceProfile ] then
-                local vptable = LambdaVoiceProfiles[ self.l_VoiceProfile ][ voicetype ]
-                if vptable and #vptable > 0 then
-                    return vptable[ random( #vptable ) ]
-                end
+        if self.l_VoiceProfile and LambdaVoiceProfiles[ self.l_VoiceProfile ] then
+            local vptable = LambdaVoiceProfiles[ self.l_VoiceProfile ][ voicetype ]
+            if vptable and #vptable > 0 then
+                return vptable[ random( #vptable ) ]
             end
         end
 
@@ -863,7 +856,7 @@ if SERVER then
     
       for i = 1, #text do
         local char = string.sub( text, i, i + look_forward - 1 )
-        if not charactertable[ char ] then charactertable[ char ] = {} end
+        if !charactertable[ char ] then charactertable[ char ] = {} end
       end
     
       for i = 1, #text - look_forward do
@@ -881,7 +874,7 @@ if SERVER then
     end
     
     local function return_weighted_char( array )
-      if not next( array ) then return false end
+      if !next( array ) then return false end
     
       local items = {}
       local total = 0
@@ -933,20 +926,18 @@ if SERVER then
 
     -- Literally the same thing as :GetVoiceLine() but for Text Lines
     function ENT:GetTextLine( texttype )
-        if self.l_TextProfile then
-            if LambdaTextProfiles[ self.l_TextProfile ] then
-                local texttable = LambdaTextProfiles[ self.l_TextProfile ][ texttype ]
-                if texttable and #texttable > 0 then
-                    
-                    for k, textline in RandomPairs( texttable ) do
-                        local line = usemarkovgenerator:GetBool() and GetRandomMarkovLine( texttable ) or textline
-                        local condition, modifiedline = LambdaConditionalKeyWordCheck( self, line )
-                        if condition then
-                            return modifiedline
-                        end
+        if self.l_TextProfile and LambdaTextProfiles[ self.l_TextProfile ] then
+            local texttable = LambdaTextProfiles[ self.l_TextProfile ][ texttype ]
+            if texttable and #texttable > 0 then
+                
+                for k, textline in RandomPairs( texttable ) do
+                    local line = usemarkovgenerator:GetBool() and GetRandomMarkovLine( texttable ) or textline
+                    local condition, modifiedline = LambdaConditionalKeyWordCheck( self, line )
+                    if condition then
+                        return modifiedline
                     end
-
                 end
+
             end
         end
         local tbl = LambdaTextTable[ texttype ]
@@ -964,22 +955,11 @@ if SERVER then
         return ""
     end
 
-    -- Makes the Lambda say the specified file or file path.
-    -- Random sound files for example, something/idle/*
+    -- Makes the Lambda say the specified file
     function ENT:PlaySoundFile( filepath )
-        local isdir = string_find( filepath or "", "/*" )
+        if !filepath then return end
 
         self:SetLastSpeakingTime( CurTime() + 4 )
-
-        if isdir then
-            local soundfiles = file_Find( "sound/" .. filepath, "GAME", "nameasc" )
-            if !soundfiles then return end
-
-            filepath = string_Replace( filepath, "*", soundfiles[ random( #soundfiles ) ] )
-            filepath = string_Replace( filepath, "sound/", "")
-
-            table_Empty( soundfiles )
-        end
 
         net.Start( "lambdaplayers_playsoundfile" )
             net.WriteEntity( self )
@@ -1094,6 +1074,29 @@ if SERVER then
         else
             return true
         end
+    end
+
+    function ENT:GetStepSoundTime()
+        local stepTime = 0.35
+        
+        if self:WaterLevel() <= 1 then
+            local maxSpeed = self.loco:GetDesiredSpeed()
+            stepTime = ( maxSpeed <= 100 and 0.4 or maxSpeed <= 300 and 0.35 or 0.25 )
+        elseif self:WaterLevel() == 2 then
+            stepTime = 0.6
+        end
+        
+        if self:GetCrouch() then
+            stepTime = stepTime + 0.05
+        end
+
+        return stepTime
+    end
+
+    function ENT:LambdaJump()
+        if !self:IsOnGround() or LambdaRunHook( "LambdaOnJump", self ) == true then return end
+        self.loco:Jump()
+        self:PlayStepSound( 1.0 )
     end
 
 

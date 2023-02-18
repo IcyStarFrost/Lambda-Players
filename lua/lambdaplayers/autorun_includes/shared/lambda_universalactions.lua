@@ -90,13 +90,12 @@ end )
 -- Jump around
 AddUActionToLambdaUA( function( self )
     if random( 1, 2 ) != 1 or self:GetState() != "Idle" then return end
-    self.loco:Jump()
+    self:LambdaJump()
 
-    if self.IsMoving then
+    if self.l_issmoving then
         self:NamedTimer( "JumpMoving", 1, random( 3, 15 ), function() 
-            if !self.IsMoving or self:GetState() != "Idle" then return true end
-            if !self:IsOnGround() then return end
-            self.loco:Jump() 
+            if !self.l_issmoving or self:GetState() != "Idle" then return true end
+            self:LambdaJump() 
         end )
     end
 end )
