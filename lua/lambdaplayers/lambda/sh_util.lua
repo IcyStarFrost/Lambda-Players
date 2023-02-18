@@ -19,7 +19,6 @@ local table_Copy = table.Copy
 local ents_GetAll = ents.GetAll
 local VectorRand = VectorRand
 local SortTable = table.sort
-local string_Explode = string.Explode
 local timer_simple = timer.Simple
 local timer_create = timer.Create
 local timer_Remove = timer.Remove
@@ -790,12 +789,10 @@ if SERVER then
 
     -- Retrieves a voice line from our Voice Profile or the Voicelines table
     function ENT:GetVoiceLine( voicetype )
-        if self.l_VoiceProfile then
-            if LambdaVoiceProfiles[ self.l_VoiceProfile ] then
-                local vptable = LambdaVoiceProfiles[ self.l_VoiceProfile ][ voicetype ]
-                if vptable and #vptable > 0 then
-                    return vptable[ random( #vptable ) ]
-                end
+        if self.l_VoiceProfile and LambdaVoiceProfiles[ self.l_VoiceProfile ] then
+            local vptable = LambdaVoiceProfiles[ self.l_VoiceProfile ][ voicetype ]
+            if vptable and #vptable > 0 then
+                return vptable[ random( #vptable ) ]
             end
         end
 
@@ -861,7 +858,7 @@ if SERVER then
     
       for i = 1, #text do
         local char = string.sub( text, i, i + look_forward - 1 )
-        if not charactertable[ char ] then charactertable[ char ] = {} end
+        if !charactertable[ char ] then charactertable[ char ] = {} end
       end
     
       for i = 1, #text - look_forward do
@@ -879,7 +876,7 @@ if SERVER then
     end
     
     local function return_weighted_char( array )
-      if not next( array ) then return false end
+      if !next( array ) then return false end
     
       local items = {}
       local total = 0
@@ -931,20 +928,18 @@ if SERVER then
 
     -- Literally the same thing as :GetVoiceLine() but for Text Lines
     function ENT:GetTextLine( texttype )
-        if self.l_TextProfile then
-            if LambdaTextProfiles[ self.l_TextProfile ] then
-                local texttable = LambdaTextProfiles[ self.l_TextProfile ][ texttype ]
-                if texttable and #texttable > 0 then
-                    
-                    for k, textline in RandomPairs( texttable ) do
-                        local line = usemarkovgenerator:GetBool() and GetRandomMarkovLine( texttable ) or textline
-                        local condition, modifiedline = LambdaConditionalKeyWordCheck( self, line )
-                        if condition then
-                            return modifiedline
-                        end
+        if self.l_TextProfile and LambdaTextProfiles[ self.l_TextProfile ] then
+            local texttable = LambdaTextProfiles[ self.l_TextProfile ][ texttype ]
+            if texttable and #texttable > 0 then
+                
+                for k, textline in RandomPairs( texttable ) do
+                    local line = usemarkovgenerator:GetBool() and GetRandomMarkovLine( texttable ) or textline
+                    local condition, modifiedline = LambdaConditionalKeyWordCheck( self, line )
+                    if condition then
+                        return modifiedline
                     end
-
                 end
+
             end
         end
         local tbl = LambdaTextTable[ texttype ]
