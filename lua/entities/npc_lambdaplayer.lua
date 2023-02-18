@@ -454,18 +454,7 @@ function ENT:Think()
             if LambdaRunHook( "LambdaFootStep", self, self:GetPos(), stepMat ) != true then
                 local stepSnds = ( _LAMBDAPLAYERSFootstepMaterials[ stepMat ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ] )
                 self:EmitSound( stepSnds[ random( #stepSnds ) ], 75, 100, 0.5 )
-
-                local stepTime = 0.35
-                if self:WaterLevel() <= 1 then
-                    local maxSpeed = self.loco:GetDesiredSpeed()
-                    stepTime = ( maxSpeed <= 100 and 0.4 or maxSpeed <= 300 and 0.35 or 0.25 )
-                elseif self:WaterLevel() == 2 then
-                    stepTime = 0.6
-                end
-                if self:GetCrouch() then
-                    stepTime = stepTime + 0.05
-                end
-                self.l_nextfootsteptime = CurTime() + stepTime
+                self.l_nextfootsteptime = CurTime() + self:GetStepSoundTime()
             end
         end
 
@@ -574,7 +563,10 @@ function ENT:Think()
 
         -- How fast we are falling
         if !self:IsOnGround() then
-            self.l_FallVelocity = -self.loco:GetVelocity().z
+            local fallSpeed = -self.loco:GetVelocity().z
+            if ( fallSpeed - self.l_FallVelocity ) <= 1000 then
+                self.l_FallVelocity = -self.loco:GetVelocity().z
+            end
         end
 
         -- Handle noclip

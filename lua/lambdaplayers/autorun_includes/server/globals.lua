@@ -389,11 +389,15 @@ hook.Add( "InitPostEntity", "lambdaplayersgetspawns", function() LambdaSpawnPoin
 -- Adds to the default killfeed
 function LambdaKillFeedAdd( victim, attacker, inflictor )
     if !IsValid( attacker ) then return end 
-    local attackername = attacker.IsLambdaPlayer and attacker:GetLambdaName() or attacker.IsZetaPlayer and attacker.zetaname or attacker:IsPlayer() and attacker:Name() or "#" .. attacker:GetClass()
-    local victimname = victim.IsLambdaPlayer and victim:GetLambdaName() or victim.IsZetaPlayer and victim.zetaname or victim:IsPlayer() and victim:Name() or "#" .. victim:GetClass()
-    local inflictorname = IsValid( inflictor ) and ( ( inflictor.IsLambdaWeapon and inflictor.l_killiconname ) or ( inflictor == attacker and IsValid( attacker ) and attacker.GetActiveWeapon and IsValid( attacker:GetActiveWeapon() ) and attacker:GetActiveWeapon():GetClass() ) or IsValid( inflictor ) and inflictor:GetClass() ) or "suicide"
-    local attackerteam = ( attacker.IsLambdaPlayer and attacker:GetTeam() or ( attacker:IsPlayer() and attacker:Team() or 1001 ) )
-    local victimteam = ( victim.IsLambdaPlayer and victim:GetTeam() or ( victim:IsPlayer() and victim:Team() or 1001 ) )
+        
+    local victimname = ( ( victim.IsLambdaPlayer or victim:IsPlayer() ) and victim:Nick() or ( victim.IsZetaPlayer and victim.zetaname or "#" .. victim:GetClass() ) )
+    local attackername = ( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and attacker:Nick() or ( attacker.IsZetaPlayer and attacker.zetaname or "#" .. attacker:GetClass() ) )
+
+    local victimteam = ( ( victim.IsLambdaPlayer or victim:IsPlayer() ) and victim:Team() or -1 )
+    local attackerteam = ( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and attacker:Team() or -1 )
+
+    local attackerWep = attacker.GetActiveWeapon
+    local inflictorname = ( !IsValid( inflictor ) and "suicide" or ( inflictor.IsLambdaWeapon and inflictor.l_killiconname or ( ( inflictor == attacker and attackerWep and IsValid( attackerWep( attacker ) ) ) and attackerWep( attacker ):GetClass() or inflictor:GetClass() ) ) )    
 
     net.Start( "lambdaplayers_addtokillfeed" )
         net.WriteString( attackername )
