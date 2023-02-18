@@ -18,6 +18,8 @@ if SERVER then
         [HITGROUP_RIGHTARM] = GetConVar("sk_player_leg")
     }
 
+    local wepDmgScale = GetConVar( "lambdaplayers_combat_weapondmgmultiplier" )
+
     hook.Add("ScalePlayerDamage", "LambdaPlayers_DmgScale", function( ply,hit,dmginfo )
         if !ply.IsLambdaPlayer or !dmginfo:IsBulletDamage() then return end
         ply.l_lasthitgroup = hit
@@ -32,6 +34,11 @@ if SERVER then
     -- God mode simple stuff
     hook.Add( "EntityTakeDamage", "LambdaMainDamageHook", function( ent, info )
         if ent.l_godmode then return true end
+
+        local inflictor = info:GetAttacker()
+        if IsValid( inflictor ) and inflictor.IsLambdaWeapon then
+            dmginfo:ScaleDamage( wepDmgScale:GetFloat() )
+        end
     end )
 
     -- Updates the map's spawn points when we clean the map

@@ -75,7 +75,7 @@ function ENT:MoveToPos( pos, options )
             -- Close up jumping
             local aheadNormal = ( goal.pos - self:GetPos() ):GetNormalized(); aheadNormal.z = 0
             local grHeight = GetSimpleGroundHeightWithFloor( self.l_currentnavarea, self:WorldSpaceCenter() + aheadNormal * 40 )
-            if grHeight and ( grHeight - self:GetPos().z ) > stepH then self.loco:Jump()  end
+            if grHeight and ( grHeight - self:GetPos().z ) > stepH then self:LambdaJump() end
         end
 
 
@@ -329,7 +329,7 @@ function ENT:HandleStuck()
     local istuckinsomething = TraceHull( unstucktable )
 
     if !istuckinsomething.Hit then -- If we didn't get stuck in any entity then try to jump
-        self.loco:Jump()
+        self:LambdaJump()
         self.loco:ClearStuck()
         return true
     else -- We got stuck in something. Force our way out

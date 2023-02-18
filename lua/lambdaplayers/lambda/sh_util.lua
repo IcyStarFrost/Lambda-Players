@@ -673,20 +673,18 @@ if SERVER then
         net.Broadcast()
 
         local ragdoll = self.ragdoll
-        if IsValid( ragdoll ) and serversidecleanup:GetBool() then
-            local removeDelay = 0
-            
+        if IsValid( ragdoll ) and serversidecleanup:GetBool() then             
             if serversidecleanupeffect:GetBool() then
-                removeDelay = 5
-
                 net.Start( "lambdaplayers_disintegrationeffect" )
                     net.WriteEntity( ragdoll )
                 net.Broadcast()
+                
+                self:SimpleTimer( removeDelay, function()
+                    if IsValid( ragdoll ) then ragdoll:Remove() end
+                end )
+            else
+                ragdoll:Remove()
             end
-
-            timer_simple( removeDelay, function()
-                if IsValid( ragdoll ) then ragdoll:Remove() end
-            end )
         end
 
         self.ragdoll = nil
@@ -1094,6 +1092,29 @@ if SERVER then
         else
             return true
         end
+    end
+
+    function ENT:GetStepSoundTime()
+        local stepTime = 0.35
+        
+        if self:WaterLevel() <= 1 then
+            local maxSpeed = self.loco:GetDesiredSpeed()
+            stepTime = ( maxSpeed <= 100 and 0.4 or maxSpeed <= 300 and 0.35 or 0.25 )
+        elseif self:WaterLevel() == 2 then
+            stepTime = 0.6
+        end
+        
+        if self:GetCrouch() then
+            stepTime = stepTime + 0.05
+        end
+
+        return stepTime
+    end
+
+    function ENT:LambdaJump()
+        if !self:IsOnGround() or LambdaRunHook( "LambdaOnJump", self ) == true then return end
+        self.loco:Jump()
+        self:PlayStepSound( 1.0 )
     end
 
 
