@@ -7,7 +7,6 @@ local ipairs = ipairs
 local pairs = pairs
 local IsValid = IsValid
 local file_Find = file.Find
-local string_find = string.find
 local random = math.random
 local FindInSphere = ents.FindInSphere
 local file_Find = file.Find
@@ -27,7 +26,6 @@ local coroutine = coroutine
 local Trace = util.TraceLine
 local EndsWith = string.EndsWith
 local tobool = tobool
-local string_Replace = string.Replace
 local table_insert = table.insert
 local isfunction = isfunction
 local tostring = tostring
@@ -774,7 +772,7 @@ if SERVER then
 
             if #files > 0 and ( i != 10 and random( 1, 2 ) ==  1 ) then
                 local selectedfile = files[ random( #files ) ]
-                if selectedfile and EndsWith( selectedfile, ".mp3" ) or selectedfile and EndsWith( selectedfile, ".wav" ) then return dir .. selectedfile end
+                if selectedfile and EndsWith( selectedfile, ".mp3" ) or selectedfile and EndsWith( selectedfile, ".wav" ) then return string.Replace( dir .. selectedfile, "sound/", "" ) end
             else
                 local rnd = directories[ random( #directories ) ]
                 if rnd then
@@ -957,22 +955,11 @@ if SERVER then
         return ""
     end
 
-    -- Makes the Lambda say the specified file or file path.
-    -- Random sound files for example, something/idle/*
+    -- Makes the Lambda say the specified file
     function ENT:PlaySoundFile( filepath )
-        local isdir = string_find( filepath or "", "/*" )
+        if !filepath then return end
 
         self:SetLastSpeakingTime( CurTime() + 4 )
-
-        if isdir then
-            local soundfiles = file_Find( "sound/" .. filepath, "GAME", "nameasc" )
-            if !soundfiles then return end
-
-            filepath = string_Replace( filepath, "*", soundfiles[ random( #soundfiles ) ] )
-            filepath = string_Replace( filepath, "sound/", "")
-
-            table_Empty( soundfiles )
-        end
 
         net.Start( "lambdaplayers_playsoundfile" )
             net.WriteEntity( self )

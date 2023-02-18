@@ -68,7 +68,6 @@ end
     local SysTime = SysTime
     local InSinglePlayer = game.SinglePlayer
     local Clamp = math.Clamp
-    local min = math.min
     local isvector = isvector
     local color_white = color_white
     local RandomPairs = RandomPairs
