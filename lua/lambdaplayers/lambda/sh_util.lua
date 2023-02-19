@@ -47,6 +47,8 @@ local serversidecleanupeffect = GetConVar( "lambdaplayers_lambda_serversideragdo
 local usemarkovgenerator = GetConVar( "lambdaplayers_text_markovgenerate" )
 local player_GetAll = player.GetAll
 local Rand = math.Rand
+local isnumber = isnumber
+local ismatrix = ismatrix
 local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
 
 ---- Anything Shared can go here ----
@@ -193,35 +195,44 @@ function ENT:GetClosestEntity( pos, radius, filter )
 end
 
 -- Returns bone position and angles
+local boneData = { Pos = Vector(), Ang = Angle() }
 function ENT:GetBoneTransformation( bone )
     local pos, ang = self:GetBonePosition( bone )
 
     if !pos or pos:IsZero() or pos == self:GetPos() then
         local matrix = self:GetBoneMatrix( bone )
-
         if matrix and ismatrix( matrix ) then
-
-            return { Pos = matrix:GetTranslation(), Ang = matrix:GetAngles() }
+            boneData.Pos = matrix:GetTranslation()
+            boneData.Ang = matrix:GetAngles()
+            return boneData
         end
-
     end
-    
-    return { Pos = pos, Ang = ang }
+
+    boneData.Pos = pos
+    boneData.Ang = Ang
+    return boneData
 end
 
 -- Returns a table that contains a position and angle with the specified type. hand or eyes
+local eyeOffVec = Vector( 0, 0, 30 )
+local eyeOffAng = Angle( 20, 0, 0 )
+local attachData = { Pos = Vector(), Ang = Angle() }
 function ENT:GetAttachmentPoint( pointtype )
     if pointtype == "hand" then
         local lookup = self:LookupAttachment( "anim_attachment_RH" )
         if lookup == 0 then
             local bone = self:LookupBone( "ValveBiped.Bip01_R_Hand" )
             if !bone then
-                return { Pos = self:WorldSpaceCenter(), Ang = self:GetForward():Angle() }
+                attachData.Pos = self:WorldSpaceCenter()
+                attachData.Ang = self:GetForward():Angle()
+                return attachData
             else
                 if isnumber( bone ) then
                     return self:GetBoneTransformation( bone )
                 else
-                    return { Pos = self:WorldSpaceCenter(), Ang = self:GetForward():Angle() }
+                    attachData.Pos = self:WorldSpaceCenter()
+                    attachData.Ang = self:GetForward():Angle()
+                    return attachData
                 end
             end
         else
@@ -230,7 +241,9 @@ function ENT:GetAttachmentPoint( pointtype )
     elseif pointtype == "eyes" then
         local lookup = self:LookupAttachment( "eyes" )
         if lookup == 0 then
-            return { Pos = self:WorldSpaceCenter() + Vector( 0, 0, 5 ), Ang = self:GetForward():Angle() + Angle( 20, 0, 0 ) }
+            attachData.Pos = ( self:WorldSpaceCenter() + eyeOffVec )
+            attachData.Ang = ( self:GetForward():Angle() + eyeOffAng )
+            return attachData
         else
             return self:GetAttachment( lookup )
         end
@@ -1076,13 +1089,18 @@ if SERVER then
         end
     end
 
+    -- The ENT:WaterLevel() function seems to be inaccurate when done on Lambda Players, so we'll do this instead
+    function ENT:GetWaterLevel()
+        return ( self:GetAttachmentPoint( "eyes" ).Pos:IsUnderwater() and 3 or self:WorldSpaceCenter():IsUnderwater() and 2 or self:GetPos():IsUnderwater() and 1 or 0 )
+    end
+
     function ENT:GetStepSoundTime()
         local stepTime = 0.35
-        
-        if self:WaterLevel() <= 1 then
+
+        if self:GetWaterLevel() != 2 then
             local maxSpeed = self.loco:GetDesiredSpeed()
             stepTime = ( maxSpeed <= 100 and 0.4 or maxSpeed <= 300 and 0.35 or 0.25 )
-        elseif self:WaterLevel() == 2 then
+        else
             stepTime = 0.6
         end
         

@@ -119,12 +119,18 @@ function ENT:SetPlayerColor( col )
 end
 
 local QuickTrace = util.QuickTrace
+local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
 function ENT:PlayStepSound( volume )
     local stepMat = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32756, self ).MatType
     if LambdaRunHook( "LambdaFootStep", self, self:GetPos(), stepMat ) == true then return end
 
-    local stepSnds = ( _LAMBDAPLAYERSFootstepMaterials[ stepMat ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ] )
-    self:EmitSound( stepSnds[ random( #stepSnds ) ], 75, 100, volume or 0.5 )
+    local waterLvl = self:GetWaterLevel()
+    if waterLvl != 0 and waterLvl != 3 and self:IsOnGround() then
+        self:EmitSound( "player/footsteps/wade" .. random( 1, 8 ) .. ".wav", 75, random( 90, 110 ), volume or 0.65 )
+    else
+        local stepSnds = ( _LAMBDAPLAYERSFootstepMaterials[ stepMat ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ] )
+        self:EmitSound( stepSnds[ random( #stepSnds ) ], 75, 100, volume or 0.5 )
+    end
 end
 
 function ENT:Name()

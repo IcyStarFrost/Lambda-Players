@@ -63,7 +63,6 @@ end
     local voiceprofilechance = GetConVar( "lambdaplayers_lambda_voiceprofileusechance" )
     local textprofilechance = GetConVar( "lambdaplayers_lambda_textprofileusechance" )
     local thinkrate = GetConVar( "lambdaplayers_lambda_singleplayerthinkdelay" )
-    local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
     local CurTime = CurTime
     local SysTime = SysTime
     local InSinglePlayer = game.SinglePlayer
@@ -145,7 +144,7 @@ function ENT:Initialize()
         self.l_UpdateAnimations = true -- If we can update our animations. Used for the purpose of playing sequences
         self.l_ClimbingLadder = false -- If we are currenly climbing a ladder
         self.VJ_AddEntityToSNPCAttackList = true -- Makes creature-based VJ SNPCs able to damages us with melee and leap attacks
-        self.l_isswimming = false -- If we are currenly swimming (only used to recompute paths when enter & exitting swimming. Use self:GetIsUnderwater() instead)
+        self.l_isswimming = false -- If we are currenly swimming (only used to recompute paths when exitting swimming)
 
         self.l_UnstuckBounds = 50 -- The distance the unstuck process will use to check. This value increments during the process and set back to 50 when done
         self.l_nextspeedupdate = 0 -- The next time we update our speed
@@ -364,7 +363,6 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", 7, "FlashlightOn" )
     self:NetworkVar( "Bool", 8, "IsFiring" )
     self:NetworkVar( "Bool", 9, "IsTyping" )
-    self:NetworkVar( "Bool", 10, "IsUnderwater" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )
@@ -449,12 +447,8 @@ function ENT:Think()
 
         -- Footstep sounds
         if CurTime() > self.l_nextfootsteptime and self:IsOnGround() and !self.loco:GetVelocity():IsZero() then
-            local stepMat = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32756, self ).MatType
-            if LambdaRunHook( "LambdaFootStep", self, self:GetPos(), stepMat ) != true then
-                local stepSnds = ( _LAMBDAPLAYERSFootstepMaterials[ stepMat ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ] )
-                self:EmitSound( stepSnds[ random( #stepSnds ) ], 75, 100, 0.5 )
-                self.l_nextfootsteptime = CurTime() + self:GetStepSoundTime()
-            end
+            self:PlayStepSound()
+            self.l_nextfootsteptime = CurTime() + self:GetStepSoundTime()
         end
 
         -- Play random Idle lines depending on current state
@@ -502,7 +496,7 @@ function ENT:Think()
         -- Update our physics object
         if CurTime() > self.l_nextphysicsupdate then
             local phys = self:GetPhysicsObject()
-            if self:WaterLevel() == 0 then
+            if self:GetWaterLevel() == 0 then
                 phys:SetPos( self:GetPos() )
                 phys:SetAngles( self:GetAngles() )
             else
@@ -618,7 +612,7 @@ function ENT:Think()
         end
 
          -- Handle swimming
-        if self:GetIsUnderwater() and !self:IsInNoClip() then -- Don't swim if we are noclipping
+        if self:GetWaterLevel() >= 2 and !self:IsInNoClip() then -- Don't swim if we are noclipping
             if CurTime() > self.l_nextswimposupdate then -- Update our swimming position over time
                 self.l_nextswimposupdate = CurTime() + 0.1
 
@@ -683,7 +677,7 @@ function ENT:Think()
                 end
             elseif self:IsInNoClip() then
                 self:StartActivity( anims.idle )
-            elseif self:GetIsUnderwater() then
+            elseif self:GetWaterLevel() >= 2 then
                 local swimAnim = ( self.l_issmoving and anims.swimMove or anims.swimIdle )
                 if self:GetActivity() != swimAnim then self:StartActivity( swimAnim ) end
             elseif self:GetActivity() != anims.jump then
@@ -821,7 +815,7 @@ function ENT:BodyUpdate()
     if !self.loco:GetVelocity():IsZero() then
         -- Apparently NEXTBOT:BodyMoveXY() really don't likes swimming animations and sets their playback rate to crazy values, causing the game to crash
         -- So instead I tried to recreate what that function does, but with clamped set playback rate
-        if self:GetIsUnderwater() then
+        if self:GetWaterLevel() >= 2 then
             local selfPos = self:GetPos()
             local velocity = self.loco:GetVelocity()
 
