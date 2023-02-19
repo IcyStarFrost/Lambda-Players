@@ -168,6 +168,7 @@ CreateLambdaConvar( "lambdaplayers_building_canedityourents", 1, true, true, tru
 CreateLambdaConvar( "lambdaplayers_lambda_allowphysgunpickup", 1, true, false, false, "If Lambda Players are able to pickup things with their physgun", 0, 1, { type = "Bool", name = "Allow Physgun Pickup", category = "Building" } )
 CreateLambdaConvar( "lambdaplayers_building_freezeprops", 0, true, false, false, "If props spawned by Lambda Players should spawn with either of these effects that lead them to being frozen: Spawn Frozen, Spawn unfrozen and freeze 10 seconds later. This can help with performance", 0, 1, { type = "Bool", name = "Handle Freezing Props", category = "Building" } )
 CreateLambdaConvar( "lambdaplayers_building_alwaysfreezelargeprops", 0, true, false, false, "If large props spawned by Lambda Players should always spawn frozen. This can help with performance", 0, 1, { type = "Bool", name = "Freeze Large Props", category = "Building" } )
+CreateLambdaConvar( "lambdaplayers_building_cleanupondeath", 0, true, false, false, "If entities spawned by a respawning Lambda Player should be cleaned up after their death. This might help with performance", 0, 1, { type = "Bool", name = "Cleanup On Death", category = "Building" } )
 --
 
 -- Voice Related Convars
