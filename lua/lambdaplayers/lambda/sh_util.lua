@@ -203,7 +203,7 @@ function ENT:GetBoneTransformation( bone )
             return { Pos = matrix:GetTranslation(), Ang = matrix:GetAngles() }
         end
     end
-    return { Pos = pos, Ang = Ang }
+    return { Pos = pos, Ang = ang }
 end
 
 -- Returns a table that contains a position and angle with the specified type. hand or eyes
