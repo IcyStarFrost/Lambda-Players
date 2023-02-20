@@ -71,7 +71,6 @@ end
     local color_white = color_white
     local RandomPairs = RandomPairs
     local TraceHull = util.TraceHull
-    local QuickTrace = util.QuickTrace
     local FrameTime = FrameTime
     local unstucktable = {}
     local sub = string.sub
@@ -637,6 +636,17 @@ function ENT:Think()
                 end
                 
                 self.l_swimpos = newSwimPos
+            end
+
+            -- This assists lambdas in getting out of water
+            if self.l_CurrentPath and !isvector( self.l_CurrentPath ) and !IsValid( self:GetEnemy() ) then 
+                local goal = self.l_CurrentPath:GetCurrentGoal()
+                local angle = goal.forward:Angle()
+                angle:Normalize()
+                if angle[ 1 ] < 0 then
+                    self.loco:Jump()
+                    self.loco:SetVelocity( self.loco:GetVelocity() + Vector( 0, 0, 50 ) )
+                end
             end
 
             local swimPos = self.l_swimpos
