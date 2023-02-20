@@ -35,9 +35,9 @@ if SERVER then
     hook.Add( "EntityTakeDamage", "LambdaMainDamageHook", function( ent, info )
         if ent.l_godmode then return true end
 
-        local inflictor = info:GetAttacker()
+        local inflictor = info:GetInflictor()
         if IsValid( inflictor ) and inflictor.IsLambdaWeapon then
-            dmginfo:ScaleDamage( wepDmgScale:GetFloat() )
+            info:ScaleDamage( wepDmgScale:GetFloat() )
         end
     end )
 

@@ -22,6 +22,7 @@ local respawnSpeech = GetConVar( "lambdaplayers_lambda_dontrespawnifspeaking" )
 local retreatLowHP = GetConVar( "lambdaplayers_combat_retreatonlowhealth" )
 local serversidecleanup = GetConVar( "lambdaplayers_lambda_serversideragdollcleanuptime" )
 local serversidecleanupeffect = GetConVar( "lambdaplayers_lambda_serversideragdollcleanupeffect" )
+local cleanupondeath = GetConVar( "lambdaplayers_building_cleanupondeath" )
 
 if SERVER then
 
@@ -199,7 +200,9 @@ if SERVER then
             end
         end
 
-
+        if cleanupondeath:GetBool() then
+            self:CleanSpawnedEntities()
+        end
 
     end
 
@@ -664,12 +667,6 @@ function ENT:InitializeMiniHooks()
             end
 
         end )
-
-
-        -- Might be better than constantly calling ENT:WaterLevel()?
-        self:Hook( "OnEntityWaterLevelChanged", "OnWaterLevelChanged", function( ent, oldVal, newVal ) 
-            if ent == self then self:SetIsUnderwater( newVal >= 2 ) end
-        end, true )
 
     elseif CLIENT then
 
