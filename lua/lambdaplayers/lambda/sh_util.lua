@@ -195,45 +195,29 @@ function ENT:GetClosestEntity( pos, radius, filter )
 end
 
 -- Returns bone position and angles
-local boneData = { Pos = Vector(), Ang = Angle() }
 function ENT:GetBoneTransformation( bone )
     local pos, ang = self:GetBonePosition( bone )
-
     if !pos or pos:IsZero() or pos == self:GetPos() then
         local matrix = self:GetBoneMatrix( bone )
         if matrix and ismatrix( matrix ) then
-            boneData.Pos = matrix:GetTranslation()
-            boneData.Ang = matrix:GetAngles()
-            return boneData
+            return { Pos = matrix:GetTranslation(), Ang = matrix:GetAngles() }
         end
     end
-
-    boneData.Pos = pos
-    boneData.Ang = Ang
-    return boneData
+    return { Pos = pos, Ang = Ang }
 end
 
 -- Returns a table that contains a position and angle with the specified type. hand or eyes
 local eyeOffVec = Vector( 0, 0, 30 )
 local eyeOffAng = Angle( 20, 0, 0 )
-local attachData = { Pos = Vector(), Ang = Angle() }
 function ENT:GetAttachmentPoint( pointtype )
     if pointtype == "hand" then
         local lookup = self:LookupAttachment( "anim_attachment_RH" )
         if lookup == 0 then
             local bone = self:LookupBone( "ValveBiped.Bip01_R_Hand" )
-            if !bone then
-                attachData.Pos = self:WorldSpaceCenter()
-                attachData.Ang = self:GetForward():Angle()
-                return attachData
+            if isnumber( bone ) then
+                return self:GetBoneTransformation( bone )
             else
-                if isnumber( bone ) then
-                    return self:GetBoneTransformation( bone )
-                else
-                    attachData.Pos = self:WorldSpaceCenter()
-                    attachData.Ang = self:GetForward():Angle()
-                    return attachData
-                end
+                return { Pos = self:WorldSpaceCenter(), Ang = self:GetForward():Angle() }
             end
         else
             return self:GetAttachment( lookup )
@@ -241,9 +225,7 @@ function ENT:GetAttachmentPoint( pointtype )
     elseif pointtype == "eyes" then
         local lookup = self:LookupAttachment( "eyes" )
         if lookup == 0 then
-            attachData.Pos = ( self:WorldSpaceCenter() + eyeOffVec )
-            attachData.Ang = ( self:GetForward():Angle() + eyeOffAng )
-            return attachData
+            return { Pos = ( self:WorldSpaceCenter() + eyeOffVec ), Ang = ( self:GetForward():Angle() + eyeOffAng ) }
         else
             return self:GetAttachment( lookup )
         end
