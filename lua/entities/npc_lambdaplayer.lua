@@ -638,16 +638,6 @@ function ENT:Think()
                 self.l_swimpos = newSwimPos
             end
 
-            -- This assists lambdas in getting out of water
-            if self.l_CurrentPath and !isvector( self.l_CurrentPath ) and !IsValid( self:GetEnemy() ) then 
-                local goal = self.l_CurrentPath:GetCurrentGoal()
-                local angle = goal.forward:Angle()
-                angle:Normalize()
-                if angle[ 1 ] < 0 then
-                    self.loco:Jump()
-                    self.loco:SetVelocity( self.loco:GetVelocity() + Vector( 0, 0, 50 ) )
-                end
-            end
 
             local swimPos = self.l_swimpos
             if !self:IsOnGround() then
