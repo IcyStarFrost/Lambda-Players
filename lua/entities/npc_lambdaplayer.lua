@@ -672,7 +672,7 @@ function ENT:Think()
                 if self.loco:GetVelocity():IsZero() then
                     self:StartActivity( self:GetCrouch() and anims.crouchIdle or anims.idle )
                 else
-                    local moveAnim = ( self:GetCrouch() and anims.crouchWalk or self.loco:GetVelocity():Length() > 150 and anims.run or anims.walk )
+                    local moveAnim = ( self:GetCrouch() and anims.crouchWalk or self.loco:GetVelocity():LengthSqr() > 150 ^ 2 and anims.run or anims.walk )
                     if self:GetActivity() != moveAnim then self:StartActivity( moveAnim ) end
                 end
             elseif self:IsInNoClip() then
@@ -774,7 +774,7 @@ function ENT:Think()
         if CurTime() > self.l_lightupdate then
             local lightvec = render.GetLightColor( self:WorldSpaceCenter() )
 
-            if lightvec:Length() < 0.02 and !self:GetIsDead() and drawflashlight:GetBool() and self:IsBeingDrawn() then
+            if lightvec:LengthSqr() < 0.02 ^ 2 and !self:GetIsDead() and drawflashlight:GetBool() and self:IsBeingDrawn() then
                 if !IsValid( self.l_flashlight ) then
                     self:SetFlashlightOn( true )
                     self.l_flashlight = ProjectedTexture() 
