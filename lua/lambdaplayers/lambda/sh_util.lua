@@ -49,6 +49,7 @@ local player_GetAll = player.GetAll
 local Rand = math.Rand
 local isnumber = isnumber
 local ismatrix = ismatrix
+local IsNavmeshLoaded = ( SERVER and navmesh.IsLoaded )
 local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
 
 ---- Anything Shared can go here ----
@@ -715,24 +716,14 @@ if SERVER then
 
     -- Returns a sequential table full of nav areas near the position
     function ENT:GetNavAreas( pos, dist )
-        pos = pos or self:GetPos()
-        dist = dist or 1500
+        pos = ( pos or self:GetPos() )
+        dist = ( ( dist or 1500 ) ^ 2 )
 
-        local areas = GetAllNavAreas()
         local neartbl = {}
-
-        if !unlimiteddistance:GetBool() then
-            local squared = dist * dist
-
-            for k, v in ipairs( areas ) do
-                if IsValid( v ) and v:GetSizeX() > 75 and v:GetSizeY() > 75 and !v:IsUnderwater() and v:GetClosestPointOnArea( pos ):DistToSqr( pos ) <= squared then
-                    neartbl[ #neartbl + 1 ] = v
-                end
-            end
-        else
-            for k, v in ipairs( areas ) do
-                if IsValid( v ) and v:GetSizeX() > 75 and v:GetSizeY() > 75 and !v:IsUnderwater() then neartbl[ #neartbl + 1 ] = v end
-            end
+        local limitDist = !unlimiteddistance:GetBool()
+        for _, area in ipairs( GetAllNavAreas() ) do
+            if !IsValid( area ) or area:IsUnderwater() or area:GetSizeX() < 75 or area:GetSizeY() < 75 or limitDist and pos:DistToSqr( area:GetClosestPointOnArea( pos ) ) > dist then continue end
+            neartbl[ #neartbl + 1 ] = area
         end
 
         return neartbl
@@ -740,22 +731,18 @@ if SERVER then
     
     -- Returns a random position near the position 
     function ENT:GetRandomPosition( pos, dist )
-        pos = pos or self:GetPos()
-        dist = dist or 1500
-
-        if navmesh.IsLoaded() then -- If the navmesh is loaded then find a nav area to go to
-
-            local areas = self:GetNavAreas( pos, dist )
-
-            for k, v in RandomPairs( areas ) do
-                if IsValid( v ) then
-                    return v:GetRandomPoint()
-                end
+        -- If the navmesh is loaded then find a nav area to go to
+        if IsNavmeshLoaded() then
+            for _, area in RandomPairs( self:GetNavAreas( pos, dist ) ) do
+                if !IsValid( area ) or !self:IsAreaTraversable( area ) then continue end
+                return area:GetRandomPoint()
             end
-
-        else -- If not, try to go to a entirely random spot
-            return self:GetPos() + VectorRand( -dist, dist )
         end
+
+        -- If not, try to go to a entirely random spot
+        pos = ( pos or self:GetPos() )
+        dist = ( dist or 1500 )
+        return ( pos + VectorRand( -dist, dist ) )
     end
 
     -- Gets a entirely random sound from the source engine sound folder

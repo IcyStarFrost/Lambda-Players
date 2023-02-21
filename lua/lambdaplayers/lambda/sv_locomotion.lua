@@ -350,7 +350,7 @@ function ENT:PathGenerator()
 
     return function( area, fromArea, ladder, elevator, length )
         if !IsValid( fromArea ) then return 0 end
-        if !self.loco:IsAreaTraversable( area ) or bit_band( area:GetAttributes(), NAV_MESH_AVOID ) == NAV_MESH_AVOID then return -1 end
+        if area:HasAttributes( NAV_MESH_AVOID ) then return -1 end
 
         local dist = 0
         if !isInNoClip and IsValid( ladder ) then
@@ -420,4 +420,85 @@ function ENT:ObstacleCheck()
     end
 
     self.l_nextobstaclecheck = CurTime() + 0.1
+end
+
+-- CNavArea --
+local CNavAreaMeta       = FindMetaTable( "CNavArea" )
+CNavArea_GetCenter            = CNavAreaMeta.GetCenter
+CNavArea_GetAdjacentAreas     = CNavAreaMeta.GetAdjacentAreas
+CNavArea_ClearSearchLists     = CNavAreaMeta.ClearSearchLists
+CNavArea_AddToOpenList        = CNavAreaMeta.AddToOpenList
+CNavArea_SetCostSoFar         = CNavAreaMeta.SetCostSoFar
+CNavArea_SetTotalCost         = CNavAreaMeta.SetTotalCost
+CNavArea_UpdateOnOpenList     = CNavAreaMeta.UpdateOnOpenList
+CNavArea_IsOpenListEmpty      = CNavAreaMeta.IsOpenListEmpty
+CNavArea_PopOpenList          = CNavAreaMeta.PopOpenList
+CNavArea_AddToClosedList      = CNavAreaMeta.AddToClosedList
+CNavArea_GetCostSoFar         = CNavAreaMeta.GetCostSoFar
+CNavArea_IsOpen               = CNavAreaMeta.IsOpen
+CNavArea_IsClosed             = CNavAreaMeta.IsClosed
+CNavArea_RemoveFromClosedList = CNavAreaMeta.RemoveFromClosedList
+--
+
+-- Vector --
+local VectorMeta         = FindMetaTable( "Vector" )
+local GetDistToSqr       = VectorMeta.DistToSqr
+--
+
+local GetNavArea = navmesh.GetNavArea
+
+-- Using the A* algorithm and navmesh, finds out if we can reach the given area
+-- Not recommended to use in loops with large tables
+-- The area variable can be a vector or a nav area
+function ENT:IsAreaTraversable( area, startArea, pathGenerator )
+    if isvector( area ) then area = GetNavArea( area, 120 ) end 
+    if !IsValid( area ) then return false end
+
+    local myArea = startArea or self.l_currentnavarea
+    if isvector( myArea ) then myArea = GetNavArea( myArea, 120 ) end 
+    if !IsValid( myArea ) then return false end
+
+    if area == myArea then return true end
+    pathGenerator = pathGenerator or self:PathGenerator()
+
+    CNavArea_ClearSearchLists( myArea )
+    CNavArea_AddToOpenList( myArea )
+    CNavArea_SetCostSoFar( myArea, 0 )
+
+    local areaPos = CNavArea_GetCenter( area )
+    CNavArea_SetTotalCost( myArea, GetDistToSqr( CNavArea_GetCenter( myArea ), areaPos ) )
+
+    CNavArea_UpdateOnOpenList( myArea )
+
+    while ( !CNavArea_IsOpenListEmpty( myArea ) ) do
+        local curArea = CNavArea_PopOpenList( myArea )
+        if curArea == area then return true end
+
+        local adjAreas = CNavArea_GetAdjacentAreas( curArea )
+        for i = 1, #adjAreas do
+            local newArea = adjAreas[ i ]
+
+            local newCostSoFar = pathGenerator( newArea, curArea, NULL, NULL, -1 )
+            if !isnumber( newCostSoFar ) then newCostSoFar = 1e30 end
+            if newCostSoFar < 0 then continue end
+
+            if ( CNavArea_IsOpen( newArea ) or CNavArea_IsClosed( newArea ) ) and CNavArea_GetCostSoFar( newArea ) <= newCostSoFar then continue end
+            CNavArea_SetCostSoFar( newArea, newCostSoFar )
+            CNavArea_SetTotalCost( newArea, newCostSoFar + GetDistToSqr( CNavArea_GetCenter( newArea ), areaPos ) )
+
+            if CNavArea_IsClosed( newArea ) then
+                CNavArea_RemoveFromClosedList( newArea )
+            end
+            
+            if CNavArea_IsOpen( newArea ) then
+                CNavArea_UpdateOnOpenList( newArea )
+            else
+                CNavArea_AddToOpenList( newArea )
+            end
+        end
+
+        CNavArea_AddToClosedList( curArea )
+    end
+
+    return false
 end
