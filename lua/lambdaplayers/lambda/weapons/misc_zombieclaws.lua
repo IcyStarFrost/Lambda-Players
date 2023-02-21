@@ -27,7 +27,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         -- HP Auto Regen + Leap Attack
         OnThink = function( lambda, wepent )
             if lambda:Health() < lambda:GetMaxHealth() then
-                lambda:SetHealth( math_min( lambda:Health() + 1, lambda:GetMaxHealth() ) )
+                lambda:SetHealth( math.Round( math_min( lambda:Health() + 1, lambda:GetMaxHealth() ), 0 ) )
             end
 
             if lambda:GetState() == "Combat" and CurTime() > wepent.NextLeapAttackTime then
@@ -87,7 +87,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 local maxHP = ( self:GetMaxHealth() * 2 )
                 if target:Health() < targetPrevHP and self:Health() < maxHP then -- Steal chunk of target's HP on successful hit
                     local chunk = ( ( targetPrevHP - target:Health() ) * Rand( 0.5, 0.75 ) )
-                    self:SetHealth( math_min( self:Health() + chunk, maxHP ) )
+                    self:SetHealth( math.Round( math_min( self:Health() + chunk, maxHP ), 0 ) )
                 end
 
                 PlaySound( "Zombie.AttackHit", target:WorldSpaceCenter() )
