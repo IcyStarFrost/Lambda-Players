@@ -423,7 +423,7 @@ function ENT:ObstacleCheck()
 end
 
 -- CNavArea --
-local CNavAreaMeta       = FindMetaTable( "CNavArea" )
+local CNavAreaMeta            = FindMetaTable( "CNavArea" )
 CNavArea_GetCenter            = CNavAreaMeta.GetCenter
 CNavArea_GetAdjacentAreas     = CNavAreaMeta.GetAdjacentAreas
 CNavArea_ClearSearchLists     = CNavAreaMeta.ClearSearchLists
@@ -441,13 +441,14 @@ CNavArea_RemoveFromClosedList = CNavAreaMeta.RemoveFromClosedList
 --
 
 -- Vector --
-local VectorMeta         = FindMetaTable( "Vector" )
-local GetDistToSqr       = VectorMeta.DistToSqr
+local VectorMeta              = FindMetaTable( "Vector" )
+local GetDistToSqr            = VectorMeta.DistToSqr
 --
 
 local GetNavArea = navmesh.GetNavArea
 
 -- Using the A* algorithm and navmesh, finds out if we can reach the given area
+-- Was created because CLuaLocomotion's 'IsAreaTraversable' seems to be broken
 -- Not recommended to use in loops with large tables
 -- The area variable can be a vector or a nav area
 function ENT:IsAreaTraversable( area, startArea, pathGenerator )
