@@ -1,6 +1,9 @@
 
+local canoverride = GetConVar( "lambdaplayers_lambda_overridegamemodehooks" )
+_LambdaGamemodeHooksOverriden = _LambdaGamemodeHooksOverriden or false
 
 if CLIENT then
+    if !canoverride:GetBool() then return end
     local table_Add = table.Add
     local draw = draw
     local CurTime = CurTime
@@ -468,8 +471,6 @@ end
 
 if CLIENT then return end
 
-local canoverride = GetConVar( "lambdaplayers_lambda_overridegamemodehooks" )
-_LambdaGamemodeHooksOverriden = _LambdaGamemodeHooksOverriden or false
 
 hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function() 
 
