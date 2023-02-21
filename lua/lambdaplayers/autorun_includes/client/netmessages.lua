@@ -518,3 +518,9 @@ net.Receive( "lambdaplayers_getplybirthday", function()
     end
     net.SendToServer()
 end )
+
+net.Receive( "lambdaplayers_reloadaddon", function()
+    LambdaReloadAddon()
+    chat.AddText( Color( 255, 145, 0 ), "Reloaded all Lambda Lua Files for your Client" )
+    RunConsoleCommand( "spawnmenu_reload" )
+end )
