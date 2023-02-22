@@ -4,11 +4,12 @@ local spawnrate = CreateLambdaConvar( "lambdaplayers_mws_spawnrate", 2, true, fa
 local randomspawnrate = CreateLambdaConvar( "lambdaplayers_mws_randomspawnrate", 0, true, false, false, "If the spawn rate should be randomized between 0.1 and what ever Spawn Rate is set to", 0, 1, { type = "Bool", name = "Randomized Spawn Rate", category = "MWS"} )
 local respawn = CreateLambdaConvar( "lambdaplayers_mws_respawning", 1, true, false, false, "If Lambda Players spawned by MWS should respawn", 0, 1, { type = "Bool", name = "Respawn", category = "MWS"} )
 local navmeshspawning = CreateLambdaConvar( "lambdaplayers_mws_spawnonnavmesh", 1, true, false, false, "If Lambda Players spawned by MWS should spawn randomly on the map using the navmesh. Remember that the (Respawn At Player Spawns) option in Lambda Server Settings will make them respawn at player spawn points", 0, 1, { type = "Bool", name = "Random Navmesh Spawn Points", category = "MWS"} )
+local navmeshspawndist = CreateLambdaConvar( "lambdaplayers_mws_navmeshspawndist", 0, true, false, false, "If (Random Navmesh Spawn Points) is enabled, sets the limit in what distance should the real player be from the area Lambda Player can spawn in. Set to zero for unlimited spawn distance", 0, 10000, { type = "Slider", decimals = 0, name = "Navmesh Spawn Distance Limit", category = "MWS"} )
+local navmeshdespawn = CreateLambdaConvar( "lambdaplayers_mws_navmeshdespawn", 0, true, false, false, "If Lambda Players spawned by MWS should despawn if they're too far from real players and aren't visible to them. (Random Navmesh Spawn Points) should be enabled and the distance is set in the (Navmesh Spawn Distance) option", 0, 1, { type = "Bool", name = "Despawn If Too Far", category = "MWS"} )
 
 local table_insert = table.insert
 local rand = math.Rand
 local random = math.random
-
 
 local personalitypresets = {
     [ "custom" ] = function( self ) -- Custom Personality set by Sliders
@@ -55,7 +56,6 @@ local personalitypresets = {
     end
 } 
 
-
 local presettbl = {
     [ "Random" ] = "random",
     [ "Builder" ] = "builder",
@@ -63,13 +63,11 @@ local presettbl = {
     [ "Custom" ] = "custom",
     [ "Custom Random" ] = "customrandom"
 }
-
 local perspreset = CreateLambdaConvar( "lambdaplayers_mwspersonality_preset", "random", true, false, false, "The preset MWS Spawned Lambda Personalities should use. Set this to Custom to make use of the chance sliders", nil, nil, { type = "Combo", options = presettbl, name = "Personality Preset", category = "MWS" } )
-
 
 hook.Add( "LambdaOnModulesLoaded", "lambdaplayers_mwspersonalities", function()
     local MWSConvars = {}
-    for k, v in ipairs( LambdaPersonalityConVars ) do
+    for _, v in ipairs( LambdaPersonalityConVars ) do
         local convar = CreateLambdaConvar( "lambdaplayers_mwspersonality_" .. v[ 1 ] .. "chance", 30, true, false, false, "The chance " .. v[ 1 ] .. " will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = v[ 1 ] .. " Chance", category = "MWS" } )
         table_insert( MWSConvars, { v[ 1 ], convar } )
     end
@@ -81,104 +79,148 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_openmwscustompersonalitypresetpan
     local tbl = {}
     tbl[ "lambdaplayers_mwspersonality_voicechance" ] = 30
     tbl[ "lambdaplayers_mwspersonality_textchance" ] = 30
-    for k, v in ipairs( MWSConvars ) do
+    for _, v in ipairs( MWSConvars ) do
         tbl[ v[ 2 ]:GetName() ] = v[ 2 ]:GetDefault()
     end
     LAMBDAPANELS:CreateCVarPresetPanel( "Custom Personality Preset Editor", tbl, "custommwspersonalities", false )
 end, true, "Opens a panel to allow you to create custom preset personalities and load them", { name = "Custom Personality Presets", category = "MWS" } )
 
-
-if CLIENT then return end
-
-
+if ( CLIENT ) then return end
 
 local CurTime = CurTime
 local ipairs = ipairs
+local RandomPairs = RandomPairs
 local table_remove = table.remove
 local IsValid = IsValid
+local player_GetAll = player.GetAll
+local ents_Create = ents.Create
+local GetAllNavAreas = navmesh.GetAllNavAreas
+local IsNavmeshLoaded = navmesh.IsLoaded
 
 local SpawnedLambdaPlayers = {}
 local shutdown = false
 local pause = false
 local failtimes = 0
 local nextspawn = 0
+local nextdespawn = 0
 
+-- Returns a summed position of all real players
+local function GetPlayerPos()
+    local plysPos
+    local plyCount = 0
+    
+    for _, ply in ipairs( player_GetAll() ) do
+        if IsValid( ply ) then
+            local plyPos = ply:GetPos()
+            plysPos = ( !plysPos and plyPos or plysPos + plyPos )
+            plyCount = plyCount + 1
+        end
+    end
 
+    if plysPos then plysPos = ( plysPos / plyCount ) end
+    return plysPos
+end
 
 -- Returns a random spawn point on the navmesh
 local function GetRandomSpawnPoint()
-    local navareas = navmesh.GetAllNavAreas()
-    local areas = {}
-    for k, v in ipairs( navareas ) do
-        if IsValid( v ) and v:GetSizeX() > 50 and v:GetSizeY() > 50 and !v:IsUnderwater() then areas[ #areas + 1 ] = v end
+    local plysPos
+    local distLimit = navmeshspawndist:GetFloat()
+    if distLimit > 0 then        
+        plysPos = GetPlayerPos()
+        if plysPos then distLimit = ( distLimit * distLimit ) end
     end
-    for k, v in RandomPairs( areas ) do if IsValid( v ) then return v:GetRandomPoint() end end
+
+    local allAreas = GetAllNavAreas()
+    local areaCount = #allAreas
+    for index, area in RandomPairs( allAreas ) do
+        if !IsValid( area ) or area:IsUnderwater() or area:GetSizeX() <= 50 or area:GetSizeY() <= 50 then continue end
+        if plysPos and index != areaCount and area:GetClosestPointOnArea( plysPos ):DistToSqr( plysPos ) > distLimit then continue end
+        return area:GetRandomPoint()
+    end
 end
 
 hook.Add( "Tick", "lambdaplayers_MWS", function()
-    if CurTime() < 5 then return end
-    if shutdown then return end    
+    if shutdown then return end
+    
+    local curTime = CurTime()
+    if curTime < 5 then return end
+
+    local rndSpawnRate = randomspawnrate:GetBool()
+    local spawnRate = spawnrate:GetFloat()
 
     -- Remove all spawned Lambdas and remain dormant
     if !enabled:GetBool() then
-
-        nextspawn = randomspawnrate:GetBool() and CurTime() + rand( 0.1, spawnrate:GetFloat() ) or CurTime() + spawnrate:GetFloat()
-
         if #SpawnedLambdaPlayers > 0 then
             for k, lambda in ipairs( SpawnedLambdaPlayers ) do
-                if IsValid( lambda ) then lambda:Remove() table_remove( SpawnedLambdaPlayers, k ) end
+                if !IsValid( lambda ) then continue end
+                lambda:Remove() 
+                table_remove( SpawnedLambdaPlayers, k ) 
             end
         end
 
-        
+        nextspawn = ( curTime + ( rndSpawnRate and rand( 0.1, spawnRate ) or spawnRate ) )
         return
     end
 
-    if navmeshspawning:GetBool() and !navmesh.IsLoaded() then return end
-    if !navmeshspawning:GetBool() and failtimes > 100 then return end
     if pause then return end
-    
-    if CurTime() > nextspawn and #SpawnedLambdaPlayers < maxlambdacount:GetInt() then
-        local pos
-        local ang
+    local useNavmesh = navmeshspawning:GetBool()
+    if useNavmesh and ( failtimes > 100 or !IsNavmeshLoaded() ) then return end
 
-        -- Spawning at player spawn points
-        if !navmeshspawning:GetBool() then
-            local spawns = LambdaGetPossibleSpawns()
-            local point = spawns[ random( #spawns ) ]
-            if !IsValid( point ) then failtimes = failtimes + 1 return end
-            pos = point:GetPos()
-            ang = point:GetAngles()
-        else
-            pos = GetRandomSpawnPoint()
-            ang = Angle( 0, random( -180, 180 ), 0 )
+    if curTime > nextdespawn then
+        if useNavmesh and #SpawnedLambdaPlayers > 0 and navmeshdespawn:GetBool() then 
+            local distCheck = navmeshspawndist:GetFloat()
+            if distCheck > 0 then
+                local plysPos = GetPlayerPos()
+                if plysPos then
+                    distCheck = ( distCheck * distCheck )
+                    for k, lambda in ipairs( SpawnedLambdaPlayers ) do
+                        if !LambdaIsValid( lambda ) or lambda:GetRangeSquaredTo( plysPos ) <= distCheck or !lambda:Trace( plysPos ).HitWorld then continue end
+                        lambda:Remove() 
+                        table_remove( SpawnedLambdaPlayers, k ) 
+                    end
+                end
+            end
         end
 
-        local lambda = ents.Create( "npc_lambdaplayer" )
-        lambda:SetPos( pos )
-        lambda:SetAngles( ang )
-        lambda.l_MWSspawned = true
-        lambda:Spawn()
-        lambda:SetRespawn( respawn:GetBool() )
-        table_insert( SpawnedLambdaPlayers, 1, lambda )
-
-        if perspreset:GetString() != "random" then
-            lambda:BuildPersonalityTable( personalitypresets[ perspreset:GetString() ]( lambda ) )
-        end
-
-        
-
-        nextspawn = randomspawnrate:GetBool() and CurTime() + rand( 0.1, spawnrate:GetFloat() ) or CurTime() + spawnrate:GetFloat()
-
-    elseif #SpawnedLambdaPlayers > maxlambdacount:GetInt() then
-        local lambda = SpawnedLambdaPlayers[ #SpawnedLambdaPlayers ]
-        if IsValid( lambda ) then lambda:Remove() table_remove( SpawnedLambdaPlayers, #SpawnedLambdaPlayers ) end
+        nextdespawn = ( curTime + ( rndSpawnRate and rand( 0.1, spawnRate ) or spawnRate ) * rand( 1.0, 2.0 ) )
     end
 
+    if curTime > nextspawn then 
+        if #SpawnedLambdaPlayers < maxlambdacount:GetInt() then
+            local pos, ang
 
+            -- Spawning at player spawn points
+            if !useNavmesh then
+                local spawns = LambdaGetPossibleSpawns()
+
+                local point = spawns[ random( #spawns ) ]
+                if !IsValid( point ) then failtimes = failtimes + 1; return end
+
+                pos = point:GetPos()
+                ang = point:GetAngles()
+            else
+                pos = GetRandomSpawnPoint()
+                ang = Angle( 0, random( -180, 180 ), 0 )
+            end
+
+            local lambda = ents_Create( "npc_lambdaplayer" )
+            lambda:SetPos( pos )
+            lambda:SetAngles( ang )
+            lambda.l_MWSspawned = true
+            lambda:Spawn()
+            lambda:SetRespawn( respawn:GetBool() )
+            table_insert( SpawnedLambdaPlayers, 1, lambda )
+
+            local personality = perspreset:GetString()
+            if personality != "random" then lambda:BuildPersonalityTable( personalitypresets[ personality ]( lambda ) ) end
+
+            nextspawn = ( curTime + ( rndSpawnRate and rand( 0.1, spawnRate ) or spawnRate ) )
+        end
+    elseif #SpawnedLambdaPlayers > maxlambdacount:GetInt() then
+        local lambda = SpawnedLambdaPlayers[ #SpawnedLambdaPlayers ]
+        if IsValid( lambda ) then lambda:Remove(); table_remove( SpawnedLambdaPlayers, #SpawnedLambdaPlayers ) end
+    end
 end )
-
-
 
 -- These hooks will prevent MWS from over shooting its limits
 hook.Add( "LambdaPreRecreated", "lambdaplayers_MWS_prerecreation", function( self )
