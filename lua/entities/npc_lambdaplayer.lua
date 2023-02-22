@@ -478,7 +478,7 @@ function ENT:Think()
 
         -- Attack nearby NPCs
         if CurTime() > self.l_nextnpccheck and !self:InCombat() then
-            local npcs = self:FindInSphere( nil, 2000, function( ent ) return LambdaIsValid( ent ) and ( ent:IsNPC() or ent:IsNextBot() and !self:ShouldTreatAsLPlayer( ent ) ) and self:ShouldAttackNPC( ent ) and self:CanSee( ent ) end )
+            local npcs = self:FindInSphere( nil, 2000, function( ent ) return LambdaIsValid( ent ) and ( ent:IsNPC() or ent:IsNextBot() and !self:ShouldTreatAsLPlayer( ent ) ) and ent:Health() > 0 and self:ShouldAttackNPC( ent ) and self:CanSee( ent ) end )
             if #npcs > 0 then self:AttackTarget( npcs[ random( #npcs ) ] ) end
             self.l_nextnpccheck = CurTime() + 1
         end
