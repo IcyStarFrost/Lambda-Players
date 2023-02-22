@@ -472,7 +472,15 @@ end
 if CLIENT then return end
 
 
+
 hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function() 
+
+    local olddamagehookfunc = GAMEMODE.EntityTakeDamage
+    function GAMEMODE:EntityTakeDamage( targ, dmg )
+        local result = hook.Run( "LambdaTakeDamage", targ, dmg )
+        if result == true then return true end
+        olddamagehookfunc( self, targ, dmg )
+    end
 
     if canoverride:GetBool() then
 

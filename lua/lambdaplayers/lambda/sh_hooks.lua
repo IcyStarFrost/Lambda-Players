@@ -571,7 +571,7 @@ function ENT:InitializeMiniHooks()
 
         -- Hoookay so interesting stuff here. When a nextbot actually dies by reaching 0 or below hp, no matter how high you set their health after the fact, they will no longer take damage.
         -- To get around that we basically predict if the Lambda is gonna die and completely block the damage so we don't actually die. This of course is exclusive to Respawning
-        self:Hook( "EntityTakeDamage", "DamageHandling", function( target, info )
+        self:Hook( "LambdaTakeDamage", "DamageHandling", function( target, info )
             if target != self then return end
             if self.l_godmode then return true end
 
