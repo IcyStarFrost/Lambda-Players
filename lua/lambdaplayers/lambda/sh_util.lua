@@ -672,7 +672,7 @@ if SERVER then
                     net.WriteEntity( ragdoll )
                 net.Broadcast()
                 
-                self:SimpleTimer( removeDelay, function()
+                self:SimpleTimer( 5.0, function()
                     if IsValid( ragdoll ) then ragdoll:Remove() end
                 end )
             else
