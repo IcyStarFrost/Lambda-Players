@@ -74,6 +74,7 @@ end
     local FrameTime = FrameTime
     local unstucktable = {}
     local sub = string.sub
+    local lower = string.lower
     local zerovector = Vector()
     local RealTime = RealTime
     local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
@@ -228,8 +229,16 @@ function ENT:Initialize()
         self:SetTextChance( random( 1, 100 ))
         self:SetVoicePitch( random( voicepitchmin:GetInt(), voicepitchmax:GetInt() ) )
 
-        local vpchance = voiceprofilechance:GetInt()
-        if vpchance > 0 and random( 1, 100 ) < vpchance then local vps = table_GetKeys( LambdaVoiceProfiles ) self.l_VoiceProfile = vps[ random( #vps ) ] end
+        local modelVP = LambdaModelVoiceProfiles[ lower( self:GetModel() ) ]
+        if modelVP then 
+            self.l_VoiceProfile = modelVP
+        else
+            local vpchance = voiceprofilechance:GetInt()
+            if vpchance > 0 and random( 1, 100 ) <= vpchance then 
+                local vps = table_GetKeys( LambdaVoiceProfiles ) 
+                self.l_VoiceProfile = vps[ random( #vps ) ] 
+            end
+        end
         self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
 
         local tpchance = textprofilechance:GetInt()

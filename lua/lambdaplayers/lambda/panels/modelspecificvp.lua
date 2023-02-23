@@ -1,0 +1,82 @@
+local vgui_Create = vgui.Create
+local pairs = pairs
+local SortedPairs = SortedPairs
+local player_manager_AllValidModel = player_manager.AllValidModels
+local notification_AddLegacy = notification.AddLegacy
+local RealTime = RealTime
+local surface_PlaySound = surface.PlaySound
+local string_lower = string.lower
+
+local function OpenModelVoiceProfilePanel( ply )
+    if !ply:IsSuperAdmin() then 
+        notification_AddLegacy( "You must be a Super Admin in order to use this!", 1, 4 )
+        surface_PlaySound( "buttons/button10.wav" ) 
+        return 
+    end
+
+    local frame = LAMBDAPANELS:CreateFrame( "Playermodel Voice Profile", 700, 500 )
+    LAMBDAPANELS:CreateLabel( "Select a playermodel from the right panel and pick a voice profile from the list below it", frame, TOP )
+    LAMBDAPANELS:CreateLabel( "Changes are applied by a button below the list", frame, TOP )
+
+    local mdlpanel = LAMBDAPANELS:CreateBasicPanel( frame, RIGHT )
+    mdlpanel:SetSize( 312, 200 )
+
+    local mdlpreview = vgui_Create( "DModelPanel", frame )
+    mdlpreview:SetSize( 375, 200 )
+    mdlpreview:Dock( LEFT )
+    mdlpreview:SetModel( "" )
+    function mdlpreview:LayoutEntity( Entity )
+        Entity:SetAngles( Angle( 0, RealTime() * 20 % 360, 0 ) )
+    end
+
+    local mdlvplist = {}
+    LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/modelvoiceprofiles.json", "json", function( data ) if data then mdlvplist = data end end )
+
+    local mdlselected, vpselected
+
+    local applybutton = LAMBDAPANELS:CreateButton( mdlpanel, BOTTOM, "Apply", function()
+        if !mdlselected then
+            notification_AddLegacy( "You haven't selected any playermodel from the list!", 1, 4 )
+            surface_PlaySound( "buttons/button10.wav" ) 
+            return 
+        end
+        if mdlvplist[ mdlselected ] == vpselected then return end
+
+        if vpselected == "/NIL" then 
+            if !mdlvplist[ mdlselected ] then return end
+            LAMBDAPANELS:RemoveVarFromKVFile( "lambdaplayers/modelvoiceprofiles.json", mdlselected, "json" ) 
+        else
+            LAMBDAPANELS:UpdateKeyValueFile( "lambdaplayers/modelvoiceprofiles.json", { [ string_lower( mdlselected ) ] = vpselected }, "json" )
+        end
+        notification_AddLegacy( "Successfully applied the change!", 0, 4 )
+        surface_PlaySound( "buttons/button15.wav" )
+
+        mdlvplist[ mdlselected ] = vpselected
+    end )
+    
+    local vptbl = { [ "No Voice Profile" ] = "/NIL" }
+    for vp, _ in pairs( LambdaVoiceProfiles ) do vptbl[ vp ] = vp end
+    local vplist = LAMBDAPANELS:CreateComboBox( mdlpanel, BOTTOM, vptbl )
+    vplist:SelectOptionByKey( "/NIL" )
+    function vplist:OnSelect( _, _, data ) vpselected = data end
+
+    local mdlscroll = LAMBDAPANELS:CreateScrollPanel( mdlpanel, false, FILL )
+    
+    local pmlist = vgui_Create( "DIconLayout", mdlscroll )
+    pmlist:Dock( FILL )
+    pmlist:SetSpaceY( 12 )
+    pmlist:SetSpaceX( 12 )
+    for _, mdl in SortedPairs( player_manager_AllValidModel() ) do
+        local modelbutton = pmlist:Add( "SpawnIcon" )
+        modelbutton:SetModel( mdl )
+
+        function modelbutton:DoClick()
+            mdlselected = modelbutton:GetModelName()
+            mdlpreview:SetModel( mdlselected )
+            surface_PlaySound( "buttons/lightswitch2.wav" )
+            vplist:SelectOptionByKey( mdlvplist[ mdlselected ] or "/NIL" )
+        end
+    end
+end
+
+RegisterLambdaPanel( "Playermodel Voice Profile", "Opens a panel that allows you to set a Lambda voice profile to a specific playermodel. YOU MUST UPDATE LAMBDA DATA AFTER ANY CHANGES!", OpenModelVoiceProfilePanel )
