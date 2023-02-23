@@ -59,10 +59,11 @@ if SERVER then
 
         ragdoll:SetParent()
         ragdoll:RemoveEffects( EF_BONEMERGE )
-
-        -- Required for other addons to detect and get Lambda's ragdoll
-        if _LambdaGamemodeHooksOverriden then
-            hook.Run( "CreateEntityRagdoll", lambda, ragdoll )
+        
+        local vel = visualEnt:GetVelocity()
+        for i = 0, ( ragdoll:GetPhysicsObjectCount() - 1 ) do
+            local phys = ragdoll:GetPhysicsObjectNum( i )
+            if IsValid( phys ) then phys:AddVelocity( vel ) end
         end
     
         ragdoll:TakePhysicsDamage( info )
@@ -93,6 +94,11 @@ if SERVER then
                 if !IsValid( ragdoll ) then return end
                 ragdoll:Remove()
             end ) 
+        end
+
+        -- Required for other addons to detect and get Lambda's ragdoll
+        if _LambdaGamemodeHooksOverriden then
+            hook.Run( "CreateEntityRagdoll", lambda, ragdoll )
         end
     end
 

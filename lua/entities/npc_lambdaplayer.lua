@@ -317,7 +317,11 @@ function ENT:Initialize()
 
         -- For some reason having this properly makes the weapon go invisible when the Lambda dies in multiplayer
         timer.Simple( 0, function()
+            if !IsValid( self ) then return end
+
             local wep = self:GetWeaponENT()
+            if !IsValid( wep ) then return end
+
             wep.Draw = function( entity )
                 if self:GetIsDead() then return end
                 entity:DrawModel()

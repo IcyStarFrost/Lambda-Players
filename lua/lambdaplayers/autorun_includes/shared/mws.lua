@@ -102,39 +102,30 @@ local shutdown = false
 local pause = false
 local failtimes = 0
 local nextspawn = 0
-local nextdespawn = 0
-
--- Returns a summed position of all real players
-local function GetPlayerPos()
-    local plysPos
-    local plyCount = 0
-    
-    for _, ply in ipairs( player_GetAll() ) do
-        if IsValid( ply ) then
-            local plyPos = ply:GetPos()
-            plysPos = ( !plysPos and plyPos or plysPos + plyPos )
-            plyCount = plyCount + 1
-        end
-    end
-
-    if plysPos then plysPos = ( plysPos / plyCount ) end
-    return plysPos
-end
 
 -- Returns a random spawn point on the navmesh
 local function GetRandomSpawnPoint()
-    local plysPos
+    local plys
     local distLimit = navmeshspawndist:GetFloat()
     if distLimit > 0 then        
-        plysPos = GetPlayerPos()
-        if plysPos then distLimit = ( distLimit * distLimit ) end
+        plys = player_GetAll()
+        distLimit = ( distLimit * distLimit )
     end
 
     local allAreas = GetAllNavAreas()
     local areaCount = #allAreas
     for index, area in RandomPairs( allAreas ) do
         if !IsValid( area ) or area:IsUnderwater() or area:GetSizeX() <= 50 or area:GetSizeY() <= 50 then continue end
-        if plysPos and index != areaCount and area:GetClosestPointOnArea( plysPos ):DistToSqr( plysPos ) > distLimit then continue end
+        if plys and index != areaCount then
+            local outofreach = true
+            for _, ply in ipairs( plys ) do
+                if !IsValid( ply ) then continue end
+                local plyPos = ply:GetPos()
+                if plyPos:DistToSqr( area:GetClosestPointOnArea( plyPos ) ) > distLimit then continue end
+                outofreach = false; break
+            end
+            if outofreach then continue end
+        end
         return area:GetRandomPoint()
     end
 end
@@ -166,25 +157,6 @@ hook.Add( "Tick", "lambdaplayers_MWS", function()
     local useNavmesh = navmeshspawning:GetBool()
     if useNavmesh and ( failtimes > 100 or !IsNavmeshLoaded() ) then return end
 
-    if curTime > nextdespawn then
-        if useNavmesh and #SpawnedLambdaPlayers > 0 and navmeshdespawn:GetBool() then 
-            local distCheck = navmeshspawndist:GetFloat()
-            if distCheck > 0 then
-                local plysPos = GetPlayerPos()
-                if plysPos then
-                    distCheck = ( distCheck * distCheck )
-                    for k, lambda in ipairs( SpawnedLambdaPlayers ) do
-                        if !LambdaIsValid( lambda ) or lambda:GetRangeSquaredTo( plysPos ) <= distCheck or !lambda:Trace( plysPos ).HitWorld then continue end
-                        lambda:Remove() 
-                        table_remove( SpawnedLambdaPlayers, k ) 
-                    end
-                end
-            end
-        end
-
-        nextdespawn = ( curTime + ( rndSpawnRate and rand( 0.1, spawnRate ) or spawnRate ) * rand( 1.0, 2.0 ) )
-    end
-
     if curTime > nextspawn then 
         if #SpawnedLambdaPlayers < maxlambdacount:GetInt() then
             local pos, ang
@@ -214,7 +186,7 @@ hook.Add( "Tick", "lambdaplayers_MWS", function()
             local personality = perspreset:GetString()
             if personality != "random" then lambda:BuildPersonalityTable( personalitypresets[ personality ]( lambda ) ) end
 
-            nextspawn = ( curTime + ( rndSpawnRate and rand( 0.1, spawnRate ) or spawnRate ) )
+            nextspawn = curTime + ( rndSpawnRate and rand( 0.1, spawnRate ) or spawnRate )
         end
     elseif #SpawnedLambdaPlayers > maxlambdacount:GetInt() then
         local lambda = SpawnedLambdaPlayers[ #SpawnedLambdaPlayers ]
@@ -247,4 +219,16 @@ hook.Add( "LambdaOnRemove", "lambdaplayers_MWS_OnRemove", function( self )
     for k, v in ipairs( SpawnedLambdaPlayers ) do
         if v == self then table_remove( SpawnedLambdaPlayers, k ) break end
     end
+end )
+
+hook.Add( "LambdaOnRespawn", "lambdaplayers_MWS_OnRespawn", function( self )
+    if !self.l_MWSspawned or !navmeshspawning:GetBool() or !IsNavmeshLoaded() then return end
+
+    local pos = GetRandomSpawnPoint()
+    self:SetPos( pos )
+    self.l_SpawnPos = pos
+    
+    local ang = Angle( 0, random( -180, 180 ), 0 )
+    self:SetAngles( ang )
+    self.l_SpawnAngles = ang
 end )
