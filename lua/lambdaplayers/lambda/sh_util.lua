@@ -196,50 +196,65 @@ function ENT:GetClosestEntity( pos, radius, filter )
 end
 
 -- Returns bone position and angles
+local boneTransTbl = { Pos = vector_origin, Ang = angle_zero }
+
 function ENT:GetBoneTransformation( bone )
     local pos, ang = self:GetBonePosition( bone )
     if !pos or pos:IsZero() or pos == self:GetPos() then
         local matrix = self:GetBoneMatrix( bone )
         if matrix and ismatrix( matrix ) then
-            return { Pos = matrix:GetTranslation(), Ang = matrix:GetAngles() }
+            boneTransTbl.Pos = matrix:GetTranslation()
+            boneTransTbl.Ang = matrix:GetAngles()
+            return boneTransTbl
         end
     end
+
+    boneTransTbl.Pos = pos
+    boneTransTbl.Ang = ang
     return { Pos = pos, Ang = ang }
 end
 
 -- Returns a table that contains a position and angle with the specified type. hand or eyes
+local attachPointTbl = { Pos = vector_origin, Ang = angle_zero }
 local eyeOffVec = Vector( 0, 0, 30 )
 local eyeOffAng = Angle( 20, 0, 0 )
+
 function ENT:GetAttachmentPoint( pointtype )
     if pointtype == "hand" then
         local lookup = self:LookupAttachment( "anim_attachment_RH" )
+
         if lookup == 0 then
             local bone = self:LookupBone( "ValveBiped.Bip01_R_Hand" )
-            if isnumber( bone ) then
-                return self:GetBoneTransformation( bone )
-            else
-                return { Pos = self:WorldSpaceCenter(), Ang = self:GetForward():Angle() }
+
+            if !isnumber( bone ) then
+                attachPointTbl.Pos = self:WorldSpaceCenter()
+                attachPointTbl.Ang = self:GetForward():Angle()
+                return attachPointTbl
             end
-        else
-            return self:GetAttachment( lookup )
+
+            return self:GetBoneTransformation( bone )
         end
+        
+        return self:GetAttachment( lookup )
     elseif pointtype == "eyes" then
         local lookup = self:LookupAttachment( "eyes" )
+
         if lookup == 0 then
-            return { Pos = ( self:WorldSpaceCenter() + eyeOffVec ), Ang = ( self:GetForward():Angle() + eyeOffAng ) }
-        else
-            return self:GetAttachment( lookup )
+            attachPointTbl.Pos = ( self:WorldSpaceCenter() + eyeOffVec )
+            attachPointTbl.Ang = ( self:GetForward():Angle() + eyeOffAng )
+            return attachPointTbl
         end
+
+        return self:GetAttachment( lookup )
     end
 end
 --
 
 -- Returns a normal direction to the pos or entity
 function ENT:GetNormalTo( pos )
-    pos = isentity( pos ) and pos:GetPos() or pos
+    pos = ( isentity( pos ) and pos:GetPos() or pos )
     return ( pos - self:WorldSpaceCenter() ):GetNormalized()
 end
-
 
 -- AI/Nextbot creators can assign .LambdaPlayerSTALP = true to their entities if they want the Lambda Players to treat them like players
 function ENT:ShouldTreatAsLPlayer( ent )
@@ -248,7 +263,6 @@ function ENT:ShouldTreatAsLPlayer( ent )
     if ent:IsPlayer() then return true end
     if ent:IsNPC() or ent:IsNextBot() then return false end
 end
-
 
 -- Turns the Lambda Player into a table of its personal data
 -- See function ENT:ApplyLambdaInfo() to use this data with
@@ -687,7 +701,7 @@ if SERVER then
 
     -- Delete ourself and spawn a recreation of ourself.
     -- If ignoreprehook is true, the LambdaPreRecreated hook won't run meaning addons won't be able to stop this 
-    function ENT:Recreate( ignoreprehook )
+    function ENT:Recreate( ignoreprehook, spawnPos, spawnAng )
         local shouldblock = LambdaRunHook( "LambdaPreRecreated", self )
 
         self:SimpleTimer( 0.1, function() self:Remove() end, true )
@@ -695,8 +709,8 @@ if SERVER then
 
         local exportinfo = self:ExportLambdaInfo()
         local newlambda = ents_Create( "npc_lambdaplayer" )
-        newlambda:SetPos( self.l_SpawnPos )
-        newlambda:SetAngles( self.l_SpawnAngles )
+        newlambda:SetPos( spawnPos or self.l_SpawnPos )
+        newlambda:SetAngles( spawnAng or self.l_SpawnAngles )
         newlambda:SetCreator( self:GetCreator() )
         newlambda:Spawn()
         newlambda:ApplyLambdaInfo( exportinfo )
@@ -704,11 +718,12 @@ if SERVER then
         table_Merge( newlambda.l_SpawnedEntities, self.l_SpawnedEntities )
 
         if IsValid( self:GetCreator() ) then
-            undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+            local undoName = "Lambda Player ( " .. self:GetLambdaName() .. " )"
+            undo.Create( undoName )
                 undo.SetPlayer( self:GetCreator() )
                 undo.AddEntity( newlambda )
-                undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. self:GetLambdaName() .. " )" )
-            undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+                undo.SetCustomUndoText( "Undone " .. undoName )
+            undo.Finish( undoName )
         end
 
         self:SimpleTimer( 0, function() LambdaRunHook( "LambdaPostRecreated", newlambda ) end, true )

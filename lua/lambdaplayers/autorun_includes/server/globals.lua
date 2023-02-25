@@ -405,7 +405,7 @@ hook.Add( "InitPostEntity", "lambdaplayersgetspawns", function() LambdaSpawnPoin
 
 -- Adds to the default killfeed
 function LambdaKillFeedAdd( victim, attacker, inflictor )
-    if !IsValid( attacker ) then return end 
+    if !attacker:IsWorld() and !IsValid( attacker ) then return end 
         
     local victimname = ( ( victim.IsLambdaPlayer or victim:IsPlayer() ) and victim:Nick() or ( victim.IsZetaPlayer and victim.zetaname or "#" .. victim:GetClass() ) )
     local attackername = ( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and attacker:Nick() or ( attacker.IsZetaPlayer and attacker.zetaname or "#" .. attacker:GetClass() ) )
