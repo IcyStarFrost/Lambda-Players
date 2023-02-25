@@ -13,15 +13,23 @@ if SERVER then
     hook.Add( "ScalePlayerDamage", "LambdaScalePlayerDamage", function( ply, hit, dmginfo )
         if !ply.IsLambdaPlayer then return end
         ply.l_lasthitgroup = hit
+        ply.l_lastdamage = dmginfo:GetDamage()
     end )
 
     -- God mode simple stuff
-    hook.Add( "EntityTakeDamage", "LambdaMainDamageHook", function( ent, info )
+    hook.Add( "EntityTakeDamage", "LambdaMainDamageHook", function( ent, dmginfo )
         if ent.l_godmode then return true end
+        
+        if ent.IsLambdaPlayer then
+            local lastDmg = ent.l_lastdamage
+            if lastDmg and ( lastDmg / 4 ) == dmginfo:GetDamage() then
+                dmginfo:ScaleDamage( 4 )
+            end
+        end
 
-        local inflictor = info:GetInflictor()
+        local inflictor = dmginfo:GetInflictor()
         if IsValid( inflictor ) and inflictor.IsLambdaWeapon then
-            info:ScaleDamage( wepDmgScale:GetFloat() )
+            dmginfo:ScaleDamage( wepDmgScale:GetFloat() )
         end
     end )
 
