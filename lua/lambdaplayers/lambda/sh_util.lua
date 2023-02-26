@@ -51,6 +51,8 @@ local isnumber = isnumber
 local ismatrix = ismatrix
 local IsNavmeshLoaded = ( SERVER and navmesh.IsLoaded )
 local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
+local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
+local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
 
 ---- Anything Shared can go here ----
 
@@ -665,6 +667,8 @@ if SERVER then
         self.l_UpdateAnimations = true
         self:PreventWeaponSwitch( false )
         self.l_ladderarea = NULL
+        self:SetRunSpeed( runningSpeed:GetInt() )
+        self:SetWalkSpeed( walkingSpeed:GetInt() )
 
         self:SetHealth( self:GetMaxHealth() )
         self:SetArmor( spawnArmor:GetInt() )

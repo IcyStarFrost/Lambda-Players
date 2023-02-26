@@ -40,6 +40,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self.l_WeaponSpeedMultiplier = weapondata.speedmultiplier or 1
     self.l_Clip = weapondata.clip or 0
     self.l_MaxClip = weapondata.clip or 0
+    self.l_WeaponUseCooldown = CurTime() + ( weapondata.deploydelay or 0.1 )
 
     local killicon_ = weapondata.killicon
     if killicon_ then

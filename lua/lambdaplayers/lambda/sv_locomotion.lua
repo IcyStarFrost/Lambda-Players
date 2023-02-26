@@ -37,15 +37,19 @@ function ENT:MoveToPos( pos, options )
         return "failed"
     end 
 
+    options = options or {}
+
     local path = Path( "Follow" )
-	path:Compute( self, pos, self:PathGenerator() )
+    path:SetGoalTolerance( options.tol or 20 )
+    path:SetMinLookAheadDistance( self.l_LookAheadDistance )
+
+    path:Compute( self, pos, self:PathGenerator() )
     if !IsValid( path ) then return "failed" end
-    
+
     self.l_issmoving = true
     self.l_movepos = pos
     self.l_CurrentPath = path
 
-	local options = options or {}
     local timeout = options.timeout
     local update = options.update
     local callback = options.callback
@@ -60,7 +64,7 @@ function ENT:MoveToPos( pos, options )
 
     LambdaRunHook( "LambdaOnBeginMove", self, pos, true )
 
-	while IsValid( path ) do
+	while ( IsValid( path ) ) do
         if self:GetIsDead() then returnMsg = "invalid" break end
         if self.AbortMovement then 
             self.AbortMovement = false 
@@ -81,6 +85,8 @@ function ENT:MoveToPos( pos, options )
             end
 		end
 
+        local goal = path:GetCurrentGoal()
+
 		if update then
             local updateTime = math_max( update, update * ( path:GetLength() / loco:GetDesiredSpeed() ) )
 			if path:GetAge() > updateTime then path:Compute( self, pos, self:PathGenerator() ) end
@@ -91,8 +97,6 @@ function ENT:MoveToPos( pos, options )
             self.l_recomputepath = nil
         end
         
-        local goal = path:GetCurrentGoal()
-
         if !self:IsDisabled() and CurTime() > self.l_moveWaitTime then
             if callback and callback( pos, path, goal ) == false then returnMsg = "callback" break end 
             path:Update( self )
