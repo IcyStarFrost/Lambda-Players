@@ -203,7 +203,7 @@ if SERVER then
         local attacker = info:GetAttacker()
         if attacker != self and IsValid( attacker ) then 
             if attacker:IsPlayer() then attacker:AddFrags( 1 ) end
-            if !self:IsSpeaking() and random( 1, 100 ) <= self:GetTextChance() and self:CanType() then
+            if !self:IsSpeaking() and random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self.l_preventdefaultspeak then
                 self.l_keyentity = attacker
                 self:TypeMessage( self:GetTextLine( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and "deathbyplayer" or "death" ) )
             end
@@ -253,6 +253,7 @@ if SERVER then
             elseif witnessChance == 2 then
                 self:LookTo( victimPos, random( 1, 3 ) )
                 self:SimpleTimer( rand( 0.1, 1.0 ), function()
+                    if self.l_preventdefaultspeak then return end
                     if ( victim:IsPlayer() or victim.IsLambdaPlayer ) and random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
                         self.l_keyentity = victim
                         self:TypeMessage( self:GetTextLine( "witness" ) )
@@ -276,9 +277,9 @@ if SERVER then
 
             if victim == self:GetEnemy() then
 
-                if random( 1, 100 ) <= self:GetVoiceChance() then
+                if random( 1, 100 ) <= self:GetVoiceChance() and !self.l_preventdefaultspeak then
                     self:PlaySoundFile( self:GetVoiceLine( "kill" ) )
-                elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
+                elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self.l_preventdefaultspeak then
                     self.l_keyentity = victim
                     self:TypeMessage( self:GetTextLine( "kill" ) )
                 end
@@ -298,7 +299,7 @@ if SERVER then
             if self:GetState() == "Combat" and victim == self:GetEnemy() and random( 1, 100 ) <= self:GetVoiceChance() and ( attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot() ) and self:CanSee( attacker ) then
                 self:LookTo( attacker, 1 )
                 self:SimpleTimer( rand( 0.1, 1.0 ), function()
-                    if !IsValid( attacker ) then return end
+                    if !IsValid( attacker ) or self.l_preventdefaultspeak then return end
                     self:PlaySoundFile( self:GetVoiceLine( "assist" ) )
                 end )
             end
@@ -540,7 +541,9 @@ if SERVER then
         if realisticfalldamage:GetBool() then deathDist = max( 256, 800 * ( self:Health() / self:GetMaxHealth() ) ) end
         if hitPos:DistToSqr( fallTr.StartPos ) < ( deathDist * deathDist ) then return end
 
-        self:PlaySoundFile( self:GetVoiceLine( "fall" ) )
+        if !self.l_preventdefaultspeak then
+            self:PlaySoundFile( self:GetVoiceLine( "fall" ) )
+        end
     end
 
     function ENT:OnBeginTyping( text )
@@ -643,7 +646,7 @@ function ENT:InitializeMiniHooks()
         end, true )
 
         self:Hook( "LambdaPlayerSay", "lambdatextchat", function( ply, text )
-            if ply == self or self:IsDisabled() then return end
+            if ply == self or self:IsDisabled() or self.l_preventdefaultspeak then return end
 
             if random( 1, 200 ) < self:GetTextChance() and !self:GetIsTyping() and !self:IsSpeaking() and self:CanType() then
                 self.l_keyentity = ply
@@ -652,7 +655,7 @@ function ENT:InitializeMiniHooks()
         end, true )
 
         self:Hook( "PlayerSay", "lambdarespondtoplayertextchat", function( ply, text )
-            if self:IsSpeaking() then return end
+            if self:IsSpeaking() or self.l_preventdefaultspeak then return end
 
             if random( 1, 100 ) <= self:GetVoiceChance() and self:IsInRange( ply, 300 ) then
                 self:PlaySoundFile( self:GetVoiceLine( "idle" ) )
@@ -663,7 +666,7 @@ function ENT:InitializeMiniHooks()
         end, true )
 
         self:Hook( "LambdaOnRealPlayerEndVoice", "lambdarespondtoplayervoicechat", function( ply )
-            if self:IsSpeaking() or !self:IsInRange( ply, 300 ) then return end
+            if self:IsSpeaking() or !self:IsInRange( ply, 300 ) or self.l_preventdefaultspeak then return end
             
             if random( 1, 100 ) <= self:GetVoiceChance() then
                 self:PlaySoundFile( self:GetVoiceLine( "idle" ) )
