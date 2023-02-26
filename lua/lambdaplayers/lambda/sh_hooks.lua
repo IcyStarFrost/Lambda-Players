@@ -481,7 +481,7 @@ if SERVER then
     local realisticfalldamage = GetConVar( "lambdaplayers_lambda_realisticfalldamage" )
     
     function ENT:OnLandOnGround( ent )
-        if self.l_ClimbingLadder or self:IsInNoClip() then return end
+        if IsValid( self.l_ladderarea ) or self:IsInNoClip() then return end
         -- Play land animation
         self:AddGesture( ACT_LAND )
 

@@ -145,7 +145,6 @@ function ENT:Initialize()
         self.l_unstuck = false -- If true, runs our unstuck process
         self.l_recomputepath = nil -- If set to true, recompute the current path. After that this will reset to nil
         self.l_UpdateAnimations = true -- If we can update our animations. Used for the purpose of playing sequences
-        self.l_ClimbingLadder = false -- If we are currenly climbing a ladder
         self.VJ_AddEntityToSNPCAttackList = true -- Makes creature-based VJ SNPCs able to damages us with melee and leap attacks
         self.l_isswimming = false -- If we are currenly swimming (only used to recompute paths when exitting swimming)
 
@@ -174,7 +173,7 @@ function ENT:Initialize()
         self.l_CurrentPlayedGesture = -1 -- Gesture ID that is assigned when the ENT:PlayGestureAndWait( id ) function is ran
         self.l_retreatendtime = 0 -- The time until we stop retreating
 
-
+        self.l_ladderarea = NULL -- The ladder nav area we are currenly using to climb
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
         self.l_movepos = nil -- The position or entity we are going to
         self.l_noclippos = self:GetPos() -- The position we want to noclip to

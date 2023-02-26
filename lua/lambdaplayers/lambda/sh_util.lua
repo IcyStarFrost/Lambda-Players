@@ -664,6 +664,7 @@ if SERVER then
 
         self.l_UpdateAnimations = true
         self:PreventWeaponSwitch( false )
+        self.l_ladderarea = NULL
 
         self:SetHealth( self:GetMaxHealth() )
         self:SetArmor( spawnArmor:GetInt() )
