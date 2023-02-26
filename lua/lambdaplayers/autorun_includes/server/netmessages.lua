@@ -12,7 +12,7 @@ local ipairs = ipairs
 -- so we can do our part and prevent sounds from being played while one is already playing
 net.Receive( "lambdaplayers_server_sendsoundduration", function( len, ply )
     local ent = net.ReadEntity()
-    if !IsValid( ent ) then return end
+    if !IsValid( ent ) or !ent.IsLambdaPlayer then return end
     ent:SetLastSpeakingTime( CurTime() + net.ReadFloat() )
 end )
 
