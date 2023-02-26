@@ -244,7 +244,7 @@ if SERVER then
         local info = DamageInfo()
         info:SetDamage( 0 )
         info:SetDamageForce( Vector( 0, 0, 0 ) )
-        info:SetAttacker( Entity( 0 ) )
+        info:SetAttacker( self )
         info:SetDamagePosition( self:GetPos() )
         self:LambdaOnKilled( info )
     end
@@ -254,9 +254,9 @@ if SERVER then
         local info = DamageInfo()
         info:SetDamage( 0 )
         info:SetDamageForce( Vector( 0, 0, 0 ) )
-        info:SetAttacker( Entity( 0 ) )
+        info:SetAttacker( self )
         info:SetDamagePosition( self:GetPos() )
-        self:LambdaOnKilled( info )
+        self:LambdaOnKilled( info, true )
     end
 
     function ENT:Lock()

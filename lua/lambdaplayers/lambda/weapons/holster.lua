@@ -20,6 +20,7 @@
     offpos          | Vector |      The offset position of the weapon local to the Lambda's considered hand position    | OPTIONAL
     offang          | Angle |       The offset angle of the weapon local to the Lambda  | OPTIONAL
 
+    deploydelay     | Number |      Time delay before Lambda starts using the weapon after equiping it
     speedmultiplier | Number |      Multiplies the Lambda's movement speed to this value while the weapon is held
     keepdistance    | Number |      The distance the Lambda will keep from the target
     attackrange     | Number |      The range the Lambda can attack from
@@ -56,6 +57,7 @@
     offpos          | Vector |      The offset position of the weapon local to the Lambda's considered hand position    | OPTIONAL
     offang          | Angle |       The offset angle of the weapon local to the Lambda  | OPTIONAL
 
+    deploydelay     | Number |      Time delay before Lambda starts using the weapon after equiping it
     speedmultiplier | Number |      Multiplies the Lambda's movement speed to this value while the weapon is held
     keepdistance    | Number |      The distance the Lambda will keep from the target
     attackrange     | Number |      The range the Lambda can attack from

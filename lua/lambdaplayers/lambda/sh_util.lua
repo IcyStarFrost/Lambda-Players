@@ -49,7 +49,10 @@ local player_GetAll = player.GetAll
 local Rand = math.Rand
 local isnumber = isnumber
 local ismatrix = ismatrix
+local IsNavmeshLoaded = ( SERVER and navmesh.IsLoaded )
 local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
+local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
+local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
 
 ---- Anything Shared can go here ----
 
@@ -195,50 +198,65 @@ function ENT:GetClosestEntity( pos, radius, filter )
 end
 
 -- Returns bone position and angles
+local boneTransTbl = { Pos = vector_origin, Ang = angle_zero }
+
 function ENT:GetBoneTransformation( bone )
     local pos, ang = self:GetBonePosition( bone )
     if !pos or pos:IsZero() or pos == self:GetPos() then
         local matrix = self:GetBoneMatrix( bone )
         if matrix and ismatrix( matrix ) then
-            return { Pos = matrix:GetTranslation(), Ang = matrix:GetAngles() }
+            boneTransTbl.Pos = matrix:GetTranslation()
+            boneTransTbl.Ang = matrix:GetAngles()
+            return boneTransTbl
         end
     end
+
+    boneTransTbl.Pos = pos
+    boneTransTbl.Ang = ang
     return { Pos = pos, Ang = ang }
 end
 
 -- Returns a table that contains a position and angle with the specified type. hand or eyes
+local attachPointTbl = { Pos = vector_origin, Ang = angle_zero }
 local eyeOffVec = Vector( 0, 0, 30 )
 local eyeOffAng = Angle( 20, 0, 0 )
+
 function ENT:GetAttachmentPoint( pointtype )
     if pointtype == "hand" then
         local lookup = self:LookupAttachment( "anim_attachment_RH" )
+
         if lookup == 0 then
             local bone = self:LookupBone( "ValveBiped.Bip01_R_Hand" )
-            if isnumber( bone ) then
-                return self:GetBoneTransformation( bone )
-            else
-                return { Pos = self:WorldSpaceCenter(), Ang = self:GetForward():Angle() }
+
+            if !isnumber( bone ) then
+                attachPointTbl.Pos = self:WorldSpaceCenter()
+                attachPointTbl.Ang = self:GetForward():Angle()
+                return attachPointTbl
             end
-        else
-            return self:GetAttachment( lookup )
+
+            return self:GetBoneTransformation( bone )
         end
+        
+        return self:GetAttachment( lookup )
     elseif pointtype == "eyes" then
         local lookup = self:LookupAttachment( "eyes" )
+
         if lookup == 0 then
-            return { Pos = ( self:WorldSpaceCenter() + eyeOffVec ), Ang = ( self:GetForward():Angle() + eyeOffAng ) }
-        else
-            return self:GetAttachment( lookup )
+            attachPointTbl.Pos = ( self:WorldSpaceCenter() + eyeOffVec )
+            attachPointTbl.Ang = ( self:GetForward():Angle() + eyeOffAng )
+            return attachPointTbl
         end
+
+        return self:GetAttachment( lookup )
     end
 end
 --
 
 -- Returns a normal direction to the pos or entity
 function ENT:GetNormalTo( pos )
-    pos = isentity( pos ) and pos:GetPos() or pos
+    pos = ( isentity( pos ) and pos:GetPos() or pos )
     return ( pos - self:WorldSpaceCenter() ):GetNormalized()
 end
-
 
 -- AI/Nextbot creators can assign .LambdaPlayerSTALP = true to their entities if they want the Lambda Players to treat them like players
 function ENT:ShouldTreatAsLPlayer( ent )
@@ -247,7 +265,6 @@ function ENT:ShouldTreatAsLPlayer( ent )
     if ent:IsPlayer() then return true end
     if ent:IsNPC() or ent:IsNextBot() then return false end
 end
-
 
 -- Turns the Lambda Player into a table of its personal data
 -- See function ENT:ApplyLambdaInfo() to use this data with
@@ -647,8 +664,12 @@ if SERVER then
         self.WeaponEnt:DrawShadow( !self:IsWeaponMarkedNodraw() )
 
 
+        self:PreventDefaultComs( false )
         self.l_UpdateAnimations = true
         self:PreventWeaponSwitch( false )
+        self.l_ladderarea = NULL
+        self:SetRunSpeed( runningSpeed:GetInt() )
+        self:SetWalkSpeed( walkingSpeed:GetInt() )
 
         self:SetHealth( self:GetMaxHealth() )
         self:SetArmor( spawnArmor:GetInt() )
@@ -671,7 +692,7 @@ if SERVER then
                     net.WriteEntity( ragdoll )
                 net.Broadcast()
                 
-                self:SimpleTimer( removeDelay, function()
+                self:SimpleTimer( 5.0, function()
                     if IsValid( ragdoll ) then ragdoll:Remove() end
                 end )
             else
@@ -686,7 +707,7 @@ if SERVER then
 
     -- Delete ourself and spawn a recreation of ourself.
     -- If ignoreprehook is true, the LambdaPreRecreated hook won't run meaning addons won't be able to stop this 
-    function ENT:Recreate( ignoreprehook )
+    function ENT:Recreate( ignoreprehook, spawnPos, spawnAng )
         local shouldblock = LambdaRunHook( "LambdaPreRecreated", self )
 
         self:SimpleTimer( 0.1, function() self:Remove() end, true )
@@ -694,8 +715,8 @@ if SERVER then
 
         local exportinfo = self:ExportLambdaInfo()
         local newlambda = ents_Create( "npc_lambdaplayer" )
-        newlambda:SetPos( self.l_SpawnPos )
-        newlambda:SetAngles( self.l_SpawnAngles )
+        newlambda:SetPos( spawnPos or self.l_SpawnPos )
+        newlambda:SetAngles( spawnAng or self.l_SpawnAngles )
         newlambda:SetCreator( self:GetCreator() )
         newlambda:Spawn()
         newlambda:ApplyLambdaInfo( exportinfo )
@@ -703,11 +724,12 @@ if SERVER then
         table_Merge( newlambda.l_SpawnedEntities, self.l_SpawnedEntities )
 
         if IsValid( self:GetCreator() ) then
-            undo.Create( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+            local undoName = "Lambda Player ( " .. self:GetLambdaName() .. " )"
+            undo.Create( undoName )
                 undo.SetPlayer( self:GetCreator() )
                 undo.AddEntity( newlambda )
-                undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. self:GetLambdaName() .. " )" )
-            undo.Finish( "Lambda Player ( " .. self:GetLambdaName() .. " )" )
+                undo.SetCustomUndoText( "Undone " .. undoName )
+            undo.Finish( undoName )
         end
 
         self:SimpleTimer( 0, function() LambdaRunHook( "LambdaPostRecreated", newlambda ) end, true )
@@ -715,24 +737,14 @@ if SERVER then
 
     -- Returns a sequential table full of nav areas near the position
     function ENT:GetNavAreas( pos, dist )
-        pos = pos or self:GetPos()
-        dist = dist or 1500
+        pos = ( pos or self:GetPos() )
+        dist = ( ( dist or 1500 ) ^ 2 )
 
-        local areas = GetAllNavAreas()
         local neartbl = {}
-
-        if !unlimiteddistance:GetBool() then
-            local squared = dist * dist
-
-            for k, v in ipairs( areas ) do
-                if IsValid( v ) and v:GetSizeX() > 75 and v:GetSizeY() > 75 and !v:IsUnderwater() and v:GetClosestPointOnArea( pos ):DistToSqr( pos ) <= squared then
-                    neartbl[ #neartbl + 1 ] = v
-                end
-            end
-        else
-            for k, v in ipairs( areas ) do
-                if IsValid( v ) and v:GetSizeX() > 75 and v:GetSizeY() > 75 and !v:IsUnderwater() then neartbl[ #neartbl + 1 ] = v end
-            end
+        local limitDist = !unlimiteddistance:GetBool()
+        for _, area in ipairs( GetAllNavAreas() ) do
+            if !IsValid( area ) or area:IsUnderwater() or area:GetSizeX() < 75 or area:GetSizeY() < 75 or limitDist and pos:DistToSqr( area:GetClosestPointOnArea( pos ) ) > dist then continue end
+            neartbl[ #neartbl + 1 ] = area
         end
 
         return neartbl
@@ -740,22 +752,18 @@ if SERVER then
     
     -- Returns a random position near the position 
     function ENT:GetRandomPosition( pos, dist )
-        pos = pos or self:GetPos()
-        dist = dist or 1500
-
-        if navmesh.IsLoaded() then -- If the navmesh is loaded then find a nav area to go to
-
-            local areas = self:GetNavAreas( pos, dist )
-
-            for k, v in RandomPairs( areas ) do
-                if IsValid( v ) then
-                    return v:GetRandomPoint()
-                end
+        -- If the navmesh is loaded then find a nav area to go to
+        if IsNavmeshLoaded() then
+            for _, area in RandomPairs( self:GetNavAreas( pos, dist ) ) do
+                if !IsValid( area ) or !self:IsAreaTraversable( area ) then continue end
+                return area:GetRandomPoint()
             end
-
-        else -- If not, try to go to a entirely random spot
-            return self:GetPos() + VectorRand( -dist, dist )
         end
+
+        -- If not, try to go to a entirely random spot
+        pos = ( pos or self:GetPos() )
+        dist = ( dist or 1500 )
+        return ( pos + VectorRand( -dist, dist ) )
     end
 
     -- Gets a entirely random sound from the source engine sound folder
@@ -794,6 +802,12 @@ if SERVER then
 
         local tbl = LambdaVoiceLinesTable[ voicetype ]
         return tbl[ random( #tbl ) ] 
+    end
+
+    -- Disables or re-enables Lambda's ability to use voice chat/type in chat.
+    -- Useful for modules that need lambdas to not speak passively.
+    function ENT:PreventDefaultComs( bool )
+        self.l_preventdefaultspeak = bool
     end
 
 

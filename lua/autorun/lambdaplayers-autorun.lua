@@ -123,6 +123,7 @@ LambdaVoiceProfiles = LambdaVoiceProfiles or LAMBDAFS:GetVoiceProfiles()
 LambdaPlayerSprays = LambdaPlayerSprays or LAMBDAFS:GetSprays()
 LambdaTextTable = LambdaTextTable or LAMBDAFS:GetTextTable()
 LambdaTextProfiles = LambdaTextProfiles or LAMBDAFS:GetTextProfiles()
+LambdaModelVoiceProfiles = LambdaModelVoiceProfiles or LAMBDAFS:GetModelVoiceProfiles()
 --
 
 -- Voice Profiles --

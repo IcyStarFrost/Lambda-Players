@@ -12,6 +12,8 @@ local string_sub = string.sub
 local table_concat = table.concat
 local table_IsEmpty = table.IsEmpty
 local SortedPairs = SortedPairs
+local string_Replace = string.Replace
+local string_lower = string.lower
 
 -- Data splitting done by https://github.com/alexgrist/NetStream
 -- Very helpful function here
@@ -702,7 +704,8 @@ end
 
 
 function RegisterLambdaPanel( name, desc, func )
-    CreateLambdaConsoleCommand( "lambdaplayers_panels_open" .. name .. "panel", func, true, desc, { name = "Open " .. name .. " Panel", category = "Panels" } )
+    local cmdName = ( string_lower( string_Replace( name, " ", "" ) ) )
+    CreateLambdaConsoleCommand( "lambdaplayers_panels_open" .. cmdName .. "panel", func, true, desc, { name = "Open " .. name .. " Panel", category = "Panels" } )
 end
 
 local panels = file.Find( "lambdaplayers/lambda/panels/*", "LUA", "nameasc" )

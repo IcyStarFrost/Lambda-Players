@@ -362,6 +362,11 @@ function LAMBDAFS:GetTextProfiles()
     return LambdaTextProfiles
 end
 
+function LAMBDAFS:GetModelVoiceProfiles()
+    local content = LAMBDAFS:ReadFile( "lambdaplayers/modelvoiceprofiles.json", "json" )
+    return content
+end
+
 
 if SERVER then
 
@@ -375,6 +380,10 @@ if SERVER then
 
     if !file.Exists( "lambdaplayers/proplist.json", "DATA" ) then 
         LAMBDAFS:WriteFile( "lambdaplayers/proplist.json", LAMBDAFS:ReadFile( "materials/lambdaplayers/data/props.vmt", nil, "GAME", false ) ) 
+    end
+
+    if !file.Exists( "lambdaplayers/modelvoiceprofiles.json", "DATA" ) then 
+        LAMBDAFS:WriteFile( "lambdaplayers/modelvoiceprofiles.json", {}, "json", false ) 
     end
 
 end
