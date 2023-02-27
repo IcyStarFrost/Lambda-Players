@@ -525,9 +525,11 @@ if SERVER then
         LambdaRunHook( "LambdaOnLeaveGround", self, ent )
         
         -- Fall Voiceline Handling
+        local selfPos = ( self:GetPos() + vector_up * 1 )
         local mins, maxs = self:GetCollisionBounds()
-        fallTrTbl.start = self:GetPos()
-        fallTrTbl.endpos = ( fallTrTbl.start - self:GetUp() * 32756 )
+        
+        fallTrTbl.start = selfPos
+        fallTrTbl.endpos = ( selfPos - vector_up * 32756 )
         fallTrTbl.filter = self
         fallTrTbl.mins = mins
         fallTrTbl.maxs = maxs
@@ -538,7 +540,7 @@ if SERVER then
 
         local deathDist = 800
         if realisticfalldamage:GetBool() then deathDist = max( 256, 800 * ( self:Health() / self:GetMaxHealth() ) ) end
-        if hitPos:DistToSqr( fallTr.StartPos ) < ( deathDist * deathDist ) then return end
+        if hitPos:DistToSqr( selfPos ) < ( deathDist * deathDist ) then return end
 
         self:PlaySoundFile( self:GetVoiceLine( "fall" ) )
     end
