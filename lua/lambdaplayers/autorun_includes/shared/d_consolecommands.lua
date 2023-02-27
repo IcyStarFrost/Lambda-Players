@@ -100,6 +100,13 @@ end, false, "Removes all entities that were spawned by Lambda Players", { name =
 
 AddConsoleCommandToLambdaSettings( "r_cleardecals", true, "Removes all decals in the map for yourself. This does not remove decals premade in the map", { name = "Clean Decals", category = "Utilities" } )
 
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_cacheplayermodels", function( ply )
+    if IsValid( ply ) and !ply:IsAdmin() then return end
+
+    for k,v in pairs(player_manager.AllValidModels()) do util.PrecacheModel(v) end
+    LambdaPlayers_Notify( ply, "Playermodels cached!", 0, "plats/elevbell1.wav" )
+end, false, "WARNING: Your game will freeze for a few seconds. This will vary on the amount of playermodels you have installed.", { name = "Cache Playermodels", category = "Utilities" } )
+
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply ) 
 	if IsValid( ply ) and !ply:IsSuperAdmin() then return end
     if !navmesh.IsLoaded() then return end

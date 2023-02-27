@@ -492,7 +492,7 @@ function ENT:Think()
 
         -- Play random Idle lines depending on current state
         if curTime > self.l_nextidlesound then
-            if !isDisabled and !self:GetIsTyping() and !self:IsSpeaking() then
+            if !isDisabled and !self:GetIsTyping() and !self:IsSpeaking() and !self.l_preventdefaultspeak then
                 if random( 1, 100 ) <= self:GetVoiceChance() then
                     local idleLine = ( self:IsPanicking() and "panic" or ( self:InCombat() and "taunt" or "idle" ) )
                     self:PlaySoundFile( self:GetVoiceLine( idleLine ) )

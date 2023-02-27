@@ -665,6 +665,7 @@ if SERVER then
         self.WeaponEnt:DrawShadow( !self:IsWeaponMarkedNodraw() )
 
 
+        self:PreventDefaultComs( false )
         self.l_UpdateAnimations = true
         self:PreventWeaponSwitch( false )
         self.l_ladderarea = NULL
@@ -802,6 +803,12 @@ if SERVER then
 
         local tbl = LambdaVoiceLinesTable[ voicetype ]
         return tbl[ random( #tbl ) ] 
+    end
+
+    -- Disables or re-enables Lambda's ability to use voice chat/type in chat.
+    -- Useful for modules that need lambdas to not speak passively.
+    function ENT:PreventDefaultComs( bool )
+        self.l_preventdefaultspeak = bool
     end
 
 
