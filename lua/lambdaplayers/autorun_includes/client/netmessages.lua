@@ -366,6 +366,7 @@ net.Receive( "lambdaplayers_updatedata", function()
     LambdaPlayerSprays = LAMBDAFS:GetSprays()
     LambdaTextTable = LAMBDAFS:GetTextTable()
     LambdaTextProfiles = LAMBDAFS:GetTextProfiles()
+    LambdaModelVoiceProfiles = LAMBDAFS:GetModelVoiceProfiles()
     LambdaPersonalProfiles = file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
     chat.AddText( "Lambda Data was updated by the Server" )
 end )
@@ -517,4 +518,10 @@ net.Receive( "lambdaplayers_getplybirthday", function()
         net.WriteUInt( 1, 5 )
     end
     net.SendToServer()
+end )
+
+net.Receive( "lambdaplayers_reloadaddon", function()
+    LambdaReloadAddon()
+    chat.AddText( Color( 255, 145, 0 ), "Reloaded all Lambda Lua Files for your Client" )
+    RunConsoleCommand( "spawnmenu_reload" )
 end )

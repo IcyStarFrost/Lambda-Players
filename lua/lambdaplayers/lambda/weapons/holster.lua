@@ -14,11 +14,13 @@
     killicon        | String |      The file path to a material ( without the file extension ) to use as the kill icon for this weapon or the alias name of a existing kill icon, example weapon_ar2 is a existing kill icon    | OPTIONAL
     nodraw          | Bool |        If the weapon should not draw   | OPTIONAL
     islethal        | Bool |        If the weapon is capable of hurting anything
+    bonemerge       | Bool |        If the weapon should be bone merged if possible  | OPTIONAL
     holdtype        | String |      The animation set Lambda should use. See globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
     ismelee         | Bool |        If the weapon is considered a melee weapon. False for ranged
     offpos          | Vector |      The offset position of the weapon local to the Lambda's considered hand position    | OPTIONAL
     offang          | Angle |       The offset angle of the weapon local to the Lambda  | OPTIONAL
 
+    deploydelay     | Number |      Time delay before Lambda starts using the weapon after equiping it
     speedmultiplier | Number |      Multiplies the Lambda's movement speed to this value while the weapon is held
     keepdistance    | Number |      The distance the Lambda will keep from the target
     attackrange     | Number |      The range the Lambda can attack from
@@ -49,11 +51,13 @@
     killicon        | String |      The file path to a material ( without the file extension ) to use as the kill icon for this weapon or the alias name of a existing kill icon, example weapon_ar2 is a existing kill icon    | OPTIONAL
     nodraw          | Bool |        If the weapon should not draw   | OPTIONAL
     islethal        | Bool |        If the weapon is capable of hurting anything
+    bonemerge       | Bool |        If the weapon should be bone merged if possible  | OPTIONAL
     holdtype        | String |      The animation set Lambda should use. See autorun_includes/server/globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
     ismelee         | Bool |        If the weapon is considered a melee weapon. False for ranged
     offpos          | Vector |      The offset position of the weapon local to the Lambda's considered hand position    | OPTIONAL
     offang          | Angle |       The offset angle of the weapon local to the Lambda  | OPTIONAL
 
+    deploydelay     | Number |      Time delay before Lambda starts using the weapon after equiping it
     speedmultiplier | Number |      Multiplies the Lambda's movement speed to this value while the weapon is held
     keepdistance    | Number |      The distance the Lambda will keep from the target
     attackrange     | Number |      The range the Lambda can attack from

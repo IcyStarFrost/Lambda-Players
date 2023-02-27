@@ -124,4 +124,4 @@ local function OpenNamePanel( ply )
 
 end
 
-RegisterLambdaPanel( "Name", "Opens a panel that allows you to create custom names for Lambda Players. You must be a Super Admin to use this Panel. YOU MUST UPDATE LAMBDA DATA AFTER ANY CHANGES!", OpenNamePanel )
+RegisterLambdaPanel( "Lambda Names", "Opens a panel that allows you to create custom names for Lambda Players. You must be a Super Admin to use this Panel. YOU MUST UPDATE LAMBDA DATA AFTER ANY CHANGES!", OpenNamePanel )

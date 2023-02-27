@@ -1,4 +1,10 @@
 local net = net
+local IsValid = IsValid
+local ipairs = ipairs
+local string_StartWith = string.StartWith
+local file_Find = file.Find
+local table_Empty = table.Empty
+local table_insert = table.insert
 
 _LAMBDAPLAYERSFootstepMaterials = {
     [MAT_ANTLION] = {"physics/flesh/flesh_impact_hard1.wav","physics/flesh/flesh_impact_hard2.wav","physics/flesh/flesh_impact_hard3.wav","physics/flesh/flesh_impact_hard4.wav","physics/flesh/flesh_impact_hard5.wav","physics/flesh/flesh_impact_hard6.wav"},
@@ -23,6 +29,17 @@ _LAMBDAPLAYERSFootstepMaterials = {
     [MAT_DEFAULT] = {"player/footsteps/concrete1.wav","player/footsteps/concrete2.wav","player/footsteps/concrete3.wav","player/footsteps/concrete4.wav"},
     [MAT_WARPSHIELD] = {"physics/glass/glass_sheet_step1.wav","physics/glass/glass_sheet_step2.wav","physics/glass/glass_sheet_step3.wav","physics/glass/glass_sheet_step4.wav"}
 }
+
+local foundSnow = false
+for _, v in ipairs( file_Find( "sound/player/footsteps/*", "GAME" ) ) do
+    if string_StartWith( v, "snow" ) then
+        if !foundSnow then
+            foundSnow = true
+            table_Empty( _LAMBDAPLAYERSFootstepMaterials[ MAT_SNOW ] )
+        end
+        table_insert( _LAMBDAPLAYERSFootstepMaterials[ MAT_SNOW ], "player/footsteps/" .. v )
+    end
+end
 
 _LAMBDAPLAYERSHoldTypeAnimations = {
     ["pistol"] = {
@@ -388,7 +405,7 @@ hook.Add( "InitPostEntity", "lambdaplayersgetspawns", function() LambdaSpawnPoin
 
 -- Adds to the default killfeed
 function LambdaKillFeedAdd( victim, attacker, inflictor )
-    if !IsValid( attacker ) then return end 
+    if !attacker:IsWorld() and !IsValid( attacker ) then return end 
         
     local victimname = ( ( victim.IsLambdaPlayer or victim:IsPlayer() ) and victim:Nick() or ( victim.IsZetaPlayer and victim.zetaname or "#" .. victim:GetClass() ) )
     local attackername = ( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and attacker:Nick() or ( attacker.IsZetaPlayer and attacker.zetaname or "#" .. attacker:GetClass() ) )

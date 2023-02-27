@@ -8,34 +8,26 @@ local Left = string.Left
 
 if SERVER then
 
-    local hitScales = {
-        [HITGROUP_HEAD]     = GetConVar("sk_player_head"),
-        [HITGROUP_LEFTARM]  = GetConVar("sk_player_arm"),
-        [HITGROUP_RIGHTARM] = GetConVar("sk_player_arm"),
-        [HITGROUP_CHEST]    = GetConVar("sk_player_chest"),
-        [HITGROUP_STOMACH]  = GetConVar("sk_player_stomach"),
-        [HITGROUP_LEFTLEG]  = GetConVar("sk_player_leg"),
-        [HITGROUP_RIGHTARM] = GetConVar("sk_player_leg")
-    }
-
     local wepDmgScale = GetConVar( "lambdaplayers_combat_weapondmgmultiplier" )
 
-    hook.Add("ScalePlayerDamage", "LambdaPlayers_DmgScale", function( ply,hit,dmginfo )
-        if !ply.IsLambdaPlayer or !dmginfo:IsBulletDamage() then return end
+    hook.Add( "ScalePlayerDamage", "LambdaScalePlayerDamage", function( ply, hit, dmginfo )
+        if !ply.IsLambdaPlayer then return end
         ply.l_lasthitgroup = hit
-        if hit == HITGROUP_HEAD then
-            dmginfo:ScaleDamage( 0.5 )
-        elseif hit == HITGROUP_LEFTARM or hit == HITGROUP_RIGHTARM or hit == HITGROUP_LEFTLEG or hit == HITGROUP_RIGHTLEG then
-            dmginfo:ScaleDamage( 4 )
-        end
-        dmginfo:ScaleDamage( ( hitScales[ hit ] and hitScales[ hit ]:GetFloat() or 1.0 ) )
-    end)
+        ply.l_lastdamage = dmginfo:GetDamage()
+    end )
 
     -- God mode simple stuff
-    hook.Add( "EntityTakeDamage", "LambdaMainDamageHook", function( ent, info )
+    hook.Add( "EntityTakeDamage", "LambdaMainDamageHook", function( ent, dmginfo )
         if ent.l_godmode then return true end
+        
+        if ent.IsLambdaPlayer then
+            local lastDmg = ent.l_lastdamage
+            if lastDmg and ( lastDmg / 4 ) == dmginfo:GetDamage() then
+                dmginfo:ScaleDamage( 4 )
+            end
+        end
 
-        local inflictor = info:GetAttacker()
+        local inflictor = dmginfo:GetInflictor()
         if IsValid( inflictor ) and inflictor.IsLambdaWeapon then
             dmginfo:ScaleDamage( wepDmgScale:GetFloat() )
         end
