@@ -15,7 +15,7 @@ local function OpenTextPanel( ply )
 
     local function CreateTextEditingPanel( texttype )
         if !IsValid( framescroll ) then return end
-        
+
         local pnl = LAMBDAPANELS:CreateBasicPanel( framescroll, LEFT )
         pnl:SetSize( 200, 200 )
         pnl:DockMargin( 10, 0, 0, 0 )
@@ -101,6 +101,11 @@ local function OpenTextPanel( ply )
             surface.PlaySound( "buttons/button15.wav" )
             listview:RemoveLine( id )
             LAMBDAPANELS:RemoveVarFromSQFile( "lambdaplayers/texttypes/" .. texttype .. ".json", line:GetSortValue( 1 ), "json" ) 
+        end
+
+        function listview:DoDoubleClick( id, line )
+            surface.PlaySound( "buttons/button16.wav" )
+            textentry:SetText( line:GetSortValue( 1 ) )
         end
 
         if !ishost then
