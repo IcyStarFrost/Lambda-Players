@@ -178,8 +178,9 @@ function ENT:Initialize()
         self.l_movepos = nil -- The position or entity we are going to
         self.l_noclippos = self:GetPos() -- The position we want to noclip to
         self.l_swimpos = self:GetPos() -- The position we are currently swimming to
-        self.l_currentnavarea = navmesh_GetNavArea( self:WorldSpaceCenter(), 400 ) -- The current nav area we are in
-
+        
+        local nearArea = navmesh_GetNavArea( self:WorldSpaceCenter(), 400 ) -- The current nav area we are in
+        if IsValid( nearArea ) then self.l_currentnavarea = nearArea; self:OnNavAreaChanged( nearArea, nearArea ) end
 
         -- Personal Stats --
         self:SetLambdaName( self:GetOpenName() )
@@ -261,6 +262,7 @@ function ENT:Initialize()
         self:SetRunSpeed( runningSpeed:GetInt() )
         self:SetCrouchSpeed( 60 )
         self:SetWalkSpeed( walkingSpeed:GetInt() )
+        self:SetSlowWalkSpeed( 100 )
 
         self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
         self:PhysicsInitShadow()
@@ -377,6 +379,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", 7, "FlashlightOn" )
     self:NetworkVar( "Bool", 8, "IsFiring" )
     self:NetworkVar( "Bool", 9, "IsTyping" )
+    self:NetworkVar( "Bool", 10, "SlowWalk" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )
@@ -400,6 +403,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 13, "Team" )
     self:NetworkVar( "Int", 14, "TextPerMinute" )
     self:NetworkVar( "Int", 15, "TextChance" )
+    self:NetworkVar( "Int", 16, "SlowWalkSpeed" )
 
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
     self:NetworkVar( "Float", 1, "VoiceLevel" )
@@ -502,7 +506,7 @@ function ENT:Think()
 
         -- Update our speed after some time
         if curTime > self.l_nextspeedupdate then
-            loco:SetDesiredSpeed( ( isCrouched and self:GetCrouchSpeed() or ( self:GetRun() and self:GetRunSpeed() or self:GetWalkSpeed() ) ) * self.l_WeaponSpeedMultiplier )
+            loco:SetDesiredSpeed( ( isCrouched and self:GetCrouchSpeed() or ( self:GetSlowWalk() and self:GetSlowWalkSpeed() or ( self:GetRun() and self:GetRunSpeed() or self:GetWalkSpeed() ) ) ) * self.l_WeaponSpeedMultiplier )
             self.l_nextspeedupdate = curTime + 0.5
         end
 
@@ -708,7 +712,7 @@ function ENT:Think()
                     if onGround then
                         local locoVel = locoVel
                         if !locoVel:IsZero() then
-                            anim = ( isCrouched and anims.crouchWalk or ( locoVel:LengthSqr() > ( 150 ^ 2 ) and anims.run or anims.walk ) )
+                            anim = ( isCrouched and anims.crouchWalk or ( ( !self:GetSlowWalk() and locoVel:LengthSqr() > ( 150 ^ 2 ) ) and anims.run or anims.walk ) )
                         elseif isCrouched then
                             anim = anims.crouchIdle
                         end

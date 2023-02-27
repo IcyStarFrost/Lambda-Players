@@ -317,36 +317,40 @@ if SERVER then
         self.LambdaPlayerPersonalInfo = self:ExportLambdaInfo()
     end
 
-    local Navmeshfunctions = {
-
-        [ NAV_MESH_CROUCH ] = function( self ) 
-            self:SetCrouch( true )
-
-            local lastState = self:GetState()
-            local crouchTime = CurTime() + rand( 1, 30 )
-            self:NamedTimer( "UnCrouch", 1, 0, function() 
-                if self:GetState() != lastState or CurTime() >= crouchTime then
-                    self:SetCrouch( false )
-                    return true
-                end
-            end )
+    local NavmeshFunctions = {
+        [ NAV_MESH_CROUCH ] = function( self, hasEntered ) 
+            self:SetCrouch( hasEntered )
         end,
-
-        [ NAV_MESH_RUN ] = function( self ) self:SetRun( true ) end,
-        [ NAV_MESH_WALK ] = function( self ) self:SetRun( false ) end,
-        [ NAV_MESH_JUMP ] = function( self ) self:LambdaJump() end
+        [ NAV_MESH_RUN ] = function( self ) 
+            self:SetRun( true ) 
+        end,
+        [ NAV_MESH_WALK ] = function( self, hasEntered ) 
+            self:SetSlowWalk( hasEntered ) 
+        end,
+        [ NAV_MESH_JUMP ] = function( self, hasEntered ) 
+            if !hasEntered then return end
+            self:LambdaJump() 
+        end,
+        [ NAV_MESH_STOP ] = function( self, hasEntered )
+            if !hasEntered then return end
+            self:WaitWhileMoving( rand( 0.66, 1.0 ) )
+        end,
+        [ NAV_MESH_STAND ] = function( self ) 
+            self:SetCrouch( false )
+        end
     }
 
-    local attributes = NAV_MESH_CROUCH + NAV_MESH_WALK + NAV_MESH_RUN + NAV_MESH_JUMP
-
     -- Sets our current nav area
-    function ENT:OnNavAreaChanged( old , new ) 
+    function ENT:OnNavAreaChanged( old, new ) 
         self.l_currentnavarea = new
 
-        local navfunc = Navmeshfunctions[ band( new:GetAttributes(), attributes ) ]
-        if obeynav:GetBool() and navfunc then navfunc( self ) end
+        if obeynav:GetBool() then
+            for attribute, navFunc in pairs( NavmeshFunctions ) do
+                navFunc( self, ( new:HasAttributes( attribute ) and !old:HasAttributes( attribute ) ) ) 
+            end
+        end
     end
-    
+
     -- Called when we collide with something
     function ENT:HandleCollision( data )
         if self:GetIsDead() or self:GetNoClip() then return end
@@ -526,9 +530,11 @@ if SERVER then
         LambdaRunHook( "LambdaOnLeaveGround", self, ent )
         
         -- Fall Voiceline Handling
+        local selfPos = ( self:GetPos() + vector_up * 1 )
         local mins, maxs = self:GetCollisionBounds()
-        fallTrTbl.start = self:GetPos()
-        fallTrTbl.endpos = ( fallTrTbl.start - self:GetUp() * 32756 )
+        
+        fallTrTbl.start = selfPos
+        fallTrTbl.endpos = ( selfPos - vector_up * 32756 )
         fallTrTbl.filter = self
         fallTrTbl.mins = mins
         fallTrTbl.maxs = maxs
@@ -539,7 +545,7 @@ if SERVER then
 
         local deathDist = 800
         if realisticfalldamage:GetBool() then deathDist = max( 256, 800 * ( self:Health() / self:GetMaxHealth() ) ) end
-        if hitPos:DistToSqr( fallTr.StartPos ) < ( deathDist * deathDist ) then return end
+        if hitPos:DistToSqr( selfPos ) < ( deathDist * deathDist ) then return end
 
         if !self.l_preventdefaultspeak then
             self:PlaySoundFile( self:GetVoiceLine( "fall" ) )
