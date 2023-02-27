@@ -106,7 +106,7 @@ function ENT:MoveToPos( pos, options )
             -- Close up jumping
             local selfPos = self:GetPos()
             local aheadNormal = ( goal.pos - selfPos ):GetNormalized(); aheadNormal.z = 0
-            local grHeight = GetSimpleGroundHeightWithFloor( self.l_currentnavarea, self:WorldSpaceCenter() + aheadNormal * jumpCheckDist )
+            local grHeight = GetSimpleGroundHeightWithFloor( self.l_currentnavarea, selfPos + vector_up * stepH + aheadNormal * jumpCheckDist )
             if grHeight and ( grHeight - selfPos.z ) > stepH then self:LambdaJump() end
         end
 
@@ -426,8 +426,9 @@ local doorClasses = {
 function ENT:ObstacleCheck()
     if CurTime() < self.l_nextobstaclecheck then return end
 
-    tracetable.start = self:WorldSpaceCenter()
-    tracetable.endpos = ( tracetable.start + self:GetForward() * 50 )
+    local selfPos = ( self:GetPos() + vector_up * self.loco:GetStepHeight() )
+    tracetable.start = selfPos
+    tracetable.endpos = ( selfPos + self:GetForward() * 50 )
     tracetable.filter = self
     
     local ent = Trace( tracetable ).Entity

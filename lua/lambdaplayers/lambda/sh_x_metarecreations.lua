@@ -153,10 +153,6 @@ function ENT:HasGodMode()
     return self.l_godmode
 end
 
-function ENT:GetSlowWalkSpeed()
-    return self:GetWalkSpeed()
-end
-
 function ENT:GetStepSize()
     return self.loco:GetStepHeight()
 end

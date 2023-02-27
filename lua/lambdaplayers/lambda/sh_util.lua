@@ -53,6 +53,7 @@ local IsNavmeshLoaded = ( SERVER and navmesh.IsLoaded )
 local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
 local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
 local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
+local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 
 ---- Anything Shared can go here ----
 
@@ -1101,7 +1102,11 @@ if SERVER then
     end
 
     function ENT:LambdaJump()
-        if !self:IsOnGround() or LambdaRunHook( "LambdaOnJump", self ) == true then return end
+        if !self:IsOnGround() then return end
+        local curNav = self.l_currentnavarea
+        if obeynav:GetBool() and IsValid( curNav ) and ( curNav:HasAttributes( NAV_MESH_NO_JUMP ) or curNav:HasAttributes( NAV_MESH_STAIRS ) ) then return end       
+        if LambdaRunHook( "LambdaOnJump", self, curNav ) == true then return end
+        
         self.loco:Jump()
         self:PlayStepSound( 1.0 )
     end
