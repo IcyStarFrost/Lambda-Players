@@ -14,6 +14,8 @@ local function OpenTextPanel( ply )
     local framescroll = LAMBDAPANELS:CreateScrollPanel( frame, true, FILL )
 
     local function CreateTextEditingPanel( texttype )
+        if !IsValid( framescroll ) then return end
+        
         local pnl = LAMBDAPANELS:CreateBasicPanel( framescroll, LEFT )
         pnl:SetSize( 200, 200 )
         pnl:DockMargin( 10, 0, 0, 0 )
