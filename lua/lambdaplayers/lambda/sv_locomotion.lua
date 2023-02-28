@@ -18,6 +18,9 @@ local navmesh_IsLoaded = navmesh.IsLoaded
 local random = math.random
 local ipairs = ipairs
 local coroutine_yield = coroutine.yield
+local isnumber = isnumber
+local band = bit.band
+local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 
 -- Finds "simple" ground height, treating the provided nav area as part of the floor
 local function GetSimpleGroundHeightWithFloor( navArea, pos )
@@ -64,8 +67,11 @@ function ENT:MoveToPos( pos, options )
     self:SetRun( !autorun and ( path:GetLength() > 1500 ) or run )
 
     local loco = self.loco
+    local runSpeed = self:GetRunSpeed()
     local stepH = loco:GetStepHeight()
     local jumpH = loco:GetJumpHeight()
+    local curGoal, prevGoal
+    local nextJumpT = CurTime() + 0.5
     local returnMsg = "ok"
 
     LambdaRunHook( "LambdaOnBeginMove", self, pos, true )
@@ -92,10 +98,13 @@ function ENT:MoveToPos( pos, options )
 		end
 
         local goal = path:GetCurrentGoal()
-        local desSpeed = loco:GetDesiredSpeed()
+        if !curGoal or curGoal != goal then
+            prevGoal = curGoal
+            curGoal = goal
+        end
 
 		if update then
-            local updateTime = math_max( update, update * ( path:GetLength() / desSpeed ) )
+            local updateTime = math_max( update, update * ( path:GetLength() / runSpeed ) )
 			if path:GetAge() > updateTime then path:Compute( self, pos, costFunctor ) end
 		end
 
@@ -105,29 +114,52 @@ function ENT:MoveToPos( pos, options )
         end
         
         if !self:IsDisabled() and CurTime() > self.l_moveWaitTime then
-            if callback and callback( pos, path, goal ) == false then returnMsg = "callback" break end 
+            if callback and callback( pos, path, curGoal ) == false then returnMsg = "callback" break end 
             path:Update( self )
             self:ObstacleCheck()
 
             local selfPos = self:GetPos()
+            local moveType = curGoal.type
+            local hasJumped = false
 
-            -- Jumping over ledges and close up jumping
-            local goalNormal = ( goal.pos - selfPos ):GetNormalized()
-            local stepAhead = ( selfPos + vector_up * stepH ); goalNormal.z = 0
-            curArea = self.l_currentnavarea
-            local grHeight, grNormal = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 60 )
-            if grHeight and grNormal.z > 0.9 and ( grHeight - selfPos.z ) > stepH then 
-                self:LambdaJump() 
+            local goalNormal = ( curGoal.pos - selfPos ):GetNormalized()
+            goalNormal.z = 0
+
+            if moveType == 4 or moveType == 5 then -- Ladder climbing ( 4 - Up, 5 - Down )
+                local ladder = curGoal.ladder
+                if IsValid( ladder ) and self:IsInRange( ( moveType == 4 and ladder:GetBottom() or ladder:GetTop() ), 64 ) then
+                    self.l_ladderarea = ladder
+                    self:ClimbLadder( ladder, ( moveType == 5 ), curGoal.pos )
+                    self.l_ladderarea = NULL 
+                    
+                    pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
+                    if pos then path:Compute( self, pos, costFunctor ) end
+                end
+            elseif moveType == 2 and ( prevGoal.pos.z - selfPos.z ) <= 0 then
+                hasJumped = true
             else
-                grHeight = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 30 )
-                if grHeight and ( grHeight - selfPos.z ) < -jumpH then self:LambdaJump() end
+                -- Jumping over ledges and close up jumping
+                local stepAhead = ( selfPos + vector_up * stepH )
+                curArea = self.l_currentnavarea
+                local grHeight, grNormal = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 60 )
+                if grHeight and grNormal.z > 0.9 and ( grHeight - selfPos.z ) > stepH then hasJumped = true end
+
+                if !hasJumped then
+                    grHeight = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 30 )
+                    if grHeight and ( grHeight - selfPos.z ) < -jumpH then hasJumped = true end
+                end
+            end
+
+            if hasJumped and CurTime() > nextJumpT then
+                self:LambdaJump() 
+                nextJumpT = CurTime() + 0.5
             end
 
             -- Air movement
             local curVel = loco:GetVelocity()
             if !self:IsOnGround() then
                 local mins, maxs = self:GetCollisionBounds()
-                local airVel = ( goalNormal * ( desSpeed * FrameTime() ) )
+                local airVel = ( goalNormal * ( loco:GetDesiredSpeed() * FrameTime() ) )
 
                 airtable.start = selfPos
                 airtable.endpos = ( selfPos + airVel )
@@ -136,20 +168,6 @@ function ENT:MoveToPos( pos, options )
                 airtable.maxs = maxs
 
                 if !TraceHull( airtable ).Hit then loco:SetVelocity( curVel + airVel ) end
-            end
-        end
-
-        -- Checks if we need to climb ladder to traverse
-        local moveType = goal.type
-        if moveType == 4 or moveType == 5 then
-            local ladder = goal.ladder
-            if IsValid( ladder ) and self:IsInRange( ( moveType == 4 and ladder:GetBottom() or ladder:GetTop() ), 64 ) then
-                self.l_ladderarea = ladder
-                self:ClimbLadder( ladder, ( moveType == 5 ), goal.pos )
-                self.l_ladderarea = NULL 
-                
-                pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
-                if pos then path:Compute( self, pos, costFunctor ) end
             end
         end
 
@@ -409,31 +427,50 @@ function ENT:HandleStuck()
     return true
 end
 
-
 -- Returns a pathfinding function for the :Compute() function
 function ENT:PathGenerator()
-    local jumpPenalty = 10
-    local isInNoClip = self:IsInNoClip()
     local stepHeight = self.loco:GetStepHeight()
     local jumpHeight = self.loco:GetJumpHeight()
     local deathHeight = -self.loco:GetDeathDropHeight()
+    
+    local crouchWalkPenalty = 5
+    local jumpPenalty = 10
+    local ladderPenalty = 15
+    local avoidPenalty = 50
+
+    local obeyNavmesh = obeynav:GetBool()
+    local isInNoClip = self:IsInNoClip()
 
     return function( area, fromArea, ladder, elevator, length )
         if !IsValid( fromArea ) then return 0 end
-        if area:HasAttributes( NAV_MESH_AVOID ) then return -1 end
 
         local dist = 0
         if !isInNoClip and IsValid( ladder ) then
-            dist = ladder:GetBottom():Distance( ladder:GetTop() )
+            dist = ( ladder:GetLength() * ladderPenalty )
         else
             dist = ( length > 0 and length or fromArea:GetCenter():Distance( area:GetCenter() ) )
         end
+
         local cost = ( fromArea:GetCostSoFar() + dist )
 
         if !isInNoClip and !IsValid( ladder ) then
             local deltaZ = fromArea:ComputeAdjacentConnectionHeightChange( area )
-            if deltaZ > jumpHeight or deltaZ < deathHeight then return -1 end
-            if deltaZ > stepHeight then cost = cost + ( dist * jumpPenalty ) end
+            if deltaZ > jumpHeight or deltaZ < deathHeight and !area:IsUnderwater() then return -1 end
+            if deltaZ > stepHeight then cost = ( cost + dist * jumpPenalty ) end
+        end
+
+        if obeyNavmesh then
+            local attributes = area:GetAttributes()
+
+            -- Simple, try to avoid going through this area unless there is no other way
+            if band( attributes, NAV_MESH_AVOID ) != 0 then
+                cost = ( cost + dist * avoidPenalty ) 
+            end
+
+            -- We slow down when slow-walking or crouching, so try avoid these areas if possible
+            if band( attributes, NAV_MESH_WALK ) != 0 or band( attributes, NAV_MESH_CROUCH ) != 0 then
+                cost = ( cost + dist * crouchWalkPenalty ) 
+            end
         end
 
         return cost
