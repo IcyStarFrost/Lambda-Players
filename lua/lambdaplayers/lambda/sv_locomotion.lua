@@ -7,8 +7,10 @@ local Trace = util.TraceLine
 local TraceHull = util.TraceHull
 local debugoverlay = debugoverlay
 local CurTime = CurTime
+local FrameTime = FrameTime
 local tracetable = {}
 local unstucktable = {}
+local airtable = {}
 local laddermovetable = { collisiongroup = COLLISION_GROUP_PLAYER }
 local ents_FindByName = ents.FindByName
 local GetGroundHeight = navmesh.GetGroundHeight
@@ -28,22 +30,25 @@ end
 -- Start off simple
 -- Pos arg can be a vector or a entity.
 function ENT:MoveToPos( pos, options )
-    pos = ( isvector( pos ) and pos or ( LambdaIsValid( pos ) and pos:GetPos() or nil ) )
+    pos = ( isvector( pos ) and pos or ( IsValid( pos ) and pos:GetPos() or nil ) )
     if !pos then return "failed" end
 
     -- If there is no nav mesh, try to go to the postion anyway
-    if !navmesh_IsLoaded() or !IsValid( self.l_currentnavarea ) then 
+    local curArea = self.l_currentnavarea
+    if !IsValid( curArea ) or !navmesh_IsLoaded() then 
         self:MoveToPosOFFNAV( pos, options ) 
         return "failed"
     end 
 
     options = options or {}
+    self.l_moveoptions = options
 
     local path = Path( "Follow" )
     path:SetGoalTolerance( options.tol or 20 )
     path:SetMinLookAheadDistance( self.l_LookAheadDistance )
 
-    path:Compute( self, pos, self:PathGenerator() )
+    local costFunctor = self:PathGenerator()
+    path:Compute( self, pos, costFunctor )
     if !IsValid( path ) then return "failed" end
 
     self.l_issmoving = true
@@ -54,12 +59,13 @@ function ENT:MoveToPos( pos, options )
     local update = options.update
     local callback = options.callback
 
+    local run = options.run or false
     local autorun = options.autorun
-    self:SetRun( !autorun and ( options.run or false ) or ( path:GetLength() > 1500 ) )
+    self:SetRun( !autorun and ( path:GetLength() > 1500 ) or run )
 
     local loco = self.loco
     local stepH = loco:GetStepHeight()
-    local jumpCheckDist = 60
+    local jumpH = loco:GetJumpHeight()
     local returnMsg = "ok"
 
     LambdaRunHook( "LambdaOnBeginMove", self, pos, true )
@@ -72,7 +78,7 @@ function ENT:MoveToPos( pos, options )
         end
         if timeout and path:GetAge() > timeout then returnMsg = "timeout" break end
 
-        pos = ( isvector( self.l_movepos ) and self.l_movepos or ( LambdaIsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
+        pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
         if !pos then returnMsg = "invalid" break end
 
 		if loco:IsStuck() then
@@ -86,28 +92,51 @@ function ENT:MoveToPos( pos, options )
 		end
 
         local goal = path:GetCurrentGoal()
+        local desSpeed = loco:GetDesiredSpeed()
 
 		if update then
-            local updateTime = math_max( update, update * ( path:GetLength() / loco:GetDesiredSpeed() ) )
-			if path:GetAge() > updateTime then path:Compute( self, pos, self:PathGenerator() ) end
+            local updateTime = math_max( update, update * ( path:GetLength() / desSpeed ) )
+			if path:GetAge() > updateTime then path:Compute( self, pos, costFunctor ) end
 		end
 
         if self.l_recomputepath then
-            path:Compute( self, pos, self:PathGenerator() )
+            path:Compute( self, pos, costFunctor )
             self.l_recomputepath = nil
         end
         
         if !self:IsDisabled() and CurTime() > self.l_moveWaitTime then
             if callback and callback( pos, path, goal ) == false then returnMsg = "callback" break end 
             path:Update( self )
-
             self:ObstacleCheck()
 
-            -- Close up jumping
             local selfPos = self:GetPos()
-            local aheadNormal = ( goal.pos - selfPos ):GetNormalized(); aheadNormal.z = 0
-            local grHeight = GetSimpleGroundHeightWithFloor( self.l_currentnavarea, selfPos + vector_up * stepH + aheadNormal * jumpCheckDist )
-            if grHeight and ( grHeight - selfPos.z ) > stepH then self:LambdaJump() end
+
+            -- Jumping over ledges and close up jumping
+            local goalNormal = ( goal.pos - selfPos ):GetNormalized()
+            local stepAhead = ( selfPos + vector_up * stepH ); goalNormal.z = 0
+            curArea = self.l_currentnavarea
+            local grHeight, grNormal = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 60 )
+            if grHeight and grNormal.z > 0.9 and ( grHeight - selfPos.z ) > stepH then 
+                self:LambdaJump() 
+            else
+                grHeight = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 30 )
+                if grHeight and ( grHeight - selfPos.z ) < -jumpH then self:LambdaJump() end
+            end
+
+            -- Air movement
+            local curVel = loco:GetVelocity()
+            if !self:IsOnGround() then
+                local mins, maxs = self:GetCollisionBounds()
+                local airVel = ( goalNormal * ( desSpeed * FrameTime() ) )
+
+                airtable.start = selfPos
+                airtable.endpos = ( selfPos + airVel )
+                airtable.filter = self
+                airtable.mins = mins
+                airtable.maxs = maxs
+
+                if !TraceHull( airtable ).Hit then loco:SetVelocity( curVel + airVel ) end
+            end
         end
 
         -- Checks if we need to climb ladder to traverse
@@ -119,8 +148,8 @@ function ENT:MoveToPos( pos, options )
                 self:ClimbLadder( ladder, ( moveType == 5 ), goal.pos )
                 self.l_ladderarea = NULL 
                 
-                pos = ( isvector( self.l_movepos ) and self.l_movepos or ( LambdaIsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
-                if pos then path:Compute( self, pos, self:PathGenerator() ) end
+                pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
+                if pos then path:Compute( self, pos, costFunctor ) end
             end
         end
 
@@ -130,6 +159,7 @@ function ENT:MoveToPos( pos, options )
 
     self.l_issmoving = false 
     self.l_movepos = nil
+    self.l_moveoptions = nil
     self.l_CurrentPath = nil
 
 	return returnMsg
@@ -137,14 +167,16 @@ end
 
 -- If the map we are on does not have a navmesh, the Lambda Players will default their movement to this so they can actually move
 function ENT:MoveToPosOFFNAV( pos, options )
-    pos = ( isvector( pos ) and pos or ( LambdaIsValid( pos ) and pos:GetPos() or nil ) )
+    pos = ( isvector( pos ) and pos or ( IsValid( pos ) and pos:GetPos() or nil ) )
     if !pos then return "failed" end
 
     self.l_issmoving = true
     self.l_movepos = pos
     self.l_CurrentPath = pos
 
-	local options = options or {}
+	options = options or {}
+    self.l_moveoptions = options
+
     local callback = options.callback
     local tolerance = options.tol or 20
     
@@ -167,7 +199,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
             returnMsg = "aborted"; break
         end
 
-        pos = ( isvector( self.l_movepos ) and self.l_movepos or ( LambdaIsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
+        pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
         if !pos then returnMsg = "invalid" break end
 
 		if loco:IsStuck() then
@@ -200,7 +232,8 @@ function ENT:MoveToPosOFFNAV( pos, options )
     end
 
     self.l_issmoving = false
-    self.l_movepos = nil 
+    self.l_movepos = nil
+    self.l_moveoptions = nil
     self.l_CurrentPath = nil
 
     return returnMsg
