@@ -176,6 +176,7 @@ function ENT:Initialize()
         self.l_ladderarea = NULL -- The ladder nav area we are currenly using to climb
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
         self.l_movepos = nil -- The position or entity we are going to
+        self.l_moveoptions = nil -- The move position's options, such as updating, goal tolerance, etc.
         self.l_noclippos = self:GetPos() -- The position we want to noclip to
         self.l_swimpos = self:GetPos() -- The position we are currently swimming to
         
@@ -691,7 +692,8 @@ function ENT:Think()
                     swimVel = ( ( swimPos - selfPos ):GetNormalized() * swimSpeed )
                 end
 
-                loco:SetVelocity( LerpVector( 20 * frameTime, locoVel, swimVel ) )
+                locoVel = LerpVector( 20 * frameTime, locoVel, swimVel )
+                loco:SetVelocity( locoVel )
             elseif LambdaIsValid( self:GetEnemy() ) or swimPos and ( swimPos.z - selfPos.z ) > loco:GetJumpHeight() then
                 loco:Jump() -- Jump and start swimming if there's a enemy or our move position height is higher than our jump height
             end
