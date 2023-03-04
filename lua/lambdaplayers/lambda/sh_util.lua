@@ -443,6 +443,11 @@ if SERVER then
     function ENT:GetExternalVar( key )
         return self.l_ExternalVars[ key ]
     end
+
+    -- Returns the position we are going to
+    function ENT:GetDestination()
+        return ( isentity( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos )
+    end
     
     -- If the we can target the ent
     function ENT:CanTarget( ent )
