@@ -343,10 +343,22 @@ if SERVER then
     -- Sets our current nav area
     function ENT:OnNavAreaChanged( old, new ) 
         self.l_currentnavarea = new
+        
+        local movePos = self.l_CurrentPath
+        if movePos == self.l_movepos and self.l_issmoving then
+            self:CancelMovement()
+            self:MoveToPos( ( isentity( movePos ) and IsValid( movePos ) and movePos:GetPos() or movePos ), self.l_moveoptions )
+        end
 
         if obeynav:GetBool() then
+            local newAttributes = new:GetAttributes()
+            local oldAttributes = ( IsValid( old ) and old:GetAttributes() )
             for attribute, navFunc in pairs( NavmeshFunctions ) do
-                navFunc( self, ( new:HasAttributes( attribute ) and !old:HasAttributes( attribute ) ) ) 
+                if band( newAttributes, attribute ) != 0 then
+                    navFunc( self, true )
+                elseif oldAttributes and band( oldAttributes, attribute ) != 0 then
+                    navFunc( self, false )
+                end
             end
         end
     end
