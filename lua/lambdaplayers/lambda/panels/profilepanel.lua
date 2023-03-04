@@ -572,6 +572,12 @@ local function OpenProfilePanel( ply )
 
         if infotable.spawnwep then spawnweapon:SelectOptionByKey( infotable.spawnwep ) else spawnweapon:SelectOptionByKey( "/NIL" ) end
 
+        if externalpanels then
+            for k, v in pairs( externalpanels ) do
+                LAMBDAPANELS:SetValue( v, nil )
+            end
+        end
+
         if infotable.externalvars then
             for k, v in pairs( infotable.externalvars ) do
                 if externalpanels[ k ] then
