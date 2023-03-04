@@ -7,7 +7,6 @@ local function OpenNamePanel( ply )
     if !IsValid( ply ) then return elseif !ply:IsSuperAdmin() then notification.AddLegacy( "You must be a Super Admin in order to use this!", 1, 4) surface.PlaySound( "buttons/button10.wav" ) return end
 
     local names = {}
-    local sortednames = {}
     local hasdata = false
     local panel = LAMBDAPANELS:CreateFrame( "Custom Name Editor", 300, 300 ) -- Start with the panel
 

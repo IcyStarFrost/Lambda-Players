@@ -39,7 +39,7 @@ local function OpenModelVoiceProfilePanel( ply )
 
     local mdlselected, vpselected
 
-    local applybutton = LAMBDAPANELS:CreateButton( mdlpanel, BOTTOM, "Apply", function()
+    LAMBDAPANELS:CreateButton( mdlpanel, BOTTOM, "Apply", function()
         if !mdlselected then
             AddNotification( "You haven't selected any playermodel from the list!", 1, 4 )
             PlaySound( "buttons/button10.wav" ) 

@@ -1,7 +1,6 @@
 local pairs = pairs
 local pcall = pcall
 local unpack = unpack
-local hook_GetTable = hook.GetTable
 
 -- Because hook.Run() doesn't pcall() for each hook function, every external addon down the line won't have their hooks run because some addon errored.
 function LambdaRunHook( hookname, ... )

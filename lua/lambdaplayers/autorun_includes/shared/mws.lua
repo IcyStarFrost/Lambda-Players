@@ -5,12 +5,10 @@ local randomspawnrate = CreateLambdaConvar( "lambdaplayers_mws_randomspawnrate",
 local respawn = CreateLambdaConvar( "lambdaplayers_mws_respawning", 1, true, false, false, "If Lambda Players spawned by MWS should respawn", 0, 1, { type = "Bool", name = "Respawn", category = "MWS"} )
 local navmeshspawning = CreateLambdaConvar( "lambdaplayers_mws_spawnonnavmesh", 1, true, false, false, "If Lambda Players spawned by MWS should spawn randomly on the map using the navmesh. Remember that the (Respawn At Player Spawns) option in Lambda Server Settings will make them respawn at player spawn points", 0, 1, { type = "Bool", name = "Random Navmesh Spawn Points", category = "MWS"} )
 local navmeshspawndist = CreateLambdaConvar( "lambdaplayers_mws_navmeshspawndist", 0, true, false, false, "If (Random Navmesh Spawn Points) is enabled, sets the limit in what distance should the real player be from the area Lambda Player can spawn in. Set to zero for unlimited spawn distance", 0, 10000, { type = "Slider", decimals = 0, name = "Navmesh Spawn Distance Limit", category = "MWS"} )
-local navmeshdespawn = CreateLambdaConvar( "lambdaplayers_mws_navmeshdespawn", 0, true, false, false, "If Lambda Players spawned by MWS should despawn if they're too far from real players and aren't visible to them. (Random Navmesh Spawn Points) should be enabled and the distance is set in the (Navmesh Spawn Distance) option", 0, 1, { type = "Bool", name = "Despawn If Too Far", category = "MWS"} )
 
 local table_insert = table.insert
 local rand = math.Rand
 local random = math.random
-
 local personalitypresets = {
     [ "custom" ] = function( self ) -- Custom Personality set by Sliders
         local tbl = {}

@@ -6,8 +6,6 @@ local table_insert = table.insert
 local table_remove = table.remove
 local tobool = tobool
 local Angle = Angle
-local table_RemoveByValue = table.RemoveByValue
-local table_GetKeys = table.GetKeys
 local caneditworld = GetConVar( "lambdaplayers_building_caneditworld" )
 local caneditnonworld = GetConVar( "lambdaplayers_building_caneditnonworld" )
 
@@ -69,7 +67,7 @@ function ENT:SpawnProp()
     prop:Spawn()
     DoPropSpawnedEffect( prop ) -- Make the prop do the spawn effect
 
-    local mins, maxs = prop:GetModelBounds()
+    local mins = prop:GetModelBounds()
     local proppos = prop:GetPos()
     proppos[ 3 ] = proppos[ 3 ] - mins[ 3 ]
     prop:SetPos( proppos )

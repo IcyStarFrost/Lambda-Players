@@ -2,7 +2,6 @@ local table_insert = table.insert
 local ipairs = ipairs
 local pairs = pairs
 local round = math.Round
-local random = math.random
 local table_Merge = table.Merge
 local table_Empty = table.Empty
 local string_upper = string.upper

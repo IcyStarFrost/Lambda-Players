@@ -8,7 +8,6 @@ local RandomPairs = RandomPairs
 local random = math.random
 local Rand = math.Rand
 local ceil = math.ceil
-local min = math.min
 local IsValid = IsValid
 local bit_band = bit.band
 local IsInWorld = util.IsInWorld
