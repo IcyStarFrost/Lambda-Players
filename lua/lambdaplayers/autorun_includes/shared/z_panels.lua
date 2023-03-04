@@ -114,6 +114,8 @@ if CLIENT then
                 combobox:ChooseOptionID( choiceindexes.keys[ key ] )
             elseif choiceindexes.values[ key ] then
                 combobox:ChooseOptionID( choiceindexes.values[ key ] )
+            elseif key == nil then
+                combobox:Clear()
             end
         end
 
@@ -410,10 +412,10 @@ if CLIENT then
     }
 
     local panelSetvalues = {
-        [ "DTextEntry" ] = function( self, value ) self:SetText( value ) end,
-        [ "DCheckBox" ] = function( self, value ) self:SetChecked( value ) end,
-        [ "DNumSlider" ] = function( self, value ) self:SetValue( value ) end,
-        [ "DColorMixer" ] = function( self, value ) self:SetColor( value ) end,
+        [ "DTextEntry" ] = function( self, value ) self:SetText( ( value or "" ) ) end,
+        [ "DCheckBox" ] = function( self, value ) self:SetChecked( ( value or false ) ) end,
+        [ "DNumSlider" ] = function( self, value ) self:SetValue( ( value or self:GetDefaultValue() ) ) end,
+        [ "DColorMixer" ] = function( self, value ) self:SetColor( ( value or Color( 255, 255, 255 ) ) ) end,
         [ "DComboBox" ] = function( self, value ) self:SelectOptionByKey( value ) end,
     }
 
