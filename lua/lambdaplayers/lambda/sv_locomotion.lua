@@ -417,8 +417,31 @@ function ENT:HandleStuck()
     unstucktable.filter = self
 
     local istuckinsomething = TraceHull( unstucktable )
-    if !istuckinsomething.Hit then -- If we didn't get stuck in any entity then try to jump
-        self:LambdaJump()
+    if !istuckinsomething.Hit then -- If we didn't get stuck in any entity then try to jump or sidestep
+        
+		local rand = random(1,3)
+		local lpos = Vector(0,0,0)
+		if isvector( self.l_movepos ) then
+			lpos = self.l_movepos
+		else
+			lpos = self.l_movepos:GetPos()
+		end
+		
+		-- Obtain a direction vector towards the target position, as Forward means wherever the bot is facing
+		local dirVector = lpos - self:GetPos()
+		dirVector:Normalize()
+		dirVector["z"] = 0;
+		
+		-- Create offset vector via rotation, then tell the lambda to move to that offset
+		if rand == 1 then
+			dirVector:Rotate(Angle(0,100,0))
+			self:Approach( self:GetPos() + dirVector * 40, 1 )
+		elseif rand == 2 then
+			dirVector:Rotate(Angle(0,-100,0))
+			self:Approach( self:GetPos() + dirVector * 40, 1 )
+		else
+			self:LambdaJump()
+		end
         self.loco:ClearStuck()
     else -- We got stuck in something. Force our way out
         self.l_unstuck = true
