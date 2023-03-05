@@ -16,8 +16,8 @@ file.CreateDir( "lambdaplayers" )
 -- Lambda File System
 LAMBDAFS = {}
 
-function LAMBDAFS:WriteFile( filename, content, type, isbinary ) 
-	local f = file.Open( filename, ( isbinary and "wb" or "w" ), "DATA" )
+function LAMBDAFS:WriteFile( filename, content, type ) 
+	local f = file.Open( filename, ( type == "compressed" and "wb" or "w" ), "DATA" )
 	if !f then return end
 
     if type == "json" then 
@@ -34,13 +34,13 @@ end
 -- Updates or creates a new file containing a sequential table
 -- type should be json or compressed
 function LAMBDAFS:UpdateSequentialFile( filename, addcontent, type ) 
-    local contents = LAMBDAFS:ReadFile( filename, type, "DATA", type == "compressed" )
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
 
     if contents then
         table_insert( contents, addcontent )
-        LAMBDAFS:WriteFile( filename, contents, type, type == "compressed" )
+        LAMBDAFS:WriteFile( filename, contents, type )
     else
-        LAMBDAFS:WriteFile( filename, { addcontent }, type, type == "compressed" )
+        LAMBDAFS:WriteFile( filename, { addcontent }, type )
     end
 
 end
@@ -48,15 +48,15 @@ end
 -- Updates or creates a new file containing a table that uses strings as keys
 -- type should be json or compressed
 function LAMBDAFS:UpdateKeyValueFile( filename, addcontent, type ) 
-    local contents = LAMBDAFS:ReadFile( filename, type, "DATA", type == "compressed" )
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
 
     if contents then
         for k, v in pairs( addcontent ) do contents[ k ] = v end
-        LAMBDAFS:WriteFile( filename, contents, type, type == "compressed" )
+        LAMBDAFS:WriteFile( filename, contents, type )
     else
         local tbl = {}
         for k, v in pairs( addcontent ) do tbl[ k ] = v end
-        LAMBDAFS:WriteFile( filename, tbl, type, type == "compressed" )
+        LAMBDAFS:WriteFile( filename, tbl, type )
     end
 
 end
@@ -65,38 +65,38 @@ end
 -- Only works if the file contains a sequential table
 function LAMBDAFS:FileHasValue( filename, value, type ) 
     if !file.Exists( filename, "DATA" ) then return false end
-    local contents = LAMBDAFS:ReadFile( filename, type, "DATA", type == "compressed" )
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
     return table_HasValue( contents, value )
 end
 
 -- Returns if the specified key's value is valid
 function LAMBDAFS:FileKeyIsValid( filename, key, type ) 
     if !file.Exists( filename, "DATA" ) then return false end
-    local contents = LAMBDAFS:ReadFile( filename, type, "DATA", type == "compressed" )
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
     return contents[ key ] != nil
 end
 
 -- SQ short for Sequential
 -- Removes a value from the specified file containing a sequential table
 function LAMBDAFS:RemoveVarFromSQFile( filename, var, type )
-    local contents = LAMBDAFS:ReadFile( filename, type, "DATA", type == "compressed" )
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
     table_RemoveByValue( contents, var )
-    LAMBDAFS:WriteFile( filename, contents, type, type == "compressed" )
+    LAMBDAFS:WriteFile( filename, contents, type )
 end
 
 -- KV short for Key Value
 -- Removes a key from the specified file containing a table that uses strings as keys
 function LAMBDAFS:RemoveVarFromKVFile( filename, key, type )
-    local contents = LAMBDAFS:ReadFile( filename, type, "DATA", type == "compressed" )
+    local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
     contents[ key ] = nil
-    LAMBDAFS:WriteFile( filename, contents, type, type == "compressed" )
+    LAMBDAFS:WriteFile( filename, contents, type )
 end
 
 
-function LAMBDAFS:ReadFile( filename, type, path, isbinary )
+function LAMBDAFS:ReadFile( filename, type, path )
 	if !path then path = "DATA" end
 
-	local f = file.Open( filename, ( isbinary and "rb" or "r" ), path )
+	local f = file.Open( filename, ( type == "compressed" and "rb" or "r" ), path )
 	if !f then return nil end
 
 	local str = f:Read( f:Size() )
