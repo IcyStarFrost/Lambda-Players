@@ -652,7 +652,12 @@ if SERVER then
         self:SetSolidMask( MASK_PLAYERSOLID )
 
         self.loco:SetVelocity( Vector( 0, 0, 0 ) )
-        self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
+
+        if !collisionPly:GetBool() then
+            self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
+        else
+            self:SetCollisionGroup( COLLISION_GROUP_PASSABLE_DOOR )
+        end
 
         local phys = self:GetPhysicsObject()
         if IsValid( phys ) then phys:EnableCollisions( true ) end
