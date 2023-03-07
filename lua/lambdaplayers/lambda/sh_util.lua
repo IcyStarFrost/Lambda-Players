@@ -639,6 +639,11 @@ if SERVER then
         self.l_NoWeaponSwitch = bool
     end
 
+    -- Returns the current weapon's pretty name
+    function ENT:GetPrettyWeaponName()
+        return self:GetNW2String( "lambda_weaponprettyname", "UNAVAILABLE" )
+    end
+
     -- Respawns the Lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time
     function ENT:LambdaRespawn()
         LambdaSpawnPoints = LambdaSpawnPoints or LambdaGetPossibleSpawns()
