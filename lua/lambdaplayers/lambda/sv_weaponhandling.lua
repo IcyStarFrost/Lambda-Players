@@ -26,6 +26,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     if oldwepdata and isfunction( oldwepdata.OnUnequip ) then oldwepdata.OnUnequip( self, wepent ) end
 
     if weapondata.bonemerge then wepent:AddEffects( EF_BONEMERGE ) else wepent:RemoveEffects( EF_BONEMERGE ) end
+    if weapondata.weaponscale then wepent:SetModelScale( weapondata.weaponscale, 0 ) else wepent:SetModelScale( 1, 0 ) end
 
     self.l_Weapon = weaponname
     self:SetNW2String( "lambda_spawnweapon", weaponname )

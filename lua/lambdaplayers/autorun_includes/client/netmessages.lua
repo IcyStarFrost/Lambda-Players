@@ -140,6 +140,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     cs_prop:SetAngles( ent:GetAngles() )
     cs_prop:SetSkin( ent:GetSkin() )
     cs_prop:SetSubMaterial( 1, ent:GetSubMaterial( 1 ) )
+    cs_prop:SetModelScale( ent:GetModelScale(), 0 )
 
     
     cs_prop:SetNW2Vector( "lambda_weaponcolor", colvec )

@@ -18,7 +18,8 @@
     holdtype        | String |      The animation set Lambda should use. See globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
     ismelee         | Bool |        If the weapon is considered a melee weapon. False for ranged
     offpos          | Vector |      The offset position of the weapon local to the Lambda's considered hand position    | OPTIONAL
-    offang          | Angle |       The offset angle of the weapon local to the Lambda  | OPTIONAL
+    offang          | Angle |       The offset angle of the weapon local to the Lambda's considered hand angle  | OPTIONAL
+    weaponscale     | Number |      The multiplier on scaling the Lambda's weapon model size. NOTE! This will NOT work while bonemerge is set true!   | OPTIONAL
 
     deploydelay     | Number |      Time delay before Lambda starts using the weapon after equiping it
     speedmultiplier | Number |      Multiplies the Lambda's movement speed to this value while the weapon is held
@@ -55,7 +56,8 @@
     holdtype        | String |      The animation set Lambda should use. See autorun_includes/server/globals.lua and the _LAMBDAPLAYERSHoldTypeAnimations table
     ismelee         | Bool |        If the weapon is considered a melee weapon. False for ranged
     offpos          | Vector |      The offset position of the weapon local to the Lambda's considered hand position    | OPTIONAL
-    offang          | Angle |       The offset angle of the weapon local to the Lambda  | OPTIONAL
+    offang          | Angle |       The offset angle of the weapon local to the Lambda's considered hand angle  | OPTIONAL
+    weaponscale     | Number |      The multiplier on scaling the Lambda's weapon model size. NOTE! This will NOT work while bonemerge is set true!   | OPTIONAL
 
     deploydelay     | Number |      Time delay before Lambda starts using the weapon after equiping it
     speedmultiplier | Number |      Multiplies the Lambda's movement speed to this value while the weapon is held
