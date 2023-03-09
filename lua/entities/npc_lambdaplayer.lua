@@ -271,7 +271,7 @@ function ENT:Initialize()
         if !collisionPly:GetBool() then
             self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
         else
-            self:SetCollisionGroup(COLLISION_GROUP_PASSABLE_DOOR)
+            self:SetCollisionGroup( COLLISION_GROUP_PASSABLE_DOOR )
         end
 
         self:SetSolidMask( MASK_PLAYERSOLID )
