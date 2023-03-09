@@ -21,6 +21,7 @@ local coroutine_yield = coroutine.yield
 local isnumber = isnumber
 local band = bit.band
 local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
+local shouldavoid = GetConVar( "lambdaplayers_lambda_avoid" )
 
 -- Finds "simple" ground height, treating the provided nav area as part of the floor
 local function GetSimpleGroundHeightWithFloor( navArea, pos )
@@ -117,6 +118,10 @@ function ENT:MoveToPos( pos, options )
             if callback and callback( pos, path, curGoal ) == false then returnMsg = "callback" break end 
             path:Update( self )
             self:ObstacleCheck()
+
+            if shouldavoid:GetBool() then
+                self:AvoidCheck()
+            end
 
             local selfPos = self:GetPos()
             local moveType = curGoal.type
@@ -241,6 +246,9 @@ function ENT:MoveToPosOFFNAV( pos, options )
             loco:FaceTowards( pos )
             loco:Approach( pos, 1 )
             
+            if shouldavoid:GetBool() then
+                self:AvoidCheck()
+            end
             self:ObstacleCheck()
         end
         self.l_CurrentPath = pos

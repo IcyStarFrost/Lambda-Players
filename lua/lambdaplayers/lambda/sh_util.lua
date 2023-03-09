@@ -1125,6 +1125,47 @@ if SERVER then
         return stepTime
     end
 
+    local avoidtracetable = {} -- Recycled table
+    local leftcol = Color( 255, 0, 0, 10 )
+    local rightcol = Color( 0, 255, 0, 10 )
+    local TraceHull = util.TraceHull
+    local mins = Vector( -18, -18, -10 )
+    local maxs = Vector( 18, 18, 10 )
+
+    -- Fires 2 hull traces that will make the player try to move out of the way of whatever is blocking the way
+    function ENT:AvoidCheck()
+
+        avoidtracetable.start = self:WorldSpaceCenter() + self:GetRight() * 20
+        avoidtracetable.endpos = avoidtracetable.start 
+        avoidtracetable.mins = mins
+        avoidtracetable.maxs = maxs
+        avoidtracetable.filter = self
+
+        debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, rightcol )
+        local rightresult = TraceHull( avoidtracetable )
+
+        avoidtracetable.start = self:WorldSpaceCenter() - self:GetRight() * 20
+        avoidtracetable.endpos = avoidtracetable.start 
+        avoidtracetable.mins = mins
+        avoidtracetable.maxs = maxs
+        avoidtracetable.filter = self
+
+        debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, leftcol )
+        local leftresult = TraceHull( avoidtracetable )
+
+        if rightresult.Hit and !leftresult.Hit then  -- Move to the left
+            if self.loco:IsAttemptingToMove() and self.loco:GetVelocity():IsZero() then self.loco:SetVelocity( self:GetRight() * -100 ) end
+            self.loco:Approach( self:GetPos() + self:GetRight() * -50, 1 )
+        elseif leftresult.Hit and !rightresult.Hit then -- Move to the right
+            if self.loco:IsAttemptingToMove() and self.loco:GetVelocity():IsZero() then self.loco:SetVelocity( self:GetRight() * 100 ) end
+            self.loco:Approach( self:GetPos() + self:GetRight() * 50, 1 )
+        elseif leftresult.Hit and rightresult.Hit then -- Back up
+            if self.loco:IsAttemptingToMove() and self.loco:GetVelocity():IsZero() then self.loco:SetVelocity( self:GetForward() * -400 + self:GetRight() * ( CurTime() % 6 > 3 and 400 or -400 ), 1 ) end
+            self.loco:Approach( self:GetPos() + self:GetForward() * -50 + self:GetRight() * random( -50, 50 ), 1 )
+        end
+    end
+
+
     function ENT:LambdaJump()
         if !self:IsOnGround() then return end
         local curNav = self.l_currentnavarea
