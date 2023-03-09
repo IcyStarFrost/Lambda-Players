@@ -285,6 +285,14 @@ local function OpenProfilePanel( ply )
     LAMBDAPANELS:CreateLabel( "The lowest point this Lambda's Ping can get", mainscroll, TOP )
     local pingrange = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 100, "Ping Range", 1, 130, 0 )
 
+    LAMBDAPANELS:CreateLabel( "Health", mainscroll, TOP )
+    LAMBDAPANELS:CreateLabel( "The Health this Lambda will have", mainscroll, TOP )
+    local health = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 100, "Health", 1, 10000, 0 )
+
+    LAMBDAPANELS:CreateLabel( "Armor", mainscroll, TOP )
+    LAMBDAPANELS:CreateLabel( "The Armor amount this Lambda will have", mainscroll, TOP )
+    local armor = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 0, "Armor", 0, 255, 0 )
+
     ---- ---- ---- ---- ---- ----
 
 
@@ -496,6 +504,8 @@ local function OpenProfilePanel( ply )
             voiceprofile = vp != "/NIL" and vp or nil,
             textprofile = tp != "/NIL" and tp or nil,
             pingrange = round( pingrange:GetValue(), 0 ),
+            health = round( health:GetValue(), 0 ),
+            armor = round( armor:GetValue(), 0 ),
 
             externalvars = profileinfo and profileinfo.externalvars or nil,
 
@@ -560,6 +570,9 @@ local function OpenProfilePanel( ply )
                 ent:SetBodygroup( k, v )
             end
         end
+
+        health:SetValue( infotable.health or 100 )
+        armor:SetValue( infotable.armor or 0 )
 
         voicepitch:SetValue( infotable.voicepitch )
         voicechance:SetValue( infotable.voice or 30 )

@@ -365,6 +365,7 @@ if SERVER then
             self:SetMaxHealth( info.health or self:GetMaxHealth() )
             self:SetHealth( info.health or self:GetMaxHealth() )
             self:SetNWMaxHealth( info.health or self:GetMaxHealth() )
+            self:SetArmor( info.armor or self:GetArmor() )
 
             self:SetSkin( info.mdlSkin or 0 )
 
