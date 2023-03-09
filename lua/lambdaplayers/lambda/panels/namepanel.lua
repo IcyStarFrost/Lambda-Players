@@ -10,6 +10,10 @@ local function OpenNamePanel( ply )
     local hasdata = false
     local panel = LAMBDAPANELS:CreateFrame( "Custom Name Editor", 300, 300 ) -- Start with the panel
 
+    function panel:OnClose()
+        chat.AddText( "Remember to Update Lambda Data after any changes!" )
+    end
+
     local listview = vgui.Create( "DListView", panel ) -- List
     listview:Dock( FILL )
     listview:AddColumn( "Names", 1 )

@@ -8,6 +8,10 @@ local function OpenTextPanel( ply )
 
     local frame = LAMBDAPANELS:CreateFrame( "Text Line Editor", 500, 300 )
 
+    function frame:OnClose()
+        chat.AddText( "Remember to Update Lambda Data after any changes!" )
+    end
+
     LAMBDAPANELS:CreateURLLabel( "Click here to learn about the default text types and keywords", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Text-Chat", frame, TOP )
     LAMBDAPANELS:CreateLabel( "Right Click a line to remove it", frame, TOP )
 

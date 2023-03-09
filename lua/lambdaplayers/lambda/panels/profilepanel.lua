@@ -29,6 +29,10 @@ local function OpenProfilePanel( ply )
 
     local frame = LAMBDAPANELS:CreateFrame( "Profile Editor", 700, 350 )
 
+    function frame:OnClose()
+        chat.AddText( "Remember to Update Lambda Data after any changes!" )
+    end
+
     
     LAMBDAPANELS:CreateURLLabel( "Click here to learn on how to use this panel!", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#lambda-profiles", frame, TOP )
 

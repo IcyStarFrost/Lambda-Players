@@ -19,6 +19,10 @@ local function OpenModelVoiceProfilePanel( ply )
     LAMBDAPANELS:CreateLabel( "Select a playermodel from the right panel and pick a voice profile from the list below it", frame, TOP )
     LAMBDAPANELS:CreateLabel( "Changes are applied by a button below the list", frame, TOP )
 
+    function frame:OnClose()
+        chat.AddText( "Remember to Update Lambda Data after any changes!" )
+    end
+
     local mdlpanel = LAMBDAPANELS:CreateBasicPanel( frame, RIGHT )
     mdlpanel:SetSize( 312, 200 )
 

@@ -48,6 +48,7 @@ local function OpenPlayermodelBlockPanel( ply )
         local mdls = {}
         for k, line in pairs( blockedlist:GetLines() ) do mdls[ #mdls + 1 ] = line:GetColumnText( 1 ) end
         LAMBDAPANELS:WriteServerFile( "lambdaplayers/pmblockdata.json", mdls, "json" ) 
+        chat.AddText( "Remember to Update Lambda Data after any changes!" )
     end
 
     LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/pmblockdata.json", "json", function( data )
