@@ -16,6 +16,7 @@ file.CreateDir( "lambdaplayers" )
 -- Lambda File System
 LAMBDAFS = {}
 
+-- Writes to a file. If content is a table, input json or compressed for the type arg
 function LAMBDAFS:WriteFile( filename, content, type ) 
 	local f = file.Open( filename, ( type == "compressed" and "wb" or "w" ), "DATA" )
 	if !f then return end
@@ -92,7 +93,7 @@ function LAMBDAFS:RemoveVarFromKVFile( filename, key, type )
     LAMBDAFS:WriteFile( filename, contents, type )
 end
 
-
+-- Reads from a file. If the file is a raw json, input json into the type arg and this function will return the table. If compressed json, input compressed
 function LAMBDAFS:ReadFile( filename, type, path )
 	if !path then path = "DATA" end
 

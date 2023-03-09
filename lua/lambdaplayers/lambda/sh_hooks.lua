@@ -28,6 +28,7 @@ if SERVER then
 
     -- Due to the issues of Lambda Players not taking damage when they die internally, we have no choice but to recreate them to get around this.
     -- If there is a fix for the damage handling failing to prevent them from actually getting below 0 please make it known so it can be fixed ASAP.
+    -- UPDATE: This seems to be fixed by the workaround in gamemode_overrides.lua
     function ENT:OnKilled( info )
         if self.l_internalkilled then return end
         if debugvar:GetBool() then ErrorNoHaltWithStack( "WARNING! ", self:GetLambdaName(), " was killed on a engine level! The entity will be recreated!" ) end

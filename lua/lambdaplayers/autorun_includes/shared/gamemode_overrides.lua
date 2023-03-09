@@ -475,6 +475,7 @@ if CLIENT then return end
 
 hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function() 
 
+    -- This fixes the issues of Lambda's health reaching below 0 and actually dying in internally
     local olddamagehookfunc = GAMEMODE.EntityTakeDamage
     function GAMEMODE:EntityTakeDamage( targ, dmg )
         local result = hook.Run( "LambdaTakeDamage", targ, dmg )
