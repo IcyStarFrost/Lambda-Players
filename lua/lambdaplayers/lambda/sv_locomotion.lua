@@ -51,8 +51,8 @@ function ENT:MoveToPos( pos, options )
     path:SetGoalTolerance( options.tol or 20 )
     path:SetMinLookAheadDistance( self.l_LookAheadDistance )
 
-    local costFunctor = self:PathGenerator()
-    path:Compute( self, pos, costFunctor )
+    local costFunctor = self.PathGenerator
+    path:Compute( self, pos, costFunctor( self ) )
     if !IsValid( path ) then return "failed" end
 
     self.l_issmoving = true
@@ -106,11 +106,11 @@ function ENT:MoveToPos( pos, options )
 
 		if update then
             local updateTime = math_max( update, update * ( path:GetLength() / runSpeed ) )
-			if path:GetAge() > updateTime then path:Compute( self, pos, costFunctor ) end
+			if path:GetAge() > updateTime then path:Compute( self, pos, costFunctor( self ) ) end
 		end
 
         if self.l_recomputepath then
-            path:Compute( self, pos, costFunctor )
+            path:Compute( self, pos, costFunctor( self ) )
             self.l_recomputepath = nil
         end
         
@@ -138,7 +138,7 @@ function ENT:MoveToPos( pos, options )
                     self.l_ladderarea = NULL 
                     
                     pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
-                    if pos then path:Compute( self, pos, costFunctor ) end
+                    if pos then path:Compute( self, pos, costFunctor( self ) ) end
                 end
             elseif moveType == 2 and ( prevGoal.pos.z - selfPos.z ) <= 0 then
                 hasJumped = true
@@ -161,10 +161,9 @@ function ENT:MoveToPos( pos, options )
             end
 
             -- Air movement
-            local curVel = loco:GetVelocity()
-            if !self:IsOnGround() then
+            if !self:IsOnGround() and !self.l_isswimming then
                 local mins, maxs = self:GetCollisionBounds()
-                local airVel = ( goalNormal * ( loco:GetDesiredSpeed() * FrameTime() ) )
+                local airVel = ( goalNormal * loco:GetDesiredSpeed() * FrameTime() )
 
                 airtable.start = selfPos
                 airtable.endpos = ( selfPos + airVel )
@@ -172,7 +171,9 @@ function ENT:MoveToPos( pos, options )
                 airtable.mins = mins
                 airtable.maxs = maxs
 
-                if !TraceHull( airtable ).Hit then loco:SetVelocity( curVel + airVel ) end
+                if !TraceHull( airtable ).Hit then 
+                    loco:SetVelocity( loco:GetVelocity() + airVel ) 
+                end
             end
         end
 
@@ -435,56 +436,6 @@ function ENT:HandleStuck()
     return true
 end
 
--- Returns a pathfinding function for the :Compute() function
-function ENT:PathGenerator()
-    local stepHeight = self.loco:GetStepHeight()
-    local jumpHeight = self.loco:GetJumpHeight()
-    local deathHeight = -self.loco:GetDeathDropHeight()
-    
-    local crouchWalkPenalty = 5
-    local jumpPenalty = 10
-    local ladderPenalty = 15
-    local avoidPenalty = 50
-
-    local obeyNavmesh = obeynav:GetBool()
-    local isInNoClip = self:IsInNoClip()
-
-    return function( area, fromArea, ladder, elevator, length )
-        if !IsValid( fromArea ) then return 0 end
-
-        local dist = 0
-        if !isInNoClip and IsValid( ladder ) then
-            dist = ( ladder:GetLength() * ladderPenalty )
-        else
-            dist = ( length > 0 and length or fromArea:GetCenter():Distance( area:GetCenter() ) )
-        end
-
-        local cost = ( fromArea:GetCostSoFar() + dist )
-
-        if !isInNoClip and !IsValid( ladder ) then
-            local deltaZ = fromArea:ComputeAdjacentConnectionHeightChange( area )
-            if deltaZ > jumpHeight or deltaZ < deathHeight and !area:IsUnderwater() then return -1 end
-            if deltaZ > stepHeight then cost = ( cost + dist * jumpPenalty ) end
-        end
-
-        if obeyNavmesh then
-            local attributes = area:GetAttributes()
-
-            -- Simple, try to avoid going through this area unless there is no other way
-            if band( attributes, NAV_MESH_AVOID ) != 0 then
-                cost = ( cost + dist * avoidPenalty ) 
-            end
-
-            -- We slow down when slow-walking or crouching, so try avoid these areas if possible
-            if band( attributes, NAV_MESH_WALK ) != 0 or band( attributes, NAV_MESH_CROUCH ) != 0 then
-                cost = ( cost + dist * crouchWalkPenalty ) 
-            end
-        end
-
-        return cost
-    end
-end
-
 -- Approaches a position 
 function ENT:Approach( pos, time )
     time = time and CurTime() + time or CurTime() + 1
@@ -538,27 +489,107 @@ function ENT:ObstacleCheck()
 end
 
 -- CNavArea --
-local CNavAreaMeta            = FindMetaTable( "CNavArea" )
-CNavArea_GetCenter            = CNavAreaMeta.GetCenter
-CNavArea_GetAdjacentAreas     = CNavAreaMeta.GetAdjacentAreas
-CNavArea_ClearSearchLists     = CNavAreaMeta.ClearSearchLists
-CNavArea_AddToOpenList        = CNavAreaMeta.AddToOpenList
-CNavArea_SetCostSoFar         = CNavAreaMeta.SetCostSoFar
-CNavArea_SetTotalCost         = CNavAreaMeta.SetTotalCost
-CNavArea_UpdateOnOpenList     = CNavAreaMeta.UpdateOnOpenList
-CNavArea_IsOpenListEmpty      = CNavAreaMeta.IsOpenListEmpty
-CNavArea_PopOpenList          = CNavAreaMeta.PopOpenList
-CNavArea_AddToClosedList      = CNavAreaMeta.AddToClosedList
-CNavArea_GetCostSoFar         = CNavAreaMeta.GetCostSoFar
-CNavArea_IsOpen               = CNavAreaMeta.IsOpen
-CNavArea_IsClosed             = CNavAreaMeta.IsClosed
-CNavArea_RemoveFromClosedList = CNavAreaMeta.RemoveFromClosedList
+local CNavAreaMeta                                   = FindMetaTable( "CNavArea" )
+local CNavArea_GetCenter                             = CNavAreaMeta.GetCenter
+local CNavArea_GetAdjacentAreas                      = CNavAreaMeta.GetAdjacentAreas
+local CNavArea_ClearSearchLists                      = CNavAreaMeta.ClearSearchLists
+local CNavArea_AddToOpenList                         = CNavAreaMeta.AddToOpenList
+local CNavArea_SetCostSoFar                          = CNavAreaMeta.SetCostSoFar
+local CNavArea_SetTotalCost                          = CNavAreaMeta.SetTotalCost
+local CNavArea_UpdateOnOpenList                      = CNavAreaMeta.UpdateOnOpenList
+local CNavArea_IsOpenListEmpty                       = CNavAreaMeta.IsOpenListEmpty
+local CNavArea_PopOpenList                           = CNavAreaMeta.PopOpenList
+local CNavArea_AddToClosedList                       = CNavAreaMeta.AddToClosedList
+local CNavArea_GetCostSoFar                          = CNavAreaMeta.GetCostSoFar
+local CNavArea_IsOpen                                = CNavAreaMeta.IsOpen
+local CNavArea_IsClosed                              = CNavAreaMeta.IsClosed
+local CNavArea_RemoveFromClosedList                  = CNavAreaMeta.RemoveFromClosedList
+local CNavArea_ComputeAdjacentConnectionHeightChange = CNavAreaMeta.ComputeAdjacentConnectionHeightChange
+local CNavArea_IsUnderwater                          = CNavAreaMeta.IsUnderwater
+local CNavArea_GetAttributes                         = CNavAreaMeta.GetAttributes
+local CNavArea_HasAttributes                         = CNavAreaMeta.HasAttributes
+--
+
+-- CNavLadder --
+local CNavLadderMeta                                 = FindMetaTable( "CNavLadder" )
+local CNavLadder_GetLength                           = CNavLadderMeta.GetLength
+--
+
+-- CLuaLocomotion --
+local CLuaLocomotionMeta                             = FindMetaTable( "CLuaLocomotion" )
+local CLuaLocomotion_GetStepHeight                   = CLuaLocomotionMeta.GetStepHeight
+local CLuaLocomotion_GetJumpHeight                   = CLuaLocomotionMeta.GetJumpHeight
+local CLuaLocomotion_GetDeathDropHeight              = CLuaLocomotionMeta.GetDeathDropHeight
 --
 
 -- Vector --
-local VectorMeta              = FindMetaTable( "Vector" )
-local GetDistToSqr            = VectorMeta.DistToSqr
+local VectorMeta                                     = FindMetaTable( "Vector" )
+local GetDistTo                                      = VectorMeta.Distance
+local GetDistToSqr                                   = VectorMeta.DistToSqr
 --
+
+-- Returns a pathfinding function for the :Compute() function
+function ENT:PathGenerator()
+    local loco = self.loco
+    local stepHeight = CLuaLocomotion_GetStepHeight( loco )
+    local jumpHeight = CLuaLocomotion_GetJumpHeight( loco )
+    local deathHeight = -CLuaLocomotion_GetDeathDropHeight( loco )
+
+    local crouchWalkPenalty = 5
+    local jumpPenalty = 15
+    local ladderPenalty = 20
+    local avoidPenalty = 75
+
+    local obeyNavmesh = obeynav:GetBool()
+    local isInNoClip = self:IsInNoClip()
+
+    return function( area, fromArea, ladder, elevator, length )
+        if !IsValid( fromArea ) then return 0 end
+
+        local areaPos = CNavArea_GetCenter( area )
+        local fromPos = CNavArea_GetCenter( fromArea )
+
+        local dist = 0
+        if !isInNoClip and IsValid( ladder ) then
+            dist = ( CNavLadder_GetLength( ladder ) * ladderPenalty )
+        else
+            dist = ( length > 0 and length or GetDistTo( fromPos, areaPos ) )
+        end
+
+        local cost = ( CNavArea_GetCostSoFar( fromArea ) + dist )
+
+        if !isInNoClip then 
+            if !IsValid( ladder ) then
+                local deltaZ = CNavArea_ComputeAdjacentConnectionHeightChange( fromArea, area )
+                if deltaZ < deathHeight and !CNavArea_IsUnderwater( area ) then return -1 end
+
+                if !CNavArea_IsUnderwater( fromArea ) then
+                    if deltaZ > jumpHeight then
+                        return -1
+                    elseif deltaZ > stepHeight then
+                        cost = ( cost + dist * jumpPenalty )
+                    end
+                end
+            end
+
+            if obeyNavmesh then
+                local attributes = CNavArea_GetAttributes( area )
+
+                -- Simple, try to avoid going through this area unless there is no other way
+                if band( attributes, NAV_MESH_AVOID ) != 0 then
+                    cost = ( cost + dist * avoidPenalty ) 
+                end
+
+                -- We slow down when slow-walking or crouching, so try avoid these areas if possible
+                if band( attributes, NAV_MESH_WALK ) != 0 or band( attributes, NAV_MESH_CROUCH ) != 0 then
+                    cost = ( cost + dist * crouchWalkPenalty ) 
+                end
+            end
+        end
+
+        return cost
+    end
+end
 
 local GetNavArea = navmesh.GetNavArea
 
