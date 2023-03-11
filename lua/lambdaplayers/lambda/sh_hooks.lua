@@ -1,4 +1,3 @@
-
 local random = math.random
 local tobool = tobool
 local ents_GetAll = ents.GetAll
@@ -23,6 +22,9 @@ local retreatLowHP = GetConVar( "lambdaplayers_combat_retreatonlowhealth" )
 local serversidecleanup = GetConVar( "lambdaplayers_lambda_serversideragdollcleanuptime" )
 local serversidecleanupeffect = GetConVar( "lambdaplayers_lambda_serversideragdollcleanupeffect" )
 local cleanupondeath = GetConVar( "lambdaplayers_building_cleanupondeath" )
+local flashlightsprite = Material( "sprites/light_glow02_add" )
+local flashlightbeam = Material( "effects/lamp_beam" )
+local faded = Color( 100, 100, 100, 100 )
 
 if SERVER then
 
@@ -703,6 +705,28 @@ function ENT:InitializeMiniHooks()
             if self:GetIsDead() or !self:IsBeingDrawn() or !self:GetHasCustomDrawFunction() then return end
             local func = _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ].Draw
             if func then func( self, self:GetWeaponENT() ) end
+        end, true )
+
+
+        local DrawSprite = render.DrawSprite
+        local SetMaterial = render.SetMaterial
+        local color_white = color_white
+        self:Hook( "PreDrawEffects", "flashlighteffects", function()
+            if self:GetIsDead() or !self:IsBeingDrawn() then return end
+
+            if self.l_flashlighton then
+                local hand = self:GetAttachmentPoint( "hand" )
+                local start = hand.Pos + hand.Ang:Forward() * 3
+                local endpos = hand.Pos + hand.Ang:Forward() * 150
+
+                SetMaterial( flashlightsprite )
+                DrawSprite(start, 4, 4, color_white )
+
+                SetMaterial( flashlightbeam )
+                
+                render.DrawBeam( start, endpos, 40, 0, 0.9, faded )
+            end
+
         end, true )
 
     end

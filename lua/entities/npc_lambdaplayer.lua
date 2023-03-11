@@ -814,6 +814,7 @@ function ENT:Think()
             if lightvec:LengthSqr() < ( 0.02 ^ 2 ) and !self:GetIsDead() and drawflashlight:GetBool() and self:IsBeingDrawn() then
                 if !IsValid( self.l_flashlight ) then
                     self:SetFlashlightOn( true )
+                    self.l_flashlighton = true
                     self.l_flashlight = ProjectedTexture() 
                     self.l_flashlight:SetTexture( "effects/flashlight001" ) 
                     self.l_flashlight:SetFarZ( 600 ) 
@@ -826,6 +827,7 @@ function ENT:Think()
                 end
             elseif IsValid( self.l_flashlight ) then
                 self:SetFlashlightOn( false )
+                self.l_flashlighton = false
                 self.l_flashlight:Remove()
                 self:EmitSound( "items/flashlight1.wav", 60 )
             end
