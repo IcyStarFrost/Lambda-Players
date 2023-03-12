@@ -261,7 +261,7 @@ local function OpenProfilePanel( ply )
             local files, dirs = file.Find( dir .. "/*", "GAME", "datedesc" )
             filecount = filecount + #files
             for k, v in ipairs( dirs ) do if !IsValid( pfpframe ) then return end RecursiveFindNum( dir .. "/" .. v ) end
-            coroutine.wait( 0.05 )
+            coroutine.wait( 0.5 )
         end
     
     
@@ -318,6 +318,7 @@ local function OpenProfilePanel( ply )
         LambdaCreateThread( function()
             RecursiveFindNum( "materials/lambdaplayers/custom_profilepictures" )
             RecursiveFind( "materials/lambdaplayers/custom_profilepictures" )
+            lbl:SetText( "Click on a image to set it as the profile picture.\nFinished!"  )
         end )
 
     end )
