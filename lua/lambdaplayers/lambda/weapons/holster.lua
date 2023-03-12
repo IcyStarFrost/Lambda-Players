@@ -26,7 +26,9 @@
     keepdistance    | Number |      The distance the Lambda will keep from the target
     attackrange     | Number |      The range the Lambda can attack from
     damage          | Number |      The amount of damage the weapon can deal
-    rateoffire      | Number |      How fast the weapon is fired/used
+    rateoffire      | Number |      How fast the weapon is fired/used in seconds
+    rateoffiremin   | Number |      The minimum amount of time this weapon can be fired/used. These two are used to make random fire delays  Won't work if the normal rateoffire variable is set    | OPTIONAL
+    rateoffiremax   | Number |      The maximum amount of time this weapon can be fired/used. These two are used to make random fire delays. Won't work if the normal rateoffire variable is set     | OPTIONAL
     attacksnd       | String |      The sound that will play when the weapon is used
     hitsnd          | String |      The sound that will play when the weapon hits our enemy
     attackanim      | Number |      The ACT Gesture to play when used
@@ -64,7 +66,9 @@
     keepdistance    | Number |      The distance the Lambda will keep from the target
     attackrange     | Number |      The range the Lambda can attack from
     damage          | Number |      The amount of damage the weapon can deal
-    rateoffire      | Number |      How fast the weapon is fired/used
+    rateoffire      | Number |      How fast the weapon is fired/used in seconds
+    rateoffiremin   | Number |      The minimum amount of time this weapon can be fired/used. These two are used to make random fire delays  Won't work if the normal rateoffire variable is set    | OPTIONAL
+    rateoffiremax   | Number |      The maximum amount of time this weapon can be fired/used. These two are used to make random fire delays. Won't work if the normal rateoffire variable is set     | OPTIONAL
     attackanim      | Number |      The ACT Gesture to play when used
     bulletcount     | Number |      The amount of bullets to fire when used
     attacksnd       | String |      The sound that will play when the weapon is fired

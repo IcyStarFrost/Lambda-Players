@@ -3,6 +3,7 @@ local IsFirstTimePredicted = IsFirstTimePredicted
 local isfunction = isfunction
 local random = math.random
 local RandomPairs = RandomPairs
+local Rand = math.Rand
 local ipairs = ipairs
 local Effect = util.Effect
 local CurTime = CurTime
@@ -101,7 +102,8 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
     disabletbl = disabletbl or {}
     
     if !disabletbl.cooldown then 
-        self.l_WeaponUseCooldown = CurTime() + weapondata.rateoffire 
+        local cooldown = weapondata.rateoffire or Rand( weapondata.rateoffiremin, weapondata.rateoffiremax )
+        self.l_WeaponUseCooldown = CurTime() + cooldown
     end
 
     if !disabletbl.sound then 
@@ -145,7 +147,8 @@ local function DefaultMeleeWeaponUse( self, wepent, target, weapondata, disablet
     disabletbl = disabletbl or {}
 
     if !disabletbl.cooldown then 
-        self.l_WeaponUseCooldown = CurTime() + weapondata.rateoffire 
+        local cooldown = weapondata.rateoffire or Rand( weapondata.rateoffiremin, weapondata.rateoffiremax )
+        self.l_WeaponUseCooldown = CurTime() + cooldown
     end
     
     if !disabletbl.sound then 
