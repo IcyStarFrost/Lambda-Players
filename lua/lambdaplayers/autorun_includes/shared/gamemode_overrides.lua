@@ -75,7 +75,7 @@ if CLIENT then
                 if !pl.IsLambdaPlayer then
                     self.Avatar:SetPlayer( pl )
                 else
-                    self.LambdaAvatar:SetMaterial( ply:GetPFPMat() )
+                    self.LambdaAvatar:SetMaterial( pl:GetPFPMat() )
                     self.LambdaAvatar:Show()
                 end
                 
