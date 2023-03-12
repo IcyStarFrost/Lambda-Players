@@ -243,14 +243,116 @@ local function OpenProfilePanel( ply )
     LAMBDAPANELS:CreateURLLabel( "Click here to learn about Profile Pictures", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#profile-pictures", mainscroll, TOP )
     local profilepicture = LAMBDAPANELS:CreateTextEntry( mainscroll, TOP, "Enter a file path" )
 
+    LAMBDAPANELS:CreateButton( mainscroll, TOP, "Profile Picture Menu", function()
+
+        local pfpframe = LAMBDAPANELS:CreateFrame( "Profile Picture Menu", 250, 400 )
+        local lbl = LAMBDAPANELS:CreateLabel( "Click on a image to set it as the profile picture.\nScanning Profile Pictures..", pfpframe, TOP )
+        lbl:SetSize( 100, 60 )
+        lbl:SetWrap( true )
+        lbl:Dock( TOP ) 
+        local scroll = LAMBDAPANELS:CreateScrollPanel( pfpframe, false, FILL )
+
+        local filecount = 0 
+        local checkedcount = 0
+    
+        local function RecursiveFindNum( dir )
+            local files, dirs = file.Find( dir .. "/*", "GAME", "datedesc" )
+            filecount = filecount + #files
+            for k, v in ipairs( dirs ) do if !IsValid( pfpframe ) then return end RecursiveFindNum( dir .. "/" .. v ) end
+            coroutine.wait( 0.05 )
+        end
+    
+    
+        local function RecursiveFind( dir )
+    
+            local files, dirs = file.Find( dir .. "/*", "GAME", "datedesc" )
+    
+            for k, v in ipairs( files ) do  
+                if !IsValid( pfpframe ) then return end
+    
+                checkedcount = checkedcount + 1
+    
+                lbl:SetText( "Click on a image to set it as the profile picture.\nImporting Profile Pictures.. " .. ( math.Round( math.Remap( checkedcount, 0, filecount, 0, 100 ), 0 ) ) .. "% imported"  )
+            
+    
+                local isVTF = string.EndsWith( string.Replace( dir .. "/" .. v, "materials/", "" ), ".vtf" ) -- If the file is a VTF
+                local material
+            
+                if isVTF then
+                    _LambdaPfpIndex = _LambdaPfpIndex or 0
+                    _LambdaPfpIndex = _LambdaPfpIndex + 1
+    
+                    material = CreateMaterial( "lambdaprofilepanelVTFmaterial" .. _LambdaPfpIndex, "UnlitGeneric", {
+                        [ "$basetexture" ] = string.Replace( dir .. "/" .. v, "materials/", "" ),
+                        [ "$translucent" ] = 1,
+                        [ "Proxies" ] = {
+                            [ "AnimatedTexture" ] = {
+                                [ "animatedTextureVar" ] = "$basetexture",
+                                [ "animatedTextureFrameNumVar" ] = "$frame",
+                                [ "animatedTextureFrameRate" ] = 10
+                            }
+                        }
+                    })
+                else
+                    material = Material( string.Replace( dir .. "/" .. v, "materials/", "" ) )
+                end
+    
+                local image = vgui.Create( "DImageButton", scroll )
+                image:SetSize( 300, 300 )
+                image:Dock( TOP )
+                image:SetMaterial( material )
+    
+                function image:DoClick()
+                    profilepicture:SetText( string.Replace( dir .. "/" .. v, "materials/lambdaplayers/custom_profilepictures/", "" ) )
+                    profilepicture:OnChange() 
+                end
+    
+                coroutine.wait( 0.05 )
+            end
+    
+            for k, v in ipairs( dirs ) do if !IsValid( pfpframe ) then return end RecursiveFind( dir .. "/" .. v ) end
+        end
+
+        LambdaCreateThread( function()
+            RecursiveFindNum( "materials/lambdaplayers/custom_profilepictures" )
+            RecursiveFind( "materials/lambdaplayers/custom_profilepictures" )
+        end )
+
+    end )
+
     local pfppreview = vgui.Create( "DImage", mainscroll )
     pfppreview:SetSize( 100, 150 )
     pfppreview:Dock( TOP ) 
 
     function profilepicture:OnChange() 
         local text = profilepicture:GetText()
-        if file.Exists( "materials/lambdaplayers/custom_profilepictures/" .. text, "GAME" ) then pfppreview:SetMaterial( Material( "lambdaplayers/custom_profilepictures/" .. text ) ) end
+        if file.Exists( "materials/lambdaplayers/custom_profilepictures/" .. text, "GAME" ) then 
+            local isVTF = string.EndsWith( "lambdaplayers/custom_profilepictures/" .. text, ".vtf" )
+            local material
+        
+            if isVTF then
+                _LambdaPfpIndex = _LambdaPfpIndex or 0
+                _LambdaPfpIndex = _LambdaPfpIndex + 1
+
+                material = CreateMaterial( "lambdaprofilepanelVTFmaterial" .. _LambdaPfpIndex, "UnlitGeneric", {
+                    [ "$basetexture" ] = "lambdaplayers/custom_profilepictures/" .. text,
+                    [ "$translucent" ] = 1,
+                    [ "Proxies" ] = {
+                        [ "AnimatedTexture" ] = {
+                            [ "animatedTextureVar" ] = "$basetexture",
+                            [ "animatedTextureFrameNumVar" ] = "$frame",
+                            [ "animatedTextureFrameRate" ] = 10
+                        }
+                    }
+                })
+            else
+                material = Material( "lambdaplayers/custom_profilepictures/" .. text )
+            end
+            pfppreview:SetMaterial( material ) 
+        end
     end
+
+
 
     LAMBDAPANELS:CreateLabel( "Voice Profile", mainscroll, TOP )
     LAMBDAPANELS:CreateURLLabel( "Click here to learn about Voice Profiles", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#voice-profiles", mainscroll, TOP )
