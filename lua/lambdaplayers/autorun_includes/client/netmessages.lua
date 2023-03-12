@@ -444,7 +444,7 @@ local CreateMaterial = CreateMaterial
 local Material = Material
 local color_white = color_white
 local DecalEx = util.DecalEx
-
+local framerateconvar = GetConVar( "lambdaplayers_animatedpfpsprayframerate" )
 
 local function Spray( spraypath, tracehitpos, tracehitnormal, index, attemptedfallback )
     local isVTF = EndsWith( spraypath, ".vtf" ) -- If the file is a VTF
@@ -459,7 +459,7 @@ local function Spray( spraypath, tracehitpos, tracehitnormal, index, attemptedfa
                 [ "AnimatedTexture" ] = { -- Support for Animated VTFs
                     [ "animatedTextureVar" ] = "$basetexture",
                     [ "animatedTextureFrameNumVar" ] = "$frame",
-                    [ "animatedTextureFrameRate" ] = 10
+                    [ "animatedTextureFrameRate" ] = framerateconvar:GetInt()
                 }
             }
         })

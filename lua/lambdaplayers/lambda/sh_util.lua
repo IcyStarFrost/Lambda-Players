@@ -1179,12 +1179,35 @@ if SERVER then
 
 elseif CLIENT then
 
+    -- This is to keep all VTF pfps unique.
+    local framerateconvar = GetConVar( "lambdaplayers_animatedpfpsprayframerate" )
+    _LambdaPfpIndex = _LambdaPfpIndex or 0
+
     -- Returns our profile picture as a Material object.
     -- Very expensive to run. Try to cache the result so this can only be ran once
     function ENT:GetPFPMat()
         local pfp = self:GetProfilePicture()
+
+        local isVTF = string.EndsWith( pfp, ".vtf" )
+        local profilepicturematerial
     
-        local profilepicturematerial = Material( pfp )
+        -- VTF ( Valve Texture Format ) support. This allows animated Profile Pictures
+        if isVTF then
+            _LambdaPfpIndex = _LambdaPfpIndex + 1
+            profilepicturematerial = CreateMaterial( "lambdaprofilepicVTFmaterial" .. _LambdaPfpIndex, "UnlitGeneric", {
+                [ "$basetexture" ] = pfp,
+                [ "$translucent" ] = 1,
+                [ "Proxies" ] = {
+                    [ "AnimatedTexture" ] = {
+                        [ "animatedTextureVar" ] = "$basetexture",
+                        [ "animatedTextureFrameNumVar" ] = "$frame",
+                        [ "animatedTextureFrameRate" ] = framerateconvar:GetInt()
+                    }
+                }
+            })
+        else
+            profilepicturematerial = Material( pfp )
+        end
     
         if profilepicturematerial:IsError() then
             local model = self:GetModel()
