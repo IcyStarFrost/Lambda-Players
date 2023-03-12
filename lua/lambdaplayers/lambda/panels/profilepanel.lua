@@ -31,6 +31,7 @@ local function OpenProfilePanel( ply )
 
     function frame:OnClose()
         chat.AddText( "Remember to Update Lambda Data after any changes!" )
+        if IsValid( self._pfpframe ) then self._pfpframe:Remove() end
     end
 
     
@@ -246,6 +247,7 @@ local function OpenProfilePanel( ply )
     LAMBDAPANELS:CreateButton( mainscroll, TOP, "Profile Picture Menu", function()
 
         local pfpframe = LAMBDAPANELS:CreateFrame( "Profile Picture Menu", 250, 400 )
+        frame._pfpframe = pfpframe
         local lbl = LAMBDAPANELS:CreateLabel( "Click on a image to set it as the profile picture.\nScanning Profile Pictures..", pfpframe, TOP )
         lbl:SetSize( 100, 60 )
         lbl:SetWrap( true )
