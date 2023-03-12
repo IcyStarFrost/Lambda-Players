@@ -455,6 +455,7 @@ if SERVER then
     function ENT:CanTarget( ent )
         if LambdaRunHook( "LambdaCanTarget", self, ent ) then return false end
         if ent:IsNPC() and ent:GetClass() == "npc_turret_floor" and ent:GetInternalVariable( "m_lifeState" ) == 1 then return false end -- Prevent lambdas from attacking downed turrets
+        if ent.IsLambdaPlayer and !ent:Alive() then return false end
         return ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() and ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 1 and ent:Alive() )
     end
 
@@ -1211,7 +1212,7 @@ elseif CLIENT then
     
         if profilepicturematerial:IsError() then
             local model = self:GetModel()
-            profilepicturematerial = Material( "spawnicons/" .. sub( model, 1, #model - 4 ) .. ".png" )
+            profilepicturematerial = Material( "spawnicons/" .. string.sub( model, 1, #model - 4 ) .. ".png" )
         end
         return profilepicturematerial
     end
