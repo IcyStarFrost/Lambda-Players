@@ -1179,6 +1179,20 @@ if SERVER then
 
 elseif CLIENT then
 
+    -- Returns our profile picture as a Material object.
+    -- Very expensive to run. Try to cache the result so this can only be ran once
+    function ENT:GetPFPMat()
+        local pfp = self:GetProfilePicture()
+    
+        local profilepicturematerial = Material( pfp )
+    
+        if profilepicturematerial:IsError() then
+            local model = self:GetModel()
+            profilepicturematerial = Material( "spawnicons/" .. sub( model, 1, #model - 4 ) .. ".png" )
+        end
+        return profilepicturematerial
+    end
+
     function ENT:IsBeingDrawn()
         return RealTime() < self.l_lastdraw
     end
