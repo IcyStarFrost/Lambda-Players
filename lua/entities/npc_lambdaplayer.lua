@@ -498,7 +498,9 @@ function ENT:Think()
                     local idleLine = ( self:IsPanicking() and "panic" or ( self:InCombat() and "taunt" or "idle" ) )
                     self:PlaySoundFile( self:GetVoiceLine( idleLine ) )
                 elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
-                    self:TypeMessage( self:GetTextLine( "idle" ) )
+                    local line = self:GetTextLine( "idle" )
+                    line = LambdaRunHook( "LambdaOnStartTyping", self, line, "idle" ) or line
+                    self:TypeMessage( line )
                 end
             end
 

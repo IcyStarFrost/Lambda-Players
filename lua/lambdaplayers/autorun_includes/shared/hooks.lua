@@ -47,6 +47,43 @@ if SERVER then
         end )
     end )
 
+    
+    local specialkeywords = { 
+        "|birthday|", 
+        "|christmas|",
+        "|newyears|",
+        "|addonbirthday|",
+        "|thanksgiving|",
+        "|4thjuly|",
+        "|easter|"
+    }
+
+    local function GetSpecialDayLine()
+        local tbl = LambdaTextTable[ "idle" ]
+        if !tbl then return end
+        local speciallines = {}
+
+        for k, str in ipairs( tbl ) do
+            for i = 1, #specialkeywords do 
+                local keyword = specialkeywords[ i ]
+                if string.find( str, keyword ) and LambdaConditionalKeyWordCheck( nil, str ) then 
+                    speciallines[ #speciallines + 1 ] = str
+                end
+            end
+        end
+        return speciallines[ math.random( #speciallines ) ]
+    end
+    
+    hook.Add( "LambdaOnStartTyping", "LambdaSpecialDaytext", function( lambda, text, texttype )
+        if texttype != "idle" or math.random( 0, 100 ) > 10 then return end
+
+        local line = GetSpecialDayLine()
+
+        if !line then return end
+
+        return line
+    end )
+
 elseif CLIENT then
     
     local DrawText = draw.DrawText

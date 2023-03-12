@@ -208,7 +208,11 @@ if SERVER then
             if attacker:IsPlayer() then attacker:AddFrags( 1 ) end
             if !self:IsSpeaking() and random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self.l_preventdefaultspeak then
                 self.l_keyentity = attacker
-                self:TypeMessage( self:GetTextLine( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and "deathbyplayer" or "death" ) )
+
+                local deathtype = ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and "deathbyplayer" or "death"
+                local line = self:GetTextLine( deathtype )
+                line = LambdaRunHook( "LambdaOnStartTyping", self, line, deathtype ) or line
+                self:TypeMessage( line )
             end
         end
 
@@ -259,7 +263,9 @@ if SERVER then
                     if self.l_preventdefaultspeak then return end
                     if ( victim:IsPlayer() or victim.IsLambdaPlayer ) and random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
                         self.l_keyentity = victim
-                        self:TypeMessage( self:GetTextLine( "witness" ) )
+                        local line = self:GetTextLine( "witness" )
+                        line = LambdaRunHook( "LambdaOnStartTyping", self, line, "witness" ) or line
+                        self:TypeMessage( line )
                     elseif self:GetVoiceChance() > 0 then
                         self:PlaySoundFile( self:GetVoiceLine( "witness" ) )
                     end
@@ -284,7 +290,9 @@ if SERVER then
                     self:PlaySoundFile( self:GetVoiceLine( "kill" ) )
                 elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self.l_preventdefaultspeak then
                     self.l_keyentity = victim
-                    self:TypeMessage( self:GetTextLine( "kill" ) )
+                    local line = self:GetTextLine( "kill" )
+                    line = LambdaRunHook( "LambdaOnStartTyping", self, line, "kill" ) or line
+                    self:TypeMessage( line )
                 end
 
                 if killerActionChance == 1 then 
@@ -671,7 +679,9 @@ function ENT:InitializeMiniHooks()
 
             if random( 1, 200 ) < self:GetTextChance() and !self:GetIsTyping() and !self:IsSpeaking() and self:CanType() then
                 self.l_keyentity = ply
-                self:TypeMessage( self:GetTextLine( "response" ) )
+                local line = self:GetTextLine( "response" )
+                line = LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line
+                self:TypeMessage( line )
             end
         end, true )
 
@@ -682,7 +692,9 @@ function ENT:InitializeMiniHooks()
                 self:PlaySoundFile( self:GetVoiceLine( "idle" ) )
             elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                 self.l_keyentity = ply
-                self:TypeMessage( self:GetTextLine( "response" ) )
+                local line = self:GetTextLine( "response" )
+                line = LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line
+                self:TypeMessage( line )
             end
         end, true )
 
@@ -693,7 +705,9 @@ function ENT:InitializeMiniHooks()
                 self:PlaySoundFile( self:GetVoiceLine( "idle" ) )
             elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                 self.l_keyentity = ply
-                self:TypeMessage( self:GetTextLine( "response" ) )
+                local line = self:GetTextLine( "response" )
+                line = LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line
+                self:TypeMessage( line )
             end
         end, true )
 
