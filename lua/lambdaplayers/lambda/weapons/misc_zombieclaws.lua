@@ -31,7 +31,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     lambda:SetHealth( math.Round( math_min( lambda:Health() + 1, lambda:GetMaxHealth() ), 0 ) )
                 end
 
-                if lambda:IsCombat() and CurTime() > wepent.NextLeapAttackTime then
+                if lambda:InCombat() and CurTime() > wepent.NextLeapAttackTime then
                     local target = lambda:GetEnemy()
                     local distTarget = lambda:GetRangeSquaredTo( target )
                     if distTarget > ( 300 * 300 ) and distTarget <= ( 600 * 600 ) and lambda.loco:IsOnGround() and lambda:Visible( target ) and target:Visible( lambda ) then
