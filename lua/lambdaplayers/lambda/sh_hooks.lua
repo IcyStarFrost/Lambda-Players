@@ -133,9 +133,11 @@ if SERVER then
         if LambdaRunHook( "LambdaOnPreKilled", self, info, silent ) == true then return end -- If someone wants to override the default behavior
 
         local wepent = self.WeaponEnt
+        local attacker = info:GetAttacker()
+        local inflictor = info:GetInflictor()
 
         if !silent then
-            self:DebugPrint( "was killed by ", info:GetAttacker() )
+            self:DebugPrint( "was killed by ", attacker )
 
             self:EmitSound( info:IsDamageType( DMG_FALL ) and "Player.FallGib" or "Player.Death" )
             
@@ -143,8 +145,8 @@ if SERVER then
                 self:PlaySoundFile( self:GetVoiceLine( "death" ) )
             end
 
-            LambdaKillFeedAdd( self, info:GetAttacker(), info:GetInflictor() )
-            if callnpchook:GetBool() then LambdaRunHook( "OnNPCKilled", self, info:GetAttacker(), info:GetInflictor() ) end
+            LambdaKillFeedAdd( self, attacker, inflictor )
+            if callnpchook:GetBool() then LambdaRunHook( "OnNPCKilled", self, attacker, inflictor ) end
             self:SetDeaths( self:GetDeaths() + 1 )
 
             if !serversideragdolls:GetBool() then
@@ -223,7 +225,6 @@ if SERVER then
             end
         end
 
-        local attacker = info:GetAttacker()
         if attacker != self and IsValid( attacker ) then 
             if attacker:IsPlayer() then attacker:AddFrags( 1 ) end
             if !self:IsSpeaking() and random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self.l_preventdefaultspeak then
@@ -233,6 +234,12 @@ if SERVER then
                 local line = self:GetTextLine( deathtype )
                 line = LambdaRunHook( "LambdaOnStartTyping", self, line, deathtype ) or line
                 self:TypeMessage( line )
+            end
+
+            local attackerWepEnt = attacker.WeaponEnt
+            if IsValid( attackerWepEnt ) and inflictor == attackerWepEnt then
+                local dealDmgFunc = attacker.l_OnDealDamagefunction
+                if dealDmgFunc then dealDmgFunc( attacker, attackerWepEnt, self, info, true ) end
             end
         end
 
