@@ -30,18 +30,20 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent.FistComboTime = nil
         end,
 
-        OnThink = function( self, wepent )
-            local keepDist = 16
-            local speedScale = 1.0
+        OnThink = function( self, wepent, isdead )
+            if !isdead then
+                local keepDist = 16
+                local speedScale = 1.0
 
-            local ene = self:GetEnemy()
-            if LambdaIsValid( ene ) and ene.IsLambdaPlayer and ene.l_HasMelee and ene:GetState() == "Combat" and ene:GetEnemy() == self and useReworkedVariant:GetBool() then
-                if random( 1, 4 ) == 1 then keepDist = 64 end
-                if self.l_movepos == ene and self:IsInRange( ene, 300 ) then speedScale = Rand( 0.66, 1.2 ) end
+                local ene = self:GetEnemy()
+                if LambdaIsValid( ene ) and ene.IsLambdaPlayer and ene.l_HasMelee and ene:GetState() == "Combat" and ene:GetEnemy() == self and useReworkedVariant:GetBool() then
+                    if random( 1, 4 ) == 1 then keepDist = 64 end
+                    if self.l_movepos == ene and self:IsInRange( ene, 300 ) then speedScale = Rand( 0.66, 1.2 ) end
+                end
+
+                self.l_CombatKeepDistance = keepDist
+                self.l_WeaponSpeedMultiplier = speedScale
             end
-
-            self.l_CombatKeepDistance = keepDist
-            self.l_WeaponSpeedMultiplier = speedScale
 
             return 0.1
         end,
@@ -59,7 +61,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self.l_WeaponUseCooldown = self.l_WeaponUseCooldown + Rand( 0.25, 0.33 )
         end,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             if CurTime() > wepent.FistComboTime then wepent.FistCombo = 0 end
             local reworkStats = useReworkedVariant:GetBool()
 
@@ -73,7 +75,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local fistSeqID = self:LookupSequence( "range_fists_" .. ( random( 1, 2 ) == 1 and "r" or "l" ) )
             if fistSeqID != -1 then self:AddGestureSequence( fistSeqID ) else self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_FIST ) end
 
-            self:SimpleTimer( 0.2, function()
+            self:SimpleWeaponTimer( 0.2, function()
                 if !LambdaIsValid( target ) or !self:IsInRange( target, 55 ) then return end
 
                 local dmginfo = DamageInfo()

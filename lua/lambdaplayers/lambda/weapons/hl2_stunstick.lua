@@ -41,7 +41,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
         
         -- Emit sparks on hit
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             
             local effect = EffectData( )
                 effect:SetOrigin( target:WorldSpaceCenter() ) -- World space center is the same as GetPos + ObbCenter

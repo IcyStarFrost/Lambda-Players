@@ -32,7 +32,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         reloadanimspeed = 1,
         reloadsounds = { { 0, "Weapon_SMG1.Reload" } },
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             -- Secondary grenade launcher
             if random( 75 ) != 1 or !self:IsInRange( target, 1000 ) then return end
             

@@ -96,6 +96,7 @@ end
     local LambdaSpawnBehavior = GetConVar( "lambdaplayers_combat_spawnbehavior" )
     local ignorePlys = GetConVar( "ai_ignoreplayers" )
     local panicAnimations = GetConVar( "lambdaplayers_lambda_panicanimations" )
+    local sv_gravity = GetConVar( "sv_gravity" )
 --
 
 if CLIENT then
@@ -259,7 +260,7 @@ function ENT:Initialize()
         self.loco:SetDeceleration( 1000000 )
         self.loco:SetStepHeight( 30 )
         self.l_LookAheadDistance = 0
-        self.loco:SetGravity( -physenv.GetGravity().z ) -- Makes us fall at the same speed as the real players do
+        self.loco:SetGravity( sv_gravity:GetFloat() ) -- Makes us fall at the same speed as the real players do
 
         self:SetRunSpeed( runningSpeed:GetInt() )
         self:SetCrouchSpeed( 60 )
@@ -443,12 +444,22 @@ function ENT:Think()
     end
     -- -- -- -- --
 
-    if self:GetIsDead() then return end
-
+    local isDead = self:GetIsDead()
     local wepent = self:GetWeaponENT()
 
+    -- Run our weapon's think callback if possible
+    if SERVER and curTime > self.l_NextWeaponThink then
+        local wepThinkFunc = self.l_WeaponThinkFunction
+        if wepThinkFunc then
+            local thinkTime = wepThinkFunc( self, wepent, isDead )
+            if isnumber( thinkTime ) then self.l_NextWeaponThink = curTime + thinkTime end 
+        end
+    end
+
     -- Allow addons to add stuff to Lambda's Think
-    LambdaRunHook( "LambdaOnThink", self, wepent )
+    LambdaRunHook( "LambdaOnThink", self, wepent, isDead )
+
+    if isDead then return end
     
     if ( SERVER ) then
 
@@ -470,15 +481,6 @@ function ENT:Think()
             end
             
             self.l_debugupdate = curTime + 0.1
-        end
-
-        -- Run our weapon's think callback if possible
-        if curTime > self.l_NextWeaponThink then
-            local wepThinkFunc = self.l_WeaponThinkFunction
-            if wepThinkFunc then
-                local thinkTime = wepThinkFunc( self, wepent )
-                if isnumber( thinkTime ) then self.l_NextWeaponThink = curTime + thinkTime end 
-            end
         end
 
         if self.l_ispickedupbyphysgun then 

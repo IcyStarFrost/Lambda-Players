@@ -25,7 +25,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent.NextFirstSwingTime = nil
         end,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             if CurTime() > wepent.NextFirstSwingTime then
                 wepent.IsFirstSwing = true
             end

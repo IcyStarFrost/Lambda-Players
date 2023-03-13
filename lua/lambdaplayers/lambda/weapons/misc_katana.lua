@@ -63,40 +63,42 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         OnThink = function( self, wepent )
-            if CurTime() > wepent.NextUnreadyTime then
-                if wepent.IsGripReady then
-                    wepent.IsGripReady = false
-                    wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 1, 2 ) .. ".mp3", 65 )
-                    wepent:SetBodygroup( 0, 1 )
-                end
+            if !isdead then
+                if CurTime() > wepent.NextUnreadyTime then
+                    if wepent.IsGripReady then
+                        wepent.IsGripReady = false
+                        wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 1, 2 ) .. ".mp3", 65 )
+                        wepent:SetBodygroup( 0, 1 )
+                    end
 
-                local moveSpeed = 1.0
-                local holdType = "katana_unready_docile"
-                if self:GetState() == "Combat" and LambdaIsValid( self:GetEnemy() ) then
-                    moveSpeed = 1.25
-                    holdType = "katana_unready_combat"
-                end
-                self.l_HoldType = holdType
-                self.l_WeaponSpeedMultiplier = moveSpeed
-            else
-                if !wepent.IsGripReady then
-                    wepent.IsGripReady = true
-                    wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 1, 2 ) .. ".mp3", 65 )
-                    wepent:SetBodygroup( 0, 0 )
-                    self.l_HoldType = "melee2"
-                end
-            end
-
-            if CurTime() > wepent.NextEnergyRestoreTime then
-                local HP, maxHP = self:Health(), self:GetMaxHealth()
-                if HP < maxHP then 
-                    self:SetHealth( min( HP + 1, maxHP ) ) 
+                    local moveSpeed = 1.0
+                    local holdType = "katana_unready_docile"
+                    if self:GetState() == "Combat" and LambdaIsValid( self:GetEnemy() ) then
+                        moveSpeed = 1.25
+                        holdType = "katana_unready_combat"
+                    end
+                    self.l_HoldType = holdType
+                    self.l_WeaponSpeedMultiplier = moveSpeed
                 else
-                    local armor, maxArmor = self:Armor(), ( self:GetMaxArmor() / 2 )
-                    if armor < maxArmor then self:SetArmor( min( armor + 1, maxArmor ) ) end
+                    if !wepent.IsGripReady then
+                        wepent.IsGripReady = true
+                        wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 1, 2 ) .. ".mp3", 65 )
+                        wepent:SetBodygroup( 0, 0 )
+                        self.l_HoldType = "melee2"
+                    end
                 end
 
-                wepent.NextEnergyRestoreTime = CurTime() + 1
+                if CurTime() > wepent.NextEnergyRestoreTime then
+                    local HP, maxHP = self:Health(), self:GetMaxHealth()
+                    if HP < maxHP then 
+                        self:SetHealth( min( HP + 1, maxHP ) ) 
+                    else
+                        local armor, maxArmor = self:Armor(), ( self:GetMaxArmor() / 2 )
+                        if armor < maxArmor then self:SetArmor( min( armor + 1, maxArmor ) ) end
+                    end
+
+                    wepent.NextEnergyRestoreTime = CurTime() + 1
+                end
             end
 
             return 0.1
@@ -133,7 +135,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             dmginfo:ScaleDamage( Rand( 0.66, 0.75 ) )
         end,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             wepent.NextUnreadyTime = CurTime() + random( 1, 4 )
             wepent:EmitSound( "lambdaplayers/weapons/katana/katana_swing_miss" .. random( 4 ) .. ".mp3", 70 )
 
@@ -144,7 +146,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local swingSpeed = Rand( 0.9, 1.4 ); self:SetLayerPlaybackRate( attackGest, swingSpeed )
 
 
-            self:SimpleTimer( ( 0.3 / swingSpeed ), function()
+            self:SimpleWeaponTimer( ( 0.3 / swingSpeed ), function()
                 if !LambdaIsValid( target ) or !self:IsInRange( target, 70 ) then return end
 
                 local dmg = ( random( 30, 45 ) / swingSpeed )

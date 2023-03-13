@@ -39,6 +39,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self.l_CombatKeepDistance = weapondata.keepdistance
     self.l_CombatAttackRange = weapondata.attackrange
     self.l_OnDamagefunction = weapondata.OnDamage
+    self.l_OnKilledfunction = weapondata.OnKilled
     self.l_WeaponNoDraw = weapondata.nodraw or false
     self.l_WeaponSpeedMultiplier = weapondata.speedmultiplier or 1
     self.l_Clip = weapondata.clip or 0
@@ -59,7 +60,10 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
 
     
     self:ClientSideNoDraw( self.WeaponEnt, weapondata.nodraw )
-    self:SetHasCustomDrawFunction( isfunction( weapondata.Draw ) )
+    
+    local drawFunc = ( weapondata.OnDraw or weapondata.Draw )
+    self:SetHasCustomDrawFunction( isfunction( drawFunc ) )
+
     self:SetWeaponName( weaponname )
     wepent:SetNoDraw( weapondata.nodraw )
     wepent:DrawShadow( !weapondata.nodraw )
@@ -69,12 +73,10 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
 
     wepent:SetModel( weapondata.model )
     
-    
     self.l_WeaponThinkFunction = weapondata.OnThink
     if isfunction( weapondata.OnEquip ) then weapondata.OnEquip( self, wepent ) end
 
     LambdaRunHook( "LambdaOnSwitchWeapon", self, wepent, weapondata )
-
 end
 
 local string_find = string.find
@@ -178,7 +180,7 @@ function ENT:UseWeapon( target )
     local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
 
     local wepent = self:GetWeaponENT()
-    local callback = weapondata.callback
+    local callback = ( weapondata.OnAttack or weapondata.callback )
     
     local result
     if callback then result = callback( self, wepent, target ) end
@@ -204,7 +206,7 @@ function ENT:ReloadWeapon()
     local snds = weapondata.reloadsounds
     if snds and #snds > 0 then
         for k, tbl in ipairs( snds ) do
-            self:SimpleTimer( tbl[ 1 ], function()
+            self:SimpleWeaponTimer( tbl[ 1 ], function()
                 wep:EmitSound( tbl[ 2 ], 65, 100, 1, CHAN_WEAPON )
             end )
         end
@@ -218,7 +220,7 @@ function ENT:ReloadWeapon()
 
     self:SetIsReloading( true )
 
-    self:NamedTimer( "Reload", ( weapondata.reloadtime or 1 ), 1, function()
+    self:NamedWeaponTimer( "Reload", ( weapondata.reloadtime or 1 ), 1, function()
         if !self:GetIsReloading() then return end
         self.l_Clip = self.l_MaxClip
         self:SetIsReloading( false )

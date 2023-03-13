@@ -16,7 +16,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 64,
         attackrange = 175,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             self.l_WeaponUseCooldown = CurTime() + Rand(1.33, 1.8)
             wepent:EmitSound( "lambdaplayers/weapons/glongclub/wpn_golf_club_swing_miss" .. random( 2 ) .. ".mp3", 85, random( 95, 110 ), 1, CHAN_WEAPON )
 
@@ -24,7 +24,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local gestAttack = self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             self:SetLayerPlaybackRate( gestAttack, 0.75 )
 
-            self:SimpleTimer(0.45, function()
+            self:SimpleWeaponTimer( 0.45, function()
                 if !IsValid( target ) or !self:IsInRange( target, 200 ) then return end
 
                 local dmg = random( 500, 750 )
@@ -50,7 +50,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 end
 
                 wepent:EmitSound( "lambdaplayers/weapons/glongclub/wpn_golf_club_melee_0" .. random( 2 ) .. ".mp3", 90 )
-            end)
+            end )
 
             return true
         end,

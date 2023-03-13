@@ -16,7 +16,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 800,
         attackrange = 5000,
 
-        callback = function( self, wepent, target )            
+        OnAttack = function( self, wepent, target )            
             local rocket = ents_Create( "rpg_missile" )
             if !IsValid( rocket ) then return end
 

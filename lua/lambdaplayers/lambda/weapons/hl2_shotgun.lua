@@ -22,7 +22,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 500,
 
         clip = 6,
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
 
             -- Secondary double barrel attack
@@ -50,7 +50,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN )
             
             -- To simulate pump action after the shot
-            self:SimpleTimer( 0.6, function()
+            self:SimpleWeaponTimer( 0.6, function()
                 wepent:EmitSound( "Weapon_Shotgun.Special1", 70, 100, 1, CHAN_WEAPON )
                 self:HandleShellEject( "ShotgunShellEject", Vector( 0, 12, 0 ), Angle( -180, 0, 0 ) )
             end)

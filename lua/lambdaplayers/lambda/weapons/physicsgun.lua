@@ -165,7 +165,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if info:GetInflictor() == lambda.l_physgungrabbedent then info:SetDamage( 0 ) end
         end,
 
-        callback = function( lambda, wepent, ent )
+        OnAttack = function( lambda, wepent, ent )
             if IsValid( ent ) then
 
                 local result = lambda:Trace( ent )

@@ -100,7 +100,7 @@ function ENT:HealUp()
         coroutine_wait( spawnRate )
     end
 
-    self:SetState( "Idle" )
+    if self:GetState() == "HealUp" then self:SetState( "Idle" ) end
 end
 
 -- Armor ourselves for better chance at surviving in combat
@@ -125,8 +125,8 @@ function ENT:ArmorUp()
 
         coroutine_wait( spawnRate )
     end
-
-    self:SetState( "Idle" )
+    
+    if self:GetState() == "ArmorUp" then self:SetState( "Idle" ) end
 end
 
 -- Wander around until we find someone to jump
