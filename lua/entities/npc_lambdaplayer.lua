@@ -149,6 +149,7 @@ function ENT:Initialize()
         self.l_UpdateAnimations = true -- If we can update our animations. Used for the purpose of playing sequences
         self.VJ_AddEntityToSNPCAttackList = true -- Makes creature-based VJ SNPCs able to damages us with melee and leap attacks
         self.l_isswimming = false -- If we are currenly swimming (only used to recompute paths when exitting swimming)
+        self.l_AvoidCheck_NextToDoor = false -- If we are currenly near a door and shouldn't use obstacle avoidance
 
         self.l_UnstuckBounds = 50 -- The distance the unstuck process will use to check. This value increments during the process and set back to 50 when done
         self.l_nextspeedupdate = 0 -- The next time we update our speed
@@ -174,6 +175,7 @@ function ENT:Initialize()
         self.l_NextWeaponThink = 0 -- The next time we will run the currenly held weapon's think callback
         self.l_CurrentPlayedGesture = -1 -- Gesture ID that is assigned when the ENT:PlayGestureAndWait( id ) function is ran
         self.l_retreatendtime = 0 -- The time until we stop retreating
+        self.l_AvoidCheck_NextDoorCheck = 0 -- The next time we will check if we are next to a door while using obstacle avoidance
 
         self.l_ladderarea = NULL -- The ladder nav area we are currenly using to climb
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector

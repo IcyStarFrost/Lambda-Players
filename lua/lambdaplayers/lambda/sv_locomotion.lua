@@ -488,6 +488,60 @@ function ENT:ObstacleCheck()
     self.l_nextobstaclecheck = CurTime() + 0.1
 end
 
+local avoidtracetable = {
+    mins = Vector( -18, -18, -10 ),
+    maxs = Vector( 18, 18, 10 )
+} -- Recycled table
+local leftcol = Color( 255, 0, 0, 10 )
+local rightcol = Color( 0, 255, 0, 10 )
+
+-- Fires 2 hull traces that will make the player try to move out of the way of whatever is blocking the way
+function ENT:AvoidCheck()
+    local selfPos = self:WorldSpaceCenter()
+
+    if CurTime() > self.l_AvoidCheck_NextDoorCheck then
+        self.l_AvoidCheck_NextToDoor = false
+        self.l_AvoidCheck_NextDoorCheck = ( CurTime() + 1.0 )
+
+        for _, door in ipairs( ents.FindInSphere( selfPos, 64 ) ) do
+            if IsValid( door ) and doorClasses[ door:GetClass() ] then 
+                self.l_AvoidCheck_NextToDoor = true
+                return 
+            end
+        end
+    end
+    if self.l_AvoidCheck_NextToDoor then return end
+
+    local selfRight = self:GetRight()
+
+    avoidtracetable.start = ( selfPos + selfRight * 20 )
+    avoidtracetable.endpos = avoidtracetable.start 
+    avoidtracetable.filter = self
+
+    debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, rightcol )
+    local rightresult = TraceHull( avoidtracetable )
+
+    avoidtracetable.start = ( selfPos - selfRight * 20 )
+    avoidtracetable.endpos = avoidtracetable.start 
+
+    debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, leftcol )
+    local leftresult = TraceHull( avoidtracetable )
+
+    selfPos = self:GetPos()
+    local loco = self.loco
+    local notMoving = ( loco:IsAttemptingToMove() and loco:GetVelocity():IsZero() )
+    if rightresult.Hit and !leftresult.Hit then  -- Move to the left
+        if notMoving then loco:SetVelocity( selfRight * -100 ) end
+        loco:Approach( selfPos + selfRight * -50, 1 )
+    elseif leftresult.Hit and !rightresult.Hit then -- Move to the right
+        if notMoving then loco:SetVelocity( selfRight * 100 ) end
+        loco:Approach( selfPos + selfRight * 50, 1 )
+    elseif leftresult.Hit and rightresult.Hit then -- Back up
+        if notMoving then loco:SetVelocity( self:GetForward() * -400 + selfRight * ( CurTime() % 6 > 3 and 400 or -400 ), 1 ) end
+        loco:Approach( selfPos + self:GetForward() * -50 + selfRight * random( -50, 50 ), 1 )
+    end
+end
+
 -- CNavArea --
 local CNavAreaMeta                                   = FindMetaTable( "CNavArea" )
 local CNavArea_GetCenter                             = CNavAreaMeta.GetCenter
