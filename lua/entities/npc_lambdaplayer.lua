@@ -452,7 +452,7 @@ function ENT:Think()
         local wepThinkFunc = self.l_WeaponThinkFunction
         if wepThinkFunc then
             local thinkTime = wepThinkFunc( self, wepent, isDead )
-            if isnumber( thinkTime ) then self.l_NextWeaponThink = curTime + thinkTime end 
+            if isnumber( thinkTime ) and thinkTime > 0 then self.l_NextWeaponThink = curTime + thinkTime end 
         end
     end
 

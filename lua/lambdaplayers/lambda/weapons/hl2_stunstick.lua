@@ -23,7 +23,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         hitsnd = "Weapon_StunStick.Melee_Hit",
         
         -- Custom effect similar to player stunstick
-        Draw = function( lambda, wepent )
+        OnDraw = function( lambda, wepent )
             if IsValid( wepent ) then
 
                 local size = random( 4, 6 )
@@ -36,7 +36,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             end
         end,
         
-        OnEquip = function( lambda, wepent )
+        OnDeploy = function( lambda, wepent )
             wepent:EmitSound( "Weapon_StunStick.Activate" )
         end,
         

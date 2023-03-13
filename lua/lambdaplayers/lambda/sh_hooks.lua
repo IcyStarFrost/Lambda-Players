@@ -153,7 +153,7 @@ if SERVER then
                 self:CreateServersideRagdoll( info )
             end
 
-            if !self:IsWeaponMarkedNodraw() then
+            if self.l_DropWeaponOnDeath and !self:IsWeaponMarkedNodraw() then
                 net.Start( "lambdaplayers_createclientsidedroppedweapon" )
                     net.WriteEntity( wepent )
                     net.WriteEntity( self )
@@ -633,11 +633,12 @@ function ENT:InitializeMiniHooks()
 
             if tookdamage then
                 local wepent = self:GetWeaponENT()
-                local inflictor = dmginfo:GetInflictor()
+                local inflictor = info:GetInflictor()
                 
                 local dealDmgFunc = self.l_OnDealDamagefunction
-                if dmginfo:GetAttacker() == self and inflictor == wepent and isfunction( dealDmgFunc ) then 
-                    dealDmgFunc( self, wepent, target, info ) 
+                if info:GetAttacker() == self and inflictor == wepent and isfunction( dealDmgFunc ) then
+                    local killed = ( ( target.IsLambdaPlayer or target:IsPlayer() ) and !target:Alive() or target:Health() <= 0 )
+                    dealDmgFunc( self, wepent, target, info, killed ) 
                 end
             end
         end, true )

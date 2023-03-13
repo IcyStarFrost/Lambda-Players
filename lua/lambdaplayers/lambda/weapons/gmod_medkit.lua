@@ -11,23 +11,23 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         clip = 1,
 
-        OnEquip = function( self, wepent ) 
+        OnDeploy = function( self, wepent ) 
             wepent.HealAmount = 100
         end,
         
-        OnUnequip = function( self, wepent ) 
+        OnHolster = function( self, wepent ) 
             wepent.HealAmount = nil
         end,
 
-        OnThink = function( self, wepent, isdead )
-            if !isdead then
+        OnThink = function( self, wepent, dead )
+            if !dead then
                 wepent.HealAmount = min( wepent.HealAmount + 2, 100 )
                 if self:Health() < self:GetMaxHealth() then self:UseWeapon( self ) end
             end
             return 0.33
         end,
 
-        OnKilled = function( self, wepent )
+        OnDeath = function( self, wepent )
             wepent.HealAmount = 100
         end,
 

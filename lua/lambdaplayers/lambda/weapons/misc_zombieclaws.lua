@@ -20,13 +20,13 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 65,
         speedmultiplier = 1.33,
 
-        OnEquip = function( lambda, wepent )
+        OnDeploy = function( lambda, wepent )
             wepent.NextLeapAttackTime = 0
         end,
 
         -- HP Auto Regen + Leap Attack
         OnThink = function( lambda, wepent )
-            if !isdead then
+            if !dead then
                 if lambda:Health() < lambda:GetMaxHealth() then
                     lambda:SetHealth( math.Round( math_min( lambda:Health() + 1, lambda:GetMaxHealth() ), 0 ) )
                 end
@@ -50,11 +50,11 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         -- Damage reduction
-        OnDamage = function( lambda, wepent, dmginfo )
+        OnTakeDamage = function( lambda, wepent, dmginfo )
             dmginfo:ScaleDamage( 0.75 )
         end,
 
-        OnUnequip = function( lambda, wepent )
+        OnHolster = function( lambda, wepent )
             wepent.NextLeapAttackTime = nil
         end,
 

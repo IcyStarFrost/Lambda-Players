@@ -59,7 +59,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         holdtype = "physgun",
         killicon = "weapon_physcannon",
 
-        OnEquip = function( lambda, wepent )
+        OnDeploy = function( lambda, wepent )
             wepent:SetSkin( 1 )
             wepent:SetSubMaterial( 1, "models/lambdaplayers/weapons/physgun/w_physics_sheet2")
 
@@ -161,8 +161,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         end,
 
-        OnDamage = function( lambda, wepent, info )
-            if info:GetInflictor() == lambda.l_physgungrabbedent then info:SetDamage( 0 ) end
+        OnTakeDamage = function( lambda, wepent, info )
+            if info:GetInflictor() == lambda.l_physgungrabbedent then return true end
         end,
 
         OnAttack = function( lambda, wepent, ent )
@@ -192,7 +192,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         -- Custom rendering effects
-        Draw = function( lambda, wepent )
+        OnDraw = function( lambda, wepent )
 
             if IsValid( wepent ) then
                 
@@ -255,7 +255,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         end,
 
-        OnUnequip = function( lambda, wepent )
+        OnHolster = function( lambda, wepent )
             lambda:KillThread( "PhysgunThread" )
             lambda:RemoveHook( "Think", "physgunthink" )
             lambda.l_physgungrabbedent = nil

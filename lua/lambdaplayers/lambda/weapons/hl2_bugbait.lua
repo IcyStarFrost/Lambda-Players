@@ -18,18 +18,18 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         holdtype = "grenade",
         bonemerge = true,
 
-        OnEquip = function( self, wepent )
+        OnDeploy = function( self, wepent )
             wepent.NextSqueezeTime = CurTime() + random( 1, 20 )
             wepent.NextThrowTime = CurTime() + random( 1, 20 )
         end,
 
-        OnUnequip = function( self, wepent )
+        OnHolster = function( self, wepent )
             wepent.NextSqueezeTime = nil
             wepent.NextThrowTime = nil
         end,
 
-        OnThink = function( self, wepent, isdead )
-            if !isdead then
+        OnThink = function( self, wepent, dead )
+            if !dead then
                 if CurTime() > wepent.NextSqueezeTime then
                     wepent:EmitSound( "weapons/bugbait/bugbait_squeeze" .. random( 1, 3 ) .. ".wav", 65, 100, 10, CHAN_WEAPON )
                     wepent.NextSqueezeTime = CurTime() + random( 1, 20 )

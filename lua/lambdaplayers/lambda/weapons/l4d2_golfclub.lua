@@ -15,7 +15,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 70,
         bonemerge = true,
 
-        OnEquip = function( self, wepent )
+        OnDeploy = function( self, wepent )
             wepent:EmitSound( "lambdaplayers/weapons/left4dead2/generic_melee_equip.mp3", 65 )
         end,
 

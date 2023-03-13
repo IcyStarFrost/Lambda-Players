@@ -27,7 +27,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         holdtype = "physgun",
 
-        Draw = function( lambda, wepent )
+        OnDraw = function( lambda, wepent )
             if IsValid( wepent ) then
                 for i = 1, #attachtab do
                     local atID = wepent:LookupAttachment( attachtab[i] )
@@ -50,8 +50,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             end
         end,
 
-        OnThink = function( lambda, wepent, isdead )
-            if !isdead then
+        OnThink = function( lambda, wepent, dead )
+            if !dead then
                 -- Pretty much will punt any prop they get close to
                 local find = lambda:FindInSphere( lambda:GetPos(), 150, function( ent ) if !ent:IsNPC() and ent:GetClass()=="prop_physics" and !ent:IsPlayer() and !ent:IsNextBot() and lambda:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and lambda:HasPermissionToEdit( ent ) and ent:GetPhysicsObject():IsMoveable() then return true end end )
                 local prop = find[ random( #find ) ]

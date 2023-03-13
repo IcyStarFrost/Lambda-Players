@@ -32,7 +32,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 50,
         speedmultiplier = 1.2,
 
-        OnEquip = function( self, wepent )
+        OnDeploy = function( self, wepent )
             wepent.SentryBusterMode = busterMode:GetBool()
             if !wepent.SentryBusterMode then return end
             
@@ -44,21 +44,21 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent:CallOnRemove( "Lambda_PAIG_StopSound" .. wepent:EntIndex(), OnPAIGRemoved )
         end,
 
-        OnThink = function( self, wepent, isdead )
+        OnThink = function( self, wepent, dead )
             if !wepent.SentryBusterMode then return end
             
             local loopSnd = wepent.LoopSound
             if !loopSnd then return end
 
-            if isdead or CurTime() < self.l_WeaponUseCooldown then
+            if dead or CurTime() < self.l_WeaponUseCooldown then
                 loopSnd:Stop()
-                if isdead then wepent:StopSound( "lambdaplayers/weapons/paig/sb_spin.mp3" ) end
+                if dead then wepent:StopSound( "lambdaplayers/weapons/paig/sb_spin.mp3" ) end
             elseif !loopSnd:IsPlaying() then
                 loopSnd:Play()
             end
         end,
 
-        OnUnequip = function( self, wepent )
+        OnHolster = function( self, wepent )
             wepent.SentryBusterMode = nil
             wepent:StopSound( "lambdaplayers/weapons/paig/sb_spin.mp3" )
             if wepent.LoopSound then wepent.LoopSound:Stop(); wepent.LoopSound = nil end

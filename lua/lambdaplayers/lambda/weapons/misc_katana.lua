@@ -44,7 +44,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 80,
         speedmultiplier = 1.0,
 
-        OnEquip = function( self, wepent )
+        OnDeploy = function( self, wepent )
             wepent.IsGripReady = false
             wepent.NextUnreadyTime = 0
             wepent.DodgeTime = 0
@@ -53,7 +53,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent:EmitSound( "lambdaplayers/weapons/katana/katana_deploy1.mp3", 70 )
         end,
 
-        OnUnequip = function( self, wepent )
+        OnHolster = function( self, wepent )
             wepent.IsGripReady = nil
             wepent.NextUnreadyTime = nil
             wepent.DodgeTime = nil
@@ -63,7 +63,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         OnThink = function( self, wepent )
-            if !isdead then
+            if !dead then
                 if CurTime() > wepent.NextUnreadyTime then
                     if wepent.IsGripReady then
                         wepent.IsGripReady = false
@@ -104,7 +104,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             return 0.1
         end,
 
-        OnDamage = function( self, wepent, dmginfo )
+        OnTakeDamage = function( self, wepent, dmginfo )
             if CurTime() > wepent.NextUnreadyTime then wepent.NextUnreadyTime = CurTime() + random( 1, 4 ) end
 
             if dmginfo:IsBulletDamage()then

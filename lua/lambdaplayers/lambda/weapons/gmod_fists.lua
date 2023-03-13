@@ -19,19 +19,20 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         nodraw = true,
         keepdistance = 16,
         attackrange = 64,
+        dropondeath = false,
 
-        OnEquip = function( self, wepent )
+        OnDeploy = function( self, wepent )
             wepent.FistCombo = 0
             wepent.FistComboTime = CurTime()
         end,
 
-        OnUnequip = function( self, wepent )
+        OnHolster = function( self, wepent )
             wepent.FistCombo = nil
             wepent.FistComboTime = nil
         end,
 
-        OnThink = function( self, wepent, isdead )
-            if !isdead then
+        OnThink = function( self, wepent, dead )
+            if !dead then
                 local keepDist = 16
                 local speedScale = 1.0
 
@@ -48,7 +49,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             return 0.1
         end,
 
-        OnDamage = function( self, wepent, dmginfo )
+        OnTakeDamage = function( self, wepent, dmginfo )
             if !useReworkedVariant:GetBool() or !dmginfo:IsDamageType( bor( DMG_CLUB, DMG_SLASH ) ) or random( 1, 2 ) == 1 or ( ( self.l_WeaponUseCooldown - 0.5 ) - CurTime() ) > 0 then return end
 
             self:RemoveGesture( ACT_HL2MP_FIST_BLOCK )
