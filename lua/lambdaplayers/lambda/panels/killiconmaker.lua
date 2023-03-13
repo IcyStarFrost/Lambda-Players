@@ -162,9 +162,9 @@ function PANEL:Init()
             local ent = self.ModelPanel:GetEntity()
             self.AnglePanel = LAMBDAPANELS:CreateFrame( "Angle Panel", 300, 150 )
             
-            local pitch = LAMBDAPANELS:CreateNumSlider( self.AnglePanel, TOP, 0, "Pitch", 0, 360, 2 )
-            local yaw = LAMBDAPANELS:CreateNumSlider( self.AnglePanel, TOP, 0, "Yaw", 0, 360, 2 )
-            local roll = LAMBDAPANELS:CreateNumSlider( self.AnglePanel, TOP, 0, "Roll", 0, 360, 2 )
+            local pitch = LAMBDAPANELS:CreateNumSlider( self.AnglePanel, TOP, 0, "Pitch", -360, 360, 2 )
+            local yaw = LAMBDAPANELS:CreateNumSlider( self.AnglePanel, TOP, 0, "Yaw", -360, 360, 2 )
+            local roll = LAMBDAPANELS:CreateNumSlider( self.AnglePanel, TOP, 0, "Roll", -360, 360, 2 )
 
             function pitch:OnValueChanged( val )
                 local oldang = ent:GetAngles()
