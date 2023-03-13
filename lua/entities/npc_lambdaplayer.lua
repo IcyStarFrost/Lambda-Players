@@ -77,6 +77,7 @@ end
     local TraceHull = util.TraceHull
     local FrameTime = FrameTime
     local unstucktable = {}
+    local swimtable = { collisiongroup = COLLISION_GROUP_PLAYER }
     local sub = string.sub
     local lower = string.lower
     local RealTime = RealTime
@@ -683,13 +684,36 @@ function ENT:Think()
 
                 local swimVel = vector_origin
                 if swimPos and self.l_issmoving then
-                    local swimTrace = self:Trace( swimPos + Vector( 0, 0, 72 ), swimPos )
-                    if swimTrace.HitPos:IsUnderwater() then swimPos = swimTrace.HitPos end -- Try swimming a little higher if possible
+                    local swimSpeed = ( ( ( self:GetRun() and !isCrouched ) and 320 or 160 ) * self.l_WeaponSpeedMultiplier )
+                    
+                    local path = self.l_CurrentPath
+                    if !isvector( path ) and IsValid( path ) and path:GetCurrentGoal().type == 1 then
+                        swimVel = ( vector_up * -swimSpeed )
+                    else
+                        local swimTrace = self:Trace( swimPos + vector_up * loco:GetJumpHeight(), swimPos ).HitPos
+                        if swimPos.z > selfPos.z - 32 and swimTrace:IsUnderwater() then swimPos = swimTrace end -- Try swimming a little higher if possible
+                        local swimDir = ( swimPos - selfPos ):GetNormalized()
+                        swimVel = ( swimDir * swimSpeed )
+
+                        if swimPos.z > selfPos.z then
+                            swimtable.start = selfPos
+                            swimtable.endpos = ( selfPos + swimDir * ( swimSpeed * FrameTime() * 10 ) )
+                            swimtable.filter = self
+                            
+                            local mins, maxs = self:GetCollisionBounds()
+                            swimtable.mins = mins
+                            swimtable.maxs = maxs
+
+                            if TraceHull( swimtable ).HitWorld then
+                                if !swimTrace:IsUnderwater() then
+                                    swimSpeed = swimSpeed + ( loco:GetJumpHeight() + loco:GetStepHeight() )
+                                end
+                                swimVel = ( vector_up * swimSpeed )
+                            end
+                        end
+                    end
 
                     loco:FaceTowards( swimPos )
-
-                    local swimSpeed = ( ( ( self:GetRun() and !isCrouched ) and 320 or 160 ) * self.l_WeaponSpeedMultiplier )
-                    swimVel = ( ( swimPos - selfPos ):GetNormalized() * swimSpeed )
                 end
 
                 locoVel = LerpVector( 20 * frameTime, locoVel, swimVel )
