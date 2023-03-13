@@ -1,4 +1,3 @@
-
 local random = math.random
 local tobool = tobool
 local ents_GetAll = ents.GetAll
@@ -23,6 +22,9 @@ local retreatLowHP = GetConVar( "lambdaplayers_combat_retreatonlowhealth" )
 local serversidecleanup = GetConVar( "lambdaplayers_lambda_serversideragdollcleanuptime" )
 local serversidecleanupeffect = GetConVar( "lambdaplayers_lambda_serversideragdollcleanupeffect" )
 local cleanupondeath = GetConVar( "lambdaplayers_building_cleanupondeath" )
+local flashlightsprite = Material( "sprites/light_glow02_add" )
+local flashlightbeam = Material( "effects/lamp_beam" )
+local faded = Color( 100, 100, 100, 100 )
 
 if SERVER then
 
@@ -206,7 +208,11 @@ if SERVER then
             if attacker:IsPlayer() then attacker:AddFrags( 1 ) end
             if !self:IsSpeaking() and random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self.l_preventdefaultspeak then
                 self.l_keyentity = attacker
-                self:TypeMessage( self:GetTextLine( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and "deathbyplayer" or "death" ) )
+
+                local deathtype = ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and "deathbyplayer" or "death"
+                local line = self:GetTextLine( deathtype )
+                line = LambdaRunHook( "LambdaOnStartTyping", self, line, deathtype ) or line
+                self:TypeMessage( line )
             end
         end
 
@@ -257,7 +263,9 @@ if SERVER then
                     if self.l_preventdefaultspeak then return end
                     if ( victim:IsPlayer() or victim.IsLambdaPlayer ) and random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
                         self.l_keyentity = victim
-                        self:TypeMessage( self:GetTextLine( "witness" ) )
+                        local line = self:GetTextLine( "witness" )
+                        line = LambdaRunHook( "LambdaOnStartTyping", self, line, "witness" ) or line
+                        self:TypeMessage( line )
                     elseif self:GetVoiceChance() > 0 then
                         self:PlaySoundFile( self:GetVoiceLine( "witness" ) )
                     end
@@ -282,7 +290,9 @@ if SERVER then
                     self:PlaySoundFile( self:GetVoiceLine( "kill" ) )
                 elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self.l_preventdefaultspeak then
                     self.l_keyentity = victim
-                    self:TypeMessage( self:GetTextLine( "kill" ) )
+                    local line = self:GetTextLine( "kill" )
+                    line = LambdaRunHook( "LambdaOnStartTyping", self, line, "kill" ) or line
+                    self:TypeMessage( line )
                 end
 
                 if killerActionChance == 1 then 
@@ -669,7 +679,9 @@ function ENT:InitializeMiniHooks()
 
             if random( 1, 200 ) < self:GetTextChance() and !self:GetIsTyping() and !self:IsSpeaking() and self:CanType() then
                 self.l_keyentity = ply
-                self:TypeMessage( self:GetTextLine( "response" ) )
+                local line = self:GetTextLine( "response" )
+                line = LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line
+                self:TypeMessage( line )
             end
         end, true )
 
@@ -680,7 +692,9 @@ function ENT:InitializeMiniHooks()
                 self:PlaySoundFile( self:GetVoiceLine( "idle" ) )
             elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                 self.l_keyentity = ply
-                self:TypeMessage( self:GetTextLine( "response" ) )
+                local line = self:GetTextLine( "response" )
+                line = LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line
+                self:TypeMessage( line )
             end
         end, true )
 
@@ -691,7 +705,9 @@ function ENT:InitializeMiniHooks()
                 self:PlaySoundFile( self:GetVoiceLine( "idle" ) )
             elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                 self.l_keyentity = ply
-                self:TypeMessage( self:GetTextLine( "response" ) )
+                local line = self:GetTextLine( "response" )
+                line = LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line
+                self:TypeMessage( line )
             end
         end, true )
 
@@ -703,6 +719,28 @@ function ENT:InitializeMiniHooks()
             if self:GetIsDead() or !self:IsBeingDrawn() or !self:GetHasCustomDrawFunction() then return end
             local func = _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ].Draw
             if func then func( self, self:GetWeaponENT() ) end
+        end, true )
+
+
+        local DrawSprite = render.DrawSprite
+        local SetMaterial = render.SetMaterial
+        local color_white = color_white
+        self:Hook( "PreDrawEffects", "flashlighteffects", function()
+            if self:GetIsDead() or !self:IsBeingDrawn() then return end
+
+            if self.l_flashlighton then
+                local hand = self:GetAttachmentPoint( "hand" )
+                local start = hand.Pos + hand.Ang:Forward() * 3
+                local endpos = hand.Pos + hand.Ang:Forward() * 150
+
+                SetMaterial( flashlightsprite )
+                DrawSprite(start, 4, 4, color_white )
+
+                SetMaterial( flashlightbeam )
+                
+                render.DrawBeam( start, endpos, 40, 0, 0.9, faded )
+            end
+
         end, true )
 
     end

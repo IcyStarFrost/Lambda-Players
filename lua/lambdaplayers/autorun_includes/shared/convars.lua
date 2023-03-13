@@ -116,11 +116,12 @@ CreateLambdaConvar( "lambdaplayers_displayarmor", 0, true, true, false, "If Lamb
 
 CreateLambdaConvar( "lambdaplayers_useplayermodelcolorasdisplaycolor", 0, true, true, true, "If Lambda Player's Playermodel Color should be its Display Color. This has priority over the Display Color below", 0, 1, { type = "Bool", name = "Playermodel Color As Display Color", category = "Misc" } )
 CreateLambdaColorConvar( "lambdaplayers_displaycolor", defDisplayClr, true, true, "The display color to use for Name Display and others", { name = "Display Color", category = "Misc" } )
+CreateLambdaConvar( "lambdaplayers_animatedpfpsprayframerate", 10, true, true, false, "The frame rate of animated Spray VTFs and animated Profile Picture VTFs", 1, 60, { type = "Slider", decimals = 0, name = "Animated VTF Frame Rate", category = "Misc" } )
 --
 
 -- Lambda Player Server Convars
 CreateLambdaConvar( "lambdaplayers_lambda_infwanderdistance", 0, true, false, false, "If Lambda Players should be able to walk anywhere on the navmesh instead of only walking within 1500 source units", 0, 1, { type = "Bool", name = "Unlimited Walk Distance", category = "Lambda Server Settings" } )
-CreateLambdaConvar( "lambdaplayers_lambda_avoid", 1, true, false, false, "If enabled, Lambdas will try their best to avoid obstacles. Note: This will decrease performance", 0, 1, { type = "Bool", name = "Obstacle Avoiding", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_avoid", 0, true, false, false, "If enabled, Lambdas will try their best to avoid obstacles. Note: This will decrease performance", 0, 1, { type = "Bool", name = "Obstacle Avoiding", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_maxhealth", 100, true, false, false, "Max Lamda Player Health", 1, 10000, { type = "Slider", decimals = 0, name = "Max Health", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_spawnhealth", 100, true, false, false, "The amount of health Lambda Players will spawn with", 1, 10000, { type = "Slider", decimals = 0, name = "Spawning Health", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_maxarmor", 100, true, false, false, "Max Lambda Player Armor", 0, 10000, { type = "Slider", decimals = 0, name = "Max Armor", category = "Lambda Server Settings" } )

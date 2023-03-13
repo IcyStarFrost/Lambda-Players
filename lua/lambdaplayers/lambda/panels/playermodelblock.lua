@@ -67,4 +67,4 @@ local function OpenPlayermodelBlockPanel( ply )
 
 
 end
-RegisterLambdaPanel( "Playermodel Blacklist", "Opens a panel that allows you to prevent Lambdas from using certain playermodels. You must a Super Admin to use this Panel. YOU MUST UPDATE LAMBDA DATA AFTER ANY CHANGES!", OpenPlayermodelBlockPanel )
+RegisterLambdaPanel( "Playermodel Blacklist", "Opens a panel that allows you to prevent Lambdas from using certain playermodels. You must be a Super Admin to use this Panel. YOU MUST UPDATE LAMBDA DATA AFTER ANY CHANGES!", OpenPlayermodelBlockPanel )

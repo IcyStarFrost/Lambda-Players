@@ -95,4 +95,4 @@ local function OpenNPCPanel( ply )
     end )
 
 end
-RegisterLambdaPanel( "NPC Spawnlist", "Opens a panel that allows you to choose what NPCs Lambdas are allowed to spawn. You must a Super Admin to use this Panel.", OpenNPCPanel )
+RegisterLambdaPanel( "NPC Spawnlist", "Opens a panel that allows you to choose what NPCs Lambdas are allowed to spawn. You must be a Super Admin to use this Panel.", OpenNPCPanel )

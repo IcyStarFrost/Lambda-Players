@@ -184,17 +184,6 @@ local Material = Material
 local voiceicon = Material( "voice/icntlk_pl" )
 
 
-local function CreateProfilePictureMat( ent )
-    local pfp = ent:GetProfilePicture()
-
-    local profilepicturematerial = Material( pfp )
-
-    if profilepicturematerial:IsError() then
-        local model = ent:GetModel()
-        profilepicturematerial = Material( "spawnicons/" .. sub( model, 1, #model - 4 ) .. ".png" )
-    end
-    return profilepicturematerial
-end
 
 -- Voice icons, voice positioning, all that stuff will be handled in here.
 local function PlaySoundFile( ent, soundname, index, is3d )
@@ -280,12 +269,12 @@ local function PlaySoundFile( ent, soundname, index, is3d )
 
             for k, v in ipairs( _LAMBDAPLAYERS_Voicechannels ) do
                 if IsValid( ent ) and v[ 5 ] == ent:EntIndex() then
-                    _LAMBDAPLAYERS_Voicechannels[ k ] = { snd, ent:GetLambdaName(), CreateProfilePictureMat( ent ), length, ent:EntIndex() }
+                    _LAMBDAPLAYERS_Voicechannels[ k ] = { snd, ent:GetLambdaName(), ent:GetPFPMat(), length, ent:EntIndex() }
                     replaced = true
                     break
                 end
             end
-            if !replaced and IsValid( ent ) then table_insert( _LAMBDAPLAYERS_Voicechannels, { snd, ent:GetLambdaName(), CreateProfilePictureMat( ent ), length, ent:EntIndex() } ) end
+            if !replaced and IsValid( ent ) then table_insert( _LAMBDAPLAYERS_Voicechannels, { snd, ent:GetLambdaName(), ent:GetPFPMat(), length, ent:EntIndex() } ) end
 
             local num
             local realtime
@@ -455,7 +444,7 @@ local CreateMaterial = CreateMaterial
 local Material = Material
 local color_white = color_white
 local DecalEx = util.DecalEx
-
+local framerateconvar = GetConVar( "lambdaplayers_animatedpfpsprayframerate" )
 
 local function Spray( spraypath, tracehitpos, tracehitnormal, index, attemptedfallback )
     local isVTF = EndsWith( spraypath, ".vtf" ) -- If the file is a VTF
@@ -470,7 +459,7 @@ local function Spray( spraypath, tracehitpos, tracehitnormal, index, attemptedfa
                 [ "AnimatedTexture" ] = { -- Support for Animated VTFs
                     [ "animatedTextureVar" ] = "$basetexture",
                     [ "animatedTextureFrameNumVar" ] = "$frame",
-                    [ "animatedTextureFrameRate" ] = 10
+                    [ "animatedTextureFrameRate" ] = framerateconvar:GetInt()
                 }
             }
         })

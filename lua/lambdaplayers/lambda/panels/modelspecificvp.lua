@@ -93,4 +93,4 @@ local function OpenModelVoiceProfilePanel( ply )
     end
 end
 
-RegisterLambdaPanel( "Playermodel Voice Profile", "Opens a panel that allows you to set a Lambda voice profile to a specific playermodel. YOU MUST UPDATE LAMBDA DATA AFTER ANY CHANGES!", OpenModelVoiceProfilePanel )
+RegisterLambdaPanel( "Playermodel Voice Profile", "Opens a panel that allows you to set a Lambda voice profile to a specific playermodel. YOU MUST UPDATE LAMBDA DATA AFTER ANY CHANGES! You must be a Super Admin to use this panel!", OpenModelVoiceProfilePanel )

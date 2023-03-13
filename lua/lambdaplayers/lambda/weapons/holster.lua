@@ -26,18 +26,20 @@
     keepdistance    | Number |      The distance the Lambda will keep from the target
     attackrange     | Number |      The range the Lambda can attack from
     damage          | Number |      The amount of damage the weapon can deal
-    rateoffire      | Number |      How fast the weapon is fired/used
+    rateoffire      | Number |      How fast the weapon is fired/used in seconds
+    rateoffiremin   | Number |      The minimum amount of time this weapon can be fired/used. These two are used to make random fire delays  Won't work if the normal rateoffire variable is set    | OPTIONAL
+    rateoffiremax   | Number |      The maximum amount of time this weapon can be fired/used. These two are used to make random fire delays. Won't work if the normal rateoffire variable is set     | OPTIONAL
     attacksnd       | String |      The sound that will play when the weapon is used
     hitsnd          | String |      The sound that will play when the weapon hits our enemy
     attackanim      | Number |      The ACT Gesture to play when used
 
-    OnDamage        | Function |    A function that will be called when the Lambda Player is hurt while holding this weapon | OPTIONAL
-    Draw            | Function |    A client side function that allows you to make render effects in 3d space   | OPTIONAL
-    callback        | Function |    A function that will be called when the weapon is used. Return true if you are making a custom shooting/swinging code   | OPTIONAL
-    OnEquip         | Function |    A function that will be called when the weapon is equipped  | OPTIONAL
-    OnUnequip       | Function |    A function that will be called when the weapon is unequipped    | OPTIONAL
-    OnDrop          | Function |    A client side function that will be called when weapon's dropped prop is created | OPTIONAL
-    OnThink         | Function |    A function that runs every tick on server while the weapon is held by Lambda Player. Returning a number in the function will add a cooldown | OPTIONAL
+    SERVERSIDE | OnDamage( Entity lambda, Entity wepent, DMGINFO dmginfo )        | Function |    A function that will be called when the Lambda Player is hurt while holding this weapon | OPTIONAL
+    CLIENTSIDE | Draw( Entity lambda, Entity wepent )            | Function |    A client side function that allows you to make render effects in 3d space   | OPTIONAL
+    SERVERSIDE | callback( Entity lambda, Entity wepent, Entity target )        | Function |    A function that will be called when the weapon is used. Return true if you are making a custom shooting/swinging code   | OPTIONAL
+    SERVERSIDE | OnEquip( Entity lambda, Entity wepent )         | Function |    A function that will be called when the weapon is equipped  | OPTIONAL
+    SERVERSIDE | OnUnequip( Entity lambda, Entity wepent )       | Function |    A function that will be called when the weapon is unequipped    | OPTIONAL
+    CLIENTSIDE | OnDrop( Entity cs_prop )          | Function |    A client side function that will be called when weapon's dropped prop is created | OPTIONAL
+    SHARED     | OnThink( Entity lambda, Entity wepent )         | Function |    A function that runs every tick on server while the weapon is held by Lambda Player. Returning a number in the function will add a cooldown | OPTIONAL
 
 
 
@@ -64,7 +66,9 @@
     keepdistance    | Number |      The distance the Lambda will keep from the target
     attackrange     | Number |      The range the Lambda can attack from
     damage          | Number |      The amount of damage the weapon can deal
-    rateoffire      | Number |      How fast the weapon is fired/used
+    rateoffire      | Number |      How fast the weapon is fired/used in seconds
+    rateoffiremin   | Number |      The minimum amount of time this weapon can be fired/used. These two are used to make random fire delays  Won't work if the normal rateoffire variable is set    | OPTIONAL
+    rateoffiremax   | Number |      The maximum amount of time this weapon can be fired/used. These two are used to make random fire delays. Won't work if the normal rateoffire variable is set     | OPTIONAL
     attackanim      | Number |      The ACT Gesture to play when used
     bulletcount     | Number |      The amount of bullets to fire when used
     attacksnd       | String |      The sound that will play when the weapon is fired
@@ -84,14 +88,15 @@
     reloadanimspeed | Number |      The speed of the reload animation   | OPTIONAL
     reloadsounds    | Table |       A table of tables that each have their 1 index as the time the sound will play and the 2 index being the sound path. Example reloadsounds = { { 0.5, "somesound1" }, { 1, "somesound2" } }  | OPTIONAL
    
-    OnDamage        | Function |    A function that will be called when the Lambda Player is hurt while holding this weapon | OPTIONAL
-    Draw            | Function |    A client side function that allows you to make render effects in 3d space   | OPTIONAL
-    callback        | Function |    A function that will be called when the weapon is used. Return true if you are making a custom shooting/swinging code   | OPTIONAL
-    OnEquip         | Function |    A function that will be called when the weapon is equipped  | OPTIONAL
-    OnUnequip       | Function |    A function that will be called when the weapon is unequipped    | OPTIONAL
-    OnReload        | Function |    A function that will be called when the weapon's reload is started. Return true if you are making a custom reloading code  | OPTIONAL
-    OnDrop          | Function |    A client side function that will be called when weapon's dropped prop is created | OPTIONAL
-    OnThink         | Function |    A function that runs every tick on server while the weapon is held by Lambda Player. Returning a number in the function will add a cooldown | OPTIONAL
+
+    SERVERSIDE | OnDamage( Entity lambda, Entity wepent, DMGINFO dmginfo )        | Function |    A function that will be called when the Lambda Player is hurt while holding this weapon | OPTIONAL
+    CLIENTSIDE | Draw( Entity lambda, Entity wepent )            | Function |    A client side function that allows you to make render effects in 3d space   | OPTIONAL
+    SERVERSIDE | callback( Entity lambda, Entity wepent, Entity target )        | Function |    A function that will be called when the weapon is used. Return true if you are making a custom shooting/swinging code   | OPTIONAL
+    SERVERSIDE | OnEquip( Entity lambda, Entity wepent )         | Function |    A function that will be called when the weapon is equipped  | OPTIONAL
+    SERVERSIDE | OnUnequip( Entity lambda, Entity wepent )       | Function |    A function that will be called when the weapon is unequipped    | OPTIONAL
+    CLIENTSIDE | OnDrop( Entity cs_prop )          | Function |    A client side function that will be called when weapon's dropped prop is created | OPTIONAL
+    SHARED     | OnThink( Entity lambda, Entity wepent )         | Function |    A function that runs every tick on server while the weapon is held by Lambda Player. Returning a number in the function will add a cooldown | OPTIONAL 
+    SERVERSIDE | OnReload( Entity lambda, Entity wepent )        | Function |    A function that will be called when the weapon's reload is started. Return true if you are making a custom reloading code  | OPTIONAL
 
     ---------------------------------
 ]]

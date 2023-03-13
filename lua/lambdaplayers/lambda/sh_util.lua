@@ -455,6 +455,7 @@ if SERVER then
     function ENT:CanTarget( ent )
         if LambdaRunHook( "LambdaCanTarget", self, ent ) then return false end
         if ent:IsNPC() and ent:GetClass() == "npc_turret_floor" and ent:GetInternalVariable( "m_lifeState" ) == 1 then return false end -- Prevent lambdas from attacking downed turrets
+        if ent.IsLambdaPlayer and !ent:Alive() then return false end
         return ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() and ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 1 and ent:Alive() )
     end
 
@@ -1178,6 +1179,43 @@ if SERVER then
 
 
 elseif CLIENT then
+
+    -- This is to keep all VTF pfps unique.
+    local framerateconvar = GetConVar( "lambdaplayers_animatedpfpsprayframerate" )
+    _LambdaPfpIndex = _LambdaPfpIndex or 0
+
+    -- Returns our profile picture as a Material object.
+    -- Very expensive to run. Try to cache the result so this can only be ran once
+    function ENT:GetPFPMat()
+        local pfp = self:GetProfilePicture()
+
+        local isVTF = string.EndsWith( pfp, ".vtf" )
+        local profilepicturematerial
+    
+        -- VTF ( Valve Texture Format ) support. This allows animated Profile Pictures
+        if isVTF then
+            _LambdaPfpIndex = _LambdaPfpIndex + 1
+            profilepicturematerial = CreateMaterial( "lambdaprofilepicVTFmaterial" .. _LambdaPfpIndex, "UnlitGeneric", {
+                [ "$basetexture" ] = pfp,
+                [ "$translucent" ] = 1,
+                [ "Proxies" ] = {
+                    [ "AnimatedTexture" ] = {
+                        [ "animatedTextureVar" ] = "$basetexture",
+                        [ "animatedTextureFrameNumVar" ] = "$frame",
+                        [ "animatedTextureFrameRate" ] = framerateconvar:GetInt()
+                    }
+                }
+            })
+        else
+            profilepicturematerial = Material( pfp )
+        end
+    
+        if profilepicturematerial:IsError() then
+            local model = self:GetModel()
+            profilepicturematerial = Material( "spawnicons/" .. string.sub( model, 1, #model - 4 ) .. ".png" )
+        end
+        return profilepicturematerial
+    end
 
     function ENT:IsBeingDrawn()
         return RealTime() < self.l_lastdraw

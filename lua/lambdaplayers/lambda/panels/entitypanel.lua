@@ -94,4 +94,4 @@ local function OpenEntityPanel( ply )
     end )
 
 end
-RegisterLambdaPanel( "Entity Spawnlist", "Opens a panel that allows you to choose what Entities Lambdas are allowed to spawn. You must a Super Admin to use this Panel.", OpenEntityPanel )
+RegisterLambdaPanel( "Entity Spawnlist", "Opens a panel that allows you to choose what Entities Lambdas are allowed to spawn. You must be a Super Admin to use this Panel.", OpenEntityPanel )
