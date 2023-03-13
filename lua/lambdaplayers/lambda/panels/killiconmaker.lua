@@ -28,13 +28,11 @@ function PANEL:Init()
 		self.ModelPanel = bg:Add( "DAdjustableModelPanel" )
 		self.ModelPanel:Dock( FILL )
 		self.ModelPanel.FarZ = 32768
-        local shading = false
+
 
         function self.ModelPanel.PreDrawModel( mdlpnl, ent )
             ent:SetMaterial( "models/debug/debugwhite" )
-            if !shading then
-                render.SuppressEngineLighting( true )
-            end
+            render.SuppressEngineLighting( true )
         end
 
 		function self.ModelPanel.PostDrawModel( mdlpnl, ent )
@@ -139,14 +137,6 @@ function PANEL:Init()
 		Render:SetWide( 50 )
 		Render:SetTooltip( "Render Icon" )
 
-        
-        local lighting = controls:Add( "DButton" )
-		lighting:SetText( "Toggle Shading" )
-		lighting.DoClick = function() shading = !shading end
-		lighting:Dock( RIGHT )
-		lighting:DockMargin( 2, 0, 0, 0 )
-		lighting:SetWide( 50 )
-		lighting:SetTooltip( "Toggle shading" )
 
 		local Rotate = controls:Add( "DImageButton" )
 		Rotate:SetImage( "icon16/arrow_rotate_clockwise.png" )
@@ -450,7 +440,9 @@ function PANEL:RenderIcon()
     cam.Start3D( tab.cam_pos, tab.cam_ang, tab.cam_fov, 0, 0, ScrW(), ScrH(), 1, 1024)
 
     render.ClearDepth()
-    render.SuppressEngineLighting(true)
+    render.SuppressEngineLighting( true )
+
+
 
     tab.ent:DrawModel()
 
@@ -475,6 +467,9 @@ function PANEL:RenderIcon()
     local mat = Material( "../data/lambdaplayers_renderedkillicons/" .. name .. ".png" )
 
     self.imagepnl:SetMaterial( mat )
+
+    render.SuppressEngineLighting( false )
+
 
     local vmt = [[
 UnlitGeneric
