@@ -33,15 +33,15 @@
     hitsnd          | String |      The sound that will play when the weapon hits our enemy
     attackanim      | Number |      The ACT Gesture to play when used
 
-    SERVERSIDE | OnTakeDamage( Entity lambda, Entity wepent, DMGINFO dmginfo )                              | Function |    A function that will be called when the Lambda Player is taking damage while holding this weapon. Return true to block dealing damage | OPTIONAL
-    CLIENTSIDE | OnDraw( Entity lambda, Entity wepent )                                                     | Function |    A function that allows you to make render effects in 3D space | OPTIONAL
-    SERVERSIDE | OnAttack( Entity lambda, Entity wepent, Entity target )                                    | Function |    A function that will be called when the weapon is used. Return true if you are making a custom shooting/swinging code | OPTIONAL
-    SERVERSIDE | OnDeploy( Entity lambda, Entity wepent )                                                   | Function |    A function that will be called when the weapon is equipped by the Lambda Player | OPTIONAL
-    SERVERSIDE | OnHolster( Entity lambda, Entity wepent, String oldWep, String newWep )                    | Function |    A function that will be called when the weapon being unequipped by the Lambda Player. Return true to prevent Lambda Player from holstering this weapon | OPTIONAL
-    CLIENTSIDE | OnDrop( Entity lambda, Entity cs_prop )                                                    | Function |    A function that will be called when weapon's dropped prop is created | OPTIONAL
-    SERVERSIDE | OnThink( Entity lambda, Entity wepent, Bool dead )                                         | Function |    A function that runs everytime while this weapon is currently held by the Lambda Player. Returning any positive number in the function will add a cooldown | OPTIONAL 
-    SERVERSIDE | OnDeath( Entity lambda, Entity wepent, DMGINFO dmginfo )                                   | Function |    A function that will be called when the Lambda Player dies while holding this weapon | OPTIONAL
-    SERVERSIDE | OnDealDamage( Entity lambda, Entity wepent, Entity target, DMGINFO dmginfo, Bool lethal )  | Function |    A function that will be called when the Lambda Player successfully deals damage to something with this weapon | OPTIONAL
+    SERVERSIDE | OnTakeDamage( Entity lambda, Entity wepent, DMGINFO dmginfo )                                                  | Function |    A function that will be called when the Lambda Player is taking damage while holding this weapon. Return true to block dealing damage | OPTIONAL
+    CLIENTSIDE | OnDraw( Entity lambda, Entity wepent )                                                                         | Function |    A function that allows you to make render effects in 3D space | OPTIONAL
+    SERVERSIDE | OnAttack( Entity lambda, Entity wepent, Entity target )                                                        | Function |    A function that will be called when the weapon is used. Return true if you are making a custom shooting/swinging code | OPTIONAL
+    SERVERSIDE | OnDeploy( Entity lambda, Entity wepent )                                                                       | Function |    A function that will be called when the weapon is equipped by the Lambda Player | OPTIONAL
+    SERVERSIDE | OnHolster( Entity lambda, Entity wepent, String oldWep, String newWep )                                        | Function |    A function that will be called when the weapon being unequipped by the Lambda Player. Return true to prevent Lambda Player from holstering this weapon | OPTIONAL
+    CLIENTSIDE | OnDrop( Entity lambda, Entity wepent, Entity cs_prop )                                                         | Function |    A function that will be called when weapon's dropped prop is created | OPTIONAL
+    SERVERSIDE | OnThink( Entity lambda, Entity wepent, Bool dead )                                                             | Function |    A function that runs everytime while this weapon is currently held by the Lambda Player. Returning any positive number in the function will add a cooldown | OPTIONAL 
+    SERVERSIDE | OnDeath( Entity lambda, Entity wepent, DMGINFO dmginfo )                                                       | Function |    A function that will be called when the Lambda Player dies while holding this weapon | OPTIONAL
+    SERVERSIDE | OnDealDamage( Entity lambda, Entity wepent, Entity target, DMGINFO dmginfo, Bool dealtDamage, Bool lethal )    | Function |    A function that will be called when the Lambda Player deals damage to something with this weapon | OPTIONAL
 
 
 
@@ -90,16 +90,15 @@
     reloadanimspeed | Number |      The speed of the reload animation   | OPTIONAL
     reloadsounds    | Table |       A table of tables that each have their 1 index as the time the sound will play and the 2 index being the sound path. Example reloadsounds = { { 0.5, "somesound1" }, { 1, "somesound2" } }  | OPTIONAL
 
-    SERVERSIDE | OnTakeDamage( Entity lambda, Entity wepent, DMGINFO dmginfo )                              | Function |    A function that will be called when the Lambda Player is taking damage while holding this weapon. Return true to block dealing damage | OPTIONAL
-    CLIENTSIDE | OnDraw( Entity lambda, Entity wepent )                                                     | Function |    A function that allows you to make render effects in 3D space | OPTIONAL
-    SERVERSIDE | OnAttack( Entity lambda, Entity wepent, Entity target )                                    | Function |    A function that will be called when the weapon is used. Return true if you are making a custom shooting/swinging code | OPTIONAL
-    SERVERSIDE | OnDeploy( Entity lambda, Entity wepent )                                                   | Function |    A function that will be called when the weapon is equipped by the Lambda Player | OPTIONAL
-    SERVERSIDE | OnHolster( Entity lambda, Entity wepent, String oldWep, String newWep )                    | Function |    A function that will be called when the weapon being unequipped by the Lambda Player. Return true to prevent Lambda Player from holstering this weapon | OPTIONAL
-    CLIENTSIDE | OnDrop( Entity lambda, Entity cs_prop )                                                    | Function |    A function that will be called when weapon's dropped prop is created | OPTIONAL
-    SERVERSIDE | OnThink( Entity lambda, Entity wepent, Bool dead )                                         | Function |    A function that runs everytime while this weapon is currently held by the Lambda Player. Returning any positive number in the function will add a cooldown | OPTIONAL 
-    SERVERSIDE | OnReload( Entity lambda, Entity wepent )                                                   | Function |    A function that will be called when this weapon's reload is started. Return true if you are making a custom reloading code | OPTIONAL
-    SERVERSIDE | OnDeath( Entity lambda, Entity wepent, DMGINFO dmginfo )                                   | Function |    A function that will be called when the Lambda Player dies while holding this weapon | OPTIONAL
-    SERVERSIDE | OnDealDamage( Entity lambda, Entity wepent, Entity target, DMGINFO dmginfo, Bool lethal )  | Function |    A function that will be called when the Lambda Player successfully deals damage to something with this weapon | OPTIONAL
+    CLIENTSIDE | OnDraw( Entity lambda, Entity wepent )                                                                         | Function |    A function that allows you to make render effects in 3D space | OPTIONAL
+    SERVERSIDE | OnAttack( Entity lambda, Entity wepent, Entity target )                                                        | Function |    A function that will be called when the weapon is used. Return true if you are making a custom shooting/swinging code | OPTIONAL
+    SERVERSIDE | OnDeploy( Entity lambda, Entity wepent )                                                                       | Function |    A function that will be called when the weapon is equipped by the Lambda Player | OPTIONAL
+    SERVERSIDE | OnHolster( Entity lambda, Entity wepent, String oldWep, String newWep )                                        | Function |    A function that will be called when the weapon being unequipped by the Lambda Player. Return true to prevent Lambda Player from holstering this weapon | OPTIONAL
+    CLIENTSIDE | OnDrop( Entity lambda, Entity wepent, Entity cs_prop )                                                         | Function |    A function that will be called when weapon's dropped prop is created | OPTIONAL
+    SERVERSIDE | OnThink( Entity lambda, Entity wepent, Bool dead )                                                             | Function |    A function that runs everytime while this weapon is currently held by the Lambda Player. Returning any positive number in the function will add a cooldown | OPTIONAL 
+    SERVERSIDE | OnReload( Entity lambda, Entity wepent )                                                                       | Function |    A function that will be called when this weapon's reload is started. Return true if you are making a custom reloading code | OPTIONAL
+    SERVERSIDE | OnDeath( Entity lambda, Entity wepent, DMGINFO dmginfo )                                                       | Function |    A function that will be called when the Lambda Player dies while holding this weapon | OPTIONAL
+    SERVERSIDE | OnDealDamage( Entity lambda, Entity wepent, Entity target, DMGINFO dmginfo, Bool dealtDamage, Bool lethal )    | Function |    A function that will be called when the Lambda Player deals damage to something with this weapon | OPTIONAL
 
     ---------------------------------
 ]]

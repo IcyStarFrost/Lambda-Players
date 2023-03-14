@@ -566,14 +566,12 @@ if SERVER then
         self:SetPlaybackRate( speed )
 
         -- wait for it to finish
-        local endTime = CurTime() + ( len / speed )
-        while ( true ) do
-            if !IsValid( self ) then return end
-            if CurTime() >= endTime then break end
-            if self:GetIsDead() then self:RemoveGesture( id ) break end
+        local endTime = ( CurTime() + ( len / speed ) )
+        while ( CurTime() < endTime and !self:GetIsDead() and self:IsValidLayer( layer ) ) do
             coroutine.yield()
         end
 
+        self:RemoveGesture( id )
         self.l_UpdateAnimations = true
         self.l_CurrentPlayedGesture = -1
     

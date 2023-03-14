@@ -239,7 +239,7 @@ if SERVER then
             local attackerWepEnt = attacker.WeaponEnt
             if IsValid( attackerWepEnt ) and inflictor == attackerWepEnt then
                 local dealDmgFunc = attacker.l_OnDealDamagefunction
-                if dealDmgFunc then dealDmgFunc( attacker, attackerWepEnt, self, info, true ) end
+                if dealDmgFunc then dealDmgFunc( attacker, attackerWepEnt, self, info, true, true ) end
             end
         end
 
@@ -638,15 +638,12 @@ function ENT:InitializeMiniHooks()
             if target == self or ( !target:IsNPC() and !target:IsNextBot() and !target:IsPlayer() ) then return end
             LambdaRunHook( "LambdaOnOtherInjured", self, target, info, tookdamage )
 
-            if tookdamage then
-                local wepent = self:GetWeaponENT()
-                local inflictor = info:GetInflictor()
-                
-                local dealDmgFunc = self.l_OnDealDamagefunction
-                if info:GetAttacker() == self and inflictor == wepent and isfunction( dealDmgFunc ) then
-                    local killed = ( ( target.IsLambdaPlayer or target:IsPlayer() ) and !target:Alive() or target:Health() <= 0 )
-                    dealDmgFunc( self, wepent, target, info, killed ) 
-                end
+            local wepent = self:GetWeaponENT()
+            local inflictor = info:GetInflictor()
+            local dealDmgFunc = self.l_OnDealDamagefunction
+            if info:GetAttacker() == self and inflictor == wepent and isfunction( dealDmgFunc ) then
+                local killed = ( tookdamage and ( ( target.IsLambdaPlayer or target:IsPlayer() ) and !target:Alive() or target:Health() <= 0 ) )
+                dealDmgFunc( self, wepent, target, info, tookdamage, killed )
             end
         end, true )
 

@@ -97,6 +97,7 @@ end
     local ignorePlys = GetConVar( "ai_ignoreplayers" )
     local panicAnimations = GetConVar( "lambdaplayers_lambda_panicanimations" )
     local sv_gravity = GetConVar( "sv_gravity" )
+    local physUpdateTime = GetConVar( "lambdaplayers_lambda_physupdatetime" )
 --
 
 if CLIENT then
@@ -550,7 +551,7 @@ function ENT:Think()
             -- Change collision bounds based on if we are crouching or not.
             self:SetCollisionBounds( collisionmins, ( isCrouched and crouchingcollisionmaxs or standingcollisionmaxs ) )
 
-            self.l_nextphysicsupdate = curTime + 0.5
+            self.l_nextphysicsupdate = ( curTime + physUpdateTime:GetFloat() )
         end
 
         -- Handle picking up entities

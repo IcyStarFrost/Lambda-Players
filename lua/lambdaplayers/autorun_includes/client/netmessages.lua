@@ -154,7 +154,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     local wpnData = _LAMBDAPLAYERSWEAPONS[ wpnName ]
     if istable( wpnData ) then
         local dropFunc = wpnData.OnDrop
-        if isfunction( dropFunc ) then dropFunc( lambda, cs_prop ) end
+        if isfunction( dropFunc ) then dropFunc( lambda, ent, cs_prop ) end
     end
 
     local phys = cs_prop:GetPhysicsObject()
