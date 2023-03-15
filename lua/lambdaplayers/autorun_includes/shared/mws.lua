@@ -62,9 +62,9 @@ local presettbl = {
     [ "Custom Random" ] = "customrandom"
 }
 local perspreset = CreateLambdaConvar( "lambdaplayers_mwspersonality_preset", "random", true, false, false, "The preset MWS Spawned Lambda Personalities should use. Set this to Custom to make use of the chance sliders", nil, nil, { type = "Combo", options = presettbl, name = "Personality Preset", category = "MWS" } )
+local MWSConvars = {}
 
 hook.Add( "LambdaOnModulesLoaded", "lambdaplayers_mwspersonalities", function()
-    local MWSConvars = {}
     for _, v in ipairs( LambdaPersonalityConVars ) do
         local convar = CreateLambdaConvar( "lambdaplayers_mwspersonality_" .. v[ 1 ] .. "chance", 30, true, false, false, "The chance " .. v[ 1 ] .. " will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = v[ 1 ] .. " Chance", category = "MWS" } )
         table_insert( MWSConvars, { v[ 1 ], convar } )
