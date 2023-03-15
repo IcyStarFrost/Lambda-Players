@@ -109,12 +109,14 @@ local function OpenNamePanel( ply )
     chat.AddText( "Requesting Names from Server.." )
 
     LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/customnames.json", "json", function( data )
+        hasdata = true
+        
         if !data then return end
 
         LAMBDAPANELS:SortStrings( data )
         table.Merge( names, data ) 
         
-        hasdata = true
+        
 
         for k, v in ipairs( data ) do
             local line = listview:AddLine( v )
