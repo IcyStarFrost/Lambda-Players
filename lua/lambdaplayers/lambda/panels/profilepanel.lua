@@ -318,6 +318,7 @@ local function OpenProfilePanel( ply )
         LambdaCreateThread( function()
             RecursiveFindNum( "materials/lambdaplayers/custom_profilepictures" )
             RecursiveFind( "materials/lambdaplayers/custom_profilepictures" )
+            if !IsValid( lbl ) then return end
             lbl:SetText( "Click on a image to set it as the profile picture.\nFinished!"  )
         end )
 
