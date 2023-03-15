@@ -76,6 +76,7 @@ function TOOL.BuildCPanel( pnl )
         local files, dirs = file.Find( dir .. "/*", "GAME", "datedesc" )
 
         for k, v in ipairs( files ) do  
+            if !IsValid( pnl ) then return end
 
             checkedcount = checkedcount + 1
 
@@ -115,7 +116,7 @@ function TOOL.BuildCPanel( pnl )
             coroutine.wait( 0.05 )
         end
 
-        for k, v in ipairs( dirs ) do RecursiveFind( dir .. "/" .. v ) end
+        for k, v in ipairs( dirs ) do  if !IsValid( pnl ) then return end RecursiveFind( dir .. "/" .. v ) end
     end
 
     LambdaCreateThread( function()
