@@ -14,18 +14,18 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 10,
         attackrange = 50,
 
-        OnEquip = function( lambda, wepent )
+        OnDeploy = function( lambda, wepent )
             wepent.IsFirstSwing = true
             wepent.NextFirstSwingTime = CurTime()
             wepent:EmitSound( "Weapon_Knife.Deploy" )
         end,
 
-        OnUnequip = function( lambda, wepent )
+        OnHolster = function( lambda, wepent )
             wepent.IsFirstSwing = nil
             wepent.NextFirstSwingTime = nil
         end,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             if CurTime() > wepent.NextFirstSwingTime then
                 wepent.IsFirstSwing = true
             end

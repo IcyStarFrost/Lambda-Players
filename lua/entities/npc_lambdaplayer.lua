@@ -77,6 +77,7 @@ end
     local TraceHull = util.TraceHull
     local FrameTime = FrameTime
     local unstucktable = {}
+    local swimtable = { collisiongroup = COLLISION_GROUP_PLAYER }
     local sub = string.sub
     local lower = string.lower
     local RealTime = RealTime
@@ -95,6 +96,8 @@ end
     local LambdaSpawnBehavior = GetConVar( "lambdaplayers_combat_spawnbehavior" )
     local ignorePlys = GetConVar( "ai_ignoreplayers" )
     local panicAnimations = GetConVar( "lambdaplayers_lambda_panicanimations" )
+    local sv_gravity = GetConVar( "sv_gravity" )
+    local physUpdateTime = GetConVar( "lambdaplayers_lambda_physupdatetime" )
 --
 
 if CLIENT then
@@ -147,6 +150,7 @@ function ENT:Initialize()
         self.l_UpdateAnimations = true -- If we can update our animations. Used for the purpose of playing sequences
         self.VJ_AddEntityToSNPCAttackList = true -- Makes creature-based VJ SNPCs able to damages us with melee and leap attacks
         self.l_isswimming = false -- If we are currenly swimming (only used to recompute paths when exitting swimming)
+        self.l_AvoidCheck_NextToDoor = false -- If we are currenly near a door and shouldn't use obstacle avoidance
 
         self.l_UnstuckBounds = 50 -- The distance the unstuck process will use to check. This value increments during the process and set back to 50 when done
         self.l_nextspeedupdate = 0 -- The next time we update our speed
@@ -172,6 +176,7 @@ function ENT:Initialize()
         self.l_NextWeaponThink = 0 -- The next time we will run the currenly held weapon's think callback
         self.l_CurrentPlayedGesture = -1 -- Gesture ID that is assigned when the ENT:PlayGestureAndWait( id ) function is ran
         self.l_retreatendtime = 0 -- The time until we stop retreating
+        self.l_AvoidCheck_NextDoorCheck = 0 -- The next time we will check if we are next to a door while using obstacle avoidance
 
         self.l_ladderarea = NULL -- The ladder nav area we are currenly using to climb
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
@@ -258,7 +263,7 @@ function ENT:Initialize()
         self.loco:SetDeceleration( 1000000 )
         self.loco:SetStepHeight( 30 )
         self.l_LookAheadDistance = 0
-        self.loco:SetGravity( -physenv.GetGravity().z ) -- Makes us fall at the same speed as the real players do
+        self.loco:SetGravity( sv_gravity:GetFloat() ) -- Makes us fall at the same speed as the real players do
 
         self:SetRunSpeed( runningSpeed:GetInt() )
         self:SetCrouchSpeed( 60 )
@@ -442,12 +447,22 @@ function ENT:Think()
     end
     -- -- -- -- --
 
-    if self:GetIsDead() then return end
-
+    local isDead = self:GetIsDead()
     local wepent = self:GetWeaponENT()
 
+    -- Run our weapon's think callback if possible
+    if SERVER and curTime > self.l_NextWeaponThink then
+        local wepThinkFunc = self.l_WeaponThinkFunction
+        if wepThinkFunc then
+            local thinkTime = wepThinkFunc( self, wepent, isDead )
+            if isnumber( thinkTime ) and thinkTime > 0 then self.l_NextWeaponThink = curTime + thinkTime end 
+        end
+    end
+
     -- Allow addons to add stuff to Lambda's Think
-    LambdaRunHook( "LambdaOnThink", self, wepent )
+    LambdaRunHook( "LambdaOnThink", self, wepent, isDead )
+
+    if isDead then return end
     
     if ( SERVER ) then
 
@@ -469,15 +484,6 @@ function ENT:Think()
             end
             
             self.l_debugupdate = curTime + 0.1
-        end
-
-        -- Run our weapon's think callback if possible
-        if curTime > self.l_NextWeaponThink then
-            local wepThinkFunc = self.l_WeaponThinkFunction
-            if wepThinkFunc then
-                local thinkTime = wepThinkFunc( self, wepent )
-                if isnumber( thinkTime ) then self.l_NextWeaponThink = curTime + thinkTime end 
-            end
         end
 
         if self.l_ispickedupbyphysgun then 
@@ -545,7 +551,7 @@ function ENT:Think()
             -- Change collision bounds based on if we are crouching or not.
             self:SetCollisionBounds( collisionmins, ( isCrouched and crouchingcollisionmaxs or standingcollisionmaxs ) )
 
-            self.l_nextphysicsupdate = curTime + 0.5
+            self.l_nextphysicsupdate = ( curTime + physUpdateTime:GetFloat() )
         end
 
         -- Handle picking up entities
@@ -685,13 +691,36 @@ function ENT:Think()
 
                 local swimVel = vector_origin
                 if swimPos and self.l_issmoving then
-                    local swimTrace = self:Trace( swimPos + Vector( 0, 0, 72 ), swimPos )
-                    if swimTrace.HitPos:IsUnderwater() then swimPos = swimTrace.HitPos end -- Try swimming a little higher if possible
+                    local swimSpeed = ( ( ( self:GetRun() and !isCrouched ) and 320 or 160 ) * self.l_WeaponSpeedMultiplier )
+                    
+                    local path = self.l_CurrentPath
+                    if !isvector( path ) and IsValid( path ) and path:GetCurrentGoal().type == 1 then
+                        swimVel = ( vector_up * -swimSpeed )
+                    else
+                        local swimTrace = self:Trace( swimPos + vector_up * loco:GetJumpHeight(), swimPos ).HitPos
+                        if swimPos.z > selfPos.z - 32 and swimTrace:IsUnderwater() then swimPos = swimTrace end -- Try swimming a little higher if possible
+                        local swimDir = ( swimPos - selfPos ):GetNormalized()
+                        swimVel = ( swimDir * swimSpeed )
+
+                        if swimPos.z > selfPos.z then
+                            swimtable.start = selfPos
+                            swimtable.endpos = ( selfPos + swimDir * ( swimSpeed * FrameTime() * 10 ) )
+                            swimtable.filter = self
+                            
+                            local mins, maxs = self:GetCollisionBounds()
+                            swimtable.mins = mins
+                            swimtable.maxs = maxs
+
+                            if TraceHull( swimtable ).HitWorld then
+                                if !swimTrace:IsUnderwater() then
+                                    swimSpeed = swimSpeed + ( loco:GetJumpHeight() + loco:GetStepHeight() )
+                                end
+                                swimVel = ( vector_up * swimSpeed )
+                            end
+                        end
+                    end
 
                     loco:FaceTowards( swimPos )
-
-                    local swimSpeed = ( ( ( self:GetRun() and !isCrouched ) and 320 or 160 ) * self.l_WeaponSpeedMultiplier )
-                    swimVel = ( ( swimPos - selfPos ):GetNormalized() * swimSpeed )
                 end
 
                 locoVel = LerpVector( 20 * frameTime, locoVel, swimVel )

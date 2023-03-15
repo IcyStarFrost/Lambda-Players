@@ -25,13 +25,11 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 4000,
         bonemerge = true,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             self.l_WeaponUseCooldown = CurTime() + 5
             wepent:EmitSound( "weapons/pistol/pistol_empty.wav", 70, 100, 1, CHAN_WEAPON )
 
-            self:SimpleTimer( 1, function()
-                if self.l_Weapon != "volver" or !IsValid( wepent ) then return end
-
+            self:SimpleWeaponTimer( 1, function()
                 wepent:EmitSound( "weapons/357/357_fire2.wav", 70, random( 70, 75 ), 1, CHAN_WEAPON )
                 self:EmitSound( "ambient/explosions/explode_4.wav", 70, 100, 1, CHAN_WEAPON )
                 self:EmitSound( "physics/body/body_medium_break" .. random( 2, 4 ) .. ".wav", 90 )

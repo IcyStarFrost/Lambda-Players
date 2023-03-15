@@ -16,14 +16,14 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 10,
         attackrange = 70,
                 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             self.l_WeaponUseCooldown = CurTime() + Rand( 0.66, 0.85 )
             wepent:EmitSound( "Zombie.AttackMiss" )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             
-            self:SimpleTimer( 0.3, function()
+            self:SimpleWeaponTimer( 0.3, function()
                 if !IsValid( target ) or !self:IsInRange( target, 60 ) then return end
 
                 local dmg = random( 20, 30 )

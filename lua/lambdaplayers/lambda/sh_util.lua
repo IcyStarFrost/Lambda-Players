@@ -126,6 +126,22 @@ function ENT:SimpleTimer( delay, func, ignoredead )
     end )
 end
 
+-- Same as ENT:SimpleTimer(), but also checks if our weapon is valid and weapon name is the same one we created this timer with
+function ENT:SimpleWeaponTimer( delay, func, ignoredead, ignorewepname )
+    local id = tostring( func ) .. random( 1, 100000 )
+    self.l_SimpleTimers[ id ] = !ignoredead
+    
+    local wepent = self:GetWeaponENT()
+    local curWep = self:GetWeaponName()
+    
+    timer_simple( delay, function()
+        if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) or !ignoredead and !self.l_SimpleTimers[ id ] then return end
+        if !IsValid( wepent ) or !ignorewepname and self:GetWeaponName() != curWep then return end
+        func()
+        self.l_SimpleTimers[ id ] = nil
+    end )
+end
+
 -- Prevents every simple timer that does not have ignoredead from running
 function ENT:TerminateNonIgnoredDeadTimers()
     table_Empty( self.l_SimpleTimers )
@@ -139,6 +155,25 @@ function ENT:NamedTimer( name, delay, repeattimes, func, ignoredead )
     self:DebugPrint( "Created a Timer: " .. name )
     timer_create( intname, delay, repeattimes, function() 
         if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) then return end
+        local result = func()
+        if result == true then timer_Remove( intname ) self:DebugPrint( "Removed a Timer: " .. name ) end
+    end )
+
+    table_insert( self.l_Timers, intname )
+end
+
+-- Same as ENT:NamedTimer(), but also checks if our weapon is valid and weapon name is the same one we created this timer with
+function ENT:NamedWeaponTimer( name, delay, repeattimes, func, ignoredead, ignorewepname )
+    local id = self:EntIndex()
+    local intname = "lambdaplayers_" .. name .. id
+    self:DebugPrint( "Created a Weapon Timer: " .. name )
+    
+    local wepent = self:GetWeaponENT()
+    local curWep = self:GetWeaponName()
+    
+    timer_create( intname, delay, repeattimes, function() 
+        if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) then return end
+        if !IsValid( wepent ) or !ignorewepname and self:GetWeaponName() != curWep then return end
         local result = func()
         if result == true then timer_Remove( intname ) self:DebugPrint( "Removed a Timer: " .. name ) end
     end )
@@ -164,7 +199,6 @@ function ENT:RemoveTimers()
         timer_Remove( v )
     end
 end
-
 
 -- Find in sphere function with a filter
 function ENT:FindInSphere( pos, radius, filter )
@@ -312,7 +346,6 @@ function ENT:ExportLambdaInfo()
     return info
 end
 
-
 -- Performs a Trace from ourselves or the overridestart to the postion
 function ENT:Trace( pos, overridestart )
     tracetable.start = overridestart or self:WorldSpaceCenter()
@@ -332,7 +365,6 @@ function ENT:CanSee( ent )
     return ( result.Fraction == 1.0 or result.Entity == ent )
 end
 
-
 -- Returns the color that should be used in displays such as Name Display, Text Chat, ect
 -- If on Server, returns the color the ply is using for the Display Color
 local useplycolorasdisplay = GetConVar( "lambdaplayers_useplayermodelcolorasdisplaycolor" )
@@ -347,11 +379,35 @@ function ENT:GetDisplayColor( ply )
     end
 end
 
+-- Obviously returns the current state
+function ENT:GetState()
+    return self:GetNW2String( "lambda_state", "Idle" )
+end
+
+-- Returns the last state we were in
+function ENT:GetLastState()
+    return self:GetNW2String( "lambda_laststate", "Idle" )
+end
+
+-- If we currently are fighting
+function ENT:InCombat()
+    return ( self:GetState() == "Combat" and LambdaIsValid( self:GetEnemy() ) )
+end
+
+-- If we are panicking
+function ENT:IsPanicking()
+    return ( self:GetState() == "Retreat" )
+end
+
+-- Returns if we are currently speaking
+function ENT:IsSpeaking() 
+    return CurTime() < self:GetLastSpeakingTime()
+end
+
 if SERVER then
 
     local GetAllNavAreas = navmesh.GetAllNavAreas
     local ignoreplayer = GetConVar( "ai_ignoreplayers" )
-
 
     -- Applies info data from :ExportLambdaInfo() to the Lambda Player
     function ENT:ApplyLambdaInfo( info )
@@ -462,11 +518,12 @@ if SERVER then
     -- Attacks the specified entity
     function ENT:AttackTarget( ent, forceAttack )
         if !IsValid( ent ) or !forceAttack and self:IsPanicking() then return end
+        if LambdaRunHook( "LambdaOnAttackTarget", self, ent ) == true then return end
+        
         if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( self:GetVoiceLine( "taunt" ) ) end
         self:SetEnemy( ent )
         self:SetState( "Combat" )
         self:CancelMovement()
-        LambdaRunHook( "LambdaOnAttackTarget", self, ent )
     end
 
     -- Retreats from entity target
@@ -509,14 +566,12 @@ if SERVER then
         self:SetPlaybackRate( speed )
 
         -- wait for it to finish
-        local endTime = CurTime() + ( len / speed )
-        while ( true ) do
-            if !IsValid( self ) then return end
-            if CurTime() >= endTime then break end
-            if self:GetIsDead() then self:RemoveGesture( id ) break end
+        local endTime = ( CurTime() + ( len / speed ) )
+        while ( CurTime() < endTime and !self:GetIsDead() and self:IsValidLayer( layer ) ) do
             coroutine.yield()
         end
 
+        self:RemoveGesture( id )
         self.l_UpdateAnimations = true
         self.l_CurrentPlayedGesture = -1
     
@@ -577,44 +632,22 @@ if SERVER then
 
     -- Sets our state
     function ENT:SetState( state )
-        if state == self.l_State then return end
-        self:DebugPrint( "Changed state from " .. self.l_State .. " to " .. state )
-        self.l_LastState = self.l_State
+        local curState = self.l_State
+        if state == curState then return end
+        if LambdaRunHook( "LambdaOnChangeState", self, curState, state ) == true then return end
+        self:DebugPrint( "Changed state from " .. curState .. " to " .. state )
+
+        self.l_LastState = curState
         self.l_State = state
+        
         self:SetNW2String( "lambda_laststate", self.l_LastState )
         self:SetNW2String( "lambda_state", state )
-    end
-
-    -- Obviously returns the current state
-    function ENT:GetState()
-        return self:GetNW2String( "lambda_state", "Idle" )
-    end
-    
-    -- Returns the last state we were in
-    function ENT:GetLastState()
-        return self:GetNW2String( "lambda_laststate", "Idle")
-    end
-
-    -- If we currently are fighting
-    function ENT:InCombat()
-        return ( self:GetState() == "Combat" and LambdaIsValid( self:GetEnemy() ) )
-    end
-
-    -- If we are panicking
-    function ENT:IsPanicking()
-        return ( self:GetState() == "Retreat" )
     end
 
     -- Returns if our ai is disabled
     function ENT:IsDisabled()
         return self:GetIsTyping() or self.l_isfrozen or aidisable:GetBool()
     end
-
-    -- Returns if we are currently speaking
-    function ENT:IsSpeaking() 
-        return CurTime() < self:GetLastSpeakingTime()
-    end
-
     -- If we have a lethal weapon
     function ENT:HasLethalWeapon()
         return self.l_HasLethal or false
@@ -1126,47 +1159,6 @@ if SERVER then
         return stepTime
     end
 
-    local avoidtracetable = {} -- Recycled table
-    local leftcol = Color( 255, 0, 0, 10 )
-    local rightcol = Color( 0, 255, 0, 10 )
-    local TraceHull = util.TraceHull
-    local mins = Vector( -18, -18, -10 )
-    local maxs = Vector( 18, 18, 10 )
-
-    -- Fires 2 hull traces that will make the player try to move out of the way of whatever is blocking the way
-    function ENT:AvoidCheck()
-
-        avoidtracetable.start = self:WorldSpaceCenter() + self:GetRight() * 20
-        avoidtracetable.endpos = avoidtracetable.start 
-        avoidtracetable.mins = mins
-        avoidtracetable.maxs = maxs
-        avoidtracetable.filter = self
-
-        debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, rightcol )
-        local rightresult = TraceHull( avoidtracetable )
-
-        avoidtracetable.start = self:WorldSpaceCenter() - self:GetRight() * 20
-        avoidtracetable.endpos = avoidtracetable.start 
-        avoidtracetable.mins = mins
-        avoidtracetable.maxs = maxs
-        avoidtracetable.filter = self
-
-        debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, leftcol )
-        local leftresult = TraceHull( avoidtracetable )
-
-        if rightresult.Hit and !leftresult.Hit then  -- Move to the left
-            if self.loco:IsAttemptingToMove() and self.loco:GetVelocity():IsZero() then self.loco:SetVelocity( self:GetRight() * -100 ) end
-            self.loco:Approach( self:GetPos() + self:GetRight() * -50, 1 )
-        elseif leftresult.Hit and !rightresult.Hit then -- Move to the right
-            if self.loco:IsAttemptingToMove() and self.loco:GetVelocity():IsZero() then self.loco:SetVelocity( self:GetRight() * 100 ) end
-            self.loco:Approach( self:GetPos() + self:GetRight() * 50, 1 )
-        elseif leftresult.Hit and rightresult.Hit then -- Back up
-            if self.loco:IsAttemptingToMove() and self.loco:GetVelocity():IsZero() then self.loco:SetVelocity( self:GetForward() * -400 + self:GetRight() * ( CurTime() % 6 > 3 and 400 or -400 ), 1 ) end
-            self.loco:Approach( self:GetPos() + self:GetForward() * -50 + self:GetRight() * random( -50, 50 ), 1 )
-        end
-    end
-
-
     function ENT:LambdaJump()
         if !self:IsOnGround() then return end
         local curNav = self.l_currentnavarea
@@ -1177,8 +1169,11 @@ if SERVER then
         self:PlayStepSound( 1.0 )
     end
 
+end
 
-elseif CLIENT then
+if ( CLIENT ) then
+
+    local RealTime = RealTime
 
     -- This is to keep all VTF pfps unique.
     local framerateconvar = GetConVar( "lambdaplayers_animatedpfpsprayframerate" )
@@ -1218,8 +1213,7 @@ elseif CLIENT then
     end
 
     function ENT:IsBeingDrawn()
-        return RealTime() < self.l_lastdraw
+        return ( RealTime() < self.l_lastdraw )
     end
-    
 
 end

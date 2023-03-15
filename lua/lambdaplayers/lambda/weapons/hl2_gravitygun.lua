@@ -27,7 +27,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         holdtype = "physgun",
 
-        Draw = function( lambda, wepent )
+        OnDraw = function( lambda, wepent )
             if IsValid( wepent ) then
                 for i = 1, #attachtab do
                     local atID = wepent:LookupAttachment( attachtab[i] )
@@ -50,22 +50,24 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             end
         end,
 
-        OnThink = function( lambda, wepent )
-            -- Pretty much will punt any prop they get close to
-            local find = lambda:FindInSphere( lambda:GetPos(), 150, function( ent ) if !ent:IsNPC() and ent:GetClass()=="prop_physics" and !ent:IsPlayer() and !ent:IsNextBot() and lambda:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and lambda:HasPermissionToEdit( ent ) and ent:GetPhysicsObject():IsMoveable() then return true end end )
-            local prop = find[ random( #find ) ]
+        OnThink = function( lambda, wepent, dead )
+            if !dead then
+                -- Pretty much will punt any prop they get close to
+                local find = lambda:FindInSphere( lambda:GetPos(), 150, function( ent ) if !ent:IsNPC() and ent:GetClass()=="prop_physics" and !ent:IsPlayer() and !ent:IsNextBot() and lambda:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and lambda:HasPermissionToEdit( ent ) and ent:GetPhysicsObject():IsMoveable() then return true end end )
+                local prop = find[ random( #find ) ]
 
-            lambda:LookTo( prop, 3 )
+                lambda:LookTo( prop, 3 )
 
-            lambda:SimpleTimer( 1, function() -- To let the Lambda aim properly
-                if !IsValid( prop ) or !IsValid( wepent ) then return end
-                lambda:UseWeapon( prop )
-            end)
+                lambda:SimpleWeaponTimer( 1, function() -- To let the Lambda aim properly
+                    if !IsValid( prop ) then return end
+                    lambda:UseWeapon( prop )
+                end)
+            end
 
             return 1.0 -- "Attack" prop twice then do another check (1)
         end,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             self.l_WeaponUseCooldown = CurTime() + 0.4
 
             local phys = target:GetPhysicsObjectNum(0)

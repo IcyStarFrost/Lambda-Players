@@ -42,8 +42,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             end
 
             -- Cool shell ejects
-            self:SimpleTimer( 1.3, function() 
-                if self.l_Weapon != "revolver" or !IsValid( wepent ) then return end
+            self:SimpleWeaponTimer( 1.3, function() 
                 for i = 1, 6 do self:HandleShellEject( "ShellEject" ) end
             end )
         end,

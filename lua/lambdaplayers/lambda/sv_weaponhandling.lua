@@ -17,17 +17,17 @@ end
 -- See the lambda/weapons folder for weapons. Check out the holster.lua file to see the current valid weapon settings
 function ENT:SwitchWeapon( weaponname, forceswitch )
     if !self:CanEquipWeapon( weaponname ) and !forceswitch or self.l_NoWeaponSwitch then return end
-
     if !self:WeaponDataExists( weaponname ) then return end
-
     local wepent = self:GetWeaponENT()
+    
+    local oldweaponname = self.l_Weapon
+    local oldwepdata = _LAMBDAPLAYERSWEAPONS[ oldweaponname ]
+    if oldwepdata then 
+        local onHolsterFunc = ( oldwepdata.OnHolster or oldwepdata.OnUnequip )
+        if onHolsterFunc and onHolsterFunc( self, wepent, oldweaponname, weaponname ) == true then return end
+    end
+
     local weapondata = _LAMBDAPLAYERSWEAPONS[ weaponname ]
-    local oldwepdata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
-
-    if oldwepdata and isfunction( oldwepdata.OnUnequip ) then oldwepdata.OnUnequip( self, wepent ) end
-
-    if weapondata.bonemerge then wepent:AddEffects( EF_BONEMERGE ) else wepent:RemoveEffects( EF_BONEMERGE ) end
-    if weapondata.weaponscale then wepent:SetModelScale( weapondata.weaponscale, 0 ) else wepent:SetModelScale( 1, 0 ) end
 
     self.l_Weapon = weaponname
     self:SetNW2String( "lambda_spawnweapon", weaponname )
@@ -38,12 +38,15 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self.l_HoldType = weapondata.holdtype or "normal"
     self.l_CombatKeepDistance = weapondata.keepdistance
     self.l_CombatAttackRange = weapondata.attackrange
-    self.l_OnDamagefunction = weapondata.OnDamage
+    self.l_OnDamagefunction = ( weapondata.OnTakeDamage or weapondata.OnDamage )
+    self.l_OnDeathfunction = weapondata.OnDeath
+    self.l_OnDealDamagefunction = weapondata.OnDealDamage
     self.l_WeaponNoDraw = weapondata.nodraw or false
     self.l_WeaponSpeedMultiplier = weapondata.speedmultiplier or 1
     self.l_Clip = weapondata.clip or 0
     self.l_MaxClip = weapondata.clip or 0
     self.l_WeaponUseCooldown = CurTime() + ( weapondata.deploydelay or 0.1 )
+    self.l_DropWeaponOnDeath = ( weapondata.dropondeath == nil and true or weapondata.dropondeath )
 
     local killicon_ = weapondata.killicon
     if killicon_ then
@@ -57,9 +60,11 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
         wepent.l_killiconname = nil
     end
 
-    
     self:ClientSideNoDraw( self.WeaponEnt, weapondata.nodraw )
-    self:SetHasCustomDrawFunction( isfunction( weapondata.Draw ) )
+    
+    local drawFunc = ( weapondata.OnDraw or weapondata.Draw )
+    self:SetHasCustomDrawFunction( isfunction( drawFunc ) )
+
     self:SetWeaponName( weaponname )
     wepent:SetNoDraw( weapondata.nodraw )
     wepent:DrawShadow( !weapondata.nodraw )
@@ -68,13 +73,23 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     wepent:SetLocalAngles( weapondata.offang or angle_zero )
 
     wepent:SetModel( weapondata.model )
-    
-    
+    wepent:SetModelScale( ( weapondata.weaponscale or 1 ), 0 )
+
+    local weapondata = _LAMBDAPLAYERSWEAPONS[ weaponname ]
+    if weapondata.bonemerge then 
+        wepent:AddEffects( EF_BONEMERGE ) 
+    else 
+        wepent:RemoveEffects( EF_BONEMERGE ) 
+    end
+
     self.l_WeaponThinkFunction = weapondata.OnThink
-    if isfunction( weapondata.OnEquip ) then weapondata.OnEquip( self, wepent ) end
+
+    local onDeployFunc = ( weapondata.OnDeploy or weapondata.OnEquip )
+    if onDeployFunc then onDeployFunc( self, wepent ) end
+
+    self:SetIsReloading( false )
 
     LambdaRunHook( "LambdaOnSwitchWeapon", self, wepent, weapondata )
-
 end
 
 local string_find = string.find
@@ -178,7 +193,7 @@ function ENT:UseWeapon( target )
     local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
 
     local wepent = self:GetWeaponENT()
-    local callback = weapondata.callback
+    local callback = ( weapondata.OnAttack or weapondata.callback )
     
     local result
     if callback then result = callback( self, wepent, target ) end
@@ -204,7 +219,7 @@ function ENT:ReloadWeapon()
     local snds = weapondata.reloadsounds
     if snds and #snds > 0 then
         for k, tbl in ipairs( snds ) do
-            self:SimpleTimer( tbl[ 1 ], function()
+            self:SimpleWeaponTimer( tbl[ 1 ], function()
                 wep:EmitSound( tbl[ 2 ], 65, 100, 1, CHAN_WEAPON )
             end )
         end
@@ -218,7 +233,7 @@ function ENT:ReloadWeapon()
 
     self:SetIsReloading( true )
 
-    self:NamedTimer( "Reload", ( weapondata.reloadtime or 1 ), 1, function()
+    self:NamedWeaponTimer( "Reload", ( weapondata.reloadtime or 1 ), 1, function()
         if !self:GetIsReloading() then return end
         self.l_Clip = self.l_MaxClip
         self:SetIsReloading( false )
