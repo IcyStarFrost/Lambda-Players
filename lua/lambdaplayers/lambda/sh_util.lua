@@ -1120,7 +1120,7 @@ if SERVER then
 
         if ent.IsVJBaseSNPC and relations == D_HT then
             self:SimpleTimer( 0.1, function() 
-                if !IsValid( ent ) then return end
+                if !IsValid( ent ) or !ent.VJ_AddCertainEntityAsEnemy or !ent.CurrentPossibleEnemies then return end
                 ent.VJ_AddCertainEntityAsEnemy[ #ent.VJ_AddCertainEntityAsEnemy + 1 ] = self
                 ent.CurrentPossibleEnemies[ #ent.CurrentPossibleEnemies + 1 ] = self
             end, true )
