@@ -161,6 +161,8 @@ local function AddLambdaPlayersoptions()
         -- Contributor thanks!
         local contributors = panel:Help( epiccontributors ) contributors:SetColor( servercolor )
 
+        local bugreporterVois = panel:Help( "Special thanks to all those who play tested Lambda Players and reported bugs!" ) bugreporterVois:SetColor( servercolor )
+
         panel:Help( "\n-- Links --" )
 
         CreateUrlLabel( "Lambda Players GitHub", "https://github.com/IcyStarFrost/Lambda-Players", panel, TOP ) -- GitHub
