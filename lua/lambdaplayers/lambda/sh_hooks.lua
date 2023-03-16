@@ -183,7 +183,7 @@ if SERVER then
         self:GetPhysicsObject():EnableCollisions( false )
 
         -- Restart our coroutine thread
-        self.BehaveThread = coroutine.create( function() self:RunBehaviour() end )
+        self:ResetAI()
 
         -- Stop playing current gesture animation
         self:RemoveGesture( self.l_CurrentPlayedGesture )

@@ -862,6 +862,11 @@ if SERVER then
         self.l_preventdefaultspeak = bool
     end
 
+    -- Restarts the Lambda's AI thread. Useful for forcing state changes
+    function ENT:ResetAI()
+        self.BehaveThread = coroutine.create( function() self:RunBehaviour() end )
+    end
+
 
     -- Combines a table of strings into one string
 --[[     local function CombineStringTable( tbl )
