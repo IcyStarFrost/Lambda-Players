@@ -481,6 +481,7 @@ function ENT:Think()
             if thread and debugmode:GetBool() then 
                 self:SetNW2String( "lambda_threadstatus", coroutine_status( thread ) )
                 self:SetNW2String( "lambda_threadtrace", GetTraceback( thread ) )
+                self:SetNW2Bool( "lambda_isdisabled", isDisabled )
             end
             
             self.l_debugupdate = curTime + 0.1

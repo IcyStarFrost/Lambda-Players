@@ -62,7 +62,8 @@ hook.Add( "PreDrawEffects", "lambdaplayers-debughelper", function()
                 AddTextToQueue( queue, "LAMBDA IS TYPING: " .. tostring( lambda:GetIsTyping() ), boolcol )
                 AddTextToQueue( queue, "LAMBDA IS RELOADING: " .. tostring( lambda:GetIsReloading() ), boolcol )
                 AddTextToQueue( queue, "LAMBDA IS NOCLIPPING: " .. tostring( lambda:GetNoClip() ), boolcol )
-
+                AddTextToQueue( queue, "LAMBDA IS DISABLED: " .. tostring( lambda:GetNW2Bool( "lambda_isdisabled", false ) ), boolcol )
+                
                 -- Strings
                 AddTextToQueue( queue, "LAMBDA FAKE STEAMID: " .. lambda:GetNW2String( "lambda_steamid", "{ UNAVAILABLE }" ), stringcol )
                 AddTextToQueue( queue, "LAMBDA TEXT PROFILE: " .. lambda:GetNW2String( "lambda_tp", "{ UNAVAILABLE }" ), stringcol )
