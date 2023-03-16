@@ -42,7 +42,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 self.l_WeaponUseCooldown = CurTime() + 1.25
                 wepent:EmitSound( "Weapon_CombineGuard.Special1" )
 
-                self:SimpleTiSimpleWeaponTimermer( 0.75, function()
+                self:SimpleWeaponTimer( 0.75, function()
                     local comBall = ents.Create( "prop_combine_ball" )
                     if IsValid( comBall ) then 
                         wepent:EmitSound( "Weapon_IRifle.Single" )
