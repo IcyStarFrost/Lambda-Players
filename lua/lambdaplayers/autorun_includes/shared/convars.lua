@@ -159,7 +159,7 @@ CreateLambdaConvar( "lambdaplayers_combat_weapondmgmultiplier", 1, true, false, 
 --
 
 -- Lambda Player Convars
-CreateLambdaConvar( "lambdaplayers_lambda_shouldrespawn", 0, true, true, true, "If Lambda Players should respawn when they die. Note: Changing this will only apply to newly spawned Lambda Players AND only if the server allows the respawn option for non admins", 0, 1, { type = "Bool", name = "Respawn", category = "Lambda Player Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_shouldrespawn", 0, true, true, true, "If Lambda Players should respawn when they die. Note: Changing this will only apply to newly spawned Lambda Players", 0, 1, { type = "Bool", name = "Respawn", category = "Lambda Player Settings" } )
 ---- lambdaplayers_lambda_voiceprofile Located in shared/voiceprofiles.lua
 ---- lambdaplayers_lambda_spawnweapon  Located in shared/globals.lua due to code order
 --
