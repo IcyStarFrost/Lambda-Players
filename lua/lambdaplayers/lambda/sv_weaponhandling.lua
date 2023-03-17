@@ -293,7 +293,7 @@ end
 function ENT:CanEquipWeapon( weaponname )
     if weaponname != self.l_Weapon then
         local allowTbl = _LAMBDAWEAPONALLOWCONVARS[ weaponname ]
-        return ( allowTbl and allowTbl:GetBool() )
+        return ( !allowTbl or allowTbl:GetBool() )
     end
 
     return false
@@ -323,4 +323,22 @@ function ENT:SwitchToLethalWeapon()
     end
 
     self:SwitchWeapon( curWep )
+end
+
+function ENT:SwitchToSpawnWeapon()
+    local weapon = self.l_SpawnWeapon
+
+    if weapon == "random" then
+        for wepName, _ in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
+            if !self:CanEquipWeapon( wepName ) then continue end
+            weapon = wepName; break
+        end
+    end
+    
+    if !self:WeaponDataExists( weapon ) then
+        weapon = "physgun"
+        self.l_SpawnWeapon = weapon
+    end
+    
+    self:SwitchWeapon( weapon ) 
 end

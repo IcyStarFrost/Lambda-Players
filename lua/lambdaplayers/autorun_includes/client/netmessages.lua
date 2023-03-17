@@ -16,6 +16,7 @@ local ipairs = ipairs
 local ClientsideRagdoll = ClientsideRagdoll
 local EyeAngles = EyeAngles
 local istable = istable
+local AddText = chat.AddText
 local sound_PlayFile = sound.PlayFile
 local coroutine_yield = coroutine.yield
 local origin = Vector()
@@ -358,7 +359,7 @@ net.Receive( "lambdaplayers_updatedata", function()
     LambdaTextProfiles = LAMBDAFS:GetTextProfiles()
     LambdaModelVoiceProfiles = LAMBDAFS:GetModelVoiceProfiles()
     LambdaPersonalProfiles = file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
-    chat.AddText( "Lambda Data was updated by the Server" )
+    AddText( "Lambda Data was updated by the Server" )
 end )
 
 net.Receive("lambdaplayers_playsoundfile", function()
@@ -425,7 +426,7 @@ net.Receive( "lambdaplayers_chatadd", function()
     local args = net.ReadString()
     args = JSONToTable( args )
 
-    chat.AddText( unpack( args ) )
+    AddText( unpack( args ) )
 end )
 
 net.Receive( "lambdaplayers_addtokillfeed", function() 
@@ -510,8 +511,17 @@ net.Receive( "lambdaplayers_getplybirthday", function()
     net.SendToServer()
 end )
 
+local color_client = Color( 255, 145, 0 )
+local RunConsoleCommand = RunConsoleCommand
+
 net.Receive( "lambdaplayers_reloadaddon", function()
     LambdaReloadAddon()
-    chat.AddText( Color( 255, 145, 0 ), "Reloaded all Lambda Lua Files for your Client" )
+    AddText( color_client, "Reloaded all Lambda Lua Files for your Client" )
+    RunConsoleCommand( "spawnmenu_reload" )
+end )
+
+net.Receive( "lambdaplayers_mergeweapons", function()
+    LambdaMergeWeapons()
+    AddText( color_client, "Merged all Lambda Weapon Lua Files for your Client" )
     RunConsoleCommand( "spawnmenu_reload" )
 end )

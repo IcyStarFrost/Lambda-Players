@@ -515,7 +515,10 @@ if SERVER then
         local personality = ply:GetInfo( "lambdaplayers_personality_preset" )
 
         self:SetRespawn( respawn )
-        if self:WeaponDataExists( weapon ) then self:SwitchWeapon( weapon ) self.l_SpawnWeapon = weapon end
+        
+        self.l_SpawnWeapon = weapon 
+        self:SwitchToSpawnWeapon()
+        
         self.l_VoiceProfile = voiceprofile != "" and voiceprofile or self.l_VoiceProfile
         self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
         

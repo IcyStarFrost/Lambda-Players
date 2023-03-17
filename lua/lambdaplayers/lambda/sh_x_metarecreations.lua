@@ -318,7 +318,7 @@ if SERVER then
     end
 
     function ENT:SwitchToDefaultWeapon()
-        self:SwitchWeapon( self.l_SpawnWeapon )
+        self:SwitchToSpawnWeapon()
     end
 
     function ENT:TimeConnected()

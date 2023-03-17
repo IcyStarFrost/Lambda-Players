@@ -6,49 +6,233 @@ local iconColor = Color(255, 80, 0, 255)
 _LAMBDAPLAYERSWEAPONS = {}
 
 -- Merge all weapon lua files
-local weaponluafiles = file.Find( "lambdaplayers/lambda/weapons/*", "LUA", "nameasc" )
+function LambdaMergeWeapons()
+    local weaponluafiles = file.Find( "lambdaplayers/lambda/weapons/*", "LUA", "nameasc" )
+    for _, luafile in ipairs( weaponluafiles ) do
+        AddCSLuaFile( "lambdaplayers/lambda/weapons/" .. luafile )
+        include( "lambdaplayers/lambda/weapons/" .. luafile )
+        print( "Lambda Players: Merged Weapon from [ " .. luafile .. " ]" )
+    end
 
-for k, luafile in ipairs( weaponluafiles ) do
-	AddCSLuaFile( "lambdaplayers/lambda/weapons/" .. luafile )
-    include( "lambdaplayers/lambda/weapons/" .. luafile )
-    print( "Lambda Players: Merged Weapon from [ " .. luafile .. " ]" )
-end
+    if ( CLIENT ) then
+        _LAMBDAPLAYERSWEAPONORIGINS = {}
+    end
+    _LAMBDAWEAPONALLOWCONVARS = {}
+    _LAMBDAWEAPONCLASSANDPRINTS = { [ "No Weapon" ] = "none" }
 
-if CLIENT then
-	_LAMBDAPLAYERSWEAPONORIGINS = {}
-end
+    for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
+        if name == "none" then continue end -- Don't count the empty hands
+        
+        local convar = CreateLambdaConvar( "lambdaplayers_weapons_allow_" .. name, 1, true, false, false, "Allows the Lambda Players to equip " .. data.prettyname .. " from " .. data.origin .. " category", 0, 1 )
+        _LAMBDAWEAPONALLOWCONVARS[ name ] = convar
 
--- Automatically creates convars for each weapon
-_LAMBDAWEAPONALLOWCONVARS = {}
-for k, v in pairs( _LAMBDAPLAYERSWEAPONS ) do
-    local convar = CreateLambdaConvar( "lambdaplayers_weapons_allow" .. k, 1, true, false, false, "Allows the Lambda Players to equip " .. v.prettyname, 0, 1 )
-	_LAMBDAWEAPONALLOWCONVARS[ k ] = convar
-    v.notagprettyname = ( v.prettyname != nil and v.prettyname or "" )
-    v.prettyname = "[" .. v.origin .. "] " .. v.prettyname
-	if CLIENT then 
-        _LAMBDAPLAYERSWEAPONORIGINS[ v.origin ] = v.origin 
+        data.notagprettyname = ( data.prettyname != nil and data.prettyname or "" )
+        data.prettyname = "[" .. data.origin .. "] " .. data.prettyname
 
-        if v.killicon then
-            local iskilliconfilepath = string_find( v.killicon, "/" )
+        if ( CLIENT ) then 
+            _LAMBDAPLAYERSWEAPONORIGINS[ data.origin ] = data.origin 
 
-            if iskilliconfilepath then
-                killicon.Add( "lambdaplayers_weaponkillicons_" .. k, v.killicon, iconColor )
-            else
-                killicon.AddAlias( "lambdaplayers_weaponkillicons_" .. k, v.killicon )
+            local killIcon = data.killicon
+            if killIcon then
+                local iskilliconfilepath = string_find( killIcon, "/" )
+                if iskilliconfilepath then
+                    killicon.Add( "lambdaplayers_weaponkillicons_" .. name, killIcon, iconColor )
+                else
+                    killicon.AddAlias( "lambdaplayers_weaponkillicons_" .. name, killIcon )
+                end
             end
         end
 
+        _LAMBDAWEAPONCLASSANDPRINTS[ data.prettyname ] = name
     end
+
+    if SERVER and LambdaHasFirstMergedWeapons then
+        net.Start( "lambdaplayers_mergeweapons" )
+        net.Broadcast()
+    end
+
+    LambdaHasFirstMergedWeapons = true
 end
 
-_LAMBDAWEAPONCLASSANDPRINTS = {}
+LambdaMergeWeapons()
+concommand.Add( "lambdaplayers_dev_mergeweapons", LambdaMergeWeapons )
 
-for k, v in pairs( _LAMBDAPLAYERSWEAPONS ) do
-    _LAMBDAWEAPONCLASSANDPRINTS[ v.prettyname ] = k
+local spawnWep = CreateLambdaConvar( "lambdaplayers_lambda_spawnweapon", "physgun", true, true, true, "The weapon Lambda Players will spawn with only if the specified weapon is allowed", 0, 1 )
+
+local net = net
+local PlaySound = ( CLIENT and surface.PlaySound )
+local AddNotification = ( CLIENT and notification.AddLegacy )
+local ipairs = ipairs
+local SortedPairs = SortedPairs
+local max = math.max
+
+local function OpenSpawnWeaponPanel() 
+    local mainframe = LAMBDAPANELS:CreateFrame( "Spawn Weapon Selection", 700, 500 )
+    local mainscroll = LAMBDAPANELS:CreateScrollPanel( mainframe, true, FILL )
+
+    local weplinelist = {}
+    local weplistlist = {}
+
+    local currentWep = spawnWep:GetString()
+    if currentWep == "random" then 
+        currentWep = "Random Weapon"
+    else
+        currentWep = _LAMBDAPLAYERSWEAPONS[ currentWep ].prettyname
+    end
+    LAMBDAPANELS:CreateLabel( "Currenly selected spawn weapon: " .. currentWep, mainframe, TOP )
+
+    for weporigin, _ in pairs( _LAMBDAPLAYERSWEAPONORIGINS ) do
+        local originlist = vgui.Create( "DListView", mainscroll )
+        originlist:SetSize( 200, 400 )
+        originlist:Dock( LEFT )
+        originlist:AddColumn( weporigin, 1 )
+        originlist:SetMultiSelect( false )
+
+        function originlist:DoDoubleClick( id, line )
+            spawnWep:SetString( line:GetSortValue( 1 ) )
+            AddNotification( "Selected " .. line:GetColumnText( 1 ) .. " from " .. weporigin .. " as a spawn weapon!", NOTIFY_GENERIC, 3 )
+            PlaySound( "buttons/button15.wav" )
+            mainframe:Close()
+        end
+
+        mainscroll:AddPanel( originlist )
+
+        for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
+            if name == "none" then continue end
+            if data.origin != weporigin then continue end
+
+            local allowCvar = _LAMBDAWEAPONALLOWCONVARS[ name ]
+            if allowCvar and !allowCvar:GetBool() then continue end
+
+            local line = originlist:AddLine( data.notagprettyname )
+            line:SetSortValue( 1, name )
+
+            function line:OnSelect()
+                for _, v in ipairs( weplinelist ) do
+                    if v != line then v:SetSelected( false ) end
+                end
+            end
+            
+            weplinelist[ #weplinelist + 1 ] = line
+        end
+
+        if #originlist:GetLines() == 0 then
+            originlist:Remove()
+            continue
+        end
+
+        originlist:SortByColumn( 1 )
+        weplistlist[ #weplistlist + 1 ] = originlist
+    end
+
+    if #weplistlist > 0 then
+        function mainframe:OnSizeChanged( width )
+            local columnWidth = max( 200, ( width - 10 ) / #weplistlist )
+            for _, list in ipairs( weplistlist ) do
+                list:SetWidth( columnWidth )
+            end
+        end
+
+        mainframe:OnSizeChanged( mainframe:GetWide() )
+    else
+        LAMBDAPANELS:CreateLabel( "You currenly have every weapon restricted and disallowed to be used by Lambda Players!", mainframe, TOP )
+    end
+
+    LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select None", function()
+        spawnWep:SetString( "none" )
+        AddNotification( "Selected none as a spawn weapon!", NOTIFY_GENERIC, 3 )
+        PlaySound( "buttons/button15.wav" )
+        mainframe:Close()
+    end )
+
+    LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select Random", function()
+        spawnWep:SetString( "random" )
+        AddNotification( "Selected random as a spawn weapon!", NOTIFY_GENERIC, 3 )
+        PlaySound( "buttons/button15.wav" )
+        mainframe:Close()
+    end )
 end
 
-CreateLambdaConvar( "lambdaplayers_lambda_spawnweapon", "physgun", true, true, true, "The weapon Lambda Players will spawn with only if the specified weapon is allowed", 0, 1, { type = "Combo", options = _LAMBDAWEAPONCLASSANDPRINTS, name = "Spawn Weapon", category = "Lambda Player Settings" } )
+local function OpenWeaponPermissionPanel( ply ) 
+    if !ply:IsSuperAdmin() then 
+        AddNotification( "You must be a Super Admin in order to use this!", 1, 4 )
+        PlaySound( "buttons/button10.wav" ) 
+        return 
+    end
 
+    local mainframe = LAMBDAPANELS:CreateFrame( "Weapon Permissions", 700, 500 )
+    local mainscroll = LAMBDAPANELS:CreateScrollPanel( mainframe, true, FILL )
+
+    LAMBDAPANELS:CreateLabel( "Press the weapon category button to toggle all weapons at once", mainframe, TOP )
+
+    local weporiginlist = {}
+    local wepcheckboxlist = {}
+
+    for weporigin, _ in pairs( _LAMBDAPLAYERSWEAPONORIGINS ) do
+        wepcheckboxlist[ weporigin ] = {}
+
+        local originpanel = LAMBDAPANELS:CreateBasicPanel( mainscroll, LEFT )
+        originpanel:SetSize( 200, 400 )
+        weporiginlist[ #weporiginlist + 1 ] = originpanel
+
+        LAMBDAPANELS:CreateButton( originpanel, TOP, weporigin, function()
+            local checkedcount, uncheckcount = 0, 0
+            for _, checkbox in pairs( wepcheckboxlist[ weporigin ] ) do
+                if checkbox:GetChecked() then
+                    checkedcount = ( checkedcount + 1 )
+                else
+                    uncheckcount = ( uncheckcount + 1 )
+                end
+            end
+
+            for cvarName, checkbox in pairs( wepcheckboxlist[ weporigin ] ) do
+                local value = ( checkedcount <= uncheckcount )
+                checkbox:SetChecked( value )
+
+                net.Start( "lambdaplayers_updateconvar" )
+                    net.WriteString( cvarName )
+                    net.WriteString( value and "1" or "0" )
+                net.SendToServer()
+            end
+        end )
+
+        local originscroll = LAMBDAPANELS:CreateScrollPanel( originpanel, false, FILL )
+        mainscroll:AddPanel( originpanel )
+
+        local wepcheckboxdata = {}
+
+        for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
+            if name == "none" then continue end
+            if data.origin != weporigin then continue end
+            wepcheckboxdata[ data.notagprettyname ] = _LAMBDAWEAPONALLOWCONVARS[ name ]
+        end
+
+        for name, cvar in SortedPairs( wepcheckboxdata ) do
+            local checkbox, checkpanel = LAMBDAPANELS:CreateCheckBox( originscroll, TOP, cvar:GetBool(), name )
+            checkpanel:DockMargin( 2, 2, 0, 2 )
+
+            function checkbox:OnChange( value )
+                net.Start( "lambdaplayers_updateconvar" )
+                    net.WriteString( cvar:GetName() )
+                    net.WriteString( value and "1" or "0" )
+                net.SendToServer()
+            end
+
+            wepcheckboxlist[ weporigin ][ cvar:GetName() ] = checkbox
+        end
+    end
+
+    function mainframe:OnSizeChanged( width )
+        local columnWidth = max( 200, ( width - 10 ) / #weporiginlist )
+        for _, list in ipairs( weporiginlist ) do
+            list:SetWidth( columnWidth )
+        end
+    end
+    mainframe:OnSizeChanged( mainframe:GetWide() )
+end
+
+CreateLambdaConsoleCommand( "lambdaplayers_lambda_openspawnweaponpanel", OpenSpawnWeaponPanel, true, "Opens a panel that allows you to select the weapon the next spawned Lambda Player by you will start with", { name = "Select Spawn Weapon", category = "Lambda Weapons" } )
+CreateLambdaConsoleCommand( "lambdaplayers_lambda_openweaponpermissionpanel", OpenWeaponPermissionPanel, true, "Opens a panel that allows you to allow and disallow certain weapons to be used by Lambda Players", { name = "Select Weapon Permissions", category = "Lambda Weapons" } )
 
 -- One part of the duplicator support
 -- Register the Lambdas so the duplicator knows how to handle these guys
@@ -225,8 +409,6 @@ function LambdaHijackGmodEntity( ent, lambda )
 end
 
 local ents_GetAll = ents.GetAll
-local ipairs = ipairs
-local IsValid = IsValid
 local lower = string.lower
 
 -- Gets all Lambda Players currently active

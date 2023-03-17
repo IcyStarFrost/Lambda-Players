@@ -421,7 +421,7 @@ local function OpenProfilePanel( ply )
     List:SetSpaceY( 12 )
     List:SetSpaceX( 12 )
 
-    for k, v in pairs( player_manager.AllValidModels() ) do
+    for k, v in SortedPairs( player_manager.AllValidModels() ) do
         local mdlbutton = List:Add( "SpawnIcon" )
         mdlbutton:SetModel( v )
         

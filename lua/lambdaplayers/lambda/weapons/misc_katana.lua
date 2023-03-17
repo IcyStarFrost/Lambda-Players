@@ -1,26 +1,3 @@
-if SERVER and _LAMBDAPLAYERSHoldTypeAnimations then 
-    _LAMBDAPLAYERSHoldTypeAnimations[ "katana_unready_docile" ] = {
-        idle = ACT_HL2MP_IDLE_SUITCASE,
-        run = ACT_HL2MP_RUN_SLAM,
-        walk = ACT_HL2MP_WALK_SUITCASE,
-        jump = ACT_HL2MP_JUMP_KNIFE,
-        crouchIdle = ACT_HL2MP_IDLE_CROUCH_KNIFE,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_KNIFE,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_KNIFE,
-        swimMove = ACT_HL2MP_SWIM_KNIFE
-    }
-    _LAMBDAPLAYERSHoldTypeAnimations[ "katana_unready_combat" ] = {
-        idle = ACT_HL2MP_IDLE_KNIFE,
-        run = ACT_HL2MP_RUN_CHARGING,
-        walk = ACT_HL2MP_WALK_KNIFE,
-        jump = ACT_HL2MP_JUMP_KNIFE,
-        crouchIdle = ACT_HL2MP_IDLE_CROUCH_KNIFE,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_KNIFE,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_KNIFE,
-        swimMove = ACT_HL2MP_SWIM_KNIFE
-    }
-end
-
 local IsValid = IsValid
 local random = math.random
 local Rand = math.Rand
@@ -31,12 +8,33 @@ local timer_Create = timer.Create
 local timer_Exists = timer.Exists
 local timer_Remove = timer.Remove
 
+local hTypeDocile = {
+    idle = ACT_HL2MP_IDLE_SUITCASE,
+    run = ACT_HL2MP_RUN_SLAM,
+    walk = ACT_HL2MP_WALK_SUITCASE,
+    jump = ACT_HL2MP_JUMP_KNIFE,
+    crouchIdle = ACT_HL2MP_IDLE_CROUCH_KNIFE,
+    crouchWalk = ACT_HL2MP_WALK_CROUCH_KNIFE,
+    swimIdle = ACT_HL2MP_SWIM_IDLE_KNIFE,
+    swimMove = ACT_HL2MP_SWIM_KNIFE
+}
+local hTypeCombat = {
+    idle = ACT_HL2MP_IDLE_KNIFE,
+    run = ACT_HL2MP_RUN_CHARGING,
+    walk = ACT_HL2MP_WALK_KNIFE,
+    jump = ACT_HL2MP_JUMP_KNIFE,
+    crouchIdle = ACT_HL2MP_IDLE_CROUCH_KNIFE,
+    crouchWalk = ACT_HL2MP_WALK_CROUCH_KNIFE,
+    swimIdle = ACT_HL2MP_SWIM_IDLE_KNIFE,
+    swimMove = ACT_HL2MP_SWIM_KNIFE
+}
+
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
     katana = {
         model = "models/lambdaplayers/weapons/w_katana.mdl",
         origin = "Misc",
         prettyname = "Katana",
-        holdtype = "katana_unready_docile",
+        holdtype = hTypeDocile,
         killicon = "lambdaplayers/killicons/icon_katana",
         ismelee = true,
         bonemerge = true,
@@ -72,10 +70,10 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     end
 
                     local moveSpeed = 1.0
-                    local holdType = "katana_unready_docile"
+                    local holdType = hTypeDocile
                     if self:GetState() == "Combat" and LambdaIsValid( self:GetEnemy() ) then
                         moveSpeed = 1.25
-                        holdType = "katana_unready_combat"
+                        holdType = hTypeCombat
                     end
                     self.l_HoldType = holdType
                     self.l_WeaponSpeedMultiplier = moveSpeed

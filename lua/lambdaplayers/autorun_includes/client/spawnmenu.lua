@@ -172,50 +172,6 @@ local function AddLambdaPlayersoptions()
 
     end )
 
-    spawnmenu.AddToolMenuOption( "Lambda Player", "Lambda Player", "lambdaplayer_weaponpermissions" , "Weapon Permissions", "", "", function( panel ) 
-        panel:Help( "All weapon convars start with lambdaplayers_weapons" )
-        for k, v in pairs( _LAMBDAPLAYERSWEAPONORIGINS ) do
-
-            local weaponcheckboxes = {}
-            local check = false
-
-            panel:Help("------ " .. k .. " ------")
-
-            local togglebutton = vgui.Create( "DButton", panel )
-            togglebutton:SetText( "Toggle " .. k .. " Category" )
-            panel:AddItem( togglebutton )
-
-            function togglebutton:DoClick()
-                if !LocalPlayer():IsSuperAdmin() then return end
-                for id, box in ipairs( weaponcheckboxes ) do
-
-                    net.Start( "lambdaplayers_updateconvar" )
-                        net.WriteString( box.l_conVar )
-                        net.WriteString( check and "1" or "0" )
-                    net.SendToServer()
-                    
-                    box:SetChecked( check )
-                end
-                check = !check
-            end
-
-            for weaponclass, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
-                if data.origin == k then
-                    local box = panel:CheckBox( "Allow " .. data.prettyname, "lambdaplayers_weapons_allow" .. weaponclass )
-                    local lbl = panel:ControlHelp( "Server-Side | Allows the Lambda Players to equip " .. data.prettyname .. "\nConVar: lambdaplayers_weapons_allow" .. weaponclass )
-                    lbl:SetColor( servercolor )
-
-                    
-                    box.l_conVar = "lambdaplayers_weapons_allow" .. weaponclass
-                    table_insert( weaponcheckboxes, box )
-                    InstallMPConVarHandling( box, "lambdaplayers_weapons_allow" .. weaponclass, "Bool", true )
-                end
-            end
-
-        end
-
-    end)
-
     for categoryname, _ in pairs( categories ) do
 
         spawnmenu.AddToolMenuOption( "Lambda Player", "Lambda Player", "lambdaplayer_" .. categoryname , categoryname, "", "", function( panel ) 
