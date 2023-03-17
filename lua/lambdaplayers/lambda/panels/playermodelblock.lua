@@ -34,7 +34,7 @@ local function OpenPlayermodelBlockPanel( ply )
     end
     
 
-    for k, mdl in pairs( player_manager.AllValidModels() ) do
+    for k, mdl in SortedPairs( player_manager.AllValidModels() ) do
         local icon = mdllayout:Add( "SpawnIcon" )
         icon:SetModel( mdl )
 

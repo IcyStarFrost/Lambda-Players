@@ -453,12 +453,11 @@ if SERVER then
             self.l_TextProfile = info.textprofile or self.l_TextProfile
             self:SetNW2String( "lambda_tp", self.l_TextProfile )
             -- Non Personal Data --
-            local spawnwep = self:WeaponDataExists( info.spawnwep ) and info.spawnwep or self.l_SpawnWeapon
             self:SetRespawn( info.respawn or self:GetRespawn() )
 
-            self:SwitchWeapon( spawnwep )
-            
-            self:SetNW2String( "lambda_spawnweapon", spawnwep )
+            local spawnwep = self:WeaponDataExists( info.spawnwep ) and info.spawnwep or self.l_SpawnWeapon
+            self:SwitchToSpawnWeapon()
+            self:SetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon )
 
             self:SetFrags( info.frags or self:GetFrags() )
             self:SetDeaths( info.deaths or self:GetDeaths() )
@@ -726,7 +725,7 @@ if SERVER then
         self:SetHealth( self:GetMaxHealth() )
         self:SetArmor( spawnArmor:GetInt() )
         self:AddFlags( FL_OBJECT )
-        self:SwitchWeapon( self.l_SpawnWeapon )
+        self:SwitchToSpawnWeapon()
         self:UpdateHealthDisplay()
         
         self:SetState( "Idle" )
@@ -1172,6 +1171,17 @@ if SERVER then
         
         self.loco:Jump()
         self:PlayStepSound( 1.0 )
+    end
+
+    local panicAnimations = GetConVar( "lambdaplayers_lambda_panicanimations" )
+
+    function ENT:GetWeaponHoldType()
+        if self:IsPanicking() and panicAnimations:GetBool() then
+            return _LAMBDAPLAYERSHoldTypeAnimations[ "panic" ]
+        end
+
+        local hType = self.l_HoldType
+        return ( istable( hType ) and hType or _LAMBDAPLAYERSHoldTypeAnimations[ hType ] )
     end
 
 end

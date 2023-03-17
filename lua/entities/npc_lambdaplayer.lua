@@ -95,7 +95,6 @@ end
     local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
     local LambdaSpawnBehavior = GetConVar( "lambdaplayers_combat_spawnbehavior" )
     local ignorePlys = GetConVar( "ai_ignoreplayers" )
-    local panicAnimations = GetConVar( "lambdaplayers_lambda_panicanimations" )
     local sv_gravity = GetConVar( "sv_gravity" )
     local physUpdateTime = GetConVar( "lambdaplayers_lambda_physupdatetime" )
 --
@@ -736,8 +735,7 @@ function ENT:Think()
 
         -- Animations --
         if self.l_UpdateAnimations then
-            local holdtype = ( ( self:IsPanicking() and panicAnimations:GetBool() ) and "panic" or self.l_HoldType )
-            local anims = _LAMBDAPLAYERSHoldTypeAnimations[ holdtype ]
+            local anims = self:GetWeaponHoldType()
 
             if anims then
                 local anim = anims.idle
