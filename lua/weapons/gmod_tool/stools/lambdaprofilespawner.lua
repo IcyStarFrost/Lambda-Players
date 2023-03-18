@@ -43,6 +43,7 @@ function TOOL:LeftClick( tr )
             lambda:SetRespawn( self:GetClientNumber( "respawn", 0 ) == 1 )
         
             lambda:ApplyLambdaInfo( profileinfo )
+            lambda:SimpleTimer( 0, function() LambdaRunHook( "LambdaOnProfileApplied", lambda, info ) end, true )
         else
             LambdaPlayers_ChatAdd( owner, self:GetClientInfo( "profilename" ) .. "'s profile data does not exist on the Server"  )
         end
