@@ -16,7 +16,6 @@ local ipairs = ipairs
 local ClientsideRagdoll = ClientsideRagdoll
 local EyeAngles = EyeAngles
 local istable = istable
-local AddText = chat.AddText
 local sound_PlayFile = sound.PlayFile
 local coroutine_yield = coroutine.yield
 local origin = Vector()
@@ -426,7 +425,7 @@ net.Receive( "lambdaplayers_chatadd", function()
     local args = net.ReadString()
     args = JSONToTable( args )
 
-    AddText( unpack( args ) )
+    chat.AddText( unpack( args ) )
 end )
 
 net.Receive( "lambdaplayers_addtokillfeed", function() 
