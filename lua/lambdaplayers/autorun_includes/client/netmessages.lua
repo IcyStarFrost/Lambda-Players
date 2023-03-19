@@ -358,7 +358,7 @@ net.Receive( "lambdaplayers_updatedata", function()
     LambdaTextProfiles = LAMBDAFS:GetTextProfiles()
     LambdaModelVoiceProfiles = LAMBDAFS:GetModelVoiceProfiles()
     LambdaPersonalProfiles = file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
-    AddText( "Lambda Data was updated by the Server" )
+    chat.AddText( "Lambda Data was updated by the Server" )
 end )
 
 net.Receive("lambdaplayers_playsoundfile", function()
@@ -515,12 +515,12 @@ local RunConsoleCommand = RunConsoleCommand
 
 net.Receive( "lambdaplayers_reloadaddon", function()
     LambdaReloadAddon()
-    AddText( color_client, "Reloaded all Lambda Lua Files for your Client" )
+    chat.AddText( color_client, "Reloaded all Lambda Lua Files for your Client" )
     RunConsoleCommand( "spawnmenu_reload" )
 end )
 
 net.Receive( "lambdaplayers_mergeweapons", function()
     LambdaMergeWeapons()
-    AddText( color_client, "Merged all Lambda Weapon Lua Files for your Client" )
+    chat.AddText( color_client, "Merged all Lambda Weapon Lua Files for your Client" )
     RunConsoleCommand( "spawnmenu_reload" )
 end )
