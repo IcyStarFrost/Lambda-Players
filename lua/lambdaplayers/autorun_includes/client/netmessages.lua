@@ -470,7 +470,7 @@ local function Spray( spraypath, tracehitpos, tracehitnormal, index, attemptedfa
     -- If we failed to load the Server's spray, try one of our own sprays and hope it works. If it does not work, give up and don't spray anything.
     if material:IsError() and !attemptedfallback then Spray( LambdaPlayerSprays[ random( #LambdaPlayerSprays ) ], tracehitpos, tracehitnormal, index, true ) return elseif material:IsError() and attemptedfallback then return end
 
---[[     local texWidth = material:Width()
+    local texWidth = material:Width()
     local texHeight = material:Height()
     local widthPower = 256
     local heightPower = 256
@@ -478,11 +478,11 @@ local function Spray( spraypath, tracehitpos, tracehitnormal, index, attemptedfa
     -- Sizing the Spray
     if texWidth > texHeight then heightPower = 128 elseif texHeight > texWidth then widthPower = 128 end
     if texWidth < 256 then texWidth = ( texWidth / 256 ) else texWidth = ( widthPower / ( texWidth * 4 ) ) end
-    if texHeight < 256 then texHeight = ( texHeight / 256 ) else texHeight = ( heightPower / ( texHeight * 4) ) end ]]
+    if texHeight < 256 then texHeight = ( texHeight / 256 ) else texHeight = ( heightPower / ( texHeight * 4) ) end
 
-    local texWidth = (material:Width() * 0.15) / material:Width()
+--[[     local texWidth = (material:Width() * 0.15) / material:Width()
     local texHeight = (material:Height() * 0.15) / material:Height() 
-
+ ]]
     -- Place the spray
     DecalEx( material, Entity( 0 ), tracehitpos, tracehitnormal, color_white, texWidth, texHeight)
 
