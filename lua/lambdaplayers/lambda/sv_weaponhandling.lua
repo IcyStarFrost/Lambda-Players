@@ -47,6 +47,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self.l_MaxClip = weapondata.clip or 0
     self.l_WeaponUseCooldown = CurTime() + ( weapondata.deploydelay or 0.1 )
     self.l_DropWeaponOnDeath = ( weapondata.dropondeath == nil and true or weapondata.dropondeath )
+    self.l_WeaponThinkFunction = CurTime()
 
     local killicon_ = weapondata.killicon
     if killicon_ then

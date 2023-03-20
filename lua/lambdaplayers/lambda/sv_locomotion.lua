@@ -270,6 +270,10 @@ end
 function ENT:ClimbLadder( ladder, isDown, movePos )
     if !IsValid( ladder ) then return end
 
+    local mins, maxs = self:GetCollisionBounds()
+    laddermovetable.mins = mins
+    laddermovetable.maxs = maxs
+
     local startPos, goalPos, finishPos
     if isDown then
         startPos = ladder:GetTop()
@@ -291,7 +295,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
 
         local lastDist = math.huge
         for _, v in ipairs( possibleAreas ) do
-            local closePoint = v:GetClosestPointOnArea( goalPos )
+            local closePoint = v:GetCenter()
             local closeDist = movePos:DistToSqr( closePoint )
             if closeDist >= lastDist then continue end
 
@@ -315,10 +319,6 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
     local climbEnd = ( startPos + ( ladder:GetNormal() * 20 ) )
     local climbNormal = ( climbEnd - climbStart ):GetNormalized()
     local climbDist = climbStart:Distance( climbEnd )
-
-    local mins, maxs = self:GetCollisionBounds()
-    laddermovetable.mins = mins
-    laddermovetable.maxs = maxs
 
     local stuckTime = CurTime() + 5
 

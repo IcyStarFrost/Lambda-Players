@@ -519,7 +519,7 @@ if SERVER then
         if !IsValid( ent ) or !forceAttack and self:IsPanicking() then return end
         if LambdaRunHook( "LambdaOnAttackTarget", self, ent ) == true then return end
         
-        if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( self:GetVoiceLine( "taunt" ) ) end
+        if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( "taunt" ) end
         self:SetEnemy( ent )
         self:SetState( "Combat" )
         self:CancelMovement()
@@ -536,7 +536,7 @@ if SERVER then
         self:SetState( "Retreat" )
 
         if self:GetVoiceChance() > 0 and !self:IsSpeaking() then
-            self:PlaySoundFile( self:GetVoiceLine( "panic" ) )
+            self:PlaySoundFile( "panic" )
         end
     end
 
@@ -852,7 +852,7 @@ if SERVER then
         if voiceDir and voiceDir:GetString() == "randomengine" then return self:GetRandomSound() end
 
         local tbl = LambdaVoiceLinesTable[ voicetype ]
-        return tbl[ random( #tbl ) ] 
+        return ( tbl and tbl[ random( #tbl ) ] )
     end
 
     -- Disables or re-enables Lambda's ability to use voice chat/type in chat.
@@ -1024,6 +1024,12 @@ if SERVER then
     function ENT:PlaySoundFile( filepath )
         if !filepath then return end
 
+        local isVoiceType = self:GetVoiceLine( filepath )
+        if isVoiceType then 
+            self.l_lastspokenvoicetype = filepath 
+            filepath = isVoiceType
+        end
+
         self:SetLastSpeakingTime( CurTime() + 4 )
 
         net.Start( "lambdaplayers_playsoundfile" )
@@ -1031,6 +1037,14 @@ if SERVER then
             net.WriteString( filepath )
             net.WriteUInt( self:GetCreationID(), 32 )
         net.Broadcast()
+    end
+
+    function ENT:GetLastSpokenVoiceType()
+        return self.l_lastspokenvoicetype
+    end
+
+    function ENT:IsUsingLadder()
+        return IsValid( self.l_ladderarea )
     end
 
 

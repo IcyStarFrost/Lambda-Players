@@ -141,6 +141,7 @@ function ENT:Initialize()
         self.l_typedtext = nil -- The current text we have typed out so far
         self.l_nexttext = 0 -- The next time we can type the next character
         self.l_starttypestate = "" -- The state we started typing in
+        self.l_lastspokenvoicetype = "" -- The last type of voiceline we spoke with
 
         self.l_issmoving = false -- If we are moving
         self.l_isfrozen = false -- If set true, stop moving as if ai_disable is on
@@ -330,6 +331,7 @@ function ENT:Initialize()
         self.l_lastdraw = 0 -- The time since we were "last" drawn. Used with ENT:IsBeingDrawn() to test if we are in a client's PVS
         self.l_lightupdate = 0 -- The next time to check if we need to turn on our flashlight or off
         self.l_ismuted = false -- If we are muted by the Local Player
+        self.l_lastsoundplaytime = 0 -- The last time we played any sound
 
         self:InitializeMiniHooks()
 
@@ -501,8 +503,7 @@ function ENT:Think()
         if curTime > self.l_nextidlesound then
             if !isDisabled and !self:GetIsTyping() and !self:IsSpeaking() and !self.l_preventdefaultspeak then
                 if random( 1, 100 ) <= self:GetVoiceChance() then
-                    local idleLine = ( self:IsPanicking() and "panic" or ( self:InCombat() and "taunt" or "idle" ) )
-                    self:PlaySoundFile( self:GetVoiceLine( idleLine ) )
+                    self:PlaySoundFile( self:IsPanicking() and "panic" or ( self:InCombat() and "taunt" or "idle" ) )
                 elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                     local line = self:GetTextLine( "idle" )
                     line = LambdaRunHook( "LambdaOnStartTyping", self, line, "idle" ) or line
@@ -602,9 +603,17 @@ function ENT:Think()
 
         -- How fast we are falling
         if !onGround then
-            local fallSpeed = -locoVel.z
-            if ( fallSpeed - self.l_FallVelocity ) <= 1000 then
-                self.l_FallVelocity = fallSpeed
+            if self:IsUsingLadder() then
+                self.l_FallVelocity = 0
+            else
+                local fallSpeed = -locoVel.z
+                if ( fallSpeed - self.l_FallVelocity ) <= 1000 then
+                    self.l_FallVelocity = fallSpeed
+                end
+
+                if !self.l_preventdefaultspeak and self.l_FallVelocity > 1000 and ( self:GetLastSpokenVoiceType() != "fall" or !self:IsSpeaking() ) then
+                    self:PlaySoundFile( "fall" )
+                end
             end
         end
 

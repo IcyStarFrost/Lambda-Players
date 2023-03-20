@@ -176,7 +176,7 @@ function ENT:PushButton()
 end
 
 function ENT:Laughing()
-    if !self.l_preventdefaultspeak then self:PlaySoundFile( self:GetVoiceLine( "laugh" ) ) end
+    if !self.l_preventdefaultspeak then self:PlaySoundFile( "laugh" ) end
     
     self:PlayGestureAndWait( ACT_GMOD_TAUNT_LAUGH )
     self:SetState( "Idle" )
@@ -236,7 +236,7 @@ function ENT:HealSomeone()
 
         if self.l_HealTarget.IsLambdaPlayer and self.l_HealTarget:Health() >= self.l_HealTarget:GetMaxHealth() then
             self.l_HealTarget:LookTo( self, 1 )
-            if !self.l_preventdefaultspeak then self.l_HealTarget:PlaySoundFile( self.l_HealTarget:GetVoiceLine( "assist" ) ) end
+            if !self.l_preventdefaultspeak then self.l_HealTarget:PlaySoundFile( "assist" ) end
         end
     else
         local cancelled = false

@@ -142,7 +142,7 @@ if SERVER then
             self:EmitSound( info:IsDamageType( DMG_FALL ) and "Player.FallGib" or "Player.Death" )
             
             if ( deathAlways:GetBool() or random( 1, 100 ) <= self:GetVoiceChance() ) and !self:GetIsTyping() then
-                self:PlaySoundFile( self:GetVoiceLine( "death" ) )
+                self:PlaySoundFile( "death" )
             end
 
             LambdaKillFeedAdd( self, attacker, inflictor )
@@ -256,8 +256,8 @@ if SERVER then
 
         if !self:IsPanicking() and attacker != self and random( 1, 2 ) == 1 and LambdaIsValid( attacker ) and retreatLowHP:GetBool() then
             local hpThreshold = ( 100 - self:GetCombatChance() )
-            if hpThreshold > 33 then hpThreshold = hpThreshold / random( 2, 4 ) end
-            if hpThreshold <= 10 then hpThreshold = hpThreshold * random( 1, 2 ) end
+            if hpThreshold > 33 then hpThreshold = hpThreshold / random( 2, 5 ) end
+            if hpThreshold <= 10 then hpThreshold = hpThreshold * random( 1, 3 ) end
 
             if self:Health() < hpThreshold then
                 self:CancelMovement()
@@ -296,7 +296,7 @@ if SERVER then
                         line = LambdaRunHook( "LambdaOnStartTyping", self, line, "witness" ) or line
                         self:TypeMessage( line )
                     elseif self:GetVoiceChance() > 0 then
-                        self:PlaySoundFile( self:GetVoiceLine( "witness" ) )
+                        self:PlaySoundFile( "witness" )
                     end
                 end )
             elseif witnessChance == 3 and retreatLowHP:GetBool() then
@@ -316,7 +316,7 @@ if SERVER then
             if victim == self:GetEnemy() then
 
                 if random( 1, 100 ) <= self:GetVoiceChance() and !self.l_preventdefaultspeak then
-                    self:PlaySoundFile( self:GetVoiceLine( "kill" ) )
+                    self:PlaySoundFile( "kill" )
                 elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self.l_preventdefaultspeak then
                     self.l_keyentity = victim
                     local line = self:GetTextLine( "kill" )
@@ -340,7 +340,7 @@ if SERVER then
                 self:LookTo( attacker, 1 )
                 self:SimpleTimer( rand( 0.1, 1.0 ), function()
                     if !IsValid( attacker ) or self.l_preventdefaultspeak then return end
-                    self:PlaySoundFile( self:GetVoiceLine( "assist" ) )
+                    self:PlaySoundFile( "assist" )
                 end )
             end
         end
@@ -541,7 +541,7 @@ if SERVER then
     local realisticfalldamage = GetConVar( "lambdaplayers_lambda_realisticfalldamage" )
     
     function ENT:OnLandOnGround( ent )
-        if IsValid( self.l_ladderarea ) or self:IsInNoClip() then return end
+        if self:IsUsingLadder() or self:IsInNoClip() then return end
         -- Play land animation
         self:AddGesture( ACT_LAND )
 
@@ -583,27 +583,27 @@ if SERVER then
 
     function ENT:OnLeaveGround( ent ) 
         LambdaRunHook( "LambdaOnLeaveGround", self, ent )
-        
+
         -- Fall Voiceline Handling
-        local selfPos = ( self:GetPos() + vector_up * 1 )
-        local mins, maxs = self:GetCollisionBounds()
-        
-        fallTrTbl.start = selfPos
-        fallTrTbl.endpos = ( selfPos - vector_up * 32756 )
-        fallTrTbl.filter = self
-        fallTrTbl.mins = mins
-        fallTrTbl.maxs = maxs
-        local fallTr = TraceHull( fallTrTbl )
-        
-        local hitPos = fallTr.HitPos
-        if hitPos:IsUnderwater() then return end
+        if !self.l_preventdefaultspeak and !self:IsUsingLadder() then
+            local selfPos = ( self:GetPos() + vector_up * 1 )
+            local mins, maxs = self:GetCollisionBounds()
+            
+            fallTrTbl.start = selfPos
+            fallTrTbl.endpos = ( selfPos - vector_up * 32756 )
+            fallTrTbl.filter = self
+            fallTrTbl.mins = mins
+            fallTrTbl.maxs = maxs
+            local fallTr = TraceHull( fallTrTbl )
+            
+            local hitPos = fallTr.HitPos
+            if hitPos:IsUnderwater() then return end
 
-        local deathDist = 800
-        if realisticfalldamage:GetBool() then deathDist = max( 256, 800 * ( self:Health() / self:GetMaxHealth() ) ) end
-        if hitPos:DistToSqr( selfPos ) < ( deathDist * deathDist ) then return end
+            local deathDist = 800
+            if realisticfalldamage:GetBool() then deathDist = max( 256, 800 * ( self:Health() / self:GetMaxHealth() ) ) end
+            if hitPos:DistToSqr( selfPos ) < ( deathDist * deathDist ) then return end
 
-        if !self.l_preventdefaultspeak then
-            self:PlaySoundFile( self:GetVoiceLine( "fall" ) )
+            self:PlaySoundFile( "fall" )
         end
     end
 
@@ -729,7 +729,7 @@ function ENT:InitializeMiniHooks()
             if self:IsSpeaking() or self.l_preventdefaultspeak then return end
 
             if random( 1, 100 ) <= self:GetVoiceChance() and self:IsInRange( ply, 300 ) then
-                self:PlaySoundFile( self:GetVoiceLine( "idle" ) )
+                self:PlaySoundFile( "idle" )
             elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                 self.l_keyentity = ply
                 local line = self:GetTextLine( "response" )
@@ -742,7 +742,7 @@ function ENT:InitializeMiniHooks()
             if self:IsSpeaking() or !self:IsInRange( ply, 300 ) or self.l_preventdefaultspeak then return end
             
             if random( 1, 100 ) <= self:GetVoiceChance() then
-                self:PlaySoundFile( self:GetVoiceLine( "idle" ) )
+                self:PlaySoundFile( "idle" )
             elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                 self.l_keyentity = ply
                 local line = self:GetTextLine( "response" )

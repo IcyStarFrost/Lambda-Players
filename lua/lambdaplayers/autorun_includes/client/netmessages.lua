@@ -367,6 +367,9 @@ net.Receive("lambdaplayers_playsoundfile", function()
     local index = net.ReadUInt( 32 )
 
     if !IsValid(lambda) then return end
+    
+    if CurTime() == lambda.l_lastsoundplaytime then return end
+    lambda.l_lastsoundplaytime = CurTime()
 
     PlaySoundFile( lambda, soundname, index, true )
 end)
