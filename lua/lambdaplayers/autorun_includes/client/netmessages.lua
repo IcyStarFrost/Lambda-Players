@@ -30,6 +30,8 @@ local removeCorpse = GetConVar( "lambdaplayers_removecorpseonrespawn" )
 
 -- Applies all values to clientside ragdoll
 local function InitializeRagdoll( ragdoll, color, lambda, force, offset )
+    if !IsValid( ragdoll ) then return end
+
     ragdoll:SetNoDraw( false )
     ragdoll:DrawShadow( true )
     ragdoll.GetPlayerColor = function() return color end
