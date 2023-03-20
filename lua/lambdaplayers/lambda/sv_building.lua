@@ -54,7 +54,7 @@ function ENT:SpawnProp()
     local trace = self:GetEyeTrace()
     local mdl = LambdaPlayerProps[ random( #LambdaPlayerProps ) ]
 
-    if !mdl then return end
+    if !mdl or !trace then return end
 
     self:EmitSound( "ui/buttonclickrelease.wav", 60 )
 
