@@ -28,8 +28,9 @@ TOOL.Name = "#tool.lambdasprayspawner"
 
 function TOOL:LeftClick( tr )
     if tr.Entity != Entity( 0 ) then return end
-
-    LambdaPlayers_Spray( LambdaPlayerSprays[ math.random( #LambdaPlayerSprays ) ], tr.HitPos, tr.HitNormal, math.random( 0, 10000000000 ) )
+    local spray = LambdaPlayerSprays[ math.random( #LambdaPlayerSprays ) ]
+    if !spray then self:GetOwner():ChatPrint( "You do not have any sprays loaded!" ) return end
+    LambdaPlayers_Spray( spray, tr.HitPos, tr.HitNormal, math.random( 0, 10000000000 ) )
    
     return true
 end
