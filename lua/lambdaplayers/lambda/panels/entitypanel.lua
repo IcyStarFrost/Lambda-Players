@@ -1,5 +1,5 @@
 
-
+local blue = Color( 0, 162, 255)
 local function OpenEntityPanel( ply )
     if !ply:IsSuperAdmin() then notification.AddLegacy( "You must be a Super Admin in order to use this!", 1, 4) surface.PlaySound( "buttons/button10.wav" ) return end
 
@@ -37,12 +37,13 @@ local function OpenEntityPanel( ply )
         for k, v in pairs( entitylayout:GetChildren() ) do if v:GetEntity() == class then return end end
 
         local pnl = entitylayout:Add( "DPanel" )
-        pnl:SetSize( 80, 80 )
+        pnl:SetSize( 120, 120 )
         local img = vgui.Create( "DImageButton", pnl )
-        img:SetSize( 1, 64 )
+        img:SetSize( 1, 100 )
         img:Dock( TOP )
         img:SetMaterial( Material( "entities/" .. class .. ".png" ) )
-        LAMBDAPANELS:CreateLabel( entitylist[ class ] and entitylist[ class ].PrintName or class, pnl, TOP )
+        local lbl = LAMBDAPANELS:CreateLabel( entitylist[ class ] and entitylist[ class ].PrintName or class, pnl, TOP )
+        lbl:SetColor( blue )
         
         function img:DoClick()
             entitylistpanel:AddLine( entitylist[ class ] and entitylist[ class ].PrintName or class, class )
