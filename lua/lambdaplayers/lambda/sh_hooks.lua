@@ -24,6 +24,7 @@ local serversidecleanupeffect = GetConVar( "lambdaplayers_lambda_serversideragdo
 local cleanupondeath = GetConVar( "lambdaplayers_building_cleanupondeath" )
 local flashlightsprite = Material( "sprites/light_glow02_add" )
 local flashlightbeam = Material( "effects/lamp_beam" )
+local aidisabled = GetConVar( "ai_disabled" )
 local faded = Color( 100, 100, 100, 100 )
 local serversideragdolls = GetConVar( "lambdaplayers_lambda_serversideragdolls" )
 
@@ -715,6 +716,7 @@ function ENT:InitializeMiniHooks()
         end, true )
 
         self:Hook( "LambdaPlayerSay", "lambdatextchat", function( ply, text )
+            if aidisabled:GetBool() then return end
             if ply == self or self:IsDisabled() or self.l_preventdefaultspeak then return end
 
             if random( 1, 200 ) < self:GetTextChance() and !self:GetIsTyping() and !self:IsSpeaking() and self:CanType() then
@@ -726,6 +728,7 @@ function ENT:InitializeMiniHooks()
         end, true )
 
         self:Hook( "PlayerSay", "lambdarespondtoplayertextchat", function( ply, text )
+            if aidisabled:GetBool() then return end
             if self:IsSpeaking() or self.l_preventdefaultspeak then return end
 
             if random( 1, 100 ) <= self:GetVoiceChance() and self:IsInRange( ply, 300 ) then
@@ -739,6 +742,7 @@ function ENT:InitializeMiniHooks()
         end, true )
 
         self:Hook( "LambdaOnRealPlayerEndVoice", "lambdarespondtoplayervoicechat", function( ply )
+            if aidisabled:GetBool() then return end
             if self:IsSpeaking() or !self:IsInRange( ply, 300 ) or self.l_preventdefaultspeak then return end
             
             if random( 1, 100 ) <= self:GetVoiceChance() then
