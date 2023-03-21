@@ -193,6 +193,8 @@ function ENT:UseWeapon( target )
     local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
 
     local wepent = self:GetWeaponENT()
+    if !IsValid( wepent ) then return end 
+    
     local callback = ( weapondata.OnAttack or weapondata.callback )
     
     local result
