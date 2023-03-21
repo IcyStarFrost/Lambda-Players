@@ -106,7 +106,7 @@ function LambdaUpdatePlayerModels()
     for _, v in ipairs( _LAMBDAPLAYERS_DefaultPlayermodels ) do
         PrecacheModel( v ) -- Precache every default model
         for k, j in ipairs( _LAMBDAPLAYERS_AddonPlayermodels ) do
-            if j == v then print("Remove Model", v ) table_remove( _LAMBDAPLAYERS_AddonPlayermodels, k ) end
+            if j == v then table_remove( _LAMBDAPLAYERS_AddonPlayermodels, k ) end
         end
     end
 
