@@ -585,7 +585,7 @@ if SERVER then
         LambdaRunHook( "LambdaOnLeaveGround", self, ent )
         
         -- Fall Voiceline Handling
-        local selfPos = ( self:GetPos() + vector_up * 1 )
+        local selfPos = self:WorldSpaceCenter() 
         local mins, maxs = self:GetCollisionBounds()
         
         fallTrTbl.start = selfPos
