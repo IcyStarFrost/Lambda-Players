@@ -424,11 +424,22 @@ net.Receive( "lambdaplayers_notification", function()
     if snd then surface.PlaySound( snd ) end
 end )
 
+-- Because JSON to table doesn't give colors their proper meta table for some reason, we must do this.
+-- This fixes other chat addons not setting the Lambda's color properly
+local function RestoreColorMetas( tbl )
+    for k, v in ipairs( tbl ) do
+        if istable( v ) and v.r and v.g and v.b then
+            setmetatable( v, FindMetaTable( "Color" ) )
+        end
+    end
+end
+
 local unpack = unpack
 local JSONToTable = util.JSONToTable
 net.Receive( "lambdaplayers_chatadd", function()
     local args = net.ReadString()
     args = JSONToTable( args )
+    RestoreColorMetas( args )
 
     chat.AddText( unpack( args ) )
 end )

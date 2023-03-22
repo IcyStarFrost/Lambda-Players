@@ -101,7 +101,7 @@ end
 -- category | String | The Lambda Settings category to place the convar into. Will create one if one doesn't exist already
 -- options | Table | Combo only! A table with its keys being the text and values being the data
 
--- Other Convars. Client-side only
+-- Other Convars
 CreateLambdaConvar( "lambdaplayers_drawflashlights", 1, true, true, false, "If Lambda Player flashlights should be rendered", 0, 1, { type = "Bool", name = "Draw Flashlights", category = "Lambda Player Settings" } )
 CreateLambdaConvar( "lambdaplayers_uiscale", 0, true, true, false, "How much to scale UI such as Voice popups, name pop ups, ect.", ( CLIENT and -ScrW() or 1 ), ( CLIENT and ScrW() or 1 ), { type = "Slider", name = "UI Scale", decimals = 1, category = "Utilities" } )
 CreateLambdaConvar( "lambdaplayers_corpsecleanuptime", 15, true, true, false, "The amount of time before a corpse is removed. Set to zero to disable this", 0, 190, { type = "Slider", name = "Corpse Cleanup Time", decimals = 0, category = "Utilities" } )
@@ -117,6 +117,7 @@ CreateLambdaConvar( "lambdaplayers_displayarmor", 0, true, true, false, "If Lamb
 CreateLambdaConvar( "lambdaplayers_useplayermodelcolorasdisplaycolor", 0, true, true, true, "If Lambda Player's Playermodel Color should be its Display Color. This has priority over the Display Color below", 0, 1, { type = "Bool", name = "Playermodel Color As Display Color", category = "Misc" } )
 CreateLambdaColorConvar( "lambdaplayers_displaycolor", defDisplayClr, true, true, "The display color to use for Name Display and others", { name = "Display Color", category = "Misc" } )
 CreateLambdaConvar( "lambdaplayers_animatedpfpsprayframerate", 10, true, true, false, "The frame rate of animated Spray VTFs and animated Profile Picture VTFs", 1, 60, { type = "Slider", decimals = 0, name = "Animated VTF Frame Rate", category = "Misc" } )
+CreateLambdaConvar( "lambdaplayers_randomizepathingcost", 0, true, false, false, "Randomizes Pathfinding in a way that will make Lambdas try different approaches to reaching their destination rather than finding the fastest and closest route", 0, 1, { type = "Bool", name = "Randomize PathFinding Cost", category = "Misc" } )
 --
 
 -- Lambda Player Server Convars

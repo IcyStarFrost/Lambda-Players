@@ -22,6 +22,7 @@ local isnumber = isnumber
 local band = bit.band
 local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 local shouldavoid = GetConVar( "lambdaplayers_lambda_avoid" )
+local randomizepathfinding = GetConVar( "lambdaplayers_randomizepathingcost" )
 
 -- Finds "simple" ground height, treating the provided nav area as part of the floor
 local function GetSimpleGroundHeightWithFloor( navArea, pos )
@@ -611,6 +612,10 @@ function ENT:PathGenerator()
         end
 
         local cost = ( CNavArea_GetCostSoFar( fromArea ) + dist )
+
+        if randomizepathfinding:GetBool() then
+            cost = cost * ( random( 9, 11 ) / 10 ) 
+        end
 
         if !isInNoClip then 
             if !IsValid( ladder ) then

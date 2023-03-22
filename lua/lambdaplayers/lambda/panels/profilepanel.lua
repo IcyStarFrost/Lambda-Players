@@ -119,21 +119,23 @@ local function OpenProfilePanel( ply )
         LAMBDAFS:UpdateKeyValueFile( "lambdaplayers/profiles.json", { [ compiledinfo.name ] = compiledinfo }, "json" ) 
     end )
 
-    LAMBDAPANELS:CreateButton( rightpanel, BOTTOM, "Save To Server", function()
-        if !LocalPlayer():IsSuperAdmin() then chat.AddText( "You must be a Super Admin to save profiles to the Server! " ) return end
-        local compiledinfo = CompileSettings()
+    if !game.SinglePlayer() then
+        LAMBDAPANELS:CreateButton( rightpanel, BOTTOM, "Save To Server", function()
+            if !LocalPlayer():IsSuperAdmin() then chat.AddText( "You must be a Super Admin to save profiles to the Server! " ) return end
+            local compiledinfo = CompileSettings()
 
-        surface.PlaySound( "buttons/button15.wav" )
-        chat.AddText( "Saved " .. compiledinfo.name .. " to the Server's Profiles. Make sure the name exists in the Server's names by using the Name Panel")
+            surface.PlaySound( "buttons/button15.wav" )
+            chat.AddText( "Saved " .. compiledinfo.name .. " to the Server's Profiles. Make sure the name exists in the Server's names by using the Name Panel")
 
-        local line =  profilelist:AddLine( compiledinfo.name .. " | Server" )
-        line.l_isprofilelocal = false
-        line:SetSortValue( 1, compiledinfo )
-        if LocalPlayer():GetNW2Bool( "lambda_serverhost", false ) and !LAMBDAFS:FileHasValue( "lambdaplayers/customnames.json", compiledinfo.name, "json" ) then LAMBDAFS:UpdateSequentialFile( "lambdaplayers/customnames.json", compiledinfo.name, "json" ) end
+            local line =  profilelist:AddLine( compiledinfo.name .. " | Server" )
+            line.l_isprofilelocal = false
+            line:SetSortValue( 1, compiledinfo )
+            if LocalPlayer():GetNW2Bool( "lambda_serverhost", false ) and !LAMBDAFS:FileHasValue( "lambdaplayers/customnames.json", compiledinfo.name, "json" ) then LAMBDAFS:UpdateSequentialFile( "lambdaplayers/customnames.json", compiledinfo.name, "json" ) end
 
-        UpdateprofileLine( compiledinfo.name, compiledinfo, true )
-        LAMBDAPANELS:UpdateKeyValueFile( "lambdaplayers/profiles.json", { [ compiledinfo.name ] = compiledinfo }, "json" ) 
-    end )
+            UpdateprofileLine( compiledinfo.name, compiledinfo, true )
+            LAMBDAPANELS:UpdateKeyValueFile( "lambdaplayers/profiles.json", { [ compiledinfo.name ] = compiledinfo }, "json" ) 
+        end )
+    end
 
     LAMBDAPANELS:CreateButton( rightpanel, BOTTOM, "Request Server Profiles", function()
         if LocalPlayer():GetNW2Bool( "lambda_serverhost", false ) then chat.AddText( "You are the server host!" ) return end
@@ -585,7 +587,7 @@ local function OpenProfilePanel( ply )
         extpnl:Dock( TOP )
         extpnl.LambdapnlClass = class
         externalpanels[ variablename ] = extpnl
-        callback( extpnl, externalscroll )
+        callback( extpnl, categories[ category ] )
         
 
     end
@@ -624,8 +626,8 @@ local function OpenProfilePanel( ply )
         }
 
         infotable.bodygroups = {}
-        for k, v in pairs( bodygroupdata ) do
-            if infotable.bodygroups[ k ] then infotable.bodygroups[ k ] = round( v:GetValue(), 0 ) end
+        for id, bodygrouppanel in pairs( bodygroupdata ) do
+            infotable.bodygroups[ id ] = round( bodygrouppanel:GetValue(), 0 )
         end
 
         for k, v in pairs( externalpanels ) do

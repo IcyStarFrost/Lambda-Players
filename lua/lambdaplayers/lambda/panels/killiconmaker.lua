@@ -7,12 +7,12 @@ AccessorFunc( PANEL, "m_bCustomIcon", "CustomIcon" )
 
 function PANEL:Init()
 
-	self:SetSize( 762, 502 )
+	self:SetSize( ScrW(), ScrH() )
 	self:SetTitle( "#smwidget.icon_editor" )
 
 	local left = self:Add( "Panel" )
 	left:Dock( LEFT )
-	left:SetWide( 400 )
+	left:SetWide( ScrW() / 1.2 )
 	self.LeftPanel = left
 
 		local bg = left:Add( "DPanel" )
@@ -37,21 +37,6 @@ function PANEL:Init()
 
 		function self.ModelPanel.PostDrawModel( mdlpnl, ent )
             render.SuppressEngineLighting( false )
-			if ( self.ShowOrigin ) then
-				render.DrawLine( vector_origin, Vector( 0, 0, 100 ), Color( 0, 0, 255 ) )
-				render.DrawLine( vector_origin, Vector( 0, 100, 0 ), Color( 0, 255, 0 ) )
-				render.DrawLine( vector_origin, Vector( 100, 0, 0 ), Color( 255, 0, 0 ) )
-			end
-
-			if ( self.ShowBBox ) then
-				local mins, maxs = ent:GetRenderBounds()
-				local scale = 1
-				mat_wireframe:SetVector( "$color", Vector( 1, 1, 1 ) )
-				render.SetMaterial( mat_wireframe )
-
-				render.DrawBox( ent:GetPos(), ent:GetAngles(), mins * scale, maxs * scale )
-			end
-
 		end
 
 	local controls = left:Add( "Panel" )
@@ -228,30 +213,6 @@ function PANEL:Init()
 	settings:DockPadding( 7, 0, 7, 7 )
 	right:AddSheet( "#smwidget.settings", settings, "icon16/cog.png" )
 
-		local bbox = settings:Add( "DCheckBoxLabel" )
-		bbox:SetText( "Show Bounding Box" )
-		bbox:Dock( TOP )
-		bbox:DockMargin( 0, 0, 0, 3 )
-		bbox:SetDark( true )
-		bbox.OnChange = function( p, b )
-			self.ShowBBox = b
-			p:SetCookie( "checkbox_checked", b && 1 or 0 )
-		end
-		bbox.LoadCookies = function( p ) local b = p:GetCookie( "checkbox_checked" ) p:SetChecked( b ) p:OnChange( tobool( b ) ) end
-		bbox:SetCookieName( "model_editor_bbox" )
-
-		local origin = settings:Add( "DCheckBoxLabel" )
-		origin:SetText( "Show Origin" )
-		origin:Dock( TOP )
-		origin:DockMargin( 0, 0, 0, 3 )
-		origin:SetDark( true )
-		origin.OnChange = function( p, b )
-			self.ShowOrigin = b
-			p:SetCookie( "checkbox_checked", b && 1 or 0 )
-		end
-		origin.LoadCookies = function( p ) local b = p:GetCookie( "checkbox_checked" ) p:SetChecked( b ) p:OnChange( tobool( b ) ) end
-		origin:SetCookieName( "model_editor_origin" )
-
 		local angle = settings:Add( "DTextEntry" )
 		angle:SetTooltip( "Entity Angles" )
 		angle:Dock( TOP )
@@ -410,7 +371,7 @@ function PANEL:UpdateEntity( ent )
 
 end
 
-local capturecam = GetRenderTarget( "lambda_iconcapture", 256, 256 )
+local capturecam = GetRenderTarget( "lambda_iconcapture1", 512, 512 )
 
 local numbers = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" }
 local endings = { "a", "b", "c" }
@@ -452,8 +413,8 @@ function PANEL:RenderIcon()
         format = "png",
         x = 0,
         y = 0,
-        w = 256,
-        h = 256
+        w = 512,
+        h = 512
     } )
 
 

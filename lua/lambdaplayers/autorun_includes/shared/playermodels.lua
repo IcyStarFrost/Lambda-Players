@@ -140,4 +140,4 @@ function LambdaUpdatePlayerModels()
 
 end
 
-LambdaUpdatePlayerModels()
+hook.Add( "PostGamemodeLoaded", "lambdaplayers-loadplayermodels", LambdaUpdatePlayerModels )
