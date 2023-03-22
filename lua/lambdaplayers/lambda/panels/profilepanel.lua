@@ -587,7 +587,7 @@ local function OpenProfilePanel( ply )
         extpnl:Dock( TOP )
         extpnl.LambdapnlClass = class
         externalpanels[ variablename ] = extpnl
-        callback( extpnl, externalscroll )
+        callback( extpnl, categories[ category ] )
         
 
     end
