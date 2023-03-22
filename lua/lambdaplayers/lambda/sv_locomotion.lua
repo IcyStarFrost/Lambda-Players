@@ -597,6 +597,7 @@ function ENT:PathGenerator()
 
     local obeyNavmesh = obeynav:GetBool()
     local isInNoClip = self:IsInNoClip()
+    local randomizeCost = randomizepathfinding:GetBool()
 
     return function( area, fromArea, ladder, elevator, length )
         if !IsValid( fromArea ) then return 0 end
@@ -613,7 +614,7 @@ function ENT:PathGenerator()
 
         local cost = ( CNavArea_GetCostSoFar( fromArea ) + dist )
 
-        if randomizepathfinding:GetBool() then
+        if randomizeCost then
             cost = cost * ( random( 9, 11 ) / 10 ) 
         end
 

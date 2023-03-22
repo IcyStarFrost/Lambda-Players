@@ -363,18 +363,31 @@ net.Receive( "lambdaplayers_updatedata", function()
     chat.AddText( "Lambda Data was updated by the Server" )
 end )
 
-net.Receive("lambdaplayers_playsoundfile", function()
+net.Receive( "lambdaplayers_playsoundfile", function()
     local lambda = net.ReadEntity()
+    if !IsValid( lambda ) then return end
+    
+    if CurTime() <= lambda.l_lastsoundplaytime then return end
+    lambda.l_lastsoundplaytime = CurTime() + 0.1
+    
     local soundname = net.ReadString()
     local index = net.ReadUInt( 32 )
-
-    if !IsValid(lambda) then return end
-    
-    if CurTime() == lambda.l_lastsoundplaytime then return end
-    lambda.l_lastsoundplaytime = CurTime()
-
     PlaySoundFile( lambda, soundname, index, true )
-end)
+end )
+
+net.Receive( "lambdaplayers_stopcurrentsound", function()
+    local ent = net.ReadEntity()
+    if !IsValid( ent ) then return end
+
+    local snd = ent.l_VoiceSnd
+    if !snd or !snd:IsValid() then return end
+
+    if usegmodpopups:GetBool() then 
+        hook.Run( "PlayerEndVoice", ent ) 
+    end
+
+    snd:Stop()
+end )
 
 net.Receive( "lambdaplayers_invalidateragdoll", function()
     local ent = net.ReadEntity()
