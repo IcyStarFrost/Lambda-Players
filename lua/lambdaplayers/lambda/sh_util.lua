@@ -554,7 +554,10 @@ if SERVER then
     -- PlaySequenceAndWait but without t-posing
     function ENT:PlayGestureAndWait( id, speed )
 
-        local layer = ( isstring( id ) and self:AddGestureSequence( id ) or self:AddGesture( id ) )
+        local isSeq = isstring( id )
+        if isSeq then id = self:LookupSequence( id ) end
+
+        local layer = ( isSeq and self:AddGestureSequence( id ) or self:AddGesture( id ) )
         if !self:IsValidLayer( layer ) then return end
 
         self.l_UpdateAnimations = false
@@ -573,6 +576,8 @@ if SERVER then
 
         if self:IsValidLayer( layer ) then
             self:SetLayerCycle( layer, 1 )
+        end
+        if !isSeq then 
             self:RemoveGesture( id )
         end
 
