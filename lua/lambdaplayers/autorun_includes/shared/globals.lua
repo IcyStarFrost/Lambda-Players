@@ -77,7 +77,7 @@ local function OpenSpawnWeaponPanel()
     if currentWep == "random" then 
         currentWep = "Random Weapon"
     else
-        currentWep = _LAMBDAPLAYERSWEAPONS[ currentWep ].prettyname
+        currentWep = _LAMBDAPLAYERSWEAPONS[ currentWep ] and _LAMBDAPLAYERSWEAPONS[ currentWep ].prettyname or "!!NON EXISTENT WEAPON"
     end
     LAMBDAPANELS:CreateLabel( "Currenly selected spawn weapon: " .. currentWep, mainframe, TOP )
 
