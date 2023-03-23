@@ -26,6 +26,7 @@ local coroutine = coroutine
 local Trace = util.TraceLine
 local EndsWith = string.EndsWith
 local tobool = tobool
+local isstring = isstring
 local table_insert = table.insert
 local isfunction = isfunction
 local tostring = tostring
@@ -553,7 +554,7 @@ if SERVER then
     -- PlaySequenceAndWait but without t-posing
     function ENT:PlayGestureAndWait( id, speed )
 
-        local layer = self:AddGesture( id )
+        local layer = ( isstring( id ) and self:AddGestureSequence( id ) or self:AddGesture( id ) )
         if !self:IsValidLayer( layer ) then return end
 
         self.l_UpdateAnimations = false
@@ -570,7 +571,11 @@ if SERVER then
             coroutine.yield()
         end
 
-        self:RemoveGesture( id )
+        if self:IsValidLayer( layer ) then
+            self:SetLayerCycle( layer, 1 )
+            self:RemoveGesture( id )
+        end
+
         self.l_UpdateAnimations = true
         self.l_CurrentPlayedGesture = -1
     
