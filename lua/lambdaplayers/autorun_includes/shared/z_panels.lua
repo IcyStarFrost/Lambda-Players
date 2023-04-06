@@ -93,7 +93,7 @@ if CLIENT then
         lbl:SetSize( 400, 100 )
         lbl:DockMargin( 5, 0, 0, 0 )
 
-        return checkbox
+        return checkbox, basepnl, lbl
     end
 
     -- Creates a box with a list of options

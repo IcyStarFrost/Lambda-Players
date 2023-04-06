@@ -16,7 +16,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 10,
         attackrange = 55,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             self.l_WeaponUseCooldown = CurTime() + Rand( 1.0, 1.2 )
             wepent:EmitSound( "Zombie.AttackMiss" )
 
@@ -24,7 +24,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local attackAnim = self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             self:SetLayerPlaybackRate( attackAnim, 0.8 )
 
-            self:SimpleTimer( 0.4, function()
+            self:SimpleWeaponTimer( 0.4, function()
                 if !IsValid( target ) or !self:IsInRange( target, 60 ) then return end
 
                 local dmg = random( 45, 55 )

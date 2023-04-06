@@ -40,6 +40,7 @@ local aidisable = GetConVar( "ai_disabled" )
 local debugcvar = GetConVar( "lambdaplayers_debug" )
 local chatAllowed = GetConVar( "lambdaplayers_text_enabled" )
 local chatlimit = GetConVar( "lambdaplayers_text_chatlimit" )
+local collisionPly = GetConVar( "lambdaplayers_lambda_noplycollisions" )
 local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
 local serversidecleanup = GetConVar( "lambdaplayers_lambda_serversideremovecorpseonrespawn" )
@@ -125,6 +126,22 @@ function ENT:SimpleTimer( delay, func, ignoredead )
     end )
 end
 
+-- Same as ENT:SimpleTimer(), but also checks if our weapon is valid and weapon name is the same one we created this timer with
+function ENT:SimpleWeaponTimer( delay, func, ignoredead, ignorewepname )
+    local id = tostring( func ) .. random( 1, 100000 )
+    self.l_SimpleTimers[ id ] = !ignoredead
+    
+    local wepent = self:GetWeaponENT()
+    local curWep = self:GetWeaponName()
+    
+    timer_simple( delay, function()
+        if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) or !ignoredead and !self.l_SimpleTimers[ id ] then return end
+        if !IsValid( wepent ) or !ignorewepname and self:GetWeaponName() != curWep then return end
+        func()
+        self.l_SimpleTimers[ id ] = nil
+    end )
+end
+
 -- Prevents every simple timer that does not have ignoredead from running
 function ENT:TerminateNonIgnoredDeadTimers()
     table_Empty( self.l_SimpleTimers )
@@ -138,6 +155,25 @@ function ENT:NamedTimer( name, delay, repeattimes, func, ignoredead )
     self:DebugPrint( "Created a Timer: " .. name )
     timer_create( intname, delay, repeattimes, function() 
         if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) then return end
+        local result = func()
+        if result == true then timer_Remove( intname ) self:DebugPrint( "Removed a Timer: " .. name ) end
+    end )
+
+    table_insert( self.l_Timers, intname )
+end
+
+-- Same as ENT:NamedTimer(), but also checks if our weapon is valid and weapon name is the same one we created this timer with
+function ENT:NamedWeaponTimer( name, delay, repeattimes, func, ignoredead, ignorewepname )
+    local id = self:EntIndex()
+    local intname = "lambdaplayers_" .. name .. id
+    self:DebugPrint( "Created a Weapon Timer: " .. name )
+    
+    local wepent = self:GetWeaponENT()
+    local curWep = self:GetWeaponName()
+    
+    timer_create( intname, delay, repeattimes, function() 
+        if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) then return end
+        if !IsValid( wepent ) or !ignorewepname and self:GetWeaponName() != curWep then return end
         local result = func()
         if result == true then timer_Remove( intname ) self:DebugPrint( "Removed a Timer: " .. name ) end
     end )
@@ -163,7 +199,6 @@ function ENT:RemoveTimers()
         timer_Remove( v )
     end
 end
-
 
 -- Find in sphere function with a filter
 function ENT:FindInSphere( pos, radius, filter )
@@ -311,7 +346,6 @@ function ENT:ExportLambdaInfo()
     return info
 end
 
-
 -- Performs a Trace from ourselves or the overridestart to the postion
 function ENT:Trace( pos, overridestart )
     tracetable.start = overridestart or self:WorldSpaceCenter()
@@ -331,7 +365,6 @@ function ENT:CanSee( ent )
     return ( result.Fraction == 1.0 or result.Entity == ent )
 end
 
-
 -- Returns the color that should be used in displays such as Name Display, Text Chat, ect
 -- If on Server, returns the color the ply is using for the Display Color
 local useplycolorasdisplay = GetConVar( "lambdaplayers_useplayermodelcolorasdisplaycolor" )
@@ -346,11 +379,35 @@ function ENT:GetDisplayColor( ply )
     end
 end
 
+-- Obviously returns the current state
+function ENT:GetState()
+    return self:GetNW2String( "lambda_state", "Idle" )
+end
+
+-- Returns the last state we were in
+function ENT:GetLastState()
+    return self:GetNW2String( "lambda_laststate", "Idle" )
+end
+
+-- If we currently are fighting
+function ENT:InCombat()
+    return ( self:GetState() == "Combat" and LambdaIsValid( self:GetEnemy() ) )
+end
+
+-- If we are panicking
+function ENT:IsPanicking()
+    return ( self:GetState() == "Retreat" )
+end
+
+-- Returns if we are currently speaking
+function ENT:IsSpeaking() 
+    return CurTime() < self:GetLastSpeakingTime()
+end
+
 if SERVER then
 
     local GetAllNavAreas = navmesh.GetAllNavAreas
     local ignoreplayer = GetConVar( "ai_ignoreplayers" )
-
 
     -- Applies info data from :ExportLambdaInfo() to the Lambda Player
     function ENT:ApplyLambdaInfo( info )
@@ -364,6 +421,7 @@ if SERVER then
             self:SetMaxHealth( info.health or self:GetMaxHealth() )
             self:SetHealth( info.health or self:GetMaxHealth() )
             self:SetNWMaxHealth( info.health or self:GetMaxHealth() )
+            self:SetArmor( info.armor or self:GetArmor() )
 
             self:SetSkin( info.mdlSkin or 0 )
 
@@ -395,12 +453,11 @@ if SERVER then
             self.l_TextProfile = info.textprofile or self.l_TextProfile
             self:SetNW2String( "lambda_tp", self.l_TextProfile )
             -- Non Personal Data --
-            local spawnwep = self:WeaponDataExists( info.spawnwep ) and info.spawnwep or self.l_SpawnWeapon
             self:SetRespawn( info.respawn or self:GetRespawn() )
 
-            self:SwitchWeapon( spawnwep )
-            
-            self:SetNW2String( "lambda_spawnweapon", spawnwep )
+            local spawnwep = self:WeaponDataExists( info.spawnwep ) and info.spawnwep or self.l_SpawnWeapon
+            self:SwitchToSpawnWeapon()
+            self:SetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon )
 
             self:SetFrags( info.frags or self:GetFrags() )
             self:SetDeaths( info.deaths or self:GetDeaths() )
@@ -453,17 +510,19 @@ if SERVER then
     function ENT:CanTarget( ent )
         if LambdaRunHook( "LambdaCanTarget", self, ent ) then return false end
         if ent:IsNPC() and ent:GetClass() == "npc_turret_floor" and ent:GetInternalVariable( "m_lifeState" ) == 1 then return false end -- Prevent lambdas from attacking downed turrets
+        if ent.IsLambdaPlayer and !ent:Alive() then return false end
         return ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() and ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 1 and ent:Alive() )
     end
 
     -- Attacks the specified entity
     function ENT:AttackTarget( ent, forceAttack )
         if !IsValid( ent ) or !forceAttack and self:IsPanicking() then return end
+        if LambdaRunHook( "LambdaOnAttackTarget", self, ent ) == true then return end
+        
         if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( self:GetVoiceLine( "taunt" ) ) end
         self:SetEnemy( ent )
         self:SetState( "Combat" )
         self:CancelMovement()
-        LambdaRunHook( "LambdaOnAttackTarget", self, ent )
     end
 
     -- Retreats from entity target
@@ -506,14 +565,12 @@ if SERVER then
         self:SetPlaybackRate( speed )
 
         -- wait for it to finish
-        local endTime = CurTime() + ( len / speed )
-        while ( true ) do
-            if !IsValid( self ) then return end
-            if CurTime() >= endTime then break end
-            if self:GetIsDead() then self:RemoveGesture( id ) break end
+        local endTime = ( CurTime() + ( len / speed ) )
+        while ( CurTime() < endTime and !self:GetIsDead() and self:IsValidLayer( layer ) ) do
             coroutine.yield()
         end
 
+        self:RemoveGesture( id )
         self.l_UpdateAnimations = true
         self.l_CurrentPlayedGesture = -1
     
@@ -574,44 +631,22 @@ if SERVER then
 
     -- Sets our state
     function ENT:SetState( state )
-        if state == self.l_State then return end
-        self:DebugPrint( "Changed state from " .. self.l_State .. " to " .. state )
-        self.l_LastState = self.l_State
+        local curState = self.l_State
+        if state == curState then return end
+        if LambdaRunHook( "LambdaOnChangeState", self, curState, state ) == true then return end
+        self:DebugPrint( "Changed state from " .. curState .. " to " .. state )
+
+        self.l_LastState = curState
         self.l_State = state
+        
         self:SetNW2String( "lambda_laststate", self.l_LastState )
         self:SetNW2String( "lambda_state", state )
-    end
-
-    -- Obviously returns the current state
-    function ENT:GetState()
-        return self:GetNW2String( "lambda_state", "Idle" )
-    end
-    
-    -- Returns the last state we were in
-    function ENT:GetLastState()
-        return self:GetNW2String( "lambda_laststate", "Idle")
-    end
-
-    -- If we currently are fighting
-    function ENT:InCombat()
-        return ( self:GetState() == "Combat" and LambdaIsValid( self:GetEnemy() ) )
-    end
-
-    -- If we are panicking
-    function ENT:IsPanicking()
-        return ( self:GetState() == "Retreat" )
     end
 
     -- Returns if our ai is disabled
     function ENT:IsDisabled()
         return self:GetIsTyping() or self.l_isfrozen or aidisable:GetBool()
     end
-
-    -- Returns if we are currently speaking
-    function ENT:IsSpeaking() 
-        return CurTime() < self:GetLastSpeakingTime()
-    end
-
     -- If we have a lethal weapon
     function ENT:HasLethalWeapon()
         return self.l_HasLethal or false
@@ -638,6 +673,11 @@ if SERVER then
         self.l_NoWeaponSwitch = bool
     end
 
+    -- Returns the current weapon's pretty name
+    function ENT:GetPrettyWeaponName()
+        return self:GetNW2String( "lambda_weaponprettyname", "UNAVAILABLE" )
+    end
+
     -- Respawns the Lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time
     function ENT:LambdaRespawn()
         LambdaSpawnPoints = LambdaSpawnPoints or LambdaGetPossibleSpawns()
@@ -652,7 +692,12 @@ if SERVER then
         self:SetSolidMask( MASK_PLAYERSOLID )
 
         self.loco:SetVelocity( Vector( 0, 0, 0 ) )
-        self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
+
+        if !collisionPly:GetBool() then
+            self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
+        else
+            self:SetCollisionGroup( COLLISION_GROUP_PASSABLE_DOOR )
+        end
 
         local phys = self:GetPhysicsObject()
         if IsValid( phys ) then phys:EnableCollisions( true ) end
@@ -680,7 +725,7 @@ if SERVER then
         self:SetHealth( self:GetMaxHealth() )
         self:SetArmor( spawnArmor:GetInt() )
         self:AddFlags( FL_OBJECT )
-        self:SwitchWeapon( self.l_SpawnWeapon )
+        self:SwitchToSpawnWeapon()
         self:UpdateHealthDisplay()
         
         self:SetState( "Idle" )
@@ -814,6 +859,11 @@ if SERVER then
     -- Useful for modules that need lambdas to not speak passively.
     function ENT:PreventDefaultComs( bool )
         self.l_preventdefaultspeak = bool
+    end
+
+    -- Restarts the Lambda's AI thread. Useful for forcing state changes
+    function ENT:ResetAI()
+        self.BehaveThread = coroutine.create( function() self:RunBehaviour() end )
     end
 
 
@@ -1069,7 +1119,7 @@ if SERVER then
 
         if ent.IsVJBaseSNPC and relations == D_HT then
             self:SimpleTimer( 0.1, function() 
-                if !IsValid( ent ) then return end
+                if !IsValid( ent ) or !ent.VJ_AddCertainEntityAsEnemy or !ent.CurrentPossibleEnemies then return end
                 ent.VJ_AddCertainEntityAsEnemy[ #ent.VJ_AddCertainEntityAsEnemy + 1 ] = self
                 ent.CurrentPossibleEnemies[ #ent.CurrentPossibleEnemies + 1 ] = self
             end, true )
@@ -1123,12 +1173,62 @@ if SERVER then
         self:PlayStepSound( 1.0 )
     end
 
+    local panicAnimations = GetConVar( "lambdaplayers_lambda_panicanimations" )
 
-elseif CLIENT then
+    function ENT:GetWeaponHoldType()
+        if self:IsPanicking() and panicAnimations:GetBool() then
+            return _LAMBDAPLAYERSHoldTypeAnimations[ "panic" ]
+        end
+
+        local hType = self.l_HoldType
+        return ( istable( hType ) and hType or _LAMBDAPLAYERSHoldTypeAnimations[ hType ] )
+    end
+
+end
+
+if ( CLIENT ) then
+
+    local RealTime = RealTime
+
+    -- This is to keep all VTF pfps unique.
+    local framerateconvar = GetConVar( "lambdaplayers_animatedpfpsprayframerate" )
+    _LambdaPfpIndex = _LambdaPfpIndex or 0
+
+    -- Returns our profile picture as a Material object.
+    -- Very expensive to run. Try to cache the result so this can only be ran once
+    function ENT:GetPFPMat()
+        local pfp = self:GetProfilePicture()
+
+        local isVTF = string.EndsWith( pfp, ".vtf" )
+        local profilepicturematerial
+    
+        -- VTF ( Valve Texture Format ) support. This allows animated Profile Pictures
+        if isVTF then
+            _LambdaPfpIndex = _LambdaPfpIndex + 1
+            profilepicturematerial = CreateMaterial( "lambdaprofilepicVTFmaterial" .. _LambdaPfpIndex, "UnlitGeneric", {
+                [ "$basetexture" ] = pfp,
+                [ "$translucent" ] = 1,
+                [ "Proxies" ] = {
+                    [ "AnimatedTexture" ] = {
+                        [ "animatedTextureVar" ] = "$basetexture",
+                        [ "animatedTextureFrameNumVar" ] = "$frame",
+                        [ "animatedTextureFrameRate" ] = framerateconvar:GetInt()
+                    }
+                }
+            })
+        else
+            profilepicturematerial = Material( pfp )
+        end
+    
+        if profilepicturematerial:IsError() then
+            local model = self:GetModel()
+            profilepicturematerial = Material( "spawnicons/" .. string.sub( model, 1, #model - 4 ) .. ".png" )
+        end
+        return profilepicturematerial
+    end
 
     function ENT:IsBeingDrawn()
-        return RealTime() < self.l_lastdraw
+        return ( RealTime() < self.l_lastdraw )
     end
-    
 
 end

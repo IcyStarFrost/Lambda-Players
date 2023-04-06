@@ -1,4 +1,3 @@
-
 local random = math.random
 local tobool = tobool
 local ents_GetAll = ents.GetAll
@@ -23,11 +22,17 @@ local retreatLowHP = GetConVar( "lambdaplayers_combat_retreatonlowhealth" )
 local serversidecleanup = GetConVar( "lambdaplayers_lambda_serversideragdollcleanuptime" )
 local serversidecleanupeffect = GetConVar( "lambdaplayers_lambda_serversideragdollcleanupeffect" )
 local cleanupondeath = GetConVar( "lambdaplayers_building_cleanupondeath" )
+local flashlightsprite = Material( "sprites/light_glow02_add" )
+local flashlightbeam = Material( "effects/lamp_beam" )
+local aidisabled = GetConVar( "ai_disabled" )
+local faded = Color( 100, 100, 100, 100 )
+local serversideragdolls = GetConVar( "lambdaplayers_lambda_serversideragdolls" )
 
 if SERVER then
 
     -- Due to the issues of Lambda Players not taking damage when they die internally, we have no choice but to recreate them to get around this.
     -- If there is a fix for the damage handling failing to prevent them from actually getting below 0 please make it known so it can be fixed ASAP.
+    -- UPDATE: This seems to be fixed by the workaround in gamemode_overrides.lua
     function ENT:OnKilled( info )
         if self.l_internalkilled then return end
         if debugvar:GetBool() then ErrorNoHaltWithStack( "WARNING! ", self:GetLambdaName(), " was killed on a engine level! The entity will be recreated!" ) end
@@ -35,22 +40,42 @@ if SERVER then
         self.l_internalkilled = true
     end
 
-    local function CreateServersideRagdoll( lambda, info, overrideEnt )
+    function ENT:CreateClientsideRagdoll( info, overrideEnt )
+        overrideEnt = overrideEnt or self.l_BecomeRagdollEntity
+
+        local dmgforce, dmgpos = vector_origin, vector_origin
+        if info then
+            dmgforce = info:GetDamageForce()
+            dmgpos = info:GetDamagePosition()
+        end
+
+        net.Start( "lambdaplayers_becomeragdoll" )
+            net.WriteEntity( self )
+            net.WriteVector( self:GetPlyColor() )
+            net.WriteVector( dmgforce )
+            net.WriteVector( dmgpos )
+            net.WriteEntity( overrideEnt )
+        net.Broadcast()
+    end
+
+    function ENT:CreateServersideRagdoll( info, overrideEnt )
+        overrideEnt = overrideEnt or self.l_BecomeRagdollEntity
+
         local ragdoll = ents.Create( "prop_ragdoll" )
-        local visualEnt = ( IsValid( overrideEnt ) and overrideEnt or lambda )
+        local visualEnt = ( IsValid( overrideEnt ) and overrideEnt or self )
 
         ragdoll:SetModel( visualEnt:GetModel() )
         ragdoll:SetPos( visualEnt:GetPos() )
-        ragdoll:SetOwner( lambda )
+        ragdoll:SetOwner( self )
         ragdoll:AddEffects( EF_BONEMERGE ) -- Pretty much sets up the bones for us
         ragdoll:SetParent( visualEnt )
         ragdoll:Spawn()
         ragdoll:SetCollisionGroup( COLLISION_GROUP_DEBRIS )
-        ragdoll.LambdaOwner = lambda
-        lambda.ragdoll = ragdoll
+        ragdoll.LambdaOwner = self
+        self.ragdoll = ragdoll
         ragdoll.IsLambdaSpawned = true
 
-        lambda:SetNW2Entity( "lambda_serversideragdoll", ragdoll )
+        self:SetNW2Entity( "lambda_serversideragdoll", ragdoll )
     
         ragdoll:SetSkin( visualEnt:GetSkin() )
         for k, v in ipairs( visualEnt:GetBodyGroups() ) do 
@@ -66,18 +91,18 @@ if SERVER then
             if IsValid( phys ) then phys:AddVelocity( vel ) end
         end
     
-        ragdoll:TakePhysicsDamage( info )
+        if info then ragdoll:TakePhysicsDamage( info ) end
 
         net.Start( "lambdaplayers_serversideragdollplycolor" )
             net.WriteEntity( ragdoll )
-            net.WriteVector( lambda:GetPlyColor() ) 
+            net.WriteVector( self:GetPlyColor() ) 
         net.Broadcast()
 
         if serversidecleanup:GetInt() != 0 then 
             local startTime = CurTime()
 
             LambdaCreateThread( function()
-                while ( CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( lambda ) and lambda:IsSpeaking() ) do 
+                while ( CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( self ) and self:IsSpeaking() ) do 
                     if !IsValid( ragdoll ) then return end
                     coroutine.yield() 
                 end
@@ -98,15 +123,22 @@ if SERVER then
 
         -- Required for other addons to detect and get Lambda's ragdoll
         if _LambdaGamemodeHooksOverriden then
-            hook.Run( "CreateEntityRagdoll", lambda, ragdoll )
+            hook.Run( "CreateEntityRagdoll", self, ragdoll )
         end
+
+        return ragdoll
     end
 
     function ENT:LambdaOnKilled( info, silent )
         if self:GetIsDead() then return end
+        if LambdaRunHook( "LambdaOnPreKilled", self, info, silent ) == true then return end -- If someone wants to override the default behavior
+
+        local wepent = self.WeaponEnt
+        local attacker = info:GetAttacker()
+        local inflictor = info:GetInflictor()
 
         if !silent then
-            self:DebugPrint( "was killed by ", info:GetAttacker() )
+            self:DebugPrint( "was killed by ", attacker )
 
             self:EmitSound( info:IsDamageType( DMG_FALL ) and "Player.FallGib" or "Player.Death" )
             
@@ -114,25 +146,19 @@ if SERVER then
                 self:PlaySoundFile( self:GetVoiceLine( "death" ) )
             end
 
-            LambdaKillFeedAdd( self, info:GetAttacker(), info:GetInflictor() )
-            if callnpchook:GetBool() then LambdaRunHook( "OnNPCKilled", self, info:GetAttacker(), info:GetInflictor() ) end
+            LambdaKillFeedAdd( self, attacker, inflictor )
+            if callnpchook:GetBool() then LambdaRunHook( "OnNPCKilled", self, attacker, inflictor ) end
             self:SetDeaths( self:GetDeaths() + 1 )
-        
-            if !GetConVar( "lambdaplayers_lambda_serversideragdolls" ):GetBool() then
-                net.Start( "lambdaplayers_becomeragdoll" )
-                    net.WriteEntity( self )
-                    net.WriteVector( self:GetPlyColor() )
-                    net.WriteVector( info:GetDamageForce() )
-                    net.WriteVector( info:GetDamagePosition() )
-                    net.WriteEntity( self.l_BecomeRagdollEntity )
-                net.Broadcast()
+
+            if !serversideragdolls:GetBool() then
+                self:CreateClientsideRagdoll( info )
             else
-                CreateServersideRagdoll( self, info, self.l_BecomeRagdollEntity )
+                self:CreateServersideRagdoll( info )
             end
-    
-            if !self:IsWeaponMarkedNodraw() then
+
+            if self.l_DropWeaponOnDeath and !self:IsWeaponMarkedNodraw() then
                 net.Start( "lambdaplayers_createclientsidedroppedweapon" )
-                    net.WriteEntity( self.WeaponEnt )
+                    net.WriteEntity( wepent )
                     net.WriteEntity( self )
                     net.WriteVector( self:GetPhysColor() )
                     net.WriteString( self:GetWeaponName() )
@@ -148,18 +174,18 @@ if SERVER then
         self:SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE )
 
         self:ClientSideNoDraw( self, true )
-        self:ClientSideNoDraw( self.WeaponEnt, true )
+        self:ClientSideNoDraw( wepent, true )
         self:SetNoDraw( true )
         self:DrawShadow( false )
-        self.WeaponEnt:SetNoDraw( true )
-        self.WeaponEnt:DrawShadow( false )
+        wepent:SetNoDraw( true )
+        wepent:DrawShadow( false )
         self:LookTo( nil )
 
         self:GetPhysicsObject():EnableCollisions( false )
 
         -- Restart our coroutine thread
-        self.BehaveThread = coroutine.create( function() self:RunBehaviour() end )
-        
+        self:ResetAI()
+
         -- Stop playing current gesture animation
         self:RemoveGesture( self.l_CurrentPlayedGesture )
         self.l_CurrentPlayedGesture = -1
@@ -172,7 +198,7 @@ if SERVER then
 
         self.l_BecomeRagdollEntity = NULL
 
-        LambdaRunHook( "LambdaOnKilled", self, info )
+        LambdaRunHook( "LambdaOnKilled", self, info, silent )
         --hook.Run( "PlayerDeath", self, info:GetInflictor(), info:GetAttacker() )
 
 
@@ -200,12 +226,21 @@ if SERVER then
             end
         end
 
-        local attacker = info:GetAttacker()
         if attacker != self and IsValid( attacker ) then 
             if attacker:IsPlayer() then attacker:AddFrags( 1 ) end
             if !self:IsSpeaking() and random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self.l_preventdefaultspeak then
                 self.l_keyentity = attacker
-                self:TypeMessage( self:GetTextLine( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and "deathbyplayer" or "death" ) )
+
+                local deathtype = ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and "deathbyplayer" or "death"
+                local line = self:GetTextLine( deathtype )
+                line = LambdaRunHook( "LambdaOnStartTyping", self, line, deathtype ) or line
+                self:TypeMessage( line )
+            end
+
+            local attackerWepEnt = attacker.WeaponEnt
+            if IsValid( attackerWepEnt ) and inflictor == attackerWepEnt then
+                local dealDmgFunc = attacker.l_OnDealDamagefunction
+                if dealDmgFunc then dealDmgFunc( attacker, attackerWepEnt, self, info, true, true ) end
             end
         end
 
@@ -213,6 +248,8 @@ if SERVER then
             self:CleanSpawnedEntities()
         end
 
+        local onDeathFunc = self.l_OnDeathfunction
+        if isfunction( onDeathFunc ) then onDeathFunc( self, wepent, info ) end
     end
 
     function ENT:OnInjured( info )
@@ -256,7 +293,9 @@ if SERVER then
                     if self.l_preventdefaultspeak then return end
                     if ( victim:IsPlayer() or victim.IsLambdaPlayer ) and random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
                         self.l_keyentity = victim
-                        self:TypeMessage( self:GetTextLine( "witness" ) )
+                        local line = self:GetTextLine( "witness" )
+                        line = LambdaRunHook( "LambdaOnStartTyping", self, line, "witness" ) or line
+                        self:TypeMessage( line )
                     elseif self:GetVoiceChance() > 0 then
                         self:PlaySoundFile( self:GetVoiceLine( "witness" ) )
                     end
@@ -281,7 +320,9 @@ if SERVER then
                     self:PlaySoundFile( self:GetVoiceLine( "kill" ) )
                 elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self.l_preventdefaultspeak then
                     self.l_keyentity = victim
-                    self:TypeMessage( self:GetTextLine( "kill" ) )
+                    local line = self:GetTextLine( "kill" )
+                    line = LambdaRunHook( "LambdaOnStartTyping", self, line, "kill" ) or line
+                    self:TypeMessage( line )
                 end
 
                 if killerActionChance == 1 then 
@@ -475,7 +516,10 @@ if SERVER then
         local personality = ply:GetInfo( "lambdaplayers_personality_preset" )
 
         self:SetRespawn( respawn )
-        if self:WeaponDataExists( weapon ) then self:SwitchWeapon( weapon ) self.l_SpawnWeapon = weapon end
+        
+        self.l_SpawnWeapon = weapon 
+        self:SwitchToSpawnWeapon()
+        
         self.l_VoiceProfile = voiceprofile != "" and voiceprofile or self.l_VoiceProfile
         self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
         
@@ -542,7 +586,7 @@ if SERVER then
         LambdaRunHook( "LambdaOnLeaveGround", self, ent )
         
         -- Fall Voiceline Handling
-        local selfPos = ( self:GetPos() + vector_up * 1 )
+        local selfPos = self:WorldSpaceCenter() 
         local mins, maxs = self:GetCollisionBounds()
         
         fallTrTbl.start = selfPos
@@ -597,6 +641,14 @@ function ENT:InitializeMiniHooks()
         self:Hook( "PostEntityTakeDamage", "OnOtherInjured", function( target, info, tookdamage )
             if target == self or ( !target:IsNPC() and !target:IsNextBot() and !target:IsPlayer() ) then return end
             LambdaRunHook( "LambdaOnOtherInjured", self, target, info, tookdamage )
+
+            local wepent = self:GetWeaponENT()
+            local inflictor = info:GetInflictor()
+            local dealDmgFunc = self.l_OnDealDamagefunction
+            if info:GetAttacker() == self and inflictor == wepent and isfunction( dealDmgFunc ) then
+                local killed = ( tookdamage and ( ( target.IsLambdaPlayer or target:IsPlayer() ) and !target:Alive() or target:Health() <= 0 ) )
+                dealDmgFunc( self, wepent, target, info, tookdamage, killed )
+            end
         end, true )
 
         -- Hoookay so interesting stuff here. When a nextbot actually dies by reaching 0 or below hp, no matter how high you set their health after the fact, they will no longer take damage.
@@ -664,33 +716,42 @@ function ENT:InitializeMiniHooks()
         end, true )
 
         self:Hook( "LambdaPlayerSay", "lambdatextchat", function( ply, text )
+            if aidisabled:GetBool() then return end
             if ply == self or self:IsDisabled() or self.l_preventdefaultspeak then return end
 
             if random( 1, 200 ) < self:GetTextChance() and !self:GetIsTyping() and !self:IsSpeaking() and self:CanType() then
                 self.l_keyentity = ply
-                self:TypeMessage( self:GetTextLine( "response" ) )
+                local line = self:GetTextLine( "response" )
+                line = LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line
+                self:TypeMessage( line )
             end
         end, true )
 
         self:Hook( "PlayerSay", "lambdarespondtoplayertextchat", function( ply, text )
+            if aidisabled:GetBool() then return end
             if self:IsSpeaking() or self.l_preventdefaultspeak then return end
 
             if random( 1, 100 ) <= self:GetVoiceChance() and self:IsInRange( ply, 300 ) then
                 self:PlaySoundFile( self:GetVoiceLine( "idle" ) )
             elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                 self.l_keyentity = ply
-                self:TypeMessage( self:GetTextLine( "response" ) )
+                local line = self:GetTextLine( "response" )
+                line = LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line
+                self:TypeMessage( line )
             end
         end, true )
 
         self:Hook( "LambdaOnRealPlayerEndVoice", "lambdarespondtoplayervoicechat", function( ply )
+            if aidisabled:GetBool() then return end
             if self:IsSpeaking() or !self:IsInRange( ply, 300 ) or self.l_preventdefaultspeak then return end
             
             if random( 1, 100 ) <= self:GetVoiceChance() then
                 self:PlaySoundFile( self:GetVoiceLine( "idle" ) )
             elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                 self.l_keyentity = ply
-                self:TypeMessage( self:GetTextLine( "response" ) )
+                local line = self:GetTextLine( "response" )
+                line = LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line
+                self:TypeMessage( line )
             end
         end, true )
 
@@ -700,8 +761,30 @@ function ENT:InitializeMiniHooks()
 
         self:Hook( "PreDrawEffects", "CustomWeaponRenderEffects", function()
             if self:GetIsDead() or !self:IsBeingDrawn() or !self:GetHasCustomDrawFunction() then return end
-            local func = _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ].Draw
+            local func = _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ].Draw or _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ].OnDraw
             if func then func( self, self:GetWeaponENT() ) end
+        end, true )
+
+
+        local DrawSprite = render.DrawSprite
+        local SetMaterial = render.SetMaterial
+        local color_white = color_white
+        self:Hook( "PreDrawEffects", "flashlighteffects", function()
+            if self:GetIsDead() or !self:IsBeingDrawn() then return end
+
+            if self.l_flashlighton then
+                local hand = self:GetAttachmentPoint( "hand" )
+                local start = hand.Pos + hand.Ang:Forward() * 3
+                local endpos = hand.Pos + hand.Ang:Forward() * 150
+
+                SetMaterial( flashlightsprite )
+                DrawSprite(start, 4, 4, color_white )
+
+                SetMaterial( flashlightbeam )
+                
+                render.DrawBeam( start, endpos, 40, 0, 0.9, faded )
+            end
+
         end, true )
 
     end

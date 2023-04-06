@@ -81,6 +81,7 @@ If you are new to Lambda, you will be surprised on the memorable moments you can
 - Voice Chat
 - Text Chat
 - Spray Capability
+- Backwards Compatibility for ZetaVps
 - Fun 
 
 ## Origins

@@ -12,7 +12,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         holdtype = "revolver",
         bonemerge = true,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
 
             wepent:EmitSound( "weapons/airboat/airboat_gun_lastshot" .. random( 1, 2 ) .. ".wav", 70, 100, 1, CHAN_WEAPON )
 

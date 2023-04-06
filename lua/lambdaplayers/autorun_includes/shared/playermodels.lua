@@ -2,7 +2,9 @@ if ( CLIENT ) then return end
 
 local table_remove = table.remove
 local table_Copy = table.Copy
+local table_RemoveByValue = table.RemoveByValue
 local table_ClearKeys = table.ClearKeys
+local table_Count = table.Count
 local ipairs = ipairs
 local PrecacheModel = util.PrecacheModel
 
@@ -112,15 +114,15 @@ function LambdaUpdatePlayerModels()
 
     if blockdata and istable( blockdata ) then
         for k, mdl in ipairs( blockdata ) do 
-            table.RemoveByValue( _LAMBDAPLAYERS_DefaultPlayermodels, mdl )
-            table.RemoveByValue( _LAMBDAPLAYERS_AddonPlayermodels, mdl )
-            table.RemoveByValue( _LAMBDAPLAYERS_AllPlayermodels, mdl )
+            table_RemoveByValue( _LAMBDAPLAYERS_DefaultPlayermodels, mdl )
+            table_RemoveByValue( _LAMBDAPLAYERS_AddonPlayermodels, mdl )
+            table_RemoveByValue( _LAMBDAPLAYERS_AllPlayermodels, mdl )
         end
     end
 
-    local defaultcount = table.Count( _LAMBDAPLAYERS_DefaultPlayermodels )
-    local allcount = table.Count( _LAMBDAPLAYERS_AllPlayermodels )
-    local addoncount = table.Count( _LAMBDAPLAYERS_AddonPlayermodels )
+    local defaultcount = table_Count( _LAMBDAPLAYERS_DefaultPlayermodels )
+    local allcount = table_Count( _LAMBDAPLAYERS_AllPlayermodels )
+    local addoncount = table_Count( _LAMBDAPLAYERS_AddonPlayermodels )
 
     if defaultcount == 0 then 
         _LAMBDAPLAYERS_DefaultPlayermodels[ 1 ] = "models/player/kleiner.mdl"
@@ -138,4 +140,4 @@ function LambdaUpdatePlayerModels()
 
 end
 
-LambdaUpdatePlayerModels()
+hook.Add( "PostGamemodeLoaded", "lambdaplayers-loadplayermodels", LambdaUpdatePlayerModels )

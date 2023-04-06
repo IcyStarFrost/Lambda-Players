@@ -101,7 +101,7 @@ end
 -- category | String | The Lambda Settings category to place the convar into. Will create one if one doesn't exist already
 -- options | Table | Combo only! A table with its keys being the text and values being the data
 
--- Other Convars. Client-side only
+-- Other Convars
 CreateLambdaConvar( "lambdaplayers_drawflashlights", 1, true, true, false, "If Lambda Player flashlights should be rendered", 0, 1, { type = "Bool", name = "Draw Flashlights", category = "Lambda Player Settings" } )
 CreateLambdaConvar( "lambdaplayers_uiscale", 0, true, true, false, "How much to scale UI such as Voice popups, name pop ups, ect.", ( CLIENT and -ScrW() or 1 ), ( CLIENT and ScrW() or 1 ), { type = "Slider", name = "UI Scale", decimals = 1, category = "Utilities" } )
 CreateLambdaConvar( "lambdaplayers_corpsecleanuptime", 15, true, true, false, "The amount of time before a corpse is removed. Set to zero to disable this", 0, 190, { type = "Slider", name = "Corpse Cleanup Time", decimals = 0, category = "Utilities" } )
@@ -116,10 +116,13 @@ CreateLambdaConvar( "lambdaplayers_displayarmor", 0, true, true, false, "If Lamb
 
 CreateLambdaConvar( "lambdaplayers_useplayermodelcolorasdisplaycolor", 0, true, true, true, "If Lambda Player's Playermodel Color should be its Display Color. This has priority over the Display Color below", 0, 1, { type = "Bool", name = "Playermodel Color As Display Color", category = "Misc" } )
 CreateLambdaColorConvar( "lambdaplayers_displaycolor", defDisplayClr, true, true, "The display color to use for Name Display and others", { name = "Display Color", category = "Misc" } )
+CreateLambdaConvar( "lambdaplayers_animatedpfpsprayframerate", 10, true, true, false, "The frame rate of animated Spray VTFs and animated Profile Picture VTFs", 1, 60, { type = "Slider", decimals = 0, name = "Animated VTF Frame Rate", category = "Misc" } )
+CreateLambdaConvar( "lambdaplayers_randomizepathingcost", 0, true, false, false, "Randomizes Pathfinding in a way that will make Lambdas try different approaches to reaching their destination rather than finding the fastest and closest route", 0, 1, { type = "Bool", name = "Randomize PathFinding Cost", category = "Misc" } )
 --
 
 -- Lambda Player Server Convars
 CreateLambdaConvar( "lambdaplayers_lambda_infwanderdistance", 0, true, false, false, "If Lambda Players should be able to walk anywhere on the navmesh instead of only walking within 1500 source units", 0, 1, { type = "Bool", name = "Unlimited Walk Distance", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_avoid", 0, true, false, false, "If enabled, Lambdas will try their best to avoid obstacles. Note: This will decrease performance", 0, 1, { type = "Bool", name = "Obstacle Avoiding", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_maxhealth", 100, true, false, false, "Max Lamda Player Health", 1, 10000, { type = "Slider", decimals = 0, name = "Max Health", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_spawnhealth", 100, true, false, false, "The amount of health Lambda Players will spawn with", 1, 10000, { type = "Slider", decimals = 0, name = "Spawning Health", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_maxarmor", 100, true, false, false, "Max Lambda Player Armor", 0, 10000, { type = "Slider", decimals = 0, name = "Max Armor", category = "Lambda Server Settings" } )
@@ -144,6 +147,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_callonnpckilledhook", 0, true, false, 
 CreateLambdaConvar( "lambdaplayers_lambda_singleplayerthinkdelay", 0, true, false, false, "The amount of seconds Lambda Players will execute their next Think. 0.1 is a good value. Increasing this will increase performance at the cost of delays and decreasing this may decrease performance but have less delays. This only applies to singleplayer since multiplayer automatically adjusts think time", 0, 0.24, { type = "Slider", decimals = 2, name = "Think Delay", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_noplycollisions", 0, true, false, false, "If Lambda Players can pass through players (Useful in small corridors/areas)", 0, 1, { type = "Bool", name = "Disable Player Collisions", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_panicanimations", 0, true, false, false, "If panicking Lambda Players should use Panic Animations", 0, 1, { type = "Bool", name = "Use Panic Animations", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_physupdatetime", 0.5, true, false, false, "The time it takes for Lambda Player to update its physics object. Lower the value if you have problems with projectiles not colliding with them", 0, 1, { type = "Slider", decimals = 2, name = "Physics Update Time", category = "Lambda Server Settings" } )
 --
 
 -- Combat Convars 
@@ -152,11 +156,11 @@ CreateLambdaConvar( "lambdaplayers_combat_retreatonlowhealth", 1, true, false, f
 CreateLambdaConvar( "lambdaplayers_combat_spawnbehavior", 0, true, false, false, "If Lambda Players should  behavior when spawned. 0 - Nothing, 1 - Attack you, 2 - Random", 0 , 2, { type = "Slider", decimals = 0, name = "Spawn Behavior Modifier", category = "Combat" } )
 CreateLambdaConvar( "lambdaplayers_combat_spawnmedkits", 1, true, false, false, "If Lambda Players are allowed to spawn medkits to heal themselves when low on health. Make sure that 'Allow Entity Spawning' setting is enabled", 0 , 1, { type = "Bool", name = "Spawn Medkits", category = "Combat" } )
 CreateLambdaConvar( "lambdaplayers_combat_spawnbatteries", 1, true, false, false, "If Lambda Players are allowed to spawn armor batteries to themselves when low on armor. Make sure that 'Allow Entity Spawning' setting is enabled", 0 , 1, { type = "Bool", name = "Spawn Armor Batteries", category = "Combat" } )
-CreateLambdaConvar( "lambdaplayers_combat_weapondmgmultiplier", 1, true, false, false, "Multiplies the damage that Lambda Player deals with its weapon", 0, 5, { type = "Slider", decimals = 2, name = "Weapon Damage Multiplier", category = "Combat" } )
+CreateLambdaConvar( "lambdaplayers_combat_weapondmgmultiplier", 1, true, false, false, "Multiplies the damage that Lambda Player deals with its weapon", 0, 5, { type = "Slider", decimals = 2, name = "Weapon Damage Multiplier", category = "Lambda Weapons" } )
 --
 
 -- Lambda Player Convars
-CreateLambdaConvar( "lambdaplayers_lambda_shouldrespawn", 0, true, true, true, "If Lambda Players should respawn when they die. Note: Changing this will only apply to newly spawned Lambda Players AND only if the server allows the respawn option for non admins", 0, 1, { type = "Bool", name = "Respawn", category = "Lambda Player Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_shouldrespawn", 0, true, true, true, "If Lambda Players should respawn when they die. Note: Changing this will only apply to newly spawned Lambda Players", 0, 1, { type = "Bool", name = "Respawn", category = "Lambda Player Settings" } )
 ---- lambdaplayers_lambda_voiceprofile Located in shared/voiceprofiles.lua
 ---- lambdaplayers_lambda_spawnweapon  Located in shared/globals.lua due to code order
 --

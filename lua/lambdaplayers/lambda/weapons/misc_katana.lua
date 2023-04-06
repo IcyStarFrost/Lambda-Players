@@ -1,26 +1,3 @@
-if SERVER and _LAMBDAPLAYERSHoldTypeAnimations then 
-    _LAMBDAPLAYERSHoldTypeAnimations[ "katana_unready_docile" ] = {
-        idle = ACT_HL2MP_IDLE_SUITCASE,
-        run = ACT_HL2MP_RUN_SLAM,
-        walk = ACT_HL2MP_WALK_SUITCASE,
-        jump = ACT_HL2MP_JUMP_KNIFE,
-        crouchIdle = ACT_HL2MP_IDLE_CROUCH_KNIFE,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_KNIFE,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_KNIFE,
-        swimMove = ACT_HL2MP_SWIM_KNIFE
-    }
-    _LAMBDAPLAYERSHoldTypeAnimations[ "katana_unready_combat" ] = {
-        idle = ACT_HL2MP_IDLE_KNIFE,
-        run = ACT_HL2MP_RUN_CHARGING,
-        walk = ACT_HL2MP_WALK_KNIFE,
-        jump = ACT_HL2MP_JUMP_KNIFE,
-        crouchIdle = ACT_HL2MP_IDLE_CROUCH_KNIFE,
-        crouchWalk = ACT_HL2MP_WALK_CROUCH_KNIFE,
-        swimIdle = ACT_HL2MP_SWIM_IDLE_KNIFE,
-        swimMove = ACT_HL2MP_SWIM_KNIFE
-    }
-end
-
 local IsValid = IsValid
 local random = math.random
 local Rand = math.Rand
@@ -31,12 +8,33 @@ local timer_Create = timer.Create
 local timer_Exists = timer.Exists
 local timer_Remove = timer.Remove
 
+local hTypeDocile = {
+    idle = ACT_HL2MP_IDLE_SUITCASE,
+    run = ACT_HL2MP_RUN_SLAM,
+    walk = ACT_HL2MP_WALK_SUITCASE,
+    jump = ACT_HL2MP_JUMP_KNIFE,
+    crouchIdle = ACT_HL2MP_IDLE_CROUCH_KNIFE,
+    crouchWalk = ACT_HL2MP_WALK_CROUCH_KNIFE,
+    swimIdle = ACT_HL2MP_SWIM_IDLE_KNIFE,
+    swimMove = ACT_HL2MP_SWIM_KNIFE
+}
+local hTypeCombat = {
+    idle = ACT_HL2MP_IDLE_KNIFE,
+    run = ACT_HL2MP_RUN_CHARGING,
+    walk = ACT_HL2MP_WALK_KNIFE,
+    jump = ACT_HL2MP_JUMP_KNIFE,
+    crouchIdle = ACT_HL2MP_IDLE_CROUCH_KNIFE,
+    crouchWalk = ACT_HL2MP_WALK_CROUCH_KNIFE,
+    swimIdle = ACT_HL2MP_SWIM_IDLE_KNIFE,
+    swimMove = ACT_HL2MP_SWIM_KNIFE
+}
+
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
     katana = {
         model = "models/lambdaplayers/weapons/w_katana.mdl",
         origin = "Misc",
         prettyname = "Katana",
-        holdtype = "katana_unready_docile",
+        holdtype = hTypeDocile,
         killicon = "lambdaplayers/killicons/icon_katana",
         ismelee = true,
         bonemerge = true,
@@ -44,7 +42,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 80,
         speedmultiplier = 1.0,
 
-        OnEquip = function( self, wepent )
+        OnDeploy = function( self, wepent )
             wepent.IsGripReady = false
             wepent.NextUnreadyTime = 0
             wepent.DodgeTime = 0
@@ -53,7 +51,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent:EmitSound( "lambdaplayers/weapons/katana/katana_deploy1.mp3", 70 )
         end,
 
-        OnUnequip = function( self, wepent )
+        OnHolster = function( self, wepent )
             wepent.IsGripReady = nil
             wepent.NextUnreadyTime = nil
             wepent.DodgeTime = nil
@@ -63,46 +61,48 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         OnThink = function( self, wepent )
-            if CurTime() > wepent.NextUnreadyTime then
-                if wepent.IsGripReady then
-                    wepent.IsGripReady = false
-                    wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 1, 2 ) .. ".mp3", 65 )
-                    wepent:SetBodygroup( 0, 1 )
-                end
+            if !dead then
+                if CurTime() > wepent.NextUnreadyTime then
+                    if wepent.IsGripReady then
+                        wepent.IsGripReady = false
+                        wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 1, 2 ) .. ".mp3", 65 )
+                        wepent:SetBodygroup( 0, 1 )
+                    end
 
-                local moveSpeed = 1.0
-                local holdType = "katana_unready_docile"
-                if self:GetState() == "Combat" and LambdaIsValid( self:GetEnemy() ) then
-                    moveSpeed = 1.25
-                    holdType = "katana_unready_combat"
-                end
-                self.l_HoldType = holdType
-                self.l_WeaponSpeedMultiplier = moveSpeed
-            else
-                if !wepent.IsGripReady then
-                    wepent.IsGripReady = true
-                    wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 1, 2 ) .. ".mp3", 65 )
-                    wepent:SetBodygroup( 0, 0 )
-                    self.l_HoldType = "melee2"
-                end
-            end
-
-            if CurTime() > wepent.NextEnergyRestoreTime then
-                local HP, maxHP = self:Health(), self:GetMaxHealth()
-                if HP < maxHP then 
-                    self:SetHealth( min( HP + 1, maxHP ) ) 
+                    local moveSpeed = 1.0
+                    local holdType = hTypeDocile
+                    if self:GetState() == "Combat" and LambdaIsValid( self:GetEnemy() ) then
+                        moveSpeed = 1.25
+                        holdType = hTypeCombat
+                    end
+                    self.l_HoldType = holdType
+                    self.l_WeaponSpeedMultiplier = moveSpeed
                 else
-                    local armor, maxArmor = self:Armor(), ( self:GetMaxArmor() / 2 )
-                    if armor < maxArmor then self:SetArmor( min( armor + 1, maxArmor ) ) end
+                    if !wepent.IsGripReady then
+                        wepent.IsGripReady = true
+                        wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 1, 2 ) .. ".mp3", 65 )
+                        wepent:SetBodygroup( 0, 0 )
+                        self.l_HoldType = "melee2"
+                    end
                 end
 
-                wepent.NextEnergyRestoreTime = CurTime() + 1
+                if CurTime() > wepent.NextEnergyRestoreTime then
+                    local HP, maxHP = self:Health(), self:GetMaxHealth()
+                    if HP < maxHP then 
+                        self:SetHealth( min( HP + 1, maxHP ) ) 
+                    else
+                        local armor, maxArmor = self:Armor(), ( self:GetMaxArmor() / 2 )
+                        if armor < maxArmor then self:SetArmor( min( armor + 1, maxArmor ) ) end
+                    end
+
+                    wepent.NextEnergyRestoreTime = CurTime() + 1
+                end
             end
 
             return 0.1
         end,
 
-        OnDamage = function( self, wepent, dmginfo )
+        OnTakeDamage = function( self, wepent, dmginfo )
             if CurTime() > wepent.NextUnreadyTime then wepent.NextUnreadyTime = CurTime() + random( 1, 4 ) end
 
             if dmginfo:IsBulletDamage()then
@@ -133,7 +133,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             dmginfo:ScaleDamage( Rand( 0.66, 0.75 ) )
         end,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             wepent.NextUnreadyTime = CurTime() + random( 1, 4 )
             wepent:EmitSound( "lambdaplayers/weapons/katana/katana_swing_miss" .. random( 4 ) .. ".mp3", 70 )
 
@@ -144,7 +144,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local swingSpeed = Rand( 0.9, 1.4 ); self:SetLayerPlaybackRate( attackGest, swingSpeed )
 
 
-            self:SimpleTimer( ( 0.3 / swingSpeed ), function()
+            self:SimpleWeaponTimer( ( 0.3 / swingSpeed ), function()
                 if !LambdaIsValid( target ) or !self:IsInRange( target, 70 ) then return end
 
                 local dmg = ( random( 30, 45 ) / swingSpeed )

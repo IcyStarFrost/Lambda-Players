@@ -24,21 +24,17 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 300,
         attackrange = 400,
 
-        OnThink = function( self, wepent )
-            if CurTime() > self.l_WeaponUseCooldown and self:GetState() != "Combat" and RandomInt( 1, 6 ) == 1 then
+        OnThink = function( self, wepent, dead )
+            if !dead and CurTime() > self.l_WeaponUseCooldown and self:GetState() != "Combat" and RandomInt( 1, 6 ) == 1 then
                 local randPos = self:GetRandomPosition( nil, 400 )
                 self:LookTo( randPos, 1.5 )
-
-                self:SimpleTimer( 1, function()
-                    if self.l_Weapon != "slam" or !IsValid( wepent ) then return end
-                    self:UseWeapon( randPos )
-                end )
+                self:SimpleWeaponTimer( 1, function() self:UseWeapon( randPos ) end )
             end
 
             return 1.0
         end,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             local satchel = EntityCreate( "npc_satchel" )
             if !IsValid( satchel ) then return end
 

@@ -34,7 +34,7 @@ local function OpenPlayermodelBlockPanel( ply )
     end
     
 
-    for k, mdl in pairs( player_manager.AllValidModels() ) do
+    for k, mdl in SortedPairs( player_manager.AllValidModels() ) do
         local icon = mdllayout:Add( "SpawnIcon" )
         icon:SetModel( mdl )
 
@@ -48,6 +48,7 @@ local function OpenPlayermodelBlockPanel( ply )
         local mdls = {}
         for k, line in pairs( blockedlist:GetLines() ) do mdls[ #mdls + 1 ] = line:GetColumnText( 1 ) end
         LAMBDAPANELS:WriteServerFile( "lambdaplayers/pmblockdata.json", mdls, "json" ) 
+        chat.AddText( "Remember to Update Lambda Data after any changes!" )
     end
 
     LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/pmblockdata.json", "json", function( data )
@@ -66,4 +67,4 @@ local function OpenPlayermodelBlockPanel( ply )
 
 
 end
-RegisterLambdaPanel( "Playermodel Blacklist", "Opens a panel that allows you to prevent Lambdas from using certain playermodels. You must a Super Admin to use this Panel. YOU MUST UPDATE LAMBDA DATA AFTER ANY CHANGES!", OpenPlayermodelBlockPanel )
+RegisterLambdaPanel( "Playermodel Blacklist", "Opens a panel that allows you to prevent Lambdas from using certain playermodels. You must be a Super Admin to use this Panel. YOU MUST UPDATE LAMBDA DATA AFTER ANY CHANGES!", OpenPlayermodelBlockPanel )

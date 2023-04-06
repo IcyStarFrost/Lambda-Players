@@ -1,7 +1,7 @@
 -- Functions below are recreations of whatever gmod meta functions
 local random = math.random
 
-local Trace = util.TraceLine
+
 local eyetracetable = {}
 
 -- Our name
@@ -83,7 +83,7 @@ function ENT:GetEyeTrace()
     eyetracetable.start = attach.Pos
     eyetracetable.endpos = attach.Ang:Forward() * 32768
     eyetracetable.filter = self
-    local result = Trace( eyetracetable )
+    local result = util.TraceLine( eyetracetable )
     return result
 end
 
@@ -318,7 +318,7 @@ if SERVER then
     end
 
     function ENT:SwitchToDefaultWeapon()
-        self:SwitchWeapon( self.l_SpawnWeapon )
+        self:SwitchToSpawnWeapon()
     end
 
     function ENT:TimeConnected()

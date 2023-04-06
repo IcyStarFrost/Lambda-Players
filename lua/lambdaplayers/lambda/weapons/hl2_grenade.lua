@@ -15,7 +15,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 500,
         attackrange = 1000,
         
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             local grenade = ents_Create( "npc_grenade_frag" )
             if !IsValid( grenade ) then return end
 

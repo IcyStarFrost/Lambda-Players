@@ -21,7 +21,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             { 0.93, "Weapon_Crossbow.BoltElectrify" }
         },
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
 
             local bolt = CreateEntity( "crossbow_bolt" )

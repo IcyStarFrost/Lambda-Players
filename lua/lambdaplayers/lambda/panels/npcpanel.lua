@@ -1,5 +1,5 @@
 
-
+local blue = Color( 0, 162, 255)
 local function OpenNPCPanel( ply )
     if !ply:IsSuperAdmin() then notification.AddLegacy( "You must be a Super Admin in order to use this!", 1, 4) surface.PlaySound( "buttons/button10.wav" ) return end
 
@@ -38,12 +38,13 @@ local function OpenNPCPanel( ply )
         for k, v in pairs( npclayout:GetChildren() ) do if v:GetNPC() == class then return end end
 
         local pnl = npclayout:Add( "DPanel" )
-        pnl:SetSize( 80, 80 )
+        pnl:SetSize( 120, 120 )
         local img = vgui.Create( "DImageButton", pnl )
-        img:SetSize( 1, 64 )
+        img:SetSize( 1, 100 )
         img:Dock( TOP )
         img:SetMaterial( Material( "entities/" .. class .. ".png" ) )
-        LAMBDAPANELS:CreateLabel( ( npclist[ class ] and npclist[ class ].Name or class ), pnl, TOP )
+        local lbl = LAMBDAPANELS:CreateLabel( ( npclist[ class ] and npclist[ class ].Name or class ), pnl, TOP )
+        lbl:SetColor( blue )
         
         function img:DoClick()
             npclistpanel:AddLine( ( npclist[ class ] and npclist[ class ].Name or class ), class )
@@ -95,4 +96,4 @@ local function OpenNPCPanel( ply )
     end )
 
 end
-RegisterLambdaPanel( "NPC Spawnlist", "Opens a panel that allows you to choose what NPCs Lambdas are allowed to spawn. You must a Super Admin to use this Panel.", OpenNPCPanel )
+RegisterLambdaPanel( "NPC Spawnlist", "Opens a panel that allows you to choose what NPCs Lambdas are allowed to spawn. You must be a Super Admin to use this Panel.", OpenNPCPanel )

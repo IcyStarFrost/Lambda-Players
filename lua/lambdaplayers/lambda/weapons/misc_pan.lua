@@ -14,7 +14,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 10,
         attackrange = 60,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             self.l_WeaponUseCooldown = CurTime() + 0.5
             wepent:EmitSound( "lambdaplayers/weapons/pan/melee_pan_miss1.mp3", 70, random( 98, 102 ), 1, CHAN_WEAPON )
 
@@ -23,7 +23,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:SetLayerPlaybackRate( attackAnim, 1.25 )
 
             -- To make sure damage syncs with the animation
-            self:SimpleTimer( 0.2, function()
+            self:SimpleWeaponTimer( 0.2, function()
                 if !IsValid( target ) or !self:IsInRange( target, 50 ) then return end
 
                 local dmg = random( 10, 20 )

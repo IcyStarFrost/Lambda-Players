@@ -15,18 +15,18 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 70,
         bonemerge = true,
 
-        OnEquip = function( self, wepent )
+        OnDeploy = function( self, wepent )
             wepent:EmitSound( "lambdaplayers/weapons/left4dead2/generic_melee_equip.mp3", 65 )
         end,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             self.l_WeaponUseCooldown = CurTime() + Rand( 1.0, 1.15 )
             wepent:EmitSound( "lambdaplayers/weapons/left4dead2/golf_club/wpn_golf_club_swing_miss_0" .. random( 1, 2 ) .. ".mp3", 65 )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             
-            self:SimpleTimer( 0.3, function()
+            self:SimpleWeaponTimer( 0.3, function()
                 if !LambdaIsValid( target ) or !self:IsInRange( target, 70 ) then return end
 
                 local dmg = random( 25, 75 )

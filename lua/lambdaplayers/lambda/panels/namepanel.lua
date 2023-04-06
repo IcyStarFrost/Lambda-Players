@@ -10,6 +10,10 @@ local function OpenNamePanel( ply )
     local hasdata = false
     local panel = LAMBDAPANELS:CreateFrame( "Custom Name Editor", 300, 300 ) -- Start with the panel
 
+    function panel:OnClose()
+        chat.AddText( "Remember to Update Lambda Data after any changes!" )
+    end
+
     local listview = vgui.Create( "DListView", panel ) -- List
     listview:Dock( FILL )
     listview:AddColumn( "Names", 1 )
@@ -105,12 +109,14 @@ local function OpenNamePanel( ply )
     chat.AddText( "Requesting Names from Server.." )
 
     LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/customnames.json", "json", function( data )
+        hasdata = true
+        
         if !data then return end
 
         LAMBDAPANELS:SortStrings( data )
         table.Merge( names, data ) 
         
-        hasdata = true
+        
 
         for k, v in ipairs( data ) do
             local line = listview:AddLine( v )

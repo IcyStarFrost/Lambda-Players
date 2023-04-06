@@ -20,19 +20,19 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 65,
         speedmultiplier = 1.33,
 
-        OnEquip = function( lambda, wepent )
+        OnDeploy = function( lambda, wepent )
             wepent.NextLeapAttackTime = 0
         end,
 
         -- HP Auto Regen + Leap Attack
         OnThink = function( lambda, wepent )
-            if lambda:Health() < lambda:GetMaxHealth() then
-                lambda:SetHealth( math.Round( math_min( lambda:Health() + 1, lambda:GetMaxHealth() ), 0 ) )
-            end
+            if !dead then
+                if lambda:Health() < lambda:GetMaxHealth() then
+                    lambda:SetHealth( math.Round( math_min( lambda:Health() + 1, lambda:GetMaxHealth() ), 0 ) )
+                end
 
-            if lambda:GetState() == "Combat" and CurTime() > wepent.NextLeapAttackTime then
-                local target = lambda:GetEnemy()
-                if LambdaIsValid( target ) then
+                if lambda:InCombat() and CurTime() > wepent.NextLeapAttackTime then
+                    local target = lambda:GetEnemy()
                     local distTarget = lambda:GetRangeSquaredTo( target )
                     if distTarget > ( 300 * 300 ) and distTarget <= ( 600 * 600 ) and lambda.loco:IsOnGround() and lambda:Visible( target ) and target:Visible( lambda ) then
                         lambda.loco:Jump()
@@ -50,15 +50,15 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         -- Damage reduction
-        OnDamage = function( lambda, wepent, dmginfo )
+        OnTakeDamage = function( lambda, wepent, dmginfo )
             dmginfo:ScaleDamage( 0.75 )
         end,
 
-        OnUnequip = function( lambda, wepent )
+        OnHolster = function( lambda, wepent )
             wepent.NextLeapAttackTime = nil
         end,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             self.l_WeaponUseCooldown = CurTime() + Rand( 1.2, 1.66 )
             self:EmitSound( "npc/zombie/zo_attack" .. random( 2 ) .. ".wav", 70, self:GetVoicePitch(), 1, CHAN_WEAPON )
 
@@ -67,7 +67,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:SetLayerPlaybackRate( attackAnim, 1.5 ) -- Sped up attack animation
 
             -- To make sure damage syncs with the animation
-            self:SimpleTimer( 0.5, function()
+            self:SimpleWeaponTimer( 0.5, function()
                 if !LambdaIsValid( target ) or !self:IsInRange( target, 55 ) then 
                     wepent:EmitSound( "Zombie.AttackMiss" ) 
                     return 

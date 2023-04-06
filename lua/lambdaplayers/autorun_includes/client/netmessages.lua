@@ -140,6 +140,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     cs_prop:SetAngles( ent:GetAngles() )
     cs_prop:SetSkin( ent:GetSkin() )
     cs_prop:SetSubMaterial( 1, ent:GetSubMaterial( 1 ) )
+    cs_prop:SetModelScale( ent:GetModelScale(), 0 )
 
     
     cs_prop:SetNW2Vector( "lambda_weaponcolor", colvec )
@@ -153,7 +154,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     local wpnData = _LAMBDAPLAYERSWEAPONS[ wpnName ]
     if istable( wpnData ) then
         local dropFunc = wpnData.OnDrop
-        if isfunction( dropFunc ) then dropFunc( cs_prop ) end
+        if isfunction( dropFunc ) then dropFunc( lambda, ent, cs_prop ) end
     end
 
     local phys = cs_prop:GetPhysicsObject()
@@ -183,17 +184,6 @@ local Material = Material
 local voiceicon = Material( "voice/icntlk_pl" )
 
 
-local function CreateProfilePictureMat( ent )
-    local pfp = ent:GetProfilePicture()
-
-    local profilepicturematerial = Material( pfp )
-
-    if profilepicturematerial:IsError() then
-        local model = ent:GetModel()
-        profilepicturematerial = Material( "spawnicons/" .. sub( model, 1, #model - 4 ) .. ".png" )
-    end
-    return profilepicturematerial
-end
 
 -- Voice icons, voice positioning, all that stuff will be handled in here.
 local function PlaySoundFile( ent, soundname, index, is3d )
@@ -279,12 +269,12 @@ local function PlaySoundFile( ent, soundname, index, is3d )
 
             for k, v in ipairs( _LAMBDAPLAYERS_Voicechannels ) do
                 if IsValid( ent ) and v[ 5 ] == ent:EntIndex() then
-                    _LAMBDAPLAYERS_Voicechannels[ k ] = { snd, ent:GetLambdaName(), CreateProfilePictureMat( ent ), length, ent:EntIndex() }
+                    _LAMBDAPLAYERS_Voicechannels[ k ] = { snd, ent:GetLambdaName(), ent:GetPFPMat(), length, ent:EntIndex() }
                     replaced = true
                     break
                 end
             end
-            if !replaced and IsValid( ent ) then table_insert( _LAMBDAPLAYERS_Voicechannels, { snd, ent:GetLambdaName(), CreateProfilePictureMat( ent ), length, ent:EntIndex() } ) end
+            if !replaced and IsValid( ent ) then table_insert( _LAMBDAPLAYERS_Voicechannels, { snd, ent:GetLambdaName(), ent:GetPFPMat(), length, ent:EntIndex() } ) end
 
             local num
             local realtime
@@ -429,11 +419,22 @@ net.Receive( "lambdaplayers_notification", function()
     if snd then surface.PlaySound( snd ) end
 end )
 
+-- Because JSON to table doesn't give colors their proper meta table for some reason, we must do this.
+-- This fixes other chat addons not setting the Lambda's color properly
+local function RestoreColorMetas( tbl )
+    for k, v in ipairs( tbl ) do
+        if istable( v ) and v.r and v.g and v.b then
+            setmetatable( v, FindMetaTable( "Color" ) )
+        end
+    end
+end
+
 local unpack = unpack
 local JSONToTable = util.JSONToTable
 net.Receive( "lambdaplayers_chatadd", function()
     local args = net.ReadString()
     args = JSONToTable( args )
+    RestoreColorMetas( args )
 
     chat.AddText( unpack( args ) )
 end )
@@ -454,7 +455,7 @@ local CreateMaterial = CreateMaterial
 local Material = Material
 local color_white = color_white
 local DecalEx = util.DecalEx
-
+local framerateconvar = GetConVar( "lambdaplayers_animatedpfpsprayframerate" )
 
 local function Spray( spraypath, tracehitpos, tracehitnormal, index, attemptedfallback )
     local isVTF = EndsWith( spraypath, ".vtf" ) -- If the file is a VTF
@@ -469,7 +470,7 @@ local function Spray( spraypath, tracehitpos, tracehitnormal, index, attemptedfa
                 [ "AnimatedTexture" ] = { -- Support for Animated VTFs
                     [ "animatedTextureVar" ] = "$basetexture",
                     [ "animatedTextureFrameNumVar" ] = "$frame",
-                    [ "animatedTextureFrameRate" ] = 10
+                    [ "animatedTextureFrameRate" ] = framerateconvar:GetInt()
                 }
             }
         })
@@ -480,7 +481,7 @@ local function Spray( spraypath, tracehitpos, tracehitnormal, index, attemptedfa
     -- If we failed to load the Server's spray, try one of our own sprays and hope it works. If it does not work, give up and don't spray anything.
     if material:IsError() and !attemptedfallback then Spray( LambdaPlayerSprays[ random( #LambdaPlayerSprays ) ], tracehitpos, tracehitnormal, index, true ) return elseif material:IsError() and attemptedfallback then return end
 
---[[     local texWidth = material:Width()
+    local texWidth = material:Width()
     local texHeight = material:Height()
     local widthPower = 256
     local heightPower = 256
@@ -488,11 +489,11 @@ local function Spray( spraypath, tracehitpos, tracehitnormal, index, attemptedfa
     -- Sizing the Spray
     if texWidth > texHeight then heightPower = 128 elseif texHeight > texWidth then widthPower = 128 end
     if texWidth < 256 then texWidth = ( texWidth / 256 ) else texWidth = ( widthPower / ( texWidth * 4 ) ) end
-    if texHeight < 256 then texHeight = ( texHeight / 256 ) else texHeight = ( heightPower / ( texHeight * 4) ) end ]]
+    if texHeight < 256 then texHeight = ( texHeight / 256 ) else texHeight = ( heightPower / ( texHeight * 4) ) end
 
-    local texWidth = (material:Width() * 0.15) / material:Width()
+--[[     local texWidth = (material:Width() * 0.15) / material:Width()
     local texHeight = (material:Height() * 0.15) / material:Height() 
-
+ ]]
     -- Place the spray
     DecalEx( material, Entity( 0 ), tracehitpos, tracehitnormal, color_white, texWidth, texHeight)
 
@@ -520,8 +521,17 @@ net.Receive( "lambdaplayers_getplybirthday", function()
     net.SendToServer()
 end )
 
+local color_client = Color( 255, 145, 0 )
+local RunConsoleCommand = RunConsoleCommand
+
 net.Receive( "lambdaplayers_reloadaddon", function()
     LambdaReloadAddon()
-    chat.AddText( Color( 255, 145, 0 ), "Reloaded all Lambda Lua Files for your Client" )
+    chat.AddText( color_client, "Reloaded all Lambda Lua Files for your Client" )
+    RunConsoleCommand( "spawnmenu_reload" )
+end )
+
+net.Receive( "lambdaplayers_mergeweapons", function()
+    LambdaMergeWeapons()
+    chat.AddText( color_client, "Merged all Lambda Weapon Lua Files for your Client" )
     RunConsoleCommand( "spawnmenu_reload" )
 end )

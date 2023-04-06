@@ -158,8 +158,8 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply 
 	lambda:SetAngles( ang )
 	lambda:Spawn()
 
-    local weapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )
-    if lambda:WeaponDataExists( weapon ) then lambda:SwitchWeapon( weapon ) lambda.l_SpawnWeapon = weapon end
+    lambda.l_SpawnWeapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )
+    lambda:SwitchToSpawnWeapon()
 
 	undo.Create( "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
 		undo.SetPlayer( ply )

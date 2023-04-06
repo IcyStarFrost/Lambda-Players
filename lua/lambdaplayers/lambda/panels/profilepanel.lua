@@ -29,6 +29,11 @@ local function OpenProfilePanel( ply )
 
     local frame = LAMBDAPANELS:CreateFrame( "Profile Editor", 700, 350 )
 
+    function frame:OnClose()
+        chat.AddText( "Remember to Update Lambda Data after any changes!" )
+        if IsValid( self._pfpframe ) then self._pfpframe:Remove() end
+    end
+
     
     LAMBDAPANELS:CreateURLLabel( "Click here to learn on how to use this panel!", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#lambda-profiles", frame, TOP )
 
@@ -114,21 +119,23 @@ local function OpenProfilePanel( ply )
         LAMBDAFS:UpdateKeyValueFile( "lambdaplayers/profiles.json", { [ compiledinfo.name ] = compiledinfo }, "json" ) 
     end )
 
-    LAMBDAPANELS:CreateButton( rightpanel, BOTTOM, "Save To Server", function()
-        if !LocalPlayer():IsSuperAdmin() then chat.AddText( "You must be a Super Admin to save profiles to the Server! " ) return end
-        local compiledinfo = CompileSettings()
+    if !game.SinglePlayer() then
+        LAMBDAPANELS:CreateButton( rightpanel, BOTTOM, "Save To Server", function()
+            if !LocalPlayer():IsSuperAdmin() then chat.AddText( "You must be a Super Admin to save profiles to the Server! " ) return end
+            local compiledinfo = CompileSettings()
 
-        surface.PlaySound( "buttons/button15.wav" )
-        chat.AddText( "Saved " .. compiledinfo.name .. " to the Server's Profiles. Make sure the name exists in the Server's names by using the Name Panel")
+            surface.PlaySound( "buttons/button15.wav" )
+            chat.AddText( "Saved " .. compiledinfo.name .. " to the Server's Profiles. Make sure the name exists in the Server's names by using the Name Panel")
 
-        local line =  profilelist:AddLine( compiledinfo.name .. " | Server" )
-        line.l_isprofilelocal = false
-        line:SetSortValue( 1, compiledinfo )
-        if LocalPlayer():GetNW2Bool( "lambda_serverhost", false ) and !LAMBDAFS:FileHasValue( "lambdaplayers/customnames.json", compiledinfo.name, "json" ) then LAMBDAFS:UpdateSequentialFile( "lambdaplayers/customnames.json", compiledinfo.name, "json" ) end
+            local line =  profilelist:AddLine( compiledinfo.name .. " | Server" )
+            line.l_isprofilelocal = false
+            line:SetSortValue( 1, compiledinfo )
+            if LocalPlayer():GetNW2Bool( "lambda_serverhost", false ) and !LAMBDAFS:FileHasValue( "lambdaplayers/customnames.json", compiledinfo.name, "json" ) then LAMBDAFS:UpdateSequentialFile( "lambdaplayers/customnames.json", compiledinfo.name, "json" ) end
 
-        UpdateprofileLine( compiledinfo.name, compiledinfo, true )
-        LAMBDAPANELS:UpdateKeyValueFile( "lambdaplayers/profiles.json", { [ compiledinfo.name ] = compiledinfo }, "json" ) 
-    end )
+            UpdateprofileLine( compiledinfo.name, compiledinfo, true )
+            LAMBDAPANELS:UpdateKeyValueFile( "lambdaplayers/profiles.json", { [ compiledinfo.name ] = compiledinfo }, "json" ) 
+        end )
+    end
 
     LAMBDAPANELS:CreateButton( rightpanel, BOTTOM, "Request Server Profiles", function()
         if LocalPlayer():GetNW2Bool( "lambda_serverhost", false ) then chat.AddText( "You are the server host!" ) return end
@@ -239,14 +246,119 @@ local function OpenProfilePanel( ply )
     LAMBDAPANELS:CreateURLLabel( "Click here to learn about Profile Pictures", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#profile-pictures", mainscroll, TOP )
     local profilepicture = LAMBDAPANELS:CreateTextEntry( mainscroll, TOP, "Enter a file path" )
 
+    LAMBDAPANELS:CreateButton( mainscroll, TOP, "Profile Picture Menu", function()
+
+        local pfpframe = LAMBDAPANELS:CreateFrame( "Profile Picture Menu", 250, 400 )
+        frame._pfpframe = pfpframe
+        local lbl = LAMBDAPANELS:CreateLabel( "Click on a image to set it as the profile picture.\nScanning Profile Pictures..", pfpframe, TOP )
+        lbl:SetSize( 100, 60 )
+        lbl:SetWrap( true )
+        lbl:Dock( TOP ) 
+        local scroll = LAMBDAPANELS:CreateScrollPanel( pfpframe, false, FILL )
+
+        local filecount = 0 
+        local checkedcount = 0
+    
+        local function RecursiveFindNum( dir )
+            local files, dirs = file.Find( dir .. "/*", "GAME", "datedesc" )
+            filecount = filecount + #files
+            for k, v in ipairs( dirs ) do if !IsValid( pfpframe ) then return end RecursiveFindNum( dir .. "/" .. v ) end
+            coroutine.wait( 0.5 )
+        end
+    
+    
+        local function RecursiveFind( dir )
+    
+            local files, dirs = file.Find( dir .. "/*", "GAME", "datedesc" )
+    
+            for k, v in ipairs( files ) do  
+                if !IsValid( pfpframe ) then return end
+    
+                checkedcount = checkedcount + 1
+    
+                lbl:SetText( "Click on a image to set it as the profile picture.\nImporting Profile Pictures.. " .. ( math.Round( math.Remap( checkedcount, 0, filecount, 0, 100 ), 0 ) ) .. "% imported"  )
+            
+    
+                local isVTF = string.EndsWith( string.Replace( dir .. "/" .. v, "materials/", "" ), ".vtf" ) -- If the file is a VTF
+                local material
+            
+                if isVTF then
+                    _LambdaPfpIndex = _LambdaPfpIndex or 0
+                    _LambdaPfpIndex = _LambdaPfpIndex + 1
+    
+                    material = CreateMaterial( "lambdaprofilepanelVTFmaterial" .. _LambdaPfpIndex, "UnlitGeneric", {
+                        [ "$basetexture" ] = string.Replace( dir .. "/" .. v, "materials/", "" ),
+                        [ "$translucent" ] = 1,
+                        [ "Proxies" ] = {
+                            [ "AnimatedTexture" ] = {
+                                [ "animatedTextureVar" ] = "$basetexture",
+                                [ "animatedTextureFrameNumVar" ] = "$frame",
+                                [ "animatedTextureFrameRate" ] = 10
+                            }
+                        }
+                    })
+                else
+                    material = Material( string.Replace( dir .. "/" .. v, "materials/", "" ) )
+                end
+    
+                local image = vgui.Create( "DImageButton", scroll )
+                image:SetSize( 300, 300 )
+                image:Dock( TOP )
+                image:SetMaterial( material )
+    
+                function image:DoClick()
+                    profilepicture:SetText( string.Replace( dir .. "/" .. v, "materials/lambdaplayers/custom_profilepictures/", "" ) )
+                    profilepicture:OnChange() 
+                end
+    
+                coroutine.wait( 0.05 )
+            end
+    
+            for k, v in ipairs( dirs ) do if !IsValid( pfpframe ) then return end RecursiveFind( dir .. "/" .. v ) end
+        end
+
+        LambdaCreateThread( function()
+            RecursiveFindNum( "materials/lambdaplayers/custom_profilepictures" )
+            RecursiveFind( "materials/lambdaplayers/custom_profilepictures" )
+            if !IsValid( lbl ) then return end
+            lbl:SetText( "Click on a image to set it as the profile picture.\nFinished!"  )
+        end )
+
+    end )
+
     local pfppreview = vgui.Create( "DImage", mainscroll )
     pfppreview:SetSize( 100, 150 )
     pfppreview:Dock( TOP ) 
 
     function profilepicture:OnChange() 
         local text = profilepicture:GetText()
-        if file.Exists( "materials/lambdaplayers/custom_profilepictures/" .. text, "GAME" ) then pfppreview:SetMaterial( Material( "lambdaplayers/custom_profilepictures/" .. text ) ) end
+        if file.Exists( "materials/lambdaplayers/custom_profilepictures/" .. text, "GAME" ) then 
+            local isVTF = string.EndsWith( "lambdaplayers/custom_profilepictures/" .. text, ".vtf" )
+            local material
+        
+            if isVTF then
+                _LambdaPfpIndex = _LambdaPfpIndex or 0
+                _LambdaPfpIndex = _LambdaPfpIndex + 1
+
+                material = CreateMaterial( "lambdaprofilepanelVTFmaterial" .. _LambdaPfpIndex, "UnlitGeneric", {
+                    [ "$basetexture" ] = "lambdaplayers/custom_profilepictures/" .. text,
+                    [ "$translucent" ] = 1,
+                    [ "Proxies" ] = {
+                        [ "AnimatedTexture" ] = {
+                            [ "animatedTextureVar" ] = "$basetexture",
+                            [ "animatedTextureFrameNumVar" ] = "$frame",
+                            [ "animatedTextureFrameRate" ] = 10
+                        }
+                    }
+                })
+            else
+                material = Material( "lambdaplayers/custom_profilepictures/" .. text )
+            end
+            pfppreview:SetMaterial( material ) 
+        end
     end
+
+
 
     LAMBDAPANELS:CreateLabel( "Voice Profile", mainscroll, TOP )
     LAMBDAPANELS:CreateURLLabel( "Click here to learn about Voice Profiles", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Adding-Custom-Content#voice-profiles", mainscroll, TOP )
@@ -285,6 +397,14 @@ local function OpenProfilePanel( ply )
     LAMBDAPANELS:CreateLabel( "The lowest point this Lambda's Ping can get", mainscroll, TOP )
     local pingrange = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 100, "Ping Range", 1, 130, 0 )
 
+    LAMBDAPANELS:CreateLabel( "Health", mainscroll, TOP )
+    LAMBDAPANELS:CreateLabel( "The Health this Lambda will have", mainscroll, TOP )
+    local health = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 100, "Health", 1, 10000, 0 )
+
+    LAMBDAPANELS:CreateLabel( "Armor", mainscroll, TOP )
+    LAMBDAPANELS:CreateLabel( "The Armor amount this Lambda will have", mainscroll, TOP )
+    local armor = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 0, "Armor", 0, 255, 0 )
+
     ---- ---- ---- ---- ---- ----
 
 
@@ -303,7 +423,7 @@ local function OpenProfilePanel( ply )
     List:SetSpaceY( 12 )
     List:SetSpaceX( 12 )
 
-    for k, v in pairs( player_manager.AllValidModels() ) do
+    for k, v in SortedPairs( player_manager.AllValidModels() ) do
         local mdlbutton = List:Add( "SpawnIcon" )
         mdlbutton:SetModel( v )
         
@@ -467,7 +587,7 @@ local function OpenProfilePanel( ply )
         extpnl:Dock( TOP )
         extpnl.LambdapnlClass = class
         externalpanels[ variablename ] = extpnl
-        callback( extpnl, externalscroll )
+        callback( extpnl, categories[ category ] )
         
 
     end
@@ -496,6 +616,8 @@ local function OpenProfilePanel( ply )
             voiceprofile = vp != "/NIL" and vp or nil,
             textprofile = tp != "/NIL" and tp or nil,
             pingrange = round( pingrange:GetValue(), 0 ),
+            health = round( health:GetValue(), 0 ),
+            armor = round( armor:GetValue(), 0 ),
 
             externalvars = profileinfo and profileinfo.externalvars or nil,
 
@@ -504,8 +626,8 @@ local function OpenProfilePanel( ply )
         }
 
         infotable.bodygroups = {}
-        for k, v in pairs( bodygroupdata ) do
-            if infotable.bodygroups[ k ] then infotable.bodygroups[ k ] = round( v:GetValue(), 0 ) end
+        for id, bodygrouppanel in pairs( bodygroupdata ) do
+            infotable.bodygroups[ id ] = round( bodygrouppanel:GetValue(), 0 )
         end
 
         for k, v in pairs( externalpanels ) do
@@ -560,6 +682,9 @@ local function OpenProfilePanel( ply )
                 ent:SetBodygroup( k, v )
             end
         end
+
+        health:SetValue( infotable.health or 100 )
+        armor:SetValue( infotable.armor or 0 )
 
         voicepitch:SetValue( infotable.voicepitch )
         voicechance:SetValue( infotable.voice or 30 )

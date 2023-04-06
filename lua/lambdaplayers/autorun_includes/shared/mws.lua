@@ -9,6 +9,13 @@ local navmeshspawndist = CreateLambdaConvar( "lambdaplayers_mws_navmeshspawndist
 local table_insert = table.insert
 local rand = math.Rand
 local random = math.random
+local net = net
+local PlaySound = ( CLIENT and surface.PlaySound )
+local AddNotification = ( CLIENT and notification.AddLegacy )
+local ipairs = ipairs
+local SortedPairs = SortedPairs
+local max = math.max
+
 local personalitypresets = {
     [ "custom" ] = function( self ) -- Custom Personality set by Sliders
         local tbl = {}
@@ -62,9 +69,9 @@ local presettbl = {
     [ "Custom Random" ] = "customrandom"
 }
 local perspreset = CreateLambdaConvar( "lambdaplayers_mwspersonality_preset", "random", true, false, false, "The preset MWS Spawned Lambda Personalities should use. Set this to Custom to make use of the chance sliders", nil, nil, { type = "Combo", options = presettbl, name = "Personality Preset", category = "MWS" } )
+local MWSConvars = {}
 
 hook.Add( "LambdaOnModulesLoaded", "lambdaplayers_mwspersonalities", function()
-    local MWSConvars = {}
     for _, v in ipairs( LambdaPersonalityConVars ) do
         local convar = CreateLambdaConvar( "lambdaplayers_mwspersonality_" .. v[ 1 ] .. "chance", 30, true, false, false, "The chance " .. v[ 1 ] .. " will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = v[ 1 ] .. " Chance", category = "MWS" } )
         table_insert( MWSConvars, { v[ 1 ], convar } )
@@ -82,6 +89,128 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_openmwscustompersonalitypresetpan
     end
     LAMBDAPANELS:CreateCVarPresetPanel( "Custom Personality Preset Editor", tbl, "custommwspersonalities", false )
 end, true, "Opens a panel to allow you to create custom preset personalities and load them", { name = "Custom Personality Presets", category = "MWS" } )
+
+
+
+
+
+local spawnWep = CreateLambdaConvar( "lambdaplayers_mws_spawnweapon", "physgun", true, false, false, "The weapon MWS spawned Lambda Players will spawn with only if the specified weapon is allowed", 0, 1 )
+
+
+if SERVER then
+    util.AddNetworkString( "lambdamws_selectspawnweapon" )
+
+    net.Receive( "lambdamws_selectspawnweapon", function( len, ply )
+        if !ply:IsSuperAdmin() then return end
+        spawnWep:SetString( net.ReadString() )
+    end )
+end 
+
+local function OpenSpawnWeaponPanel( ply ) 
+    if !ply:IsSuperAdmin() then 
+        AddNotification( "You must be a Super Admin in order to use this!", 1, 4 )
+        PlaySound( "buttons/button10.wav" ) 
+        return 
+    end
+
+    local mainframe = LAMBDAPANELS:CreateFrame( "Spawn Weapon Selection", 700, 500 )
+    local mainscroll = LAMBDAPANELS:CreateScrollPanel( mainframe, true, FILL )
+
+    local weplinelist = {}
+    local weplistlist = {}
+
+    local currentWep = spawnWep:GetString()
+    if currentWep == "random" then 
+        currentWep = "Random Weapon"
+    else
+        currentWep = _LAMBDAPLAYERSWEAPONS[ currentWep ].prettyname
+    end
+    LAMBDAPANELS:CreateLabel( "Currenly selected spawn weapon: " .. currentWep, mainframe, TOP )
+
+    for weporigin, _ in pairs( _LAMBDAPLAYERSWEAPONORIGINS ) do
+        local originlist = vgui.Create( "DListView", mainscroll )
+        originlist:SetSize( 200, 400 )
+        originlist:Dock( LEFT )
+        originlist:AddColumn( weporigin, 1 )
+        originlist:SetMultiSelect( false )
+
+        function originlist:DoDoubleClick( id, line )
+            net.Start( "lambdamws_selectspawnweapon" )
+            net.WriteString( line:GetSortValue( 1 ) )
+            net.SendToServer()
+            AddNotification( "Selected " .. line:GetColumnText( 1 ) .. " from " .. weporigin .. " as a spawn weapon!", NOTIFY_GENERIC, 3 )
+            PlaySound( "buttons/button15.wav" )
+            mainframe:Close()
+        end
+
+        mainscroll:AddPanel( originlist )
+
+        for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
+            if name == "none" then continue end
+            if data.origin != weporigin then continue end
+
+            local allowCvar = _LAMBDAWEAPONALLOWCONVARS[ name ]
+            if allowCvar and !allowCvar:GetBool() then continue end
+
+            local line = originlist:AddLine( data.notagprettyname )
+            line:SetSortValue( 1, name )
+
+            function line:OnSelect()
+                for _, v in ipairs( weplinelist ) do
+                    if v != line then v:SetSelected( false ) end
+                end
+            end
+            
+            weplinelist[ #weplinelist + 1 ] = line
+        end
+
+        if #originlist:GetLines() == 0 then
+            originlist:Remove()
+            continue
+        end
+
+        originlist:SortByColumn( 1 )
+        weplistlist[ #weplistlist + 1 ] = originlist
+    end
+
+    if #weplistlist > 0 then
+        function mainframe:OnSizeChanged( width )
+            local columnWidth = max( 200, ( width - 10 ) / #weplistlist )
+            for _, list in ipairs( weplistlist ) do
+                list:SetWidth( columnWidth )
+            end
+        end
+
+        mainframe:OnSizeChanged( mainframe:GetWide() )
+    else
+        LAMBDAPANELS:CreateLabel( "You currenly have every weapon restricted and disallowed to be used by Lambda Players!", mainframe, TOP )
+    end
+
+    LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select None", function()
+        net.Start( "lambdamws_selectspawnweapon" )
+        net.WriteString( "none" )
+        net.SendToServer()
+        AddNotification( "Selected none as a spawn weapon!", NOTIFY_GENERIC, 3 )
+        PlaySound( "buttons/button15.wav" )
+        mainframe:Close()
+    end )
+
+    LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select Random", function()
+        net.Start( "lambdamws_selectspawnweapon" )
+        net.WriteString( "random" )
+        net.SendToServer()
+        AddNotification( "Selected random as a spawn weapon!", NOTIFY_GENERIC, 3 )
+        PlaySound( "buttons/button15.wav" )
+        mainframe:Close()
+    end )
+end
+
+CreateLambdaConsoleCommand( "lambdaplayers_mws_openspawnweaponpanel", OpenSpawnWeaponPanel, true, "Opens a panel that allows you to select the weapon the next MWS spawned Lambda Player will start with", { name = "Select Spawn Weapon", category = "MWS" } )
+
+
+
+
+
 
 if ( CLIENT ) then return end
 
@@ -179,6 +308,9 @@ hook.Add( "Tick", "lambdaplayers_MWS", function()
             lambda.l_MWSspawned = true
             lambda:Spawn()
             lambda:SetRespawn( respawn:GetBool() )
+            lambda.l_SpawnWeapon = spawnWep:GetString() 
+            lambda:SwitchToSpawnWeapon()
+
             table_insert( SpawnedLambdaPlayers, 1, lambda )
 
             local personality = perspreset:GetString()

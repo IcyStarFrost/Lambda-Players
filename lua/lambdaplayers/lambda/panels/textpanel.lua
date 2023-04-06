@@ -6,7 +6,11 @@ local function OpenTextPanel( ply )
     if !ply:IsSuperAdmin() then return end
     local ishost = ply:GetNW2Bool( "lambda_serverhost", false )
 
-    local frame = LAMBDAPANELS:CreateFrame( "Text Line Editor", 500, 300 )
+    local frame = LAMBDAPANELS:CreateFrame( "Text Line Editor", 700, 300 )
+
+    function frame:OnClose()
+        chat.AddText( "Remember to Update Lambda Data after any changes!" )
+    end
 
     LAMBDAPANELS:CreateURLLabel( "Click here to learn about the default text types and keywords", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Text-Chat", frame, TOP )
     LAMBDAPANELS:CreateLabel( "Right Click a line to remove it", frame, TOP )
@@ -153,6 +157,15 @@ local function OpenTextPanel( ply )
                 CreateTextEditingPanel( k )
             end
 
+            if !IsValid( framescroll ) then return end
+
+            -- Adding this panel here fixes the strange cut off of the last panel made in the for loop above
+            local pnl = LAMBDAPANELS:CreateBasicPanel( framescroll, LEFT )
+            pnl:SetSize( 200, 200 )
+            pnl:DockMargin( 10, 0, 0, 0 )
+            pnl:Dock( LEFT )
+            framescroll:AddPanel( pnl )
+            
             chat.AddText( "All text chat lines have been received!" )
         end )
 

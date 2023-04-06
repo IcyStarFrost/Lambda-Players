@@ -36,39 +36,37 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         islethal = true,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             -- Secondary orb launcher
             if random( 75 ) == 1 then
                 self.l_WeaponUseCooldown = CurTime() + 1.25
                 wepent:EmitSound( "Weapon_CombineGuard.Special1" )
 
-                self:SimpleTimer( 0.75, function()
-                    if IsValid( wepent ) then
-                        local comBall = ents.Create( "prop_combine_ball" )
-                        if IsValid( comBall ) then 
-                            wepent:EmitSound( "Weapon_IRifle.Single" )
+                self:SimpleWeaponTimer( 0.75, function()
+                    local comBall = ents.Create( "prop_combine_ball" )
+                    if IsValid( comBall ) then 
+                        wepent:EmitSound( "Weapon_IRifle.Single" )
 
-                            self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
+                        self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
 
-                            local launchAng = ( IsValid( target ) and ( target:WorldSpaceCenter() - self:EyePos() ):Angle() or self:GetAngles() )
-                            local launchVel = ( launchAng:Forward() * 1000 )
-                            
-                            comBall:SetSaveValue( "m_flRadius", ballRadius:GetFloat() )
-                            comBall:SetPos( self:EyePos() + launchAng:Forward() * 32 + launchAng:Up() * 32 )
-                            comBall:SetOwner( self )
-                            comBall:Spawn()
-                            comBall:SetSaveValue( "m_nState", 2 )
-                            comBall:SetSaveValue( "m_flSpeed", launchVel:Length() )
-                            comBall:Fire( "Explode", nil, ballTime:GetInt() )
+                        local launchAng = ( IsValid( target ) and ( target:WorldSpaceCenter() - self:EyePos() ):Angle() or self:GetAngles() )
+                        local launchVel = ( launchAng:Forward() * 1000 )
+                        
+                        comBall:SetSaveValue( "m_flRadius", ballRadius:GetFloat() )
+                        comBall:SetPos( self:EyePos() + launchAng:Forward() * 32 + launchAng:Up() * 32 )
+                        comBall:SetOwner( self )
+                        comBall:Spawn()
+                        comBall:SetSaveValue( "m_nState", 2 )
+                        comBall:SetSaveValue( "m_flSpeed", launchVel:Length() )
+                        comBall:Fire( "Explode", nil, ballTime:GetInt() )
 
-                            local phys = comBall:GetPhysicsObject()
-                            if IsValid( phys ) then
-                                phys:SetVelocity( launchVel )
-                                phys:AddGameFlag( FVPHYSICS_WAS_THROWN )
+                        local phys = comBall:GetPhysicsObject()
+                        if IsValid( phys ) then
+                            phys:SetVelocity( launchVel )
+                            phys:AddGameFlag( FVPHYSICS_WAS_THROWN )
 
-                                phys:SetMass( ballMass:GetFloat() )
-                                phys:SetInertia( Vector( 500, 500, 500 ) )
-                            end
+                            phys:SetMass( ballMass:GetFloat() )
+                            phys:SetInertia( Vector( 500, 500, 500 ) )
                         end
                     end
                 end)

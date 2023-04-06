@@ -19,7 +19,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 400,
         attackrange = 1500,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             local ent = CreateEntity( "hunter_flechette" )
             if !IsValid( ent ) then return true end
 

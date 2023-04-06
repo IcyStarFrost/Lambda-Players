@@ -13,6 +13,12 @@ game.AddParticles("particles/bigboom.pcf")
 
 local busterMode = CreateLambdaConvar( "lambdaplayers_weapons_paigsentrybuster", 0, true, false, true, "If Lambda that spawn with the PAIG have the ability to act like the Sentry Buster from TF2.", 0, 1, { type = "Bool", name = "PAIG - Enable Sentry Buster Mode", category = "Weapon Utilities" } )
 
+local function OnPAIGRemoved( self )
+    self:StopSound( "lambdaplayers/weapons/paig/sb_intro.mp3" )
+    self:StopSound( "lambdaplayers/weapons/paig/sb_spin.mp3" )
+    if self.LoopSound then self.LoopSound:Stop(); self.LoopSound = nil end 
+end
+
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
     paig = {
         model = "models/weapons/w_grenade.mdl",
@@ -26,7 +32,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 50,
         speedmultiplier = 1.2,
 
-        OnEquip = function( self, wepent )
+        OnDeploy = function( self, wepent )
             wepent.SentryBusterMode = busterMode:GetBool()
             if !wepent.SentryBusterMode then return end
             
@@ -35,32 +41,32 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent.LoopSound = CreateSound( wepent, "lambdaplayers/weapons/paig/sb_loop.wav" ) -- Looping only works on .WAV formats, unfortunately
             if wepent.LoopSound then wepent.LoopSound:Play() end
 
-            wepent:CallOnRemove( "Lambda_PAIG_StopSound" .. wepent:EntIndex(), function() 
-                wepent:StopSound( "lambdaplayers/weapons/paig/sb_intro.mp3" )
-                wepent:StopSound( "lambdaplayers/weapons/paig/sb_spin.mp3" )
-                if wepent.LoopSound then wepent.LoopSound:Stop(); wepent.LoopSound = nil end 
-            end )
-
-            wepent:LambdaHookTick( "Lambda_PAIG_SentryBusterThink", function() 
-                local loopSnd = wepent.LoopSound
-                if !loopSnd then return true end
-
-                if !LambdaIsValid( self ) or CurTime() <= self.l_WeaponUseCooldown then 
-                    loopSnd:Stop() 
-                elseif !loopSnd:IsPlaying() then
-                    loopSnd:Play()
-                end 
-            end )
+            wepent:CallOnRemove( "Lambda_PAIG_StopSound" .. wepent:EntIndex(), OnPAIGRemoved )
         end,
 
-        OnUnequip = function( self, wepent )
+        OnThink = function( self, wepent, dead )
+            if !wepent.SentryBusterMode then return end
+            
+            local loopSnd = wepent.LoopSound
+            if !loopSnd then return end
+
+            if dead or CurTime() < self.l_WeaponUseCooldown then
+                loopSnd:Stop()
+                if dead then wepent:StopSound( "lambdaplayers/weapons/paig/sb_spin.mp3" ) end
+            elseif !loopSnd:IsPlaying() then
+                loopSnd:Play()
+            end
+        end,
+
+        OnHolster = function( self, wepent )
             wepent.SentryBusterMode = nil
-            wepent:StopSound( "lambdaplayers/weapons/paig/sb_intro.mp3" )
             wepent:StopSound( "lambdaplayers/weapons/paig/sb_spin.mp3" )
             if wepent.LoopSound then wepent.LoopSound:Stop(); wepent.LoopSound = nil end
         end,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
+            self.l_WeaponUseCooldown = CurTime() + 1
+
             local detonateTime = 0.3
             local detonateSnd = "BaseExplosionEffect.Sound"
             
@@ -80,19 +86,15 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 end
             end
 
-            self.l_WeaponUseCooldown = CurTime() + 1 + detonateTime
+            self.l_WeaponUseCooldown = ( self.l_WeaponUseCooldown + detonateTime )
 
-            self:SimpleTimer( detonateTime - 0.3, function()
-                if !IsValid( wepent ) or self:GetWeaponName() != "paig" then return end
+            self:SimpleWeaponTimer( detonateTime - 0.3, function()
                 wepent:EmitSound( "WeaponFrag.Throw", 70 )
-                
                 self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
                 self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
             end )
 
-            self:SimpleTimer( detonateTime, function()
-                if !IsValid( wepent ) or self:GetWeaponName() != "paig" then return end
-
+            self:SimpleWeaponTimer( detonateTime, function()
                 local blowPos = self:GetAttachmentPoint( "hand" ).Pos
 
                 local effectData = EffectData()

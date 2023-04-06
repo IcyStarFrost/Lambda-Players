@@ -11,18 +11,6 @@ if CLIENT then
     local sub = string.sub
     local Material = Material
 
-    local function CreateProfilePictureMat( ent )
-        local pfp = ent:GetProfilePicture()
-        
-        local profilepicturematerial = Material( pfp )
-
-        if profilepicturematerial:IsError() then
-            local model = ent:GetModel()
-            profilepicturematerial = Material( "spawnicons/" .. sub( model, 1, #model - 4 ) .. ".png" )
-        end
-        return profilepicturematerial
-    end
-
     hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function() 
 
         local PLAYER_LINE = {
@@ -87,7 +75,7 @@ if CLIENT then
                 if !pl.IsLambdaPlayer then
                     self.Avatar:SetPlayer( pl )
                 else
-                    self.LambdaAvatar:SetMaterial( CreateProfilePictureMat( pl ) )
+                    self.LambdaAvatar:SetMaterial( pl:GetPFPMat() )
                     self.LambdaAvatar:Show()
                 end
                 
@@ -338,7 +326,7 @@ if CLIENT then
                 self.LambdaAvatar = vgui.Create( "DImage", self )
                 self.LambdaAvatar:SetSize( 32, 32 )
                 self.LambdaAvatar:Dock( LEFT )
-                self.LambdaAvatar:SetMaterial( CreateProfilePictureMat( ply ) )
+                self.LambdaAvatar:SetMaterial( ply:GetPFPMat() )
             else
                 self.Avatar:SetPlayer( ply )
             end
@@ -475,6 +463,7 @@ if CLIENT then return end
 
 hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function() 
 
+    -- This fixes the issues of Lambda's health reaching below 0 and actually dying in internally
     local olddamagehookfunc = GAMEMODE.EntityTakeDamage
     function GAMEMODE:EntityTakeDamage( targ, dmg )
         local result = hook.Run( "LambdaTakeDamage", targ, dmg )

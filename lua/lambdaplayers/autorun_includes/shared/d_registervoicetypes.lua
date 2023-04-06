@@ -12,7 +12,7 @@ function LambdaRegisterVoiceType( voicetypename, defaultpath, voicetypedescripti
     table_insert( LambdaValidVoiceTypes, { voicetypename, "lambdaplayers_voice_" .. voicetypename .. "dir" } )
 end
 
-LambdaRegisterVoiceType( "idle", "randomengine", "These are voice lines that play randomly." )
+LambdaRegisterVoiceType( "idle", "lambdaplayers/vo/idle", "These are voice lines that play randomly. Input randomengine to randomly use sounds loaded in game. randomengine can work on any voice type" )
 LambdaRegisterVoiceType( "taunt", "lambdaplayers/vo/taunt", "These are voice lines that play when a Lambda Player is about to attack something." )
 LambdaRegisterVoiceType( "death", "lambdaplayers/vo/death", "These are voice lines that play when a Lambda Player dies." )
 LambdaRegisterVoiceType( "kill", "lambdaplayers/vo/kill", "These are voice lines that play when a Lambda Player kills their enemy." )
