@@ -8,6 +8,7 @@ local ipairs = ipairs
 local Effect = util.Effect
 local CurTime = CurTime
 local string_find = string.find
+local meleeonly = GetConVar( "lambdaplayers_combat_meleeonly" )
 
 function ENT:WeaponDataExists( weaponname )
     return _LAMBDAPLAYERSWEAPONS[ weaponname ] != nil
@@ -303,12 +304,25 @@ end
 
 function ENT:SwitchToRandomWeapon()
     local curWep = self.l_Weapon
-    for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if k == curWep or !self:CanEquipWeapon( k ) then continue end
-        if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
 
-        self:SwitchWeapon( k )
-        return
+    if !meleeonly:GetBool() then
+        for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
+            if k == curWep or !self:CanEquipWeapon( k ) then continue end
+            if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
+
+            self:SwitchWeapon( k )
+            return
+        end
+    end
+
+    if meleeonly:GetBool() then
+        for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
+            if k == curWep or !v.ismelee or !self:CanEquipWeapon( k ) then continue end
+            if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
+    
+            self:SwitchWeapon( k )
+            return
+        end
     end
 
     self:SwitchWeapon( "none", true )
@@ -316,12 +330,25 @@ end
 
 function ENT:SwitchToLethalWeapon()
     local curWep = self.l_Weapon
-    for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if k == curWep or !v.islethal or !self:CanEquipWeapon( k ) then continue end
-        if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
 
-        self:SwitchWeapon( k )
-        return
+    if !meleeonly:GetBool() then
+        for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
+            if k == curWep or !v.islethal or !self:CanEquipWeapon( k ) then continue end
+            if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
+
+            self:SwitchWeapon( k )
+            return
+        end
+    end
+
+    if meleeonly:GetBool() then
+        for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
+            if k == curWep or !v.ismelee or !self:CanEquipWeapon( k ) then continue end
+            if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
+    
+            self:SwitchWeapon( k )
+            return
+        end
     end
 
     self:SwitchWeapon( curWep )
