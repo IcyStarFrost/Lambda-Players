@@ -95,32 +95,35 @@ elseif CLIENT then
     local input_IsKeyDown = input.IsKeyDown
 
     local displayArmor = GetConVar( "lambdaplayers_displayarmor" )
+    local displayHealth = GetConVar( "lambdaplayers_displayinfo" )
 
     -- The little name and health display when you look at Lambdas
     hook.Add( "HUDPaint", "LambdaPlayers_NameDisplay", function()
         local sw, sh = ScrW(), ScrH()
         local traceent = LocalPlayer():GetEyeTrace().Entity
 
-        if LambdaIsValid( traceent ) and traceent.IsLambdaPlayer then
-            local result = LambdaRunHook( "LambdaShowNameDisplay", traceent )
-            if result == false then return end
+        if !displayHealth:GetBool() then
 
-            local name = traceent:GetLambdaName()
-            local color = traceent:GetDisplayColor()
-            local hp = traceent:GetNW2Float( "lambda_health", "NAN" )
-            local hpW = 2
-            local armor = traceent:GetArmor()
-            hp = hp == "NAN" and traceent:GetNWFloat( "lambda_health", "NAN" ) or hp
+            if LambdaIsValid( traceent ) and traceent.IsLambdaPlayer then
+                local result = LambdaRunHook( "LambdaShowNameDisplay", traceent )
+                if result == false then return end
 
-            if armor > 0 and displayArmor:GetBool() then
-                hpW = 2.1
-                DrawText( tostring( armor ) .. "%", "lambdaplayers_healthfont", ( sw / 1.9 ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), color, TEXT_ALIGN_CENTER)
+                local name = traceent:GetLambdaName()
+                local color = traceent:GetDisplayColor()
+                local armor = traceent:GetArmor()
+                local hp = traceent:GetNW2Float( "lambda_health", "NAN" )
+                local hpW = 2
+                hp = hp == "NAN" and traceent:GetNWFloat( "lambda_health", "NAN" ) or hp
+
+                if armor > 0 and displayArmor:GetBool() then
+                    hpW = 2.1
+                    DrawText( tostring( armor ) .. "%", "lambdaplayers_healthfont", ( sw / 1.9 ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), color, TEXT_ALIGN_CENTER)
+                end
+
+                DrawText( name, "lambdaplayers_displayname", ( sw / 2 ), ( sh / 1.95 ) , color, TEXT_ALIGN_CENTER )
+                DrawText( tostring( hp ) .. "%", "lambdaplayers_healthfont", ( sw / hpW ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), color, TEXT_ALIGN_CENTER)
             end
-
-            DrawText( name, "lambdaplayers_displayname", ( sw / 2 ), ( sh / 1.95 ) , color, TEXT_ALIGN_CENTER )
-            DrawText( tostring( hp ) .. "%", "lambdaplayers_healthfont", ( sw / hpW ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), color, TEXT_ALIGN_CENTER)
         end
-    
     end )
 
 

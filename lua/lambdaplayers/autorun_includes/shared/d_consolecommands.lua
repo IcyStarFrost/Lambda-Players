@@ -103,90 +103,103 @@ AddConsoleCommandToLambdaSettings( "r_cleardecals", true, "Removes all decals in
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_cacheplayermodels", function( ply )
     if IsValid( ply ) and !ply:IsAdmin() then return end
 
-    for k,v in pairs(player_manager.AllValidModels()) do util.PrecacheModel(v) end
+    for k,v in pairs( player_manager.AllValidModels() ) do util.PrecacheModel( v ) end
     LambdaPlayers_Notify( ply, "Playermodels cached!", 0, "plats/elevbell1.wav" )
 end, false, "WARNING: Your game will freeze for a few seconds. This will vary on the amount of playermodels you have installed.", { name = "Cache Playermodels", category = "Utilities" } )
 
-CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply ) 
-	if IsValid( ply ) and !ply:IsSuperAdmin() then return end
-    if !navmesh.IsLoaded() then return end
+local function GetRandomNavmesh( ply, plyradius )
+    local maxSearchHeight = 300 -- Increase this to search for Navmesh areas at higher heights
 
-    local function GetRandomNavmesh()
-        local FindAllNavMesh_NearPly = navmesh.Find( ply:GetPos(), plyradius:GetInt(), 30, 50 )
-        local NavMesh_NearPly = FindAllNavMesh_NearPly[ random( #FindAllNavMesh_NearPly ) ]
-
-        local FindAllNavMesh_Random = navmesh.Find( ply:GetPos(), random( 250, 99999 ), 30, 50 )
-        local NavMesh_Random = FindAllNavMesh_Random[ random( #FindAllNavMesh_Random ) ]
-        
-        -- Once we got all nearby NavMesh areas near the player, pick out a random
-        -- navmesh spot to spawn around with the set radius.
-        -- BUG: it doesn't get different heights, unless our player is on that level
-        if plyradius:GetInt() > 1 then
-            for k, v in ipairs( FindAllNavMesh_NearPly ) do
-                if IsValid( v ) and v:GetSizeX() > 35 and v:GetSizeY() > 35 then -- We don't want to spawn them in smaller nav areas, or water.
-                    return NavMesh_NearPly:GetRandomPoint() -- We found a suitable location, spawn it!
-                end
+    if plyradius == 0 then -- Spawn at random navmesh point
+        local suitableNavmeshes = {}
+        for _, navMesh in pairs( navmesh.GetAllNavAreas() ) do
+            if not navMesh:IsUnderwater() then
+                table.insert( suitableNavmeshes, navMesh )
             end
-        else -- If the radius is 0, find a random navmesh around the player at any range
-            for k, v in ipairs( FindAllNavMesh_Random ) do
-                if IsValid( v ) and v:GetSizeX() > 35 and v:GetSizeY() > 35 then
-                    return NavMesh_Random:GetRandomPoint()
+        end
+        if not suitableNavmeshes[1] then
+            print( "Failed to find suitable Navmesh area for NPC spawn." )
+            return nil
+        end
+        local spawnPos = suitableNavmeshes[ random( #suitableNavmeshes ) ]:GetRandomPoint()
+        return spawnPos
+    else -- Spawn within a certain radius of player's position
+        local FindAllNavMesh_NearPly = navmesh.Find( ply:GetPos(), plyradius > 1 and plyradius or 99999, 30, maxSearchHeight )
+        for i = 1, 10 do -- Try 10 times to find a suitable navmesh point
+            local NavMesh_NearPly = FindAllNavMesh_NearPly[ random( #FindAllNavMesh_NearPly ) ]
+            if NavMesh_NearPly and not NavMesh_NearPly:IsUnderwater() then
+                local spawnPos = NavMesh_NearPly:GetRandomPoint()
+                if spawnPos then
+                    return spawnPos
                 end
             end
         end
     end
 
+    return nil
+end
+
+CreateLambdaConsoleCommand("lambdaplayers_cmd_forcespawnlambda", function(ply)
+    if IsValid( ply ) and not ply:IsSuperAdmin() then return end
+    if not navmesh.IsLoaded() then return end
+
     local pos
     local ang
-    local spawns
 
     -- Spawning at player spawn points
     if spawnatplayerpoints:GetBool() then
-		spawns = LambdaGetPossibleSpawns()
-		local spawn = spawns[ random( #spawns ) ]
-        
+        local spawns = LambdaGetPossibleSpawns()
+        local spawn = spawns[ random( #spawns ) ]
+
         pos = spawn:GetPos()
         ang = Angle( 0, random( -180, 180 ), 0 )
     else -- We spawn at a random navmesh
-        pos = GetRandomNavmesh()
+        pos = GetRandomNavmesh( ply, plyradius:GetInt() )
         ang = Angle( 0, random( -180, 180 ), 0 )
+
+        if not pos then
+            print( "Failed to find suitable Navmesh area for NPC spawn." )
+            return
+        end
     end
 
-
-	local lambda = ents.Create( "npc_lambdaplayer" )
-	lambda:SetPos( pos )
-	lambda:SetAngles( ang )
-	lambda:Spawn()
+    local lambda = ents.Create( "npc_lambdaplayer" )
+    lambda:SetPos( pos )
+    lambda:SetAngles( ang )
+    lambda:Spawn()
 
     lambda.l_SpawnWeapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )
     lambda:SwitchToSpawnWeapon()
 
-	undo.Create( "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
-		undo.SetPlayer( ply )
-		undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
-		undo.AddEntity( lambda )
-	undo.Finish( "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
+    undo.Create("Lambda Player (" .. lambda:GetLambdaName() .. ")")
+    undo.SetPlayer(ply)
+    undo.SetCustomUndoText( "Undone " .. "Lambda Player (" .. lambda:GetLambdaName() .. ")" )
+    undo.AddEntity( lambda )
+    undo.Finish( "Lambda Player ( " .. lambda:GetLambdaName() .. ")" )
 
-	local dynLight = ents.Create( "light_dynamic" )
-	dynLight:SetKeyValue( "brightness", "2" )
-	dynLight:SetKeyValue( "distance", "90" )
-	dynLight:SetPos( lambda:GetPos() )
-	dynLight:SetLocalAngles( lambda:GetAngles() )
-	dynLight:Fire( "Color", "255 145 0" )
-	dynLight:Spawn()
-	dynLight:Activate()
-	dynLight:Fire( "TurnOn", "", 0 )
-	dynLight:Fire( "Kill", "", 0.75 )
+--[[local dynLight = ents.Create("light_dynamic")
+    dynLight:SetKeyValue("brightness", "2")
+    dynLight:SetKeyValue("distance", "90")
+    dynLight:SetPos(lambda:GetPos())
+    dynLight:SetLocalAngles(lambda:GetAngles())
+    dynLight:Fire("Color", "255 145 0")
+    dynLight:Spawn()
+    dynLight:Activate()
+    dynLight:Fire("TurnOn", "", 0)
+    dynLight:Fire("Kill", "", 0.75) ]]
 
-end, false, "Spawns a Lambda Player at a random area", { name = "Spawn Lambda Player At Random Area", category = "Force Menu" } )
+end, false, "Spawns a Lambda Player at a random area", {name = "Spawn Lambda Player At Random Area", category = "Force Menu"})
 
-CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombat", function( ply ) 
-    if IsValid( ply ) and !ply:IsSuperAdmin() then return end
+CreateLambdaConsoleCommand("lambdaplayers_cmd_forcecombat", function(ply)
+    if not IsValid(ply) or not ply:IsSuperAdmin() then return end
 
-    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance:GetInt() ) ) do
-        if IsValid( v ) and v.IsLambdaPlayer then v:AttackTarget( ply ) end
+    local lambdaPlayers = ents_FindInSphere(ply:GetPos(), distance:GetInt())
+
+    for i, v in ipairs(lambdaPlayers) do
+        if IsValid(v) and v.IsLambdaPlayer then
+            v:AttackTarget(ply)
+        end
     end
-
 end, false, "Forces all Lambda Players to attack you", { name = "Lambda Players Attack You", category = "Force Menu" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombatlambda", function( ply ) 
