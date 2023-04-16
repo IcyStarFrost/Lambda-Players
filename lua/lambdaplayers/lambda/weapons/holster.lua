@@ -20,6 +20,7 @@
     offpos          | Vector |          The offset position of the weapon local to the Lambda's considered hand position    | OPTIONAL
     offang          | Angle |           The offset angle of the weapon local to the Lambda's considered hand angle  | OPTIONAL
     weaponscale     | Number |          The multiplier on scaling the Lambda's weapon model size. NOTE! This will NOT work while bonemerge is set true!   | OPTIONAL
+    cantbeselected  | Bool |            If the weapon is only equippable directly in code rather than randomly selected by Lambda Player | OPTIONAL
 
     deploydelay     | Number |          Time delay before Lambda starts using the weapon after equiping it
     speedmultiplier | Number |          Multiplies the Lambda's movement speed to this value while the weapon is held
@@ -62,6 +63,7 @@
     offpos          | Vector |          The offset position of the weapon local to the Lambda's considered hand position    | OPTIONAL
     offang          | Angle |           The offset angle of the weapon local to the Lambda's considered hand angle  | OPTIONAL
     weaponscale     | Number |          The multiplier on scaling the Lambda's weapon model size. NOTE! This will NOT work while bonemerge is set true!   | OPTIONAL
+    cantbeselected  | Bool |            If the weapon is only equippable directly in code rather than randomly selected by Lambda Player | OPTIONAL
 
     deploydelay     | Number |          Time delay before Lambda starts using the weapon after equiping it
     speedmultiplier | Number |          Multiplies the Lambda's movement speed to this value while the weapon is held

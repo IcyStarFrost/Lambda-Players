@@ -87,18 +87,18 @@ AddUActionToLambdaUA( function( self )
     end )
 end )
 
--- Jump around
-AddUActionToLambdaUA( function( self )
-    if random( 1, 2 ) != 1 or self:GetState() != "Idle" then return end
-    self:LambdaJump()
+-- Jump around ( Disabled because caused to many stuck situations )
+-- AddUActionToLambdaUA( function( self )
+--     if random( 1, 2 ) != 1 or self:GetState() != "Idle" then return end
+--     self:LambdaJump()
 
-    if self.l_issmoving then
-        self:NamedTimer( "JumpMoving", 1, random( 3, 15 ), function() 
-            if !self.l_issmoving or self:GetState() != "Idle" then return true end
-            self:LambdaJump() 
-        end )
-    end
-end )
+--     if self.l_issmoving then
+--         self:NamedTimer( "JumpMoving", 1, random( 3, 15 ), function() 
+--             if !self.l_issmoving or self:GetState() != "Idle" then return true end
+--             self:LambdaJump() 
+--         end )
+--     end
+-- end )
 
 
 local killbind = GetConVar( "lambdaplayers_lambda_allowkillbind" )

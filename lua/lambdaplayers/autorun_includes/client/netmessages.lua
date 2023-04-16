@@ -413,8 +413,8 @@ net.Receive( "lambdaplayers_invalidateragdoll", function()
         end
     end
 
-    ent.ragdoll = NULL
-    ent.cs_prop = NULL
+    ent.ragdoll = nil
+    ent.cs_prop = nil
 end )
 
 

@@ -8,7 +8,9 @@ local TraceHull = util.TraceHull
 local debugoverlay = debugoverlay
 local CurTime = CurTime
 local FrameTime = FrameTime
-local tracetable = {}
+local tracetable = {
+    ignoreworld = true
+}
 local unstucktable = {}
 local airtable = {}
 local laddermovetable = { collisiongroup = COLLISION_GROUP_PLAYER }
@@ -16,6 +18,7 @@ local ents_FindByName = ents.FindByName
 local GetGroundHeight = navmesh.GetGroundHeight
 local navmesh_IsLoaded = navmesh.IsLoaded
 local random = math.random
+local Rand = math.Rand
 local ipairs = ipairs
 local coroutine_yield = coroutine.yield
 local isnumber = isnumber
@@ -71,7 +74,6 @@ function ENT:MoveToPos( pos, options )
     local loco = self.loco
     local runSpeed = self:GetRunSpeed()
     local stepH = loco:GetStepHeight()
-    local jumpH = loco:GetJumpHeight()
     local curGoal, prevGoal
     local nextJumpT = CurTime() + 0.5
     local returnMsg = "ok"
@@ -130,7 +132,7 @@ function ENT:MoveToPos( pos, options )
 
             local goalNormal = ( curGoal.pos - selfPos ):GetNormalized()
             goalNormal.z = 0
-
+            
             if moveType == 4 or moveType == 5 then -- Ladder climbing ( 4 - Up, 5 - Down )
                 local ladder = curGoal.ladder
                 if IsValid( ladder ) and self:IsInRange( ( moveType == 4 and ladder:GetBottom() or ladder:GetTop() ), 64 ) then
@@ -144,16 +146,11 @@ function ENT:MoveToPos( pos, options )
             elseif moveType == 2 and ( prevGoal.pos.z - selfPos.z ) <= 0 then
                 hasJumped = true
             else
-                -- Jumping over ledges and close up jumping
+                -- Close up jumping
                 local stepAhead = ( selfPos + vector_up * stepH )
                 curArea = self.l_currentnavarea
                 local grHeight, grNormal = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 60 )
                 if grHeight and grNormal.z > 0.9 and ( grHeight - selfPos.z ) > stepH then hasJumped = true end
-
-                if !hasJumped then
-                    grHeight = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 30 )
-                    if grHeight and ( grHeight - selfPos.z ) < -jumpH then hasJumped = true end
-                end
             end
 
             if hasJumped and CurTime() > nextJumpT then
@@ -457,16 +454,20 @@ function ENT:ObstacleCheck()
     if CurTime() < self.l_nextobstaclecheck then return end
 
     local selfPos = ( self:GetPos() + vector_up * self.loco:GetStepHeight() )
+    local mins, maxs = self:GetCollisionBounds()
+
     tracetable.start = selfPos
     tracetable.endpos = ( selfPos + self:GetForward() * 50 )
     tracetable.filter = self
+    tracetable.mins = mins
+    tracetable.maxs = maxs
     
-    local ent = Trace( tracetable ).Entity
+    local ent = TraceHull( tracetable ).Entity
     if IsValid( ent ) then
         local class = ent:GetClass()
         if doorClasses[ class ] and ent.Fire then
             -- Back up when opening a door
-            if ent:GetInternalVariable( "m_eDoorState" ) != 0 or ent:GetInternalVariable( "m_toggle_state" ) != 0 then
+            if ent:GetInternalVariable( "m_eDoorState" ) != 2 and ent:GetInternalVariable( "m_toggle_state" ) != 0 then
                 self:Approach( self:GetPos() - self:GetForward() * 50, 0.8 )
                 --self:WaitWhileMoving( 1.5 )
             end
@@ -481,8 +482,16 @@ function ENT:ObstacleCheck()
             end
         elseif ent.Health and ent:Health() > 0 and !ent:IsPlayer() and !ent:IsNPC() and !ent:IsNextBot() then
             if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
-            self:LookTo( ent, 1.0 )
-            self:UseWeapon( ent )
+            
+            if !self:HookExists( "Tick", "ShootAtObstacle" ) then
+                local fireTime = ( CurTime() + Rand( 0.5, 1.0 ) )
+                
+                self:Hook( "Tick", "ShootAtObstacle", function()
+                    if CurTime() > fireTime or !IsValid( ent ) or ent:Health() <= 0 then return "end" end
+                    self:LookTo( ent, 1.0 )
+                    self:UseWeapon( ent )
+                end )
+            end
         end
     end
 
@@ -587,7 +596,7 @@ local GetDistToSqr                                   = VectorMeta.DistToSqr
 function ENT:PathGenerator()
     local loco = self.loco
     local stepHeight = CLuaLocomotion_GetStepHeight( loco )
-    local jumpHeight = CLuaLocomotion_GetJumpHeight( loco )
+    local jumpHeight = CLuaLocomotion_GetJumpHeight( loco ) + 12
     local deathHeight = -CLuaLocomotion_GetDeathDropHeight( loco )
 
     local crouchWalkPenalty = 5
@@ -598,6 +607,7 @@ function ENT:PathGenerator()
     local obeyNavmesh = obeynav:GetBool()
     local isInNoClip = self:IsInNoClip()
     local randomizeCost = randomizepathfinding:GetBool()
+    local randCost = Rand( 0.8, 1.2 )
 
     return function( area, fromArea, ladder, elevator, length )
         if !IsValid( fromArea ) then return 0 end
@@ -615,7 +625,8 @@ function ENT:PathGenerator()
         local cost = ( CNavArea_GetCostSoFar( fromArea ) + dist )
 
         if randomizeCost then
-            cost = cost * ( random( 9, 11 ) / 10 ) 
+            if random( 1, 10 ) == 1 then randCost = Rand( 0.8, 1.2 ) end
+            cost = ( cost * randCost ) 
         end
 
         if !isInNoClip then 

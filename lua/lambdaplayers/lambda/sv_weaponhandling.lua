@@ -307,7 +307,8 @@ function ENT:SwitchToRandomWeapon()
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
         if k == curWep or !self:CanEquipWeapon( k ) then continue end
         if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
-
+        if v.cantbeselected then continue end
+        
         self:SwitchWeapon( k )
         return
     end
@@ -320,11 +321,12 @@ function ENT:SwitchToLethalWeapon()
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
         if k == curWep or !v.islethal or !self:CanEquipWeapon( k ) then continue end
         if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
-
+        if v.cantbeselected then continue end
+        
         self:SwitchWeapon( k )
         return
     end
-
+    
     self:SwitchWeapon( curWep )
 end
 
@@ -332,12 +334,14 @@ function ENT:SwitchToSpawnWeapon()
     local weapon = self.l_SpawnWeapon
 
     if weapon == "random" then
-        for wepName, _ in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-            if !self:CanEquipWeapon( wepName ) then continue end
+        for wepName, wepData in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
+            if !self:CanEquipWeapon( wepName ) then continue end 
+            if LambdaRunHook( "LambdaCanSwitchWeapon", self, wepName, wepData ) then continue end
+            if wepData.cantbeselected then continue end
             weapon = wepName; break
         end
     end
-    
+
     if !self:WeaponDataExists( weapon ) then
         weapon = "physgun"
         self.l_SpawnWeapon = weapon

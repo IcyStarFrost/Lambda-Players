@@ -548,6 +548,7 @@ if SERVER then
         self:SimpleTimer( Rand( 0.2, 0.66 ), function()
             self:CancelMovement()
             self:SetState( "Laughing" )
+            self:LookTo( pos, 1 )
         end )
     end
 

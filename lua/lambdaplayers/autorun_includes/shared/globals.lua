@@ -22,7 +22,7 @@ function LambdaMergeWeapons()
 
     for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
         if name == "none" then continue end -- Don't count the empty hands
-        
+
         local convar = CreateLambdaConvar( "lambdaplayers_weapons_allow_" .. name, 1, true, false, false, "Allows the Lambda Players to equip " .. data.prettyname .. " from " .. data.origin .. " category", 0, 1 )
         _LAMBDAWEAPONALLOWCONVARS[ name ] = convar
 
@@ -43,7 +43,9 @@ function LambdaMergeWeapons()
             end
         end
 
-        _LAMBDAWEAPONCLASSANDPRINTS[ data.prettyname ] = name
+        if !data.cantbeselected then
+            _LAMBDAWEAPONCLASSANDPRINTS[ data.prettyname ] = name
+        end
     end
 
     if SERVER and LambdaHasFirstMergedWeapons then
@@ -100,6 +102,7 @@ local function OpenSpawnWeaponPanel()
         for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
             if name == "none" then continue end
             if data.origin != weporigin then continue end
+            if data.cantbeselected then continue end
 
             local allowCvar = _LAMBDAWEAPONALLOWCONVARS[ name ]
             if allowCvar and !allowCvar:GetBool() then continue end

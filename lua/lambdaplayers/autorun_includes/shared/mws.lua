@@ -148,6 +148,7 @@ local function OpenSpawnWeaponPanel( ply )
         for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
             if name == "none" then continue end
             if data.origin != weporigin then continue end
+            if data.cantbeselected then continue end
 
             local allowCvar = _LAMBDAWEAPONALLOWCONVARS[ name ]
             if allowCvar and !allowCvar:GetBool() then continue end

@@ -7,6 +7,9 @@ local bor = bit.bor
 local CurTime = CurTime
 local max = math.max
 local SortTable = table.sort
+local IsSinglePlayer = game.SinglePlayer
+local SimpleTimer = timer.Simple
+local FrameTime = FrameTime
 local ceil = math.ceil
 local band = bit.band
 local rand = math.Rand
@@ -93,10 +96,22 @@ if SERVER then
     
         if info then ragdoll:TakePhysicsDamage( info ) end
 
-        net.Start( "lambdaplayers_serversideragdollplycolor" )
-            net.WriteEntity( ragdoll )
-            net.WriteVector( self:GetPlyColor() ) 
-        net.Broadcast()
+        -- Fixes playercolor not being assigned in multiplayer
+        if IsSinglePlayer() then
+            net.Start( "lambdaplayers_serversideragdollplycolor" )
+                net.WriteEntity( ragdoll )
+                net.WriteVector( self:GetPlyColor() ) 
+            net.Broadcast()
+        else
+            SimpleTimer( FrameTime() * 2, function()
+                if !IsValid( ragdoll ) then return end
+
+                net.Start( "lambdaplayers_serversideragdollplycolor" )
+                    net.WriteEntity( ragdoll )
+                    net.WriteVector( self:GetPlyColor() ) 
+                net.Broadcast()
+            end )
+        end
 
         if serversidecleanup:GetInt() != 0 then 
             local startTime = CurTime()
@@ -186,8 +201,8 @@ if SERVER then
         -- Restart our coroutine thread
         self:ResetAI()
 
-        -- Stop playing current gesture animation
-        self:RemoveGesture( self.l_CurrentPlayedGesture )
+        -- Stop playing all gesture animations
+        self:RemoveAllGestures()
         self.l_CurrentPlayedGesture = -1
         self.l_UpdateAnimations = true
 
@@ -198,6 +213,7 @@ if SERVER then
 
         self.l_BecomeRagdollEntity = NULL
 
+        info:SetDamage( self.l_PreDeathDamage )
         LambdaRunHook( "LambdaOnKilled", self, info, silent )
         --hook.Run( "PlayerDeath", self, info:GetInflictor(), info:GetAttacker() )
 
@@ -220,18 +236,21 @@ if SERVER then
         end, "DeathThread", true )
 
 
-        for k ,v in ipairs( ents_GetAll() ) do
-            if IsValid( v ) and v != self and v:IsNextBot() then
-                v:OnOtherKilled( self, info )
-            end
+        for _, v in ipairs( ents_GetAll() ) do
+            if v == self or !IsValid( v ) or !v:IsNextBot() then continue end
+            v:OnOtherKilled( self, info )
+            if v.IsLambdaPlayer then LambdaRunHook( "LambdaOnOtherInjured", v, seld, info, true ) end
         end
 
         if attacker != self and IsValid( attacker ) then 
-            if attacker:IsPlayer() then attacker:AddFrags( 1 ) end
-            if !self:IsSpeaking() and random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self.l_preventdefaultspeak then
+            if attacker:IsPlayer() then 
+                attacker:AddFrags( 1 ) 
+            end
+            
+            if !self.l_preventdefaultspeak and random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
                 self.l_keyentity = attacker
 
-                local deathtype = ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and "deathbyplayer" or "death"
+                local deathtype = ( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and "deathbyplayer" or "death" )
                 local line = self:GetTextLine( deathtype )
                 line = LambdaRunHook( "LambdaOnStartTyping", self, line, deathtype ) or line
                 self:TypeMessage( line )
@@ -689,11 +708,15 @@ function ENT:InitializeMiniHooks()
             local onDmgFunc = self.l_OnDamagefunction
             if isfunction( onDmgFunc ) and onDmgFunc( self, self:GetWeaponENT(), info ) == true then return true end
 
-            local potentialdeath = ( self:Health() - ceil( info:GetDamage() ) ) <= 0
+            local dmg = info:GetDamage()
+            local potentialdeath =  ( self:Health() - ceil( dmg ) ) <= 0
             if potentialdeath then
                 info:SetDamageBonus( 0 )
                 info:SetBaseDamage( 0 )
+
+                self.l_PreDeathDamage = dmg
                 info:SetDamage( 0 ) -- We need this because apparently the nextbot would think it is dead and do some wacky health issues without it
+                
                 self:LambdaOnKilled( info )
                 return true
             end

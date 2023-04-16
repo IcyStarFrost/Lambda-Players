@@ -97,6 +97,7 @@ end
     local ignorePlys = GetConVar( "ai_ignoreplayers" )
     local sv_gravity = GetConVar( "sv_gravity" )
     local physUpdateTime = GetConVar( "lambdaplayers_lambda_physupdatetime" )
+    local lethalWaters = GetConVar( "lambdaplayers_lambda_lethalwaters" )
 --
 
 if CLIENT then
@@ -177,6 +178,7 @@ function ENT:Initialize()
         self.l_CurrentPlayedGesture = -1 -- Gesture ID that is assigned when the ENT:PlayGestureAndWait( id ) function is ran
         self.l_retreatendtime = 0 -- The time until we stop retreating
         self.l_AvoidCheck_NextDoorCheck = 0 -- The next time we will check if we are next to a door while using obstacle avoidance
+        self.l_PreDeathDamage = 0 -- The damage we took before running our death function and setting it to zero
 
         self.l_ladderarea = NULL -- The ladder nav area we are currenly using to climb
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
@@ -284,14 +286,6 @@ function ENT:Initialize()
             self:HandleCollision( data )
         end)
 
-        if LambdaSpawnBehavior:GetInt() == 1 then
-            local plys = self:FindInSphere( nil, 25000, function( ent ) return ( ent:IsPlayer()) end )
-            self:AttackTarget( plys[ random( #plys ) ] )
-        elseif LambdaSpawnBehavior:GetInt() == 2 then
-            local randomtarg = self:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignorePlys:GetBool() and ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 1 and ent:Alive() ) end )
-            self:AttackTarget( randomtarg[ random( #randomtarg ) ] )
-        end
-
         self:SetLagCompensated( true )
         self:AddFlags( FL_OBJECT + FL_NPC )
 
@@ -325,6 +319,21 @@ function ENT:Initialize()
         end
 
         self:ProfileCheck()
+
+        self:SimpleTimer( 0.1, function()
+            local spawnBehav = LambdaSpawnBehavior:GetInt()
+            if spawnBehav == 1 then
+                for _, ply in RandomPairs( player.GetAll() ) do
+                    if !IsValid( ply ) or !self:CanTarget( ply ) then continue end
+                    self:AttackTarget( ply ); break
+                end
+            elseif spawnBehav == 2 then
+                for _, ent in RandomPairs( ents.GetAll() ) do
+                    if !IsValid( ent ) or !self:CanTarget( ent ) then continue end
+                    self:AttackTarget( ent ); break
+                end
+            end
+        end )
 
     elseif CLIENT then
 
@@ -580,10 +589,11 @@ function ENT:Think()
         end
 
         -- Out of Bounds Fail Safe --
-        if self:IsInWorld() then
+        if self:IsInWorld() and ( waterLvl == 0 or !lethalWaters:GetBool() ) then
             self.l_outboundsreset = curTime + 5
         elseif curTime > self.l_outboundsreset then
             self:Kill()
+            self.l_outboundsreset = curTime + 5
         end
 
         -- UA, Universal Actions
@@ -933,6 +943,8 @@ function ENT:RunBehaviour()
         self.l_initialized = true 
         LambdaRunHook( "LambdaAIInitialize", self ) 
     end
+
+    --self:MoveToPos( Vector( 512.281250, -37.041260, 145.604553 ), { update = 0.2 } )
 
     while true do
         if !self:GetIsDead() and !self:IsDisabled() then
