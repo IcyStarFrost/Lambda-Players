@@ -109,11 +109,12 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cacheplayermodels", function( ply
 end, false, "WARNING: Your game will freeze for a few seconds. This will vary on the amount of playermodels you have installed.", { name = "Cache Playermodels", category = "Utilities" } )
 
 local function GetRandomNavmesh( ply )
-    local maxSearchHeight = 300
+    local maxSearchHeight = 350
     local tries = 0 -- Track the number of attempts to find a suitable Navmesh area
     local maxTries = 10 -- Maximum number of attempts to try to find a suitable Navmesh area
 
     while tries < maxTries do
+
         if plyradius == 0 then
             local suitableNavmeshes = {}
             for _, navMesh in pairs( navmesh.GetAllNavAreas() ) do
@@ -121,10 +122,12 @@ local function GetRandomNavmesh( ply )
                     table.insert( suitableNavmeshes, navMesh )
                 end
             end
+
             if #suitableNavmeshes == 0 then
                 print( "Failed to find suitable Navmesh area for NPC spawn." )
                 return nil
             end
+
             return table.Random( suitableNavmeshes ):GetRandomPoint()
         else
             local navMeshes = navmesh.Find( ply:GetPos(), plyradius:GetInt() > 1 and plyradius:GetInt() or 99999, 30, maxSearchHeight )
@@ -137,6 +140,7 @@ local function GetRandomNavmesh( ply )
                 end
             end
         end
+
         tries = tries + 1 -- Increment the number of tries
     end
 
@@ -148,43 +152,50 @@ CreateLambdaConsoleCommand("lambdaplayers_cmd_forcespawnlambda", function(ply)
     if IsValid( ply ) and not ply:IsSuperAdmin() then return end
     if not navmesh.IsLoaded() then return end
 
-    local pos, ang
-    if spawnatplayerpoints:GetBool() then
-        local spawns = LambdaGetPossibleSpawns()
-        local spawn = table.Random( spawns )
+    -- variable must be here, or it will not update the for loop variable
+    local numSpawns = GetConVar( "lambdaplayers_force_spawnamount" ):GetInt()
 
-        pos = spawn:GetPos()
-        ang = Angle( 0, math.random( -180, 180 ), 0 )
-    else
-        pos = GetRandomNavmesh( ply )
-        ang = Angle( 0, math.random( -180, 180 ), 0 )
+    for i = 1, numSpawns do
+        
+        local pos, ang
+        local spawns = {}
 
-        if not pos then
-            return
+        if spawnatplayerpoints:GetBool() then
+            spawns = LambdaGetPossibleSpawns()
+            local spawn = table.Random( spawns )
+
+            pos = spawn:GetPos()
+            ang = Angle( 0, math.random( -180, 180 ), 0 )
+        else
+            pos = GetRandomNavmesh( ply )
+            ang = Angle( 0, math.random( -180, 180 ), 0 )
+
+            if not pos then
+                return
+            end
+        end
+
+        local lambda = ents.Create( "npc_lambdaplayer" )
+        lambda:SetPos( pos )
+        lambda:SetAngles( ang )
+        lambda:Spawn()
+
+        lambda.l_SpawnWeapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )
+        lambda:SwitchToSpawnWeapon()
+
+        undo.Create( "Lambda Player (" .. lambda:GetLambdaName() .. ")" )
+        undo.SetPlayer( ply )
+        undo.SetCustomUndoText( "Undone " .. "Lambda Player (" .. lambda:GetLambdaName() .. ")" )
+        undo.AddEntity( lambda )
+        undo.Finish( "Lambda Player ( " .. lambda:GetLambdaName() .. ")" )
+
+        if debugcvar:GetBool() then
+            local startTime = SysTime()
+            local distance = ply:GetPos():Distance( pos )
+            print( string.format( "Spawned Lambda Player at X,Y,Z Coords: (%.3f, %.3f, %.3f), Distance from player: %.3f hammer units, Time taken: %.6f seconds", pos.x, pos.y, pos.z, distance, SysTime() - startTime ) )
         end
     end
-
-    local lambda = ents.Create( "npc_lambdaplayer" )
-    lambda:SetPos( pos )
-    lambda:SetAngles( ang )
-    lambda:Spawn()
-
-    lambda.l_SpawnWeapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )
-    lambda:SwitchToSpawnWeapon()
-
-    undo.Create( "Lambda Player (" .. lambda:GetLambdaName() .. ")" )
-    undo.SetPlayer( ply )
-    undo.SetCustomUndoText( "Undone " .. "Lambda Player (" .. lambda:GetLambdaName() .. ")" )
-    undo.AddEntity( lambda )
-    undo.Finish( "Lambda Player ( " .. lambda:GetLambdaName() .. ")" )
-
-    if debugcvar:GetBool() then
-        local startTime = SysTime()
-        local distance = ply:GetPos():Distance( pos )
-        print( string.format( "Spawned Lambda Player at X,Y,Z Coords: (%.3f, %.3f, %.3f), Distance from player: %.3f hammer units, Time taken: %.6f seconds", pos.x, pos.y, pos.z, distance, SysTime() - startTime ) )
-    end
-
-end, false, "Spawns a Lambda Player at a random area", { name = "Spawn Lambda Player At Random Area", category = "Force Menu" } )
+end, false, "Spawns a number of Lambda Players at random areas", { name = "Spawn Lambda Players At Random Areas", category = "Force Menu" } )
 
 CreateLambdaConsoleCommand("lambdaplayers_cmd_forcecombat", function(ply)
     if not IsValid(ply) or not ply:IsSuperAdmin() then return end
