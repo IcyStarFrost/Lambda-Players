@@ -329,7 +329,7 @@ function ENT:Initialize()
                 end
             elseif spawnBehav == 2 then
                 for _, ent in RandomPairs( ents.GetAll() ) do
-                    if !IsValid( ent ) or !self:CanTarget( ent ) then continue end
+                    if ent == self or !IsValid( ent ) or !self:CanTarget( ent ) then continue end
                     self:AttackTarget( ent ); break
                 end
             end
