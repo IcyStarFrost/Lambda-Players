@@ -56,6 +56,8 @@ local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
 local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
 local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
 local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
+local spawnBehavior = GetConVar( "lambdaplayers_combat_spawnbehavior" )
+local spawnBehavInitSpawn = GetConVar( "lambdaplayers_combat_spawnbehavior_initialspawnonly" )
 
 ---- Anything Shared can go here ----
 
@@ -761,8 +763,22 @@ if SERVER then
                 ragdoll:Remove()
             end
         end
-
         self.ragdoll = nil
+
+        if !spawnBehavInitSpawn:GetBool() then
+            local spawnBehav = spawnBehavior:GetInt()
+            if spawnBehav == 1 then
+                for _, ply in RandomPairs( player.GetAll() ) do
+                    if !IsValid( ply ) or !self:CanTarget( ply ) then continue end
+                    self:AttackTarget( ply ); break
+                end
+            elseif spawnBehav == 2 then
+                for _, ent in RandomPairs( ents.GetAll() ) do
+                    if !IsValid( ent ) or !self:CanTarget( ent ) then continue end
+                    self:AttackTarget( ent ); break
+                end
+            end
+        end
 
         LambdaRunHook( "LambdaOnRespawn", self )
     end

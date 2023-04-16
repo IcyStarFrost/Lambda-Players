@@ -239,7 +239,7 @@ if SERVER then
         for _, v in ipairs( ents_GetAll() ) do
             if v == self or !IsValid( v ) or !v:IsNextBot() then continue end
             v:OnOtherKilled( self, info )
-            if v.IsLambdaPlayer then LambdaRunHook( "LambdaOnOtherInjured", v, seld, info, true ) end
+            if v.IsLambdaPlayer then LambdaRunHook( "LambdaOnOtherInjured", v, self, info, true ) end
         end
 
         if attacker != self and IsValid( attacker ) then 
