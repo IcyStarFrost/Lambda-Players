@@ -20,7 +20,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local rocket = ents_Create( "rpg_missile" )
             if !IsValid( rocket ) then return end
 
-            self.l_WeaponUseCooldown = CurTime() + Rand( 2.0, 3.0 )
+            self.l_WeaponUseCooldown = CurTime() + Rand( 2.0, 5.0 )
 
             wepent:EmitSound( "Weapon_RPG.Single" )
 

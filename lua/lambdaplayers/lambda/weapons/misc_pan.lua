@@ -15,7 +15,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 60,
 
         OnAttack = function( self, wepent, target )
-            self.l_WeaponUseCooldown = CurTime() + 0.5
+            self.l_WeaponUseCooldown = CurTime() + random( 0.5, 0.75 )
             wepent:EmitSound( "lambdaplayers/weapons/pan/melee_pan_miss1.mp3", 70, random( 98, 102 ), 1, CHAN_WEAPON )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE )

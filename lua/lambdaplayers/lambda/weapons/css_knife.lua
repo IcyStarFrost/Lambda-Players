@@ -52,10 +52,10 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             target:TakeDamageInfo( dmginfo )
 
             wepent:EmitSound( slashSnd )
-            self.l_WeaponUseCooldown = CurTime() + ( slashDmg == 195 and 1.0 or 0.5 )
+            self.l_WeaponUseCooldown = CurTime() + ( slashDmg == 195 and 1.0 or random( 0.5, 0.75 ) )
 
             wepent.IsFirstSwing = false
-            wepent.NextFirstSwingTime = self.l_WeaponUseCooldown + 0.4
+            wepent.NextFirstSwingTime = self.l_WeaponUseCooldown + random( 0.4, 0.65 )
 
             return true
         end,

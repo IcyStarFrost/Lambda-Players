@@ -59,7 +59,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         OnAttack = function( self, wepent, target )
-            self.l_WeaponUseCooldown = CurTime() + Rand( 1.2, 1.66 )
+            self.l_WeaponUseCooldown = CurTime() + random( 1.2, 1.66 )
             self:EmitSound( "npc/zombie/zo_attack" .. random( 2 ) .. ".wav", 70, self:GetVoicePitch(), 1, CHAN_WEAPON )
 
             self:RemoveGesture( ACT_GMOD_GESTURE_RANGE_ZOMBIE )

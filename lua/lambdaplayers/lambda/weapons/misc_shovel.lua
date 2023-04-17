@@ -1,7 +1,6 @@
 local IsValid = IsValid
 local random = math.random
 local CurTime = CurTime
-local Rand = math.Rand
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
@@ -17,7 +16,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 70,
                 
         OnAttack = function( self, wepent, target )
-            self.l_WeaponUseCooldown = CurTime() + Rand( 0.66, 0.85 )
+            self.l_WeaponUseCooldown = CurTime() + random( 0.66, 0.85 )
             wepent:EmitSound( "Zombie.AttackMiss" )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )

@@ -113,12 +113,14 @@ local bullettbl = {}
 
 -- I like this way more than before 
 local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabletbl )
+
+    if self.l_WeaponUseCooldown > CurTime() then return end
     if self.l_Clip <= 0 then self:ReloadWeapon() return end
     
     disabletbl = disabletbl or {}
     
     if !disabletbl.cooldown then 
-        local cooldown = weapondata.rateoffire or Rand( weapondata.rateoffiremin, weapondata.rateoffiremax )
+        local cooldown = weapondata.rateoffire or random(1, 2) == 1 and weapondata.rateoffiremin or random(weapondata.rateoffiremin,weapondata.rateoffiremax)
         self.l_WeaponUseCooldown = CurTime() + cooldown
     end
 
@@ -160,10 +162,11 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
 end
 
 local function DefaultMeleeWeaponUse( self, wepent, target, weapondata, disabletbl )
+    if self.l_WeaponUseCooldown > CurTime() then return end
     disabletbl = disabletbl or {}
 
     if !disabletbl.cooldown then 
-        local cooldown = weapondata.rateoffire or Rand( weapondata.rateoffiremin, weapondata.rateoffiremax )
+        local cooldown = weapondata.rateoffire or random(1, 2) == 1 and weapondata.rateoffiremin or random(weapondata.rateoffiremin,weapondata.rateoffiremax)
         self.l_WeaponUseCooldown = CurTime() + cooldown
     end
     
