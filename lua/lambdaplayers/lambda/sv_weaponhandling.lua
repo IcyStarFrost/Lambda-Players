@@ -306,17 +306,8 @@ end
 
 function ENT:SwitchToRandomWeapon()
     local curWep = self.l_Weapon
-
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
         if k == curWep or !self:CanEquipWeapon( k ) then continue end
-        if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
-
-        self:SwitchWeapon( k )
-        return
-    end
-
-    for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if k == curWep or !v.ismelee or !self:CanEquipWeapon( k ) then continue end
         if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
 
         self:SwitchWeapon( k )
@@ -328,17 +319,8 @@ end
 
 function ENT:SwitchToLethalWeapon()
     local curWep = self.l_Weapon
-
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
         if k == curWep or !v.islethal or !self:CanEquipWeapon( k ) then continue end
-        if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
-
-        self:SwitchWeapon( k )
-        return
-    end
-
-    for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if k == curWep or !v.ismelee or !self:CanEquipWeapon( k ) then continue end
         if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
 
         self:SwitchWeapon( k )
