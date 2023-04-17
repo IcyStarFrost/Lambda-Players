@@ -944,8 +944,6 @@ function ENT:RunBehaviour()
         LambdaRunHook( "LambdaAIInitialize", self ) 
     end
 
-    --self:MoveToPos( Vector( 512.281250, -37.041260, 145.604553 ), { update = 0.2 } )
-
     while true do
         if !self:GetIsDead() and !self:IsDisabled() then
             local statefunc = self[ self:GetState() ] -- I forgot this was possible. See sv_states.lua

@@ -559,7 +559,9 @@ if SERVER then
     -- Note that this doesn't always work due to nextbot quirks but that's alright.
 
     local realisticfalldamage = GetConVar( "lambdaplayers_lambda_realisticfalldamage" )
-    
+    local maxsafefallspeed = 526.5 -- sqrt( 2 * gravity * 20 * 12 )
+    local fatalfallspeed = 922.5 -- sqrt( 2 * gravity * 60 * 12 ) but right now this will do
+
     function ENT:OnLandOnGround( ent )
         if self:IsUsingLadder() or self:IsInNoClip() then return end
         -- Play land animation
@@ -570,13 +572,9 @@ if SERVER then
 
         if !self:GetPos():IsUnderwater() then
             local damage = 0
-            local maxsafefallspeed = 526.5 -- sqrt( 2 * gravity * 20 * 12 )
-
             if realisticfalldamage:GetBool() then
-                local fatalfallspeed = 922.5 -- sqrt( 2 * gravity * 60 * 12 ) but right now this will do
-                local damageforfall = 100 / (fatalfallspeed - maxsafefallspeed) -- Simulate the same fall damage as players
-
-                damage = (self.l_FallVelocity - maxsafefallspeed) * damageforfall -- If the fall isn't long enough it gives us a negative number and that's fine, we check for higher than 0 anyway. 
+                local damageforfall = ( 100 / ( fatalfallspeed - maxsafefallspeed ) ) -- Simulate the same fall damage as players
+                damage = ( ( self.l_FallVelocity - maxsafefallspeed ) * damageforfall ) -- If the fall isn't long enough it gives us a negative number and that's fine, we check for higher than 0 anyway. 
             elseif self.l_FallVelocity > maxsafefallspeed then
                 damage = 10
             end

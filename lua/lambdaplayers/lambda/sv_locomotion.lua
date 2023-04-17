@@ -454,15 +454,12 @@ function ENT:ObstacleCheck()
     if CurTime() < self.l_nextobstaclecheck then return end
 
     local selfPos = ( self:GetPos() + vector_up * self.loco:GetStepHeight() )
-    local mins, maxs = self:GetCollisionBounds()
 
     tracetable.start = selfPos
     tracetable.endpos = ( selfPos + self:GetForward() * 50 )
     tracetable.filter = self
-    tracetable.mins = mins
-    tracetable.maxs = maxs
     
-    local ent = TraceHull( tracetable ).Entity
+    local ent = Trace( tracetable ).Entity
     if IsValid( ent ) then
         local class = ent:GetClass()
         if doorClasses[ class ] and ent.Fire then
