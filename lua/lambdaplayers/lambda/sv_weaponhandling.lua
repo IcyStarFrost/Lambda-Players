@@ -113,7 +113,7 @@ local bullettbl = {}
 -- I like this way more than before 
 local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabletbl )
 
-    if self.l_WeaponUseCooldown > CurTime() then return end -- From Zetas (Needed to add that Delay)
+    if self.l_WeaponUseCooldown > CurTime() then return end
     if self.l_Clip <= 0 then self:ReloadWeapon() return end
     
     disabletbl = disabletbl or {}
@@ -161,7 +161,7 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
 end
 
 local function DefaultMeleeWeaponUse( self, wepent, target, weapondata, disabletbl )
-    if self.l_WeaponUseCooldown > CurTime() then return end -- From Zetas (Needed to add that Delay)
+    if self.l_WeaponUseCooldown > CurTime() then return end
     disabletbl = disabletbl or {}
 
     if !disabletbl.cooldown then 
