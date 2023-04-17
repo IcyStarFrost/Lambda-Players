@@ -120,7 +120,7 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
     disabletbl = disabletbl or {}
     
     if !disabletbl.cooldown then 
-        local cooldown = weapondata.rateoffire or random(1, 2) == 1 and weapondata.rateoffiremin or random(weapondata.rateoffiremin,weapondata.rateoffiremax)
+        local cooldown = weapondata.rateoffire or random(1, 2) == 1 and weapondata.rateoffiremin or random( weapondata.rateoffiremin, weapondata.rateoffiremax )
         self.l_WeaponUseCooldown = CurTime() + cooldown
     end
 
@@ -166,7 +166,7 @@ local function DefaultMeleeWeaponUse( self, wepent, target, weapondata, disablet
     disabletbl = disabletbl or {}
 
     if !disabletbl.cooldown then 
-        local cooldown = weapondata.rateoffire or random(1, 2) == 1 and weapondata.rateoffiremin or random(weapondata.rateoffiremin,weapondata.rateoffiremax)
+        local cooldown = weapondata.rateoffire or random(1, 2) == 1 and weapondata.rateoffiremin or random( weapondata.rateoffiremin, weapondata.rateoffiremax )
         self.l_WeaponUseCooldown = CurTime() + cooldown
     end
     
