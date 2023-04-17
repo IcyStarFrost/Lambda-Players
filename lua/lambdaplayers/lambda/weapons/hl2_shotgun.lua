@@ -20,6 +20,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 150,
         attackrange = 500,
+        --rateoffiremin = 1.0,
+        --rateoffiremax = 1.25,
 
         clip = 6,
         OnAttack = function( self, wepent, target )
@@ -32,7 +34,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 bulletData.Num = 12
                 self.l_Clip = self.l_Clip - 2
             else
-                self.l_WeaponUseCooldown = CurTime() + random( 1, 1.25 )
+                self.l_WeaponUseCooldown = CurTime() + random( 1, 1.4 )
                 wepent:EmitSound( "Weapon_Shotgun.Single" )
                 bulletData.Num = 7
                 self.l_Clip = self.l_Clip - 1

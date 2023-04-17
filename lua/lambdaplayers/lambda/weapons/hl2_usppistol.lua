@@ -15,7 +15,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         damage = 5,
         spread = 0.2,
         rateoffiremin = 0.2,
-        rateoffiremax = 0.45,
+        rateoffiremax = 0.5,
         muzzleflash = 1,
         shelleject = "ShellEject",
         shelloffpos = Vector(0,2,5),

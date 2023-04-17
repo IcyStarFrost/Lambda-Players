@@ -59,14 +59,14 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             dmginfo:ScaleDamage( Rand( 0.66, 0.8 ) )
             if !useAltSounds:GetBool() then wepent:EmitSound( "Flesh.ImpactHard" ) end
             if useAltSounds:GetBool() then wepent:EmitSound( "lambdaplayers/weapons/fist/strike_faceblow_".. random( 1, 3 ).. ".mp3", 80 ) end
-            self.l_WeaponUseCooldown = self.l_WeaponUseCooldown + Rand( 0.25, 0.33 )
+            self.l_WeaponUseCooldown = self.l_WeaponUseCooldown + random( 0.25, 0.33 )
         end,
 
         OnAttack = function( self, wepent, target )
             if CurTime() > wepent.FistComboTime then wepent.FistCombo = 0 end
             local reworkStats = useReworkedVariant:GetBool()
 
-            self.l_WeaponUseCooldown = CurTime() + ( reworkStats and Rand( 0.55, 0.75 ) or 0.9 )
+            self.l_WeaponUseCooldown = CurTime() + ( reworkStats and random( 0.55, 0.75 ) or random( 0.9, 1.2 ) )
             wepent.FistComboTime = self.l_WeaponUseCooldown + ( reworkStats and 0.25 or 0.1 )
 
             if !useAltSounds:GetBool() then wepent:EmitSound( "WeaponFrag.Throw" ) end

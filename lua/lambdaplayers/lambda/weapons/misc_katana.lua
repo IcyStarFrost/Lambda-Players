@@ -137,11 +137,11 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent.NextUnreadyTime = CurTime() + random( 1, 4 )
             wepent:EmitSound( "lambdaplayers/weapons/katana/katana_swing_miss" .. random( 4 ) .. ".mp3", 70 )
 
-            self.l_WeaponUseCooldown = CurTime() + Rand( 0.4, 0.8 )
+            self.l_WeaponUseCooldown = CurTime() + random( 0.4, 0.8 )
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
 
             local attackGest = self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
-            local swingSpeed = Rand( 0.9, 1.4 ); self:SetLayerPlaybackRate( attackGest, swingSpeed )
+            local swingSpeed = random( 0.9, 1.4 ); self:SetLayerPlaybackRate( attackGest, swingSpeed )
 
 
             self:SimpleWeaponTimer( ( 0.3 / swingSpeed ), function()

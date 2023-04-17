@@ -112,12 +112,14 @@ local bullettbl = {}
 
 -- I like this way more than before 
 local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabletbl )
+
+    if self.l_WeaponUseCooldown > CurTime() then return end -- From Zetas (Needed to add that Delay)
     if self.l_Clip <= 0 then self:ReloadWeapon() return end
     
     disabletbl = disabletbl or {}
     
     if !disabletbl.cooldown then 
-        local cooldown = weapondata.rateoffire or Rand( weapondata.rateoffiremin, weapondata.rateoffiremax )
+        local cooldown = weapondata.rateoffire or random(1, 2) == 1 and weapondata.rateoffiremin or random(weapondata.rateoffiremin,weapondata.rateoffiremax)
         self.l_WeaponUseCooldown = CurTime() + cooldown
     end
 
@@ -159,10 +161,11 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
 end
 
 local function DefaultMeleeWeaponUse( self, wepent, target, weapondata, disabletbl )
+    if self.l_WeaponUseCooldown > CurTime() then return end -- From Zetas (Needed to add that Delay)
     disabletbl = disabletbl or {}
 
     if !disabletbl.cooldown then 
-        local cooldown = weapondata.rateoffire or Rand( weapondata.rateoffiremin, weapondata.rateoffiremax )
+        local cooldown = weapondata.rateoffire or random(1, 2) == 1 and weapondata.rateoffiremin or random(weapondata.rateoffiremin,weapondata.rateoffiremax)
         self.l_WeaponUseCooldown = CurTime() + cooldown
     end
     
@@ -303,8 +306,17 @@ end
 
 function ENT:SwitchToRandomWeapon()
     local curWep = self.l_Weapon
+
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
         if k == curWep or !self:CanEquipWeapon( k ) then continue end
+        if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
+
+        self:SwitchWeapon( k )
+        return
+    end
+
+    for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
+        if k == curWep or !v.ismelee or !self:CanEquipWeapon( k ) then continue end
         if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
 
         self:SwitchWeapon( k )
@@ -316,8 +328,17 @@ end
 
 function ENT:SwitchToLethalWeapon()
     local curWep = self.l_Weapon
+
     for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
         if k == curWep or !v.islethal or !self:CanEquipWeapon( k ) then continue end
+        if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
+
+        self:SwitchWeapon( k )
+        return
+    end
+
+    for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
+        if k == curWep or !v.ismelee or !self:CanEquipWeapon( k ) then continue end
         if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
 
         self:SwitchWeapon( k )

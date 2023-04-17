@@ -12,7 +12,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 55,
 
         damage = 10,
-        rateoffire = 0.4,
+        rateoffiremin = 0.4,
+        rateoffiremax = 0.7,
         attackanim = ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE,
         attacksnd = "Weapon_Crowbar.Single",
         hitsnd = "Weapon_Crowbar.Melee_Hit",

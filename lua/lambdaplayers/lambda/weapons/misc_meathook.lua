@@ -17,7 +17,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 55,
 
         OnAttack = function( self, wepent, target )
-            self.l_WeaponUseCooldown = CurTime() + Rand( 1.0, 1.2 )
+            self.l_WeaponUseCooldown = CurTime() + random( 1.0, 1.2 )
             wepent:EmitSound( "Zombie.AttackMiss" )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
