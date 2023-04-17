@@ -66,7 +66,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if CurTime() > wepent.FistComboTime then wepent.FistCombo = 0 end
             local reworkStats = useReworkedVariant:GetBool()
 
-            self.l_WeaponUseCooldown = CurTime() + ( reworkStats and random( 0.55, 0.75 ) or random( 0.9, 1.2 ) )
+            self.l_WeaponUseCooldown = CurTime() + ( reworkStats and random( 0.55, 0.75 ) or random( 0.9, 1.0 ) )
             wepent.FistComboTime = self.l_WeaponUseCooldown + ( reworkStats and 0.25 or 0.1 )
 
             if !useAltSounds:GetBool() then wepent:EmitSound( "WeaponFrag.Throw" ) end
