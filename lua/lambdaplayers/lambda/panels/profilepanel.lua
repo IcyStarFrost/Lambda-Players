@@ -532,15 +532,16 @@ local function OpenProfilePanel( ply )
     UpdateSBSliders = function()
         local ent = playermodelpreview:GetEntity()
 
-        if skinslider then skinslider:Remove() skinslider = nil end
-        for k, v in pairs( bodygroupdata ) do if v then v:Remove() v = nil end end
+        for k, v in pairs( bodygroupdata ) do 
+            if v then v:Remove() end
+            bodygroupdata[ k ] = nil
+        end
 
+        if skinslider then skinslider:Remove() end
         skinslider = LAMBDAPANELS:CreateNumSlider( sbscroll, TOP, 0, "Skin", 0, ent:SkinCount() - 1, 0 )
-
         function skinslider:OnValueChanged( val ) ent:SetSkin( round( val, 0 ) ) end
 
         local groups = ent:GetBodyGroups() or {}
-        
         for _, v in ipairs( groups ) do
             local smds = #v.submodels
             if smds == 0 then continue end 
