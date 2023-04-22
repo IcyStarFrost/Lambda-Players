@@ -118,6 +118,8 @@ CreateLambdaConvar( "lambdaplayers_useplayermodelcolorasdisplaycolor", 0, true, 
 CreateLambdaColorConvar( "lambdaplayers_displaycolor", defDisplayClr, true, true, "The display color to use for Name Display and others", { name = "Display Color", category = "Misc" } )
 CreateLambdaConvar( "lambdaplayers_animatedpfpsprayframerate", 10, true, true, false, "The frame rate of animated Spray VTFs and animated Profile Picture VTFs", 1, 60, { type = "Slider", decimals = 0, name = "Animated VTF Frame Rate", category = "Misc" } )
 CreateLambdaConvar( "lambdaplayers_randomizepathingcost", 0, true, false, false, "Randomizes Pathfinding in a way that will make Lambdas try different approaches to reaching their destination rather than finding the fastest and closest route", 0, 1, { type = "Bool", name = "Randomize PathFinding Cost", category = "Misc" } )
+CreateLambdaConvar( "lambdaplayers_randomizepathingcost_min", 0.8, true, false, false, "Minimum value to how much Lambdas can scale their pathing cost.", 0.1, 20.0, { type = "Slider", decimals = 1, name = "Min Random Cost Scale", category = "Misc" } )
+CreateLambdaConvar( "lambdaplayers_randomizepathingcost_max", 1.2, true, false, false, "Maximum value to how much Lambdas can scale their pathing cost.", 0.1, 20.0, { type = "Slider", decimals = 1, name = "Max Random Cost Scale", category = "Misc" } )
 --
 
 -- Lambda Player Server Convars
@@ -148,7 +150,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_singleplayerthinkdelay", 0, true, fals
 CreateLambdaConvar( "lambdaplayers_lambda_noplycollisions", 0, true, false, false, "If Lambda Players can pass through players (Useful in small corridors/areas)", 0, 1, { type = "Bool", name = "Disable Player Collisions", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_panicanimations", 0, true, false, false, "If panicking Lambda Players should use Panic Animations", 0, 1, { type = "Bool", name = "Use Panic Animations", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_physupdatetime", 0.5, true, false, false, "The time it takes for Lambda Player to update its physics object. Lower the value if you have problems with projectiles not colliding with them", 0, 1, { type = "Slider", decimals = 2, name = "Physics Update Time", category = "Lambda Server Settings" } )
-CreateLambdaConvar( "lambdaplayers_lambda_lethalwaters", 0, true, false, false, "If Lambda Players should die after few seconds of submerging into any water. Useful for maps completely surrounded by water", 0, 1, { type = "Bool", name = "Lethal Waters", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_lethalwaters", 0, true, false, false, "If Lambda Players should die after few seconds of submerging into any water. Useful for maps with water where players can't get out with normal ways", 0, 1, { type = "Bool", name = "Lethal Waters", category = "Lambda Server Settings" } )
 --
 
 -- Combat Convars 

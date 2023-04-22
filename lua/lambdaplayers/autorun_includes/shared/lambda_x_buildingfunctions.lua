@@ -86,9 +86,10 @@ local function SpawnEntity( self )
     return true
 end
 
-local spraytbl = {}
+local spraytbl = { collisiongroup = COLLISION_GROUP_WORLD }
 local function Spray( self )
-    if #LambdaPlayerSprays == 0 then return end
+    if #LambdaPlayerSprays == 0 or CurTime() <= self.l_NextSprayUseTime then return end
+    self.l_NextSprayUseTime = ( CurTime() + 10 )
 
     local targetpos = self:WorldSpaceCenter() + VectorRand( -200, 200 )
     self:LookTo( targetpos, 1 )
@@ -97,7 +98,7 @@ local function Spray( self )
     spraytbl.start = self:WorldSpaceCenter()
     spraytbl.endpos = targetpos
     spraytbl.filter = self
-    spraytbl.collisiongroup = COLLISION_GROUP_WORLD
+
     local trace = Trace( spraytbl )
     if !trace.Hit then return end
 

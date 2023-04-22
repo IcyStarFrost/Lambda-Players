@@ -26,6 +26,8 @@ local band = bit.band
 local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 local shouldavoid = GetConVar( "lambdaplayers_lambda_avoid" )
 local randomizepathfinding = GetConVar( "lambdaplayers_randomizepathingcost" )
+local mincostscale = GetConVar( "lambdaplayers_randomizepathingcost_min" )
+local maxcostscale = GetConVar( "lambdaplayers_randomizepathingcost_max" )
 
 -- Finds "simple" ground height, treating the provided nav area as part of the floor
 local function GetSimpleGroundHeightWithFloor( navArea, pos )
@@ -55,8 +57,8 @@ function ENT:MoveToPos( pos, options )
     path:SetGoalTolerance( options.tol or 20 )
     path:SetMinLookAheadDistance( self.l_LookAheadDistance )
 
-    local costFunctor = self.PathGenerator
-    path:Compute( self, pos, costFunctor( self ) )
+    local costFunctor = self:PathGenerator()
+    path:Compute( self, pos, costFunctor )
     if !IsValid( path ) then return "failed" end
 
     self.l_issmoving = true
@@ -109,24 +111,25 @@ function ENT:MoveToPos( pos, options )
 
 		if update then
             local updateTime = math_max( update, update * ( path:GetLength() / runSpeed ) )
-			if path:GetAge() > updateTime then path:Compute( self, pos, costFunctor( self ) ) end
+			if path:GetAge() > updateTime then path:Compute( self, pos, costFunctor ) end
 		end
 
         if self.l_recomputepath then
-            path:Compute( self, pos, costFunctor( self ) )
+            path:Compute( self, pos, costFunctor )
             self.l_recomputepath = nil
         end
         
         if !self:IsDisabled() and CurTime() > self.l_moveWaitTime then
             if callback and callback( pos, path, curGoal ) == false then returnMsg = "callback" break end 
             path:Update( self )
-            self:ObstacleCheck()
+
+            local selfPos = self:GetPos()
+            self:ObstacleCheck( ( curGoal.pos - selfPos ):GetNormalized() )
 
             if shouldavoid:GetBool() then
                 self:AvoidCheck()
             end
 
-            local selfPos = self:GetPos()
             local moveType = curGoal.type
             local hasJumped = false
 
@@ -141,7 +144,7 @@ function ENT:MoveToPos( pos, options )
                     self.l_ladderarea = NULL 
                     
                     pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
-                    if pos then path:Compute( self, pos, costFunctor( self ) ) end
+                    if pos then path:Compute( self, pos, costFunctor ) end
                 end
             elseif moveType == 2 and ( prevGoal.pos.z - selfPos.z ) <= 0 then
                 hasJumped = true
@@ -248,7 +251,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
             if shouldavoid:GetBool() then
                 self:AvoidCheck()
             end
-            self:ObstacleCheck()
+            self:ObstacleCheck( ( pos - selfPos ):GetNormalized() )
         end
         self.l_CurrentPath = pos
 
@@ -450,13 +453,13 @@ local doorClasses = {
 }
 
 -- Fires a trace in front of the player that will open doors if it hits a door and shoot at breakable obstacles
-function ENT:ObstacleCheck()
+function ENT:ObstacleCheck( pathDir )
     if CurTime() < self.l_nextobstaclecheck then return end
 
     local selfPos = ( self:GetPos() + vector_up * self.loco:GetStepHeight() )
 
     tracetable.start = selfPos
-    tracetable.endpos = ( selfPos + self:GetForward() * 50 )
+    tracetable.endpos = ( selfPos + pathDir * 50 )
     tracetable.filter = self
     
     local ent = Trace( tracetable ).Entity
@@ -465,7 +468,7 @@ function ENT:ObstacleCheck()
         if doorClasses[ class ] and ent.Fire then
             -- Back up when opening a door
             if ent:GetInternalVariable( "m_eDoorState" ) != 2 and ent:GetInternalVariable( "m_toggle_state" ) != 0 then
-                self:Approach( self:GetPos() - self:GetForward() * 50, 0.8 )
+                self:Approach( self:GetPos() - pathDir * 50, 0.8 )
                 --self:WaitWhileMoving( 1.5 )
             end
 
@@ -603,8 +606,11 @@ function ENT:PathGenerator()
 
     local obeyNavmesh = obeynav:GetBool()
     local isInNoClip = self:IsInNoClip()
+
     local randomizeCost = randomizepathfinding:GetBool()
-    local randCost = Rand( 0.8, 1.2 )
+    local minRandCost = mincostscale:GetFloat()
+    local maxRandCost = maxcostscale:GetFloat()
+    local randCost = Rand( minRandCost, maxRandCost )
 
     return function( area, fromArea, ladder, elevator, length )
         if !IsValid( fromArea ) then return 0 end
@@ -622,7 +628,10 @@ function ENT:PathGenerator()
         local cost = ( CNavArea_GetCostSoFar( fromArea ) + dist )
 
         if randomizeCost then
-            if random( 1, 10 ) == 1 then randCost = Rand( 0.8, 1.2 ) end
+            if random( 1, 50 ) == 1 then 
+                randCost = Rand( minRandCost, maxRandCost )
+            end
+
             cost = ( cost * randCost ) 
         end
 

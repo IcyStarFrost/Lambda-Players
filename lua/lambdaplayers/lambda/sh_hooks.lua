@@ -85,7 +85,7 @@ if SERVER then
             ragdoll:SetBodygroup( v.id, visualEnt:GetBodygroup( v.id ) )
         end
 
-        ragdoll:SetParent()
+        ragdoll:SetParent( NULL )
         ragdoll:RemoveEffects( EF_BONEMERGE )
         
         local vel = visualEnt:GetVelocity()
