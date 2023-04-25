@@ -298,22 +298,18 @@ if SERVER then
     end
 
     function ENT:OnOtherKilled( victim, info )
-        LambdaRunHook( "LambdaOnOtherKilled", self, victim, info )
-
-        local attacker = info:GetAttacker()
-
-        if self:GetState() != "Combat" and self:IsInRange( victim, 2000 ) and self:CanSee( victim ) then
+        local preventDefaultActions = LambdaRunHook( "LambdaOnOtherKilled", self, victim, info )
+        if !preventDefaultActions and !self:InCombat() and self:IsInRange( victim, 2000 ) and self:CanSee( victim ) then
             local witnessChance = random( 1, 10 )
             if witnessChance == 1 then
                 self:LaughAt( victim ) 
-            elseif witnessChance == 2 then
+            elseif witnessChance == 2 and !self.l_preventdefaultspeak then
                 self:LookTo( victimPos, random( 1, 3 ) )
                 self:SimpleTimer( rand( 0.1, 1.0 ), function()
-                    if self.l_preventdefaultspeak then return end
-                    if ( victim:IsPlayer() or victim.IsLambdaPlayer ) and random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
+                    if IsValid( victim ) and ( victim:IsPlayer() or victim.IsLambdaPlayer ) and random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
                         self.l_keyentity = victim
                         local line = self:GetTextLine( "witness" )
-                        line = LambdaRunHook( "LambdaOnStartTyping", self, line, "witness" ) or line
+                        line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "witness" ) or line )
                         self:TypeMessage( line )
                     elseif self:GetVoiceChance() > 0 then
                         self:PlaySoundFile( "witness" )
@@ -327,25 +323,31 @@ if SERVER then
             end
         end
 
+        local attacker = info:GetAttacker()
+        local enemy = self:GetEnemy()
+
         -- If we killed the victim
         if attacker == self then
-            local killerActionChance = random( 1, 10 )
             self:DebugPrint( "killed ", victim )
             self:SetFrags( self:GetFrags() + 1 )
+            if !victim.IsLambdaPlayer then LambdaKillFeedAdd( victim, attacker, info:GetInflictor() ) end
 
-            if victim == self:GetEnemy() then
-
-                if random( 1, 100 ) <= self:GetVoiceChance() and !self.l_preventdefaultspeak then
-                    self:PlaySoundFile( "kill" )
-                elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self.l_preventdefaultspeak then
-                    self.l_keyentity = victim
-                    local line = self:GetTextLine( "kill" )
-                    line = LambdaRunHook( "LambdaOnStartTyping", self, line, "kill" ) or line
-                    self:TypeMessage( line )
+            if !preventDefaultActions and victim == enemy then
+                if !self.l_preventdefaultspeak then
+                    if random( 1, 100 ) <= self:GetVoiceChance() then
+                        self:PlaySoundFile( "kill" )
+                    elseif random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
+                        self.l_keyentity = victim
+                        local line = self:GetTextLine( "kill" )
+                        line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "kill" ) or line )
+                        self:TypeMessage( line )
+                    end
                 end
 
+                local killerActionChance = random( 1, 10 )
                 if killerActionChance == 1 then 
-                    self.l_tbagpos = victim:GetPos(); self:SetState( "TBaggingPosition" )
+                    self.l_tbagpos = victim:GetPos()
+                    self:SetState( "TBaggingPosition" )
                 elseif killerActionChance == 2 and !self:IsSpeaking() and retreatLowHP:GetBool() then
                     self:DebugPrint( "I'm running away, I killed someone." )
                     self:RetreatFrom()
@@ -353,19 +355,17 @@ if SERVER then
                     self:CancelMovement()
                 end
             end
-
-            if !victim.IsLambdaPlayer then LambdaKillFeedAdd( victim, info:GetAttacker(), info:GetInflictor() ) end
         else -- Someone else killed the victim
-            if self:GetState() == "Combat" and victim == self:GetEnemy() and random( 1, 100 ) <= self:GetVoiceChance() and ( attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot() ) and self:CanSee( attacker ) then
+            if !preventDefaultActions and !self.l_preventdefaultspeak and victim == enemy and self:InCombat() and random( 1, 100 ) <= self:GetVoiceChance() and ( attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot() ) and self:CanSee( attacker ) then
                 self:LookTo( attacker, 1 )
                 self:SimpleTimer( rand( 0.1, 1.0 ), function()
-                    if !IsValid( attacker ) or self.l_preventdefaultspeak then return end
+                    if !IsValid( attacker ) then return end
                     self:PlaySoundFile( "assist" )
                 end )
             end
         end
 
-        if victim == self:GetEnemy() then
+        if victim == enemy then
             self:DebugPrint( "Enemy was killed by", attacker )
             self:SetEnemy( NULL )
             self:CancelMovement()

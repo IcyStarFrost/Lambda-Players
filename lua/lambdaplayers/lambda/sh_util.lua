@@ -515,8 +515,11 @@ if SERVER then
         if ent.IsLambdaPlayer then 
             if !ent:Alive() then return false end
         elseif ent:IsPlayer() then
-            if !ent:Alive() or ignoreplayer:GetBool() or ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 0 then return false end
+            if !ent:Alive() then return false end 
+            if ignoreplayer:GetBool() then return false end 
+            if ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 0 then return false end
         elseif ent:IsNPC() or ent:IsNextBot() then
+            if ent:GetInternalVariable( "m_lifeState" ) != 0 then return false end
             if ignoreFriendNPCs:GetBool() and self:Relations( ent ) == D_LI then return false end
         else
             return false
