@@ -155,6 +155,8 @@ CreateLambdaConvar( "lambdaplayers_lambda_lethalwaters", 0, true, false, false, 
 
 -- Combat Convars 
 CreateLambdaConvar( "lambdaplayers_combat_allowtargetyou", 1, true, true, true, "If Lambda Players are allowed to attack you", 0, 1, { type = "Bool", name = "Target You", category = "Combat" } )
+CreateLambdaConvar( "lambdaplayers_combat_dontrdmlambdas", 0, true, false, false, "If Lambda Players shouldn't randomly start attacking other Lambda Players. They'll still get in fights if directly damaged or by other conditions", 0, 1, { type = "Bool", name = "Don't RDM Other Lambdas", category = "Combat" } )
+CreateLambdaConvar( "lambdaplayers_combat_ignorefriendlynpcs", 0, true, false, false, "If Lambda Players shouldn't target NPCs and nextbots that are allied with them", 0, 1, { type = "Bool", name = "Ignore Friendly NPCs", category = "Combat" } )
 CreateLambdaConvar( "lambdaplayers_combat_retreatonlowhealth", 1, true, false, false, "If Lambda Players should start retreating if they are low on health, or witnessed/committed RDM", 0, 1, { type = "Bool", name = "Retreat On Low Health", category = "Combat" } )
 CreateLambdaConvar( "lambdaplayers_combat_spawnbehavior", 0, true, false, false, "What should the Lambda Player do after spawning. 0 - Do nothing, 1 - Attack a random real targetable player, 2 - Attack a random targetable entity", 0 , 2, { type = "Slider", decimals = 0, name = "Spawn Behavior Modifier", category = "Combat" } )
 CreateLambdaConvar( "lambdaplayers_combat_spawnbehavior_initialspawnonly", 1, true, false, false, "If the Spawn Behavior Modifier should only apply on Lambda Player's initial spawn", 0, 1, { type = "Bool", name = "Apply Spawn Behavior On Initial Spawn Only", category = "Combat" } )

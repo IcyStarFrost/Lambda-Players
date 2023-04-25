@@ -58,6 +58,7 @@ local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
 local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 local spawnBehavior = GetConVar( "lambdaplayers_combat_spawnbehavior" )
 local spawnBehavInitSpawn = GetConVar( "lambdaplayers_combat_spawnbehavior_initialspawnonly" )
+local ignoreFriendNPCs = GetConVar( "lambdaplayers_combat_ignorefriendlynpcs" )
 
 ---- Anything Shared can go here ----
 
@@ -508,13 +509,21 @@ if SERVER then
     function ENT:GetDestination()
         return ( isentity( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos )
     end
-    
+
     -- If the we can target the ent
     function ENT:CanTarget( ent )
-        if LambdaRunHook( "LambdaCanTarget", self, ent ) then return false end
-        if ent:IsNPC() and ent:GetInternalVariable( "m_lifeState" ) != 0 then return false end -- Prevent lambdas from attacking dead NPCs
-        if ent.IsLambdaPlayer and !ent:Alive() then return false end
-        return ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignoreplayer:GetBool() and ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 1 and ent:Alive() )
+        if ent.IsLambdaPlayer then 
+            if !ent:Alive() then return false end
+        elseif ent:IsPlayer() then
+            if !ent:Alive() or ignoreplayer:GetBool() or ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 0 then return false end
+        elseif ent:IsNPC() or ent:IsNextBot() then
+            if ignoreFriendNPCs:GetBool() and self:Relations( ent ) == D_LI then return false end
+        else
+            return false
+        end
+
+        if LambdaRunHook( "LambdaCanTarget", self, ent ) == true then return false end
+        return true
     end
 
     -- Attacks the specified entity
@@ -1140,25 +1149,28 @@ if SERVER then
         net.Broadcast()
     end
 
-    function ENT:Relations( ent )
-        if _LAMBDAPLAYERSEnemyRelations[ ent:GetClass() ] then return D_HT end
-        
+    function ENT:Relations( ent )        
         if ent.IsVJBaseSNPC then
             if ent.PlayerFriendly then return D_LI end
             for _, v in ipairs( ent.VJ_NPC_Class ) do if v == "CLASS_PLAYER_ALLY" then return D_LI end end
             if ent.Behavior == VJ_BEHAVIOR_AGGRESSIVE then return D_HT end
+        elseif ent.IsDrGNextbot then
+            return ent:GetPlayersRelationship()
         end
 
-        return D_NU
+        return ( _LAMBDAPLAYERSEntityRelations[ ent:GetClass() ] or D_NU )
     end
 
     function ENT:HandleNPCRelations( ent )
         self:DebugPrint( "handling relationship with ", ent )
 
-        local relations = self:Relations( ent )
-        ent:AddEntityRelationship( self, relations, 1 )
+        local addRelationFunc = ent.AddEntityRelationship
+        if !addRelationFunc then return end
 
-        if ent.IsVJBaseSNPC and relations == D_HT then
+        local relations, priority = self:Relations( ent )
+        addRelationFunc( ent, self, relations, ( priority or 1 ) )
+
+        if relations == D_HT and ent.IsVJBaseSNPC then
             self:SimpleTimer( 0.1, function() 
                 if !IsValid( ent ) or !ent.VJ_AddCertainEntityAsEnemy or !ent.CurrentPossibleEnemies then return end
                 ent.VJ_AddCertainEntityAsEnemy[ #ent.VJ_AddCertainEntityAsEnemy + 1 ] = self
@@ -1168,8 +1180,9 @@ if SERVER then
     end
 
     function ENT:HandleAllValidNPCRelations()
-        for k, v in ipairs( ents_GetAll() ) do 
-            if IsValid( v ) and v:IsNPC() then self:HandleNPCRelations( v ) end
+        for _, v in ipairs( ents_GetAll() ) do 
+            if !IsValid( v ) or v.IsLambdaPlayer or !v:IsNPC() and !v:IsNextBot() then continue end 
+            self:HandleNPCRelations( v ) 
         end
     end
 

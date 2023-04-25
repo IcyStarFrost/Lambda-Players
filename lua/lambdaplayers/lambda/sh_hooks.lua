@@ -724,7 +724,8 @@ function ENT:InitializeMiniHooks()
 
         self:Hook( "OnEntityCreated", "NPCRelationshipHandle", function( ent )
             self:SimpleTimer( 0, function() 
-                if IsValid( ent ) and ent:IsNPC() then self:HandleNPCRelations( ent ) end
+                if !IsValid( ent ) or ent.IsLambdaPlayer or !ent:IsNPC() and !ent:IsNextBot() then return end 
+                self:HandleNPCRelations( ent ) 
             end )
         end, true )
 

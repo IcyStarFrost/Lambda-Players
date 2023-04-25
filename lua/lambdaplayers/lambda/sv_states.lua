@@ -14,25 +14,22 @@ local IsInWorld = util.IsInWorld
 local VectorRand = VectorRand
 local coroutine_wait = coroutine.wait
 local table_insert = table.insert
+local ignoreLambdas = GetConVar( "lambdaplayers_combat_dontrdmlambdas" )
 
 local wandertbl = { autorun = true }
 function ENT:Idle()
     if random( 1, 100 ) < 70 then
         self:ComputeChance()
     else
-
         local pos = self:GetRandomPosition()
-
         if random( 1, 3 ) == 1 then
-            local triggers = self:FindInSphere( nil, 2000, function( ent ) return ent:GetClass() == "trigger_teleport" and !ent:GetInternalVariable( "StartDisabled" ) and bit_band( ent:GetInternalVariable( "spawnflags" ), 2 ) == 2 end )
-            for k, v in RandomPairs( triggers ) do
-                if self:Visible( v ) then
-                    pos = v:WorldSpaceCenter()
-                    break
-                end
-            end
-        end
+            local triggers = self:FindInSphere( nil, 2000, function( ent ) 
+                return ( ent:GetClass() == "trigger_teleport" and !ent:GetInternalVariable( "StartDisabled" ) and bit_band( ent:GetInternalVariable( "spawnflags" ), 2 ) == 2 and self:Visible( ent ) )
+            end )
 
+            if #triggers == 0 then return end
+            pos = triggers[ random( #triggers ) ]:WorldSpaceCenter()
+        end
         self:MoveToPos( pos, wandertbl )
     end
 end
@@ -131,20 +128,20 @@ end
 
 -- Wander around until we find someone to jump
 function ENT:FindTarget()
-
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
 
     self:Hook( "Tick", "CombatTick", function()
-        if LambdaIsValid( self:GetEnemy() ) or self:GetState() != "FindTarget" then return "end" end
-        local find = self:FindInSphere( nil, 1500, function( ent ) return self:CanTarget( ent ) and self:CanSee( ent ) end )
+        if self:InCombat() or self:GetState() != "FindTarget" then return "end" end
+        local dontRDMLambdas = ignoreLambdas:GetBool()
 
-        for k, v in RandomPairs( find ) do
-            self:AttackTarget( v )
-            break
-        end
+        local findTargets = self:FindInSphere( nil, 1500, function( ent )
+            if ent.IsLambdaPlayer and dontRDMLambdas then return false end
+            return ( self:CanTarget( ent ) and self:CanSee( ent ) )
+        end )
 
+        if #findTargets == 0 then return end
+        self:AttackTarget( findTargets[ random( #findTargets ) ] )
     end, nil, 0.5 )
-
 
     self:MoveToPos( self:GetRandomPosition() )
 end

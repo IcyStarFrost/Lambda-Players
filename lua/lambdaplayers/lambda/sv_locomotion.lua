@@ -57,7 +57,9 @@ function ENT:MoveToPos( pos, options )
     path:SetGoalTolerance( options.tol or 20 )
     path:SetMinLookAheadDistance( self.l_LookAheadDistance )
 
-    local costFunctor = self:PathGenerator()
+    local update = options.update
+    local costFunctor = self:PathGenerator( update )
+
     path:Compute( self, pos, costFunctor )
     if !IsValid( path ) then return "failed" end
 
@@ -66,7 +68,6 @@ function ENT:MoveToPos( pos, options )
     self.l_CurrentPath = path
 
     local timeout = options.timeout
-    local update = options.update
     local callback = options.callback
 
     local run = options.run or false
@@ -628,7 +629,7 @@ function ENT:PathGenerator()
         local cost = ( CNavArea_GetCostSoFar( fromArea ) + dist )
 
         if randomizeCost then
-            if random( 1, 50 ) == 1 then 
+            if !updates or random( 1, 20 ) == 1 then
                 randCost = Rand( minRandCost, maxRandCost )
             end
 
