@@ -775,18 +775,7 @@ if SERVER then
         self.ragdoll = nil
 
         if !spawnBehavInitSpawn:GetBool() then
-            local spawnBehav = spawnBehavior:GetInt()
-            if spawnBehav == 1 then
-                for _, ply in RandomPairs( player.GetAll() ) do
-                    if !IsValid( ply ) or !self:CanTarget( ply ) then continue end
-                    self:AttackTarget( ply ); break
-                end
-            elseif spawnBehav == 2 then
-                for _, ent in RandomPairs( ents.GetAll() ) do
-                    if ent == self or !IsValid( ent ) or !self:CanTarget( ent ) then continue end
-                    self:AttackTarget( ent ); break
-                end
-            end
+            self:ApplyCombatSpawnBehavior()
         end
 
         LambdaRunHook( "LambdaOnRespawn", self )
@@ -1236,6 +1225,22 @@ if SERVER then
 
         local hType = self.l_HoldType
         return ( istable( hType ) and hType or _LAMBDAPLAYERSHoldTypeAnimations[ hType ] )
+    end
+
+    function ENT:ApplyCombatSpawnBehavior()
+        local spawnBehav = spawnBehavior:GetInt()
+        if spawnBehav == 1 then
+            for _, ply in RandomPairs( player_GetAll() ) do
+                if !IsValid( ply ) or !self:CanTarget( ply ) then continue end
+                self:AttackTarget( ply ); break
+            end
+        else
+            for _, ent in RandomPairs( ents_GetAll() ) do
+                if ent == self or !IsValid( ent ) or !self:CanTarget( ent ) then continue end
+                if spawnBehav == 2 and ( ent.IsLambdaPlayer or !ent:IsNPC() and !ent:IsNextBot() ) then continue end
+                self:AttackTarget( ent ); break
+            end
+        end
     end
 
 end

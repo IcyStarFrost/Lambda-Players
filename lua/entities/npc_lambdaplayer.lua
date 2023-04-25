@@ -93,7 +93,6 @@ end
     local collisionPly = GetConVar( "lambdaplayers_lambda_noplycollisions" )
     local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
     local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
-    local LambdaSpawnBehavior = GetConVar( "lambdaplayers_combat_spawnbehavior" )
     local ignorePlys = GetConVar( "ai_ignoreplayers" )
     local sv_gravity = GetConVar( "sv_gravity" )
     local physUpdateTime = GetConVar( "lambdaplayers_lambda_physupdatetime" )
@@ -321,19 +320,8 @@ function ENT:Initialize()
 
         self:ProfileCheck()
 
-        self:SimpleTimer( 0.1, function()
-            local spawnBehav = LambdaSpawnBehavior:GetInt()
-            if spawnBehav == 1 then
-                for _, ply in RandomPairs( player.GetAll() ) do
-                    if !IsValid( ply ) or !self:CanTarget( ply ) then continue end
-                    self:AttackTarget( ply ); break
-                end
-            elseif spawnBehav == 2 then
-                for _, ent in RandomPairs( ents.GetAll() ) do
-                    if ent == self or !IsValid( ent ) or !self:CanTarget( ent ) then continue end
-                    self:AttackTarget( ent ); break
-                end
-            end
+        self:SimpleTimer( 0.2, function()
+            self:ApplyCombatSpawnBehavior()
         end )
 
     elseif CLIENT then
