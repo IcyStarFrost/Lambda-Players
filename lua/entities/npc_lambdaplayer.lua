@@ -179,6 +179,7 @@ function ENT:Initialize()
         self.l_AvoidCheck_NextDoorCheck = 0 -- The next time we will check if we are next to a door while using obstacle avoidance
         self.l_PreDeathDamage = 0 -- The damage we took before running our death function and setting it to zero
         self.l_NextSprayUseTime = 0 -- The next time we can use sprays to spray
+        self.l_DStepsWhichFoot = 1 -- The foot that is used in DSteps for stepping. 0 for left, 1 for right
 
         self.l_ladderarea = NULL -- The ladder nav area we are currenly using to climb
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector

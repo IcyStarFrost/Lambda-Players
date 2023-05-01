@@ -121,15 +121,28 @@ end
 local QuickTrace = util.QuickTrace
 local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
 function ENT:PlayStepSound( volume )
-    local stepMat = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32756, self ).MatType
-    if LambdaRunHook( "LambdaFootStep", self, self:GetPos(), stepMat ) == true then return end
+    local stepMat = QuickTrace( self:WorldSpaceCenter(), vector_up * -32756, self ).MatType
+    local selfPos = self:GetPos()
+    if LambdaRunHook( "LambdaFootStep", self, selfPos, stepMat ) == true then return end
 
+    local sndPitch, sndName = 100
     local waterLvl = self:GetWaterLevel()
     if waterLvl != 0 and waterLvl != 3 and self:IsOnGround() then
-        self:EmitSound( "player/footsteps/wade" .. random( 1, 8 ) .. ".wav", 75, random( 90, 110 ), volume or 0.65 )
+        sndName = "player/footsteps/wade" .. random( 1, 8 ) .. ".wav"
+        sndPitch = random( 90, 110 )
+        if !volume then volume = 0.65 end
     else
         local stepSnds = ( _LAMBDAPLAYERSFootstepMaterials[ stepMat ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ] )
-        self:EmitSound( stepSnds[ random( #stepSnds ) ], 75, 100, volume or 0.5 )
+        sndName = stepSnds[ random( #stepSnds ) ]
+        if !volume then volume = 0.5 end
+    end
+
+    if DSteps then
+        if self.DStep_HitGround then return end
+        DSteps( self, selfPos, self.l_DStepsWhichFoot, sndName, volume )
+        self.l_DStepsWhichFoot = ( self.l_DStepsWhichFoot == 0 and 1 or 0 )
+    else
+        self:EmitSound( sndName, 75, sndPitch, volume )
     end
 end
 

@@ -570,12 +570,13 @@ if SERVER then
         --hook.Run( "OnPlayerHitGround", self, self:GetPos():IsUnderwater(), false, self.l_FallVelocity )
         LambdaRunHook( "LambdaOnLandOnGround", self, ent )
 
+        local fallSpeed = self.l_FallVelocity
         if !self:GetPos():IsUnderwater() then
             local damage = 0
             if realisticfalldamage:GetBool() then
                 local damageforfall = ( 100 / ( fatalfallspeed - maxsafefallspeed ) ) -- Simulate the same fall damage as players
-                damage = ( ( self.l_FallVelocity - maxsafefallspeed ) * damageforfall ) -- If the fall isn't long enough it gives us a negative number and that's fine, we check for higher than 0 anyway. 
-            elseif self.l_FallVelocity > maxsafefallspeed then
+                damage = ( ( fallSpeed - maxsafefallspeed ) * damageforfall ) -- If the fall isn't long enough it gives us a negative number and that's fine, we check for higher than 0 anyway. 
+            elseif fallSpeed > maxsafefallspeed then
                 damage = 10
             end
 
@@ -591,9 +592,16 @@ if SERVER then
             end
         end
 
-        if self.l_FallVelocity > 300 then
-            self:PlayStepSound( 0.85 )
-            self.l_nextfootsteptime = CurTime() + self:GetStepSoundTime()
+        if DSteps and fallSpeed > 150 then
+            self.DStep_HitGround = speed
+            DSteps( self, self:GetPos(), 0, "" )
+        else
+            self.DStep_HitGround = nil
+
+            if fallSpeed > 300 then
+                self:PlayStepSound( 0.85 )
+                self.l_nextfootsteptime = CurTime() + self:GetStepSoundTime()
+            end
         end
 
         self.l_FallVelocity = 0
