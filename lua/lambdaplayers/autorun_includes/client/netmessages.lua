@@ -4,6 +4,7 @@ local table_insert = table.insert
 local RealTime = RealTime
 local IsValid = IsValid
 local CurTime = CurTime
+local FrameTime = FrameTime
 local math_Clamp = math.Clamp
 local random = math.random
 local sub = string.sub
@@ -366,9 +367,10 @@ end )
 net.Receive( "lambdaplayers_playsoundfile", function()
     local lambda = net.ReadEntity()
     if !IsValid( lambda ) then return end
-    
-    if CurTime() <= lambda.l_lastsoundplaytime then return end
-    lambda.l_lastsoundplaytime = CurTime() + ( FrameTime() * 2 )
+        
+    local lastSndPlay = lambda.l_lastsoundplaytime
+    if lastSndPlay and CurTime() <= lastSndPlay then return end
+    lambda.l_lastsoundplaytime = ( CurTime() + ( FrameTime() * 2 ) )
     
     local soundname = net.ReadString()
     local index = net.ReadUInt( 32 )
