@@ -521,6 +521,7 @@ if SERVER then
         elseif ent:IsNPC() or ent:IsNextBot() then
             if ent:GetInternalVariable( "m_lifeState" ) != 0 then return false end
             if ignoreFriendNPCs:GetBool() and self:Relations( ent ) == D_LI then return false end
+            if ent.IsDrGNextbot and ent:IsDown() then return false end
         else
             return false
         end

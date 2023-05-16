@@ -523,10 +523,15 @@ function ENT:Think()
         if curTime > self.l_nextnpccheck then 
             if !self:InCombat() then
                 local npcs = self:FindInSphere( nil, 2000, function( ent ) return LambdaIsValid( ent ) and ( ent:IsNPC() or ent:IsNextBot() and !self:ShouldTreatAsLPlayer( ent ) ) and ent:Health() > 0 and self:ShouldAttackNPC( ent ) and self:CanSee( ent ) end )
-                if #npcs > 0 then self:AttackTarget( npcs[ random( #npcs ) ] ) end
+                if #npcs != 0 then self:AttackTarget( npcs[ random( #npcs ) ] ) end
+            else
+                local ene = self:GetEnemy()
+                if ene.IsDrGNextbot and ene:IsDown() then
+                    self:SetEnemy( NULL )
+                end
             end
-            
-            self.l_nextnpccheck = curTime + 1
+
+            self.l_nextnpccheck = ( curTime + 1 )
         end
 
         -- Ladder Physics Failure (LPF to sound cool) fallback
