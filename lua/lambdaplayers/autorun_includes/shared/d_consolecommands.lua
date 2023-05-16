@@ -108,6 +108,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cacheplayermodels", function( ply
     LambdaPlayers_Notify( ply, "Playermodels cached!", 0, "plats/elevbell1.wav" )
 end, false, "WARNING: Your game will freeze for a few seconds. This will vary on the amount of playermodels you have installed.", { name = "Cache Playermodels", category = "Utilities" } )
 
+-- Spawn Method 1, spawn around the player, more restricted
 local function GetRandomNavmesh( ply )
     local maxSearchHeight = 350
     local tries = 0 -- Track the number of attempts to find a suitable Navmesh area
@@ -133,7 +134,7 @@ local function GetRandomNavmesh( ply )
             local navMeshes = navmesh.Find( ply:GetPos(), plyradius:GetInt() > 1 and plyradius:GetInt() or 99999, 30, maxSearchHeight )
             local navMesh = table.Random( navMeshes )
             
-            if navMesh and not navMesh:IsUnderwater() then
+            if navMesh and navMesh:GetSizeX() > 26 and navMesh:GetSizeY() > 26 and !navMesh:IsUnderwater() then
                 local spawnPos = navMesh:GetRandomPoint()
                 if spawnPos then
                     return spawnPos
@@ -148,6 +149,99 @@ local function GetRandomNavmesh( ply )
     return nil
 end
 
+-- Returns a table of filtered nav areas around a position (From CR2 game mode)
+-- Spawn Method 2, spawns more freely around the player
+local function GetNavAreasNear(pos, radius, height)
+    local navareas = navmesh.GetAllNavAreas()
+    local foundareas = {}
+    for i = 1, #navareas do
+        local nav = navareas[i]
+        if IsValid(nav) and nav:GetSizeX() > 20 and nav:GetSizeY() > 20 and not nav:IsUnderwater() and pos:DistToSqr(nav:GetClosestPointOnArea(pos)) < (radius * radius) and math.abs(pos.z - nav:GetCenter().z) <= height then
+            foundareas[#foundareas + 1] = nav
+        end
+    end
+    return foundareas
+end
+
+CreateLambdaConsoleCommand("lambdaplayers_cmd_forcespawnlambda", function(ply)
+    if IsValid( ply ) and not ply:IsSuperAdmin() then return end
+    if not navmesh.IsLoaded() then return end
+
+    -- variable must be here, or it will not update the for loop variable
+    local numSpawns = GetConVar( "lambdaplayers_force_spawnamount" ):GetInt()
+    local spawnMethod = GetConVar( "lambdaplayers_force_spawnmethod" ):GetInt()
+
+    for i = 1, numSpawns do
+        
+        local pos, ang
+        local spawns = {}
+
+        -- This could need some cleanup, like badly, but it works.
+        if spawnMethod == 1 then
+
+            if spawnatplayerpoints:GetBool() then
+                spawns = LambdaGetPossibleSpawns()
+                local spawn = table.Random( spawns )
+    
+                pos = spawn:GetPos()
+                ang = Angle( 0, math.random( -180, 180 ), 0 )
+            else
+                pos = GetRandomNavmesh( ply )
+                ang = Angle( 0, math.random( -180, 180 ), 0 )
+    
+                if not pos then
+                    return
+                end
+            end
+
+        elseif spawnMethod == 2 then
+            if spawnatplayerpoints:GetBool() then
+                spawns = LambdaGetPossibleSpawns()
+                local spawn = table.Random( spawns )
+
+                pos = spawn:GetPos()
+                ang = Angle( 0, math.random( -180, 180 ), 0 )
+            else
+                if !pos then
+                    local areas = GetNavAreasNear( ply:GetPos(), plyradius:GetInt() > 1 and plyradius:GetInt() or 99999, plyradius:GetInt() > 1 and plyradius:GetInt() / 2.5 or 99999 )
+                    local area = areas[ random( #areas ) ]
+                    if !IsValid( area ) then return end
+                    pos = area:GetRandomPoint()
+                    ang = Angle( 0, math.random( -180, 180 ), 0 )
+                end
+
+                if not pos then
+                    return
+                end
+
+                if debugcvar:GetBool() then ply:ChatPrint(string.format("plyradius: %d, height: %d", plyradius:GetInt(), plyradius:GetInt() / 2.5)) end
+            end
+        end
+
+        local lambda = ents.Create( "npc_lambdaplayer" )
+        lambda:SetPos( pos )
+        lambda:SetAngles( ang )
+        lambda:Spawn()
+
+        lambda.l_SpawnWeapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )
+        lambda:SwitchToSpawnWeapon()
+
+        undo.Create( "Lambda Player (" .. lambda:GetLambdaName() .. ")" )
+        undo.SetPlayer( ply )
+        undo.SetCustomUndoText( "Undone " .. "Lambda Player (" .. lambda:GetLambdaName() .. ")" )
+        undo.AddEntity( lambda )
+        undo.Finish( "Lambda Player ( " .. lambda:GetLambdaName() .. ")" )
+
+        if debugcvar:GetBool() then
+            local startTime = SysTime()
+            local distance = ply:GetPos():Distance( pos )
+            print( string.format( "Spawned Lambda Player at X,Y,Z Coords: (%.3f, %.3f, %.3f), Distance from player: %.3f hammer units, Time taken: %.6f seconds", pos.x, pos.y, pos.z, distance, SysTime() - startTime ) )
+        end
+    end
+    
+end, false, "Spawns a number of Lambda Players at random areas", { name = "Spawn Lambda Players At Random Areas", category = "Force Menu" } )
+
+--[[
 CreateLambdaConsoleCommand("lambdaplayers_cmd_forcespawnlambda", function(ply)
     if IsValid( ply ) and not ply:IsSuperAdmin() then return end
     if not navmesh.IsLoaded() then return end
@@ -195,7 +289,9 @@ CreateLambdaConsoleCommand("lambdaplayers_cmd_forcespawnlambda", function(ply)
             print( string.format( "Spawned Lambda Player at X,Y,Z Coords: (%.3f, %.3f, %.3f), Distance from player: %.3f hammer units, Time taken: %.6f seconds", pos.x, pos.y, pos.z, distance, SysTime() - startTime ) )
         end
     end
-end, false, "Spawns a number of Lambda Players at random areas", { name = "Spawn Lambda Players At Random Areas", category = "Force Menu" } )
+    
+end, false, "Spawns a number of Lambda Players at random areas", { name = "Spawn Lambda Players At Random Areas", category = "Force Menu" } ) 
+]]
 
 CreateLambdaConsoleCommand("lambdaplayers_cmd_forcecombat", function(ply)
     if not IsValid(ply) or not ply:IsSuperAdmin() then return end
