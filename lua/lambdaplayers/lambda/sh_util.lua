@@ -1180,12 +1180,9 @@ if SERVER then
     end
 
     function ENT:ShouldAttackNPC( ent )
-        if isfunction( ent.GetEnemy ) or isfunction( ent.GetTarget ) then
-            local getfunc = ent.GetEnemy or ent.GetTarget
-            return getfunc( ent ) == self
-        else
-            return true
-        end
+        local getfunc = ent.GetEnemy
+        if !getfunc then getfunc = ent.GetTarget end
+        return ( !getfunc and true or ( getfunc( ent ) == self ) )
     end
 
     -- The ENT:WaterLevel() function seems to be inaccurate when done on Lambda Players, so we'll do this instead

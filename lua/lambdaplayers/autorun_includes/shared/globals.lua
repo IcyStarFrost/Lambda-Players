@@ -316,6 +316,21 @@ if SERVER then
         if self.IsLambdaPlayer then self:UpdateHealthDisplay( newHealth ) end
         _LambdaOldEntitySetHealth( self, newHealth )
     end
+
+    _LambdaOldDrG_RagdollDeath = _LambdaOldDrG_RagdollDeath or EntMeta.DrG_RagdollDeath
+    function EntMeta:DrG_RagdollDeath( dmginfo )
+        if !self.IsLambdaPlayer then return _LambdaOldDrG_RagdollDeath( self, dmginfo ) end
+        if self:GetIsDead() then return NULL end
+
+        self:KillSilent()
+        if dmginfo then LambdaKillFeedAdd( self, dmginfo:GetAttacker(), dmginfo:GetInflictor() ) end
+        self:PlaySoundFile( "death" )
+
+        local ragdoll = self:CreateServersideRagdoll( dmginfo )
+        self:SetNW2Entity( "lambda_serversideragdoll", ragdoll )
+
+        return ragdoll
+    end
 end
 
 local VecMeta = FindMetaTable( "Vector" )
