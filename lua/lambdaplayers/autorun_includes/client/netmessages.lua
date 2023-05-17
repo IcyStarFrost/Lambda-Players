@@ -284,15 +284,24 @@ local function PlaySoundFile( ent, soundname, index, is3d )
             local num2 
             local lastpos
             local tickent -- This variable is used so we don't redefine ent and can allow the sound to return to the Lambda when they respawn
+            local sndEndTime = ( RealTime() + length )
 
             -- This has proved to be a bit of a challenge.
             -- There were issues with the sounds not going back the Lambda player when they respawn and there were issues when the ragdoll gets removed.
             -- Right now this code seems to work just as I think I want it to. Unsure if it could be optimized better but to me it looks as good as it is gonna get
 
             hook.Add( "Tick", "lambdaplayersvoicetick" .. index, function()
-                if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then if usegmodpopups:GetBool() then hook.Run( "PlayerEndVoice", ent ) end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
-                if !IsValid( ent ) then if usegmodpopups:GetBool() then hook.Run( "PlayerEndVoice", ent ) end snd:Stop() return end
-                if RealTime() > RealTime() + length then if usegmodpopups:GetBool() then hook.Run( "PlayerEndVoice", ent ) end hook.Remove( "Tick", "lambdaplayersvoicetick" .. index ) return end
+                if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED or !IsValid( ent ) or RealTime() >= sndEndTime then
+                    if IsValid( snd ) then snd:Stop() end
+                    
+                    if IsValid( ent ) then 
+                        ent:SetVoiceLevel( 0 )
+                        hook.Run( "PlayerEndVoice", ent ) 
+                    end
+
+                    hook.Remove( "Tick", "lambdaplayersvoicetick" .. index )
+                    return
+                end
 
                 tickent = ( LambdaIsValid( ent ) and ent or IsValid( ent ) and IsValid( ent:GetNW2Entity( "lambda_serversideragdoll" ) ) and ent:GetNW2Entity( "lambda_serversideragdoll" ) or ( IsValid( ent.ragdoll ) and ent.ragdoll or tickent ) )
                 local globalVC = globalvoice:GetBool()

@@ -163,7 +163,7 @@ CreateLambdaConvar( "lambdaplayers_combat_spawnbehavior", 0, true, false, false,
 CreateLambdaConvar( "lambdaplayers_combat_spawnbehavior_initialspawnonly", 1, true, false, false, "If the Spawn Behavior Modifier should only apply on Lambda Player's initial spawn", 0, 1, { type = "Bool", name = "Apply Spawn Behavior On Initial Spawn Only", category = "Combat" } )
 CreateLambdaConvar( "lambdaplayers_combat_spawnmedkits", 1, true, false, false, "If Lambda Players are allowed to spawn medkits to heal themselves when low on health. Make sure that 'Allow Entity Spawning' setting is enabled", 0 , 1, { type = "Bool", name = "Spawn Medkits", category = "Combat" } )
 CreateLambdaConvar( "lambdaplayers_combat_spawnbatteries", 1, true, false, false, "If Lambda Players are allowed to spawn armor batteries to themselves when low on armor. Make sure that 'Allow Entity Spawning' setting is enabled", 0 , 1, { type = "Bool", name = "Spawn Armor Batteries", category = "Combat" } )
-CreateLambdaConvar( "lambdaplayers_combat_weapondmgmultiplier", 1, true, false, false, "Multiplies the damage that Lambda Player deals with its weapon", 0, 5, { type = "Slider", decimals = 2, name = "Weapon Damage Multiplier", category = "Lambda Weapons" } )
+CreateLambdaConvar( "lambdaplayers_combat_weapondmgmultiplier", 1, true, false, false, "Multiplies the damage that Lambda Player deals with its weapon", 0, 10, { type = "Slider", decimals = 2, name = "Weapon Damage Multiplier", category = "Lambda Weapons" } )
 --
 
 -- Lambda Player Convars
