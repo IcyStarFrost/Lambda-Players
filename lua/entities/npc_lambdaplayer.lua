@@ -528,6 +528,7 @@ function ENT:Think()
                 local ene = self:GetEnemy()
                 if ene.IsDrGNextbot and ene:IsDown() then
                     self:SetEnemy( NULL )
+                    self:CancelMovement()
                 end
             end
 

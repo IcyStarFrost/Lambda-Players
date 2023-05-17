@@ -245,15 +245,14 @@ function ENT:GetBoneTransformation( bone )
     if !pos or pos:IsZero() or pos == self:GetPos() then
         local matrix = self:GetBoneMatrix( bone )
         if matrix and ismatrix( matrix ) then
-            boneTransTbl.Pos = matrix:GetTranslation()
-            boneTransTbl.Ang = matrix:GetAngles()
-            return boneTransTbl
+            pos = matrix:GetTranslation()
+            ang = matrix:GetAngles()
         end
     end
 
     boneTransTbl.Pos = pos
     boneTransTbl.Ang = ang
-    return { Pos = pos, Ang = ang }
+    return boneTransTbl
 end
 
 -- Returns a table that contains a position and angle with the specified type. hand or eyes
@@ -264,10 +263,8 @@ local eyeOffAng = Angle( 20, 0, 0 )
 function ENT:GetAttachmentPoint( pointtype )
     if pointtype == "hand" then
         local lookup = self:LookupAttachment( "anim_attachment_RH" )
-
-        if lookup == 0 then
+        if lookup <= 0 then
             local bone = self:LookupBone( "ValveBiped.Bip01_R_Hand" )
-
             if !isnumber( bone ) then
                 attachPointTbl.Pos = self:WorldSpaceCenter()
                 attachPointTbl.Ang = self:GetForward():Angle()
@@ -276,17 +273,14 @@ function ENT:GetAttachmentPoint( pointtype )
 
             return self:GetBoneTransformation( bone )
         end
-        
         return self:GetAttachment( lookup )
     elseif pointtype == "eyes" then
         local lookup = self:LookupAttachment( "eyes" )
-
-        if lookup == 0 then
+        if lookup <= 0 then
             attachPointTbl.Pos = ( self:WorldSpaceCenter() + eyeOffVec )
             attachPointTbl.Ang = ( self:GetForward():Angle() + eyeOffAng )
             return attachPointTbl
         end
-
         return self:GetAttachment( lookup )
     end
 end
@@ -1180,6 +1174,7 @@ if SERVER then
     end
 
     function ENT:ShouldAttackNPC( ent )
+        if !self:CanTarget( ent ) then return false end
         local getfunc = ent.GetEnemy
         if !getfunc then getfunc = ent.GetTarget end
         return ( !getfunc and true or ( getfunc( ent ) == self ) )
@@ -1230,6 +1225,8 @@ if SERVER then
 
     function ENT:ApplyCombatSpawnBehavior()
         local spawnBehav = spawnBehavior:GetInt()
+        if spawnBehav == 0 then return end
+
         if spawnBehav == 1 then
             for _, ply in RandomPairs( player_GetAll() ) do
                 if !IsValid( ply ) or !self:CanTarget( ply ) then continue end
