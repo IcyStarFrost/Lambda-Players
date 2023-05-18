@@ -298,12 +298,14 @@ if SERVER then
     end
 
     function ENT:OnOtherKilled( victim, info )
+        local attacker = info:GetAttacker()
         local preventDefaultActions = LambdaRunHook( "LambdaOnOtherKilled", self, victim, info )
+
         if !preventDefaultActions and !self:InCombat() and self:IsInRange( victim, 2000 ) and self:CanSee( victim ) then
             local witnessChance = random( 1, 10 )
             if witnessChance == 1 then
                 self:LaughAt( victim ) 
-            elseif witnessChance == 2 and !self.l_preventdefaultspeak then
+            elseif witnessChance == 2 and !self.l_preventdefaultspeak and attacker != self then
                 self:LookTo( victimPos, random( 1, 3 ) )
                 self:SimpleTimer( rand( 0.1, 1.0 ), function()
                     if IsValid( victim ) and ( victim:IsPlayer() or victim.IsLambdaPlayer ) and random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
@@ -323,7 +325,6 @@ if SERVER then
             end
         end
 
-        local attacker = info:GetAttacker()
         local enemy = self:GetEnemy()
 
         -- If we killed the victim
