@@ -538,16 +538,18 @@ if SERVER then
     -- Retreats from entity target
     -- If the target is not specified, then Lambda will stop retreating only when time runs out
     function ENT:RetreatFrom( target, timeout )
-        self:CancelMovement()
-        self:SetEnemy( NULL )
-        
-        self.l_retreatendtime = CurTime() + ( timeout or random( 5, 15 ) )
-        self.l_RetreatTarget = target
-        self:SetState( "Retreat" )
-
-        if self:GetVoiceChance() > 0 and !self:IsSpeaking() then
-            self:PlaySoundFile( "panic" )
+        local alreadyPanic = self:IsPanicking()
+        if !alreadyPanic then 
+            self:CancelMovement()
+            self:SetEnemy( NULL )
+            self:SetState( "Retreat" )
+            if self:GetVoiceChance() > 0 then self:PlaySoundFile( "panic" ) end
         end
+
+        local retreatTime = ( CurTime() + ( timeout or random( 5, 15 ) ) )
+        if retreatTime > self.l_retreatendtime then self.l_retreatendtime = retreatTime end
+
+        self.l_RetreatTarget = ( ( !alreadyPanic or LambdaIsValid( target ) ) and target or self.l_RetreatTarget )
     end
 
     -- Makes the Lambda laugh towards a position/entity
@@ -752,8 +754,11 @@ if SERVER then
         self:SetCrouch( false )
         self:SetEnemy( nil )
         
-        net.Start( "lambdaplayers_invalidateragdoll" )
+        net.Start( "lambdaplayers_updatecsstatus" )
             net.WriteEntity( self )
+            net.WriteBool( false )
+            net.WriteInt( self:GetFrags(), 11 )
+            net.WriteInt( self:GetDeaths(), 11 )
         net.Broadcast()
 
         local ragdoll = self.ragdoll

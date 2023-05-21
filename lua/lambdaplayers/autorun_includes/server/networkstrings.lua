@@ -1,6 +1,6 @@
 util.AddNetworkString( "lambdaplayers_becomeragdoll" )
 util.AddNetworkString( "lambdaplayers_playsoundfile" )
-util.AddNetworkString( "lambdaplayers_invalidateragdoll" )
+util.AddNetworkString( "lambdaplayers_updatecsstatus" )
 util.AddNetworkString( "lambdaplayers_setnodraw" )
 util.AddNetworkString( "lambdaplayers_server_sendsoundduration" )
 util.AddNetworkString( "lambdaplayers_createclientsidedroppedweapon" )

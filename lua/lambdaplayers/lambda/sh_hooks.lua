@@ -163,7 +163,9 @@ if SERVER then
 
             LambdaKillFeedAdd( self, attacker, inflictor )
             if callnpchook:GetBool() then LambdaRunHook( "OnNPCKilled", self, attacker, inflictor ) end
+
             self:SetDeaths( self:GetDeaths() + 1 )
+            if attacker == self then self:SetFrags( self:GetFrags() - 1 ) end
 
             if !serversideragdolls:GetBool() then
                 self:CreateClientsideRagdoll( info )
@@ -266,6 +268,13 @@ if SERVER then
         if cleanupondeath:GetBool() then
             self:CleanSpawnedEntities()
         end
+        
+        net.Start( "lambdaplayers_updatecsstatus" )
+            net.WriteEntity( self )
+            net.WriteBool( true )
+            net.WriteInt( self:GetFrags(), 11 )
+            net.WriteInt( self:GetDeaths(), 11 )
+        net.Broadcast()
 
         local onDeathFunc = self.l_OnDeathfunction
         if isfunction( onDeathFunc ) then onDeathFunc( self, wepent, info ) end

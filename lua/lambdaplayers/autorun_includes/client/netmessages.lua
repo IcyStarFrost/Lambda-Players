@@ -400,32 +400,39 @@ net.Receive( "lambdaplayers_stopcurrentsound", function()
     snd:Stop()
 end )
 
-net.Receive( "lambdaplayers_invalidateragdoll", function()
-    local ent = net.ReadEntity()
-    if !IsValid( ent ) then return end
+net.Receive( "lambdaplayers_updatecsstatus", function()
+    local lambda = net.ReadEntity()
+    if !IsValid( lambda ) then return end
 
-    if removeCorpse:GetBool() then
-        local ragdoll = ent.ragdoll
-        if IsValid( ragdoll ) then
-            if cleaneffect:GetBool() then 
-                ragdoll:LambdaDisintegrate()
-            else
-                ragdoll:Remove()
+    local hasDied = net.ReadBool()
+    if !hasDied then 
+        if removeCorpse:GetBool() then
+            local ragdoll = lambda.ragdoll
+            if IsValid( ragdoll ) then
+                if cleaneffect:GetBool() then 
+                    ragdoll:LambdaDisintegrate()
+                else
+                    ragdoll:Remove()
+                end
+            end
+
+            local cs_prop = lambda.cs_prop
+            if IsValid( cs_prop ) then
+                if cleaneffect:GetBool() then 
+                    cs_prop:LambdaDisintegrate()
+                else
+                    cs_prop:Remove()
+                end
             end
         end
 
-        local cs_prop = ent.cs_prop
-        if IsValid( cs_prop ) then
-            if cleaneffect:GetBool() then 
-                cs_prop:LambdaDisintegrate()
-            else
-                cs_prop:Remove()
-            end
-        end
+        lambda.ragdoll = nil
+        lambda.cs_prop = nil
     end
 
-    ent.ragdoll = nil
-    ent.cs_prop = nil
+    lambda:SetIsDead( hasDied )
+    lambda:SetFrags( net.ReadInt( 11 ) )
+    lambda:SetDeaths( net.ReadInt( 11 ) )
 end )
 
 

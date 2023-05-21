@@ -450,6 +450,14 @@ function ENT:Think()
     local isDead = self:GetIsDead()
     local wepent = self:GetWeaponENT()
 
+    -- Handle our ping rising or dropping
+    local updateRate = ( ( SERVER or !self:IsDormant() ) and 125 or 500 )
+    if random( 1, updateRate ) == 1 then
+        local ping, absPing = self:GetPing(), self:GetAbsPing()
+        self:SetPing( Clamp( ping + random( -20, ( 24 - ( ping / absPing ) ) ), absPing, 999 ) )
+    end
+    -- -- -- -- --
+
     -- Run our weapon's think callback if possible
     if SERVER and curTime > self.l_NextWeaponThink then
         local wepThinkFunc = self.l_WeaponThinkFunction
@@ -458,9 +466,11 @@ function ENT:Think()
             if isnumber( thinkTime ) and thinkTime > 0 then self.l_NextWeaponThink = curTime + thinkTime end 
         end
     end
+    -- -- -- -- --
 
     -- Allow addons to add stuff to Lambda's Think
     LambdaRunHook( "LambdaOnThink", self, wepent, isDead )
+    -- -- -- -- --
 
     if isDead then return end
     
@@ -571,12 +581,6 @@ function ENT:Think()
             end
 
             self.l_NextPickupCheck = curTime + 0.1
-        end
-
-        -- Handle our ping rising or dropping
-        if random( 125 ) == 1 then
-            local ping, absPing = self:GetPing(), self:GetAbsPing()
-            self:SetPing( Clamp( ping + random( -20, ( 24 - ( ping / absPing ) ) ), absPing, 999 ) )
         end
 
         -- Reload randomly when we aren't shooting
