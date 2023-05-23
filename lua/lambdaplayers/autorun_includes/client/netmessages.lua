@@ -400,6 +400,12 @@ net.Receive( "lambdaplayers_stopcurrentsound", function()
     snd:Stop()
 end )
 
+-- Mfw networking:
+local function SafelySetNetworkVar( ent, name, var )
+    local func = ent[ "Set" .. name ]
+    if func then func( ent, var ) end
+end
+
 net.Receive( "lambdaplayers_updatecsstatus", function()
     local lambda = net.ReadEntity()
     if !IsValid( lambda ) then return end
@@ -430,9 +436,9 @@ net.Receive( "lambdaplayers_updatecsstatus", function()
         lambda.cs_prop = nil
     end
 
-    lambda:SetIsDead( hasDied )
-    lambda:SetFrags( net.ReadInt( 11 ) )
-    lambda:SetDeaths( net.ReadInt( 11 ) )
+    SafelySetNetworkVar( lambda, "IsDead", hasDied )
+    SafelySetNetworkVar( lambda, "Frags", net.ReadInt( 11 ) )
+    SafelySetNetworkVar( lambda, "Deaths", net.ReadInt( 11 ) )
 end )
 
 

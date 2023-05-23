@@ -10,7 +10,6 @@ local Rand = math.Rand
 local ceil = math.ceil
 local IsValid = IsValid
 local bit_band = bit.band
-local IsInWorld = util.IsInWorld
 local VectorRand = VectorRand
 local coroutine_wait = coroutine.wait
 local table_insert = table.insert
@@ -37,40 +36,7 @@ end
 local combattbl = { update = 0.2, run = true, tol = 0 }
 function ENT:Combat()
     if !LambdaIsValid( self:GetEnemy() ) then self:SetEnemy( NULL ) self:SetState( "Idle" ) return end
-
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
-
-    if !self:HookExists( "Tick", "CombatTick" ) then
-        self:Hook( "Tick", "CombatTick", function()
-            if self:IsDisabled() then return end
-            if self:GetState() != "Combat" then self:SetIsFiring( false ) return "end" end -- Returns and removes this hook because we returned "end". See sh_util.lua for source
-
-            local ene = self:GetEnemy()
-            if !LambdaIsValid( ene ) then self:SetEnemy( NULL ) return "end" end
-
-            local canSee = self:CanSee( ene )
-            local attackDist = self.l_CombatAttackRange
-            if attackDist and canSee and self:IsInRange( ene, attackDist ) then
-                self:SetIsFiring( true )
-                self.Face = ene
-                self.l_Faceend = CurTime() + 1
-                self:UseWeapon( ene )
-            else
-                self:SetIsFiring( false )
-            end
-
-            local myOrigin = self:GetPos()
-            local keepDist = self.l_CombatKeepDistance
-            local posCopy = ene:GetPos(); posCopy.z = myOrigin.z
-            if keepDist and canSee and self:IsInRange( posCopy, keepDist ) then
-                local potentialPos = ( myOrigin + ( myOrigin - posCopy ):GetNormalized() * 200 ) + VectorRand( -1000, 1000 )
-                self.l_movepos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )
-            else
-                self.l_movepos = ene
-            end
-        end )
-    end
-
     self:MoveToPos( self:GetEnemy(), combattbl )
 end
 
@@ -205,10 +171,9 @@ end
 
 local retreatOptions = { run = true }
 function ENT:Retreat()
-    local target = self.l_RetreatTarget
-    if CurTime() > self.l_retreatendtime or target != nil and ( !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 600 ) ) then 
+    local target = self:GetEnemy()
+    if CurTime() > self.l_retreatendtime or IsValid( target ) and ( target.IsLambdaPlayer and ( !target:Alive() or target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 600 ) ) then 
         self:SetState( "Idle" ) 
-        self.l_RetreatTarget = nil
         return
     end
 

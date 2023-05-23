@@ -398,8 +398,8 @@ function ENT:IsPanicking()
 end
 
 -- Returns if we are currently speaking
-function ENT:IsSpeaking() 
-    return CurTime() < self:GetLastSpeakingTime()
+function ENT:IsSpeaking( voicetype )
+    return ( ( !voicetype or self:GetLastSpokenVoiceType() != voicetype ) and CurTime() < self:GetLastSpeakingTime() )
 end
 
 if SERVER then
@@ -526,11 +526,13 @@ if SERVER then
 
     -- Attacks the specified entity
     function ENT:AttackTarget( ent, forceAttack )
-        if !IsValid( ent ) or !forceAttack and self:IsPanicking() then return end
+        if !LambdaIsValid( ent ) then return end
         if LambdaRunHook( "LambdaOnAttackTarget", self, ent ) == true then return end
-        
-        if random( 1, 100 ) <= self:GetVoiceChance() then self:PlaySoundFile( "taunt" ) end
+
         self:SetEnemy( ent )
+        if !forceAttack and self:IsPanicking() then return end
+
+        if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking( "taunt" ) then self:PlaySoundFile( "taunt" ) end
         self:SetState( "Combat" )
         self:CancelMovement()
     end
@@ -541,7 +543,6 @@ if SERVER then
         local alreadyPanic = self:IsPanicking()
         if !alreadyPanic then 
             self:CancelMovement()
-            self:SetEnemy( NULL )
             self:SetState( "Retreat" )
             if self:GetVoiceChance() > 0 then self:PlaySoundFile( "panic" ) end
         end
@@ -549,7 +550,8 @@ if SERVER then
         local retreatTime = ( CurTime() + ( timeout or random( 5, 15 ) ) )
         if retreatTime > self.l_retreatendtime then self.l_retreatendtime = retreatTime end
 
-        self.l_RetreatTarget = ( ( !alreadyPanic or LambdaIsValid( target ) ) and target or self.l_RetreatTarget )
+        local target = self:GetEnemy()
+        if !alreadyPanic or LambdaIsValid( target ) then self:SetEnemy( target ) end
     end
 
     -- Makes the Lambda laugh towards a position/entity
@@ -1215,6 +1217,7 @@ if SERVER then
         
         self.loco:Jump()
         self:PlayStepSound( 1.0 )
+        return true
     end
 
     local panicAnimations = GetConVar( "lambdaplayers_lambda_panicanimations" )

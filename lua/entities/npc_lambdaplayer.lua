@@ -75,16 +75,23 @@ end
     local color_white = color_white
     local RandomPairs = RandomPairs
     local TraceHull = util.TraceHull
+    local IsInWorld = util.IsInWorld
     local FrameTime = FrameTime
+    local collisionmins = Vector( -16, -16, 0 )
+    local standingcollisionmaxs = Vector( 16, 16, 72 )
+    local crouchingcollisionmaxs = Vector( 16, 16, 36 )
     local unstucktable = {}
     local swimtable = { collisiongroup = COLLISION_GROUP_PLAYER }
+    local combatjumptbl = {
+        filter = NULL,
+        collisiongroup = COLLISION_GROUP_PLAYER,
+        mins = collisionmins,
+        maxs = standingcollisionmaxs
+    }
     local sub = string.sub
     local lower = string.lower
     local RealTime = RealTime
     local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
-    local collisionmins = Vector( -16, -16, 0 )
-    local standingcollisionmaxs = Vector( 16, 16, 72 )
-    local crouchingcollisionmaxs = Vector( 16, 16, 36 )
     local maxHealth = GetConVar( "lambdaplayers_lambda_maxhealth" )
     local debugmode = GetConVar( "lambdaplayers_debug" )
     local spawnHealth = GetConVar( "lambdaplayers_lambda_spawnhealth" )
@@ -97,6 +104,8 @@ end
     local sv_gravity = GetConVar( "sv_gravity" )
     local physUpdateTime = GetConVar( "lambdaplayers_lambda_physupdatetime" )
     local lethalWaters = GetConVar( "lambdaplayers_lambda_lethalwaters" )
+    local useWeaponPanic = GetConVar( "lambdaplayers_combat_useweapononretreat" )
+    local jumpInCombat = GetConVar( "lambdaplayers_combat_usejumpsincombat" )
 --
 
 if CLIENT then
@@ -545,6 +554,75 @@ function ENT:Think()
             self.l_nextnpccheck = ( curTime + 1 )
         end
 
+        if !isDisabled then 
+            local target = self:GetEnemy()
+            local isFiring = false
+            local isPanicking = self:IsPanicking()
+
+            if LambdaIsValid( target ) and ( isPanicking or self:GetState() == "Combat" ) then
+                local canSee = self:CanSee( target )
+                local attackRange = self.l_CombatAttackRange
+
+                if attackRange and ( !isPanicking or useWeaponPanic:GetBool() ) then 
+                    if isPanicking then attackRange = ( attackRange * 0.5 ) end
+
+                    if canSee then 
+                        if self:IsInRange( target, attackRange * ( self.l_HasMelee and 3 or 1 ) ) then
+                            self.Face = target
+                            self.l_Faceend = ( CurTime() + rand( 0.5, 2.0 ) )
+                        end
+
+                        if self:IsInRange( target, attackRange ) then
+                            isFiring = true
+                            self:UseWeapon( target )
+                        end
+                    end
+                end
+
+                if !isPanicking and canSee then
+                    local keepDist, myOrigin = self.l_CombatKeepDistance, self:GetPos()
+                    local posCopy = target:GetPos(); posCopy.z = myOrigin.z
+
+                    if keepDist and self:IsInRange( posCopy, keepDist ) then
+                        local moveAng = ( myOrigin - posCopy ):Angle()
+                        local potentialPos = ( myOrigin + moveAng:Forward() * random( -self:GetRunSpeed(), keepDist ) + moveAng:Right() * random( -keepDist, keepDist ) )
+                        self.l_movepos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )
+                    else
+                        self.l_movepos = target
+                    end
+                end
+
+                if random( 1, 40 ) == 1 and jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.9 ) then
+                    combatjumptbl.start = self:GetPos()
+                    combatjumptbl.endpos = ( combatjumptbl.start + locoVel )
+                    combatjumptbl.filter = self
+
+                    local jumpTr = TraceHull( combatjumptbl )
+                    local hitNorm = jumpTr.HitNormal
+                    local invertVel = false
+                    local canJump = ( hitNorm.x == 0 and hitNorm.y == 0 and hitNorm.z <= 0 )
+
+                    if !canJump then 
+                        invertVel = Vector( -locoVel.x, -locoVel.y, locoVel.z )
+                        combatjumptbl.endpos = ( combatjumptbl.start + invertVel )
+                        jumpTr = TraceHull( combatjumptbl )
+                        hitNorm = jumpTr.HitNormal
+
+                        canJump = ( hitNorm.z < 0 and hitNorm.x == 0 and hitNorm.y == 0 )
+                    end
+
+                    if canJump and self:LambdaJump() and invertVel then
+                        locoVel = invertVel
+                        self.loco:SetVelocity( locoVel )
+                    end
+                end
+            else
+                self:SetEnemy( NULL )
+            end
+
+            self:SetIsFiring( isFiring )
+        end
+
         -- Ladder Physics Failure (LPF to sound cool) fallback
         if !loco:IsUsingLadder() then
             self.l_ladderfailtimer = curTime + 15
@@ -621,7 +699,7 @@ function ENT:Think()
                     self.l_FallVelocity = fallSpeed
                 end
 
-                if !self.l_preventdefaultspeak and self.l_FallVelocity > 1000 and ( self:GetLastSpokenVoiceType() != "fall" or !self:IsSpeaking() ) then
+                if !self.l_preventdefaultspeak and self.l_FallVelocity > 1000 and !self:IsSpeaking( "fall" ) then
                     self:PlaySoundFile( "fall" )
                 end
             end

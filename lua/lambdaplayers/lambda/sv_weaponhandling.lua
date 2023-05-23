@@ -190,7 +190,7 @@ local function DefaultMeleeWeaponUse( self, wepent, target, weapondata, disablet
 end
 
 function ENT:UseWeapon( target )
-    if CurTime() < self.l_WeaponUseCooldown or self:GetIsReloading() then return end
+    if CurTime() < self.l_WeaponUseCooldown or self:GetIsReloading() or self.l_CurrentPlayedGesture != -1 then return end
     local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
 
     local wepent = self:GetWeaponENT()
@@ -209,7 +209,7 @@ function ENT:UseWeapon( target )
 end
 
 function ENT:ReloadWeapon()
-    if self.l_HasMelee or self.l_Clip == self.l_MaxClip or self:GetIsReloading() then return end
+    if self.l_HasMelee or self.l_Clip == self.l_MaxClip or self:GetIsReloading() or self.l_CurrentPlayedGesture != -1 then return end
 
     local wep = self:GetWeaponENT()
     if !IsValid( wep ) then return end

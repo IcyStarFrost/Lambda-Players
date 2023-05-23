@@ -112,7 +112,12 @@ function ENT:MoveToPos( pos, options )
 
 		if update then
             local updateTime = math_max( update, update * ( path:GetLength() / runSpeed ) )
-			if path:GetAge() > updateTime then path:Compute( self, pos, costFunctor ) end
+			if update > updateTime then 
+                updateTime = update
+            elseif updateTime > 1.0 then
+                updateTime = 1.0
+            end
+            if path:GetAge() > updateTime then path:Compute( self, pos, costFunctor ) end
 		end
 
         if self.l_recomputepath then

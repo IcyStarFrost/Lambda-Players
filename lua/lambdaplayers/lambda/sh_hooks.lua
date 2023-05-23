@@ -238,10 +238,18 @@ if SERVER then
         end, "DeathThread", true )
 
 
-        for _, v in ipairs( ents_GetAll() ) do
-            if v == self or !IsValid( v ) or !v:IsNextBot() then continue end
-            v:OnOtherKilled( self, info )
-            if v.IsLambdaPlayer then LambdaRunHook( "LambdaOnOtherInjured", v, self, info, true ) end
+        for _, nb in ipairs( ents_GetAll() ) do
+            if nb == self or !IsValid( nb ) or !nb:IsNextBot() then continue end
+            nb:OnOtherKilled( self, info )
+            
+            if nb.IsLambdaPlayer then 
+                LambdaRunHook( "LambdaOnOtherInjured", nb, self, info, true ) 
+            end
+
+            -- Keep them comin'!
+            if nb.IsUltrakillNextbot and nb.RestartVoiceLine then
+                nb.PreviouslyKilled[ self:EntIndex() ] = true
+            end
         end
 
         if attacker != self and IsValid( attacker ) then 
@@ -283,17 +291,11 @@ if SERVER then
     function ENT:OnInjured( info )
         local attacker = info:GetAttacker()
 
-        if !self:IsPanicking() and attacker != self and random( 1, 2 ) == 1 and LambdaIsValid( attacker ) and retreatLowHP:GetBool() then
+        if attacker != self and random( 1, 2 ) == 1 and LambdaIsValid( attacker ) and retreatLowHP:GetBool() then
             local hpThreshold = ( 100 - self:GetCombatChance() )
-            if hpThreshold > 33 then hpThreshold = hpThreshold / random( 2, 5 ) end
-            if hpThreshold <= 10 then hpThreshold = hpThreshold * random( 1, 3 ) end
-
-            if self:Health() < hpThreshold then
-                self:CancelMovement()
-                self:SetEnemy( NULL )
-                self:RetreatFrom( attacker )
-                return
-            end
+            if hpThreshold > 40 then hpThreshold = hpThreshold / random( 2, 5 ) end
+            if hpThreshold < 15 then hpThreshold = hpThreshold * random( 1, 3 ) end
+            if ( self:Health() - info:GetDamage() ) <= hpThreshold then self:RetreatFrom( attacker ) return end
         end
 
         if ( self:ShouldTreatAsLPlayer( attacker ) and random( 1, 3 ) == 1 or !self:ShouldTreatAsLPlayer( attacker ) and true ) and self:CanTarget( attacker ) and self:GetEnemy() != attacker and attacker != self and self:CanSee( attacker ) then
@@ -574,6 +576,7 @@ if SERVER then
 
     function ENT:OnLandOnGround( ent )
         if self:IsUsingLadder() or self:IsInNoClip() then return end
+        
         -- Play land animation
         self:AddGesture( ACT_LAND )
 
@@ -613,6 +616,8 @@ if SERVER then
                 self.l_nextfootsteptime = CurTime() + self:GetStepSoundTime()
             end
         end
+
+        self:RecomputePath()
 
         self.l_FallVelocity = 0
     end

@@ -8,7 +8,15 @@ local Left = string.Left
 
 if SERVER then
 
-    local wepDmgScale = GetConVar( "lambdaplayers_combat_weapondmgmultiplier" )
+    local wepDmgScalePlys = GetConVar( "lambdaplayers_combat_weapondmgmultiplier_players" )
+    local wepDmgScaleLambdas = GetConVar( "lambdaplayers_combat_weapondmgmultiplier_lambdas" )
+    local wepDmgScaleMisc = GetConVar( "lambdaplayers_combat_weapondmgmultiplier_misc" )
+
+    function LambdaGetWeaponDamageScale( target )
+        if target.IsLambdaPlayer then return wepDmgScaleLambdas:GetFloat() end
+        if target:IsPlayer() then return wepDmgScalePlys:GetFloat() end
+        return wepDmgScaleMisc:GetFloat()
+    end
 
     hook.Add( "ScalePlayerDamage", "LambdaScalePlayerDamage", function( ply, hit, dmginfo )
         if !ply.IsLambdaPlayer then return end
@@ -29,7 +37,7 @@ if SERVER then
 
         local inflictor = dmginfo:GetInflictor()
         if IsValid( inflictor ) and inflictor.IsLambdaWeapon then
-            dmginfo:ScaleDamage( wepDmgScale:GetFloat() )
+            dmginfo:ScaleDamage( LambdaGetWeaponDamageScale( ent ) )
         end
     end )
 
