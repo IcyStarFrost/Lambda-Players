@@ -238,8 +238,6 @@ function ENT:GetClosestEntity( pos, radius, filter )
 end
 
 -- Returns bone position and angles
-local boneTransTbl = { Pos = vector_origin, Ang = angle_zero }
-
 function ENT:GetBoneTransformation( bone )
     local pos, ang = self:GetBonePosition( bone )
     if !pos or pos:IsZero() or pos == self:GetPos() then
@@ -249,40 +247,33 @@ function ENT:GetBoneTransformation( bone )
             ang = matrix:GetAngles()
         end
     end
-
-    boneTransTbl.Pos = pos
-    boneTransTbl.Ang = ang
-    return boneTransTbl
+    return { Pos = pos, Ang = ang }
 end
 
 -- Returns a table that contains a position and angle with the specified type. hand or eyes
-local attachPointTbl = { Pos = vector_origin, Ang = angle_zero }
-local eyeOffVec = Vector( 0, 0, 30 )
 local eyeOffAng = Angle( 20, 0, 0 )
-
 function ENT:GetAttachmentPoint( pointtype )
+    local attachData = { Pos = self:WorldSpaceCenter(), Ang = self:GetForward():Angle() }
+
     if pointtype == "hand" then
         local lookup = self:LookupAttachment( "anim_attachment_RH" )
         if lookup <= 0 then
             local bone = self:LookupBone( "ValveBiped.Bip01_R_Hand" )
-            if !isnumber( bone ) then
-                attachPointTbl.Pos = self:WorldSpaceCenter()
-                attachPointTbl.Ang = self:GetForward():Angle()
-                return attachPointTbl
-            end
-
-            return self:GetBoneTransformation( bone )
+            if isnumber( bone ) then attachData = self:GetBoneTransformation( bone ) end
+        else
+            attachData = self:GetAttachment( lookup )
         end
-        return self:GetAttachment( lookup )
     elseif pointtype == "eyes" then
         local lookup = self:LookupAttachment( "eyes" )
-        if lookup <= 0 then
-            attachPointTbl.Pos = ( self:WorldSpaceCenter() + eyeOffVec )
-            attachPointTbl.Ang = ( self:GetForward():Angle() + eyeOffAng )
-            return attachPointTbl
+        if lookup <= 0 then 
+            attachData.Pos = ( attachData.Pos + vector_up * 30 )
+            attachData.Ang = ( attachData.Ang + eyeOffAng )
+        else
+            attachData = self:GetAttachment( lookup )
         end
-        return self:GetAttachment( lookup )
     end
+
+    return attachData
 end
 --
 
