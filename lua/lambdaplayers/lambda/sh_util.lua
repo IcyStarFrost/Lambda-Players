@@ -51,6 +51,7 @@ local player_GetAll = player.GetAll
 local Rand = math.Rand
 local isnumber = isnumber
 local ismatrix = ismatrix
+local IsValidModel = util.IsValidModel
 local IsNavmeshLoaded = ( SERVER and navmesh.IsLoaded )
 local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
 local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
@@ -406,14 +407,16 @@ if SERVER then
 
             self:SetLambdaName( info.name or self:GetLambdaName() )
             self:SetProfilePicture( info.profilepicture or self:GetProfilePicture() )
-            self:SetModel( info.model or self:GetModel() )
             self:SetMaxHealth( info.health or self:GetMaxHealth() )
             self:SetHealth( info.health or self:GetMaxHealth() )
             self:SetNWMaxHealth( info.health or self:GetMaxHealth() )
             self:SetArmor( info.armor or self:GetArmor() )
 
-            self:SetSkin( info.mdlSkin or 0 )
+            local model = ( info.model or self:GetModel() )
+            if !IsValidModel( model ) then model = "models/player/kleiner.mdl" end
+            self:SetModel( model )
 
+            self:SetSkin( info.mdlSkin or 0 )
             local bodygroups = info.bodygroups
             if bodygroups and !table_IsEmpty( bodygroups ) then
                 self.l_BodyGroupData = bodygroups
@@ -504,6 +507,7 @@ if SERVER then
             if ignoreplayer:GetBool() then return false end 
             if ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 0 then return false end
         elseif ent:IsNPC() or ent:IsNextBot() then
+            if ent.IsLambdaAntlion and ( self:GetWeaponName() == "hl2_bugbait" or ent:GetOwner() == self ) then return false end
             if ent:GetInternalVariable( "m_lifeState" ) != 0 then return false end
             if ignoreFriendNPCs:GetBool() and self:Relations( ent ) == D_LI then return false end
             if ent.IsDrGNextbot and ent:IsDown() then return false end

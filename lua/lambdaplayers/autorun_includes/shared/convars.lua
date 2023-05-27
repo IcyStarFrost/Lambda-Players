@@ -120,6 +120,10 @@ CreateLambdaConvar( "lambdaplayers_animatedpfpsprayframerate", 10, true, true, f
 CreateLambdaConvar( "lambdaplayers_randomizepathingcost", 0, true, false, false, "Randomizes Pathfinding in a way that will make Lambdas try different approaches to reaching their destination rather than finding the fastest and closest route", 0, 1, { type = "Bool", name = "Randomize PathFinding Cost", category = "Misc" } )
 CreateLambdaConvar( "lambdaplayers_randomizepathingcost_min", 0.8, true, false, false, "Minimum value to how much Lambdas can scale their pathing cost.", 0.1, 20.0, { type = "Slider", decimals = 1, name = "Min Random Cost Scale", category = "Misc" } )
 CreateLambdaConvar( "lambdaplayers_randomizepathingcost_max", 1.2, true, false, false, "Maximum value to how much Lambdas can scale their pathing cost.", 0.1, 20.0, { type = "Slider", decimals = 1, name = "Max Random Cost Scale", category = "Misc" } )
+
+CreateLambdaConvar( "lambdaplayers_weapons_bugbait_antlionhealth", 50, true, false, false, "Determines the amount of health the Lambda Antlions will spawn with. Set to zero for invincible", 0, 1000, { type = "Slider", decimals = 0, name = "Bugbait - Antlion Health", category = "Weapon Utilities" } )
+CreateLambdaConvar( "lambdaplayers_weapons_bugbait_antliondamage", 15, true, false, false, "Determines the amount of damage the Lambda Antlions deal to their targets", 0, 1000, { type = "Slider", decimals = 0, name = "Bugbait - Antlion Damage", category = "Weapon Utilities" } )
+CreateLambdaConvar( "lambdaplayers_weapons_bugbait_antlionlimit", 4, true, false, false, "Determines the amount of Lambda Antlions Lambdas with bugbaits are allowed have. Set to zero for unlimited amount", 0, 15, { type = "Slider", decimals = 0, name = "Bugbait - Antlion Limit", category = "Weapon Utilities" } )
 --
 
 -- Lambda Player Server Convars
