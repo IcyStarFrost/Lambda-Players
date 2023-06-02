@@ -376,25 +376,79 @@ local table_Add = table.Add
 -- Gets every possible spawn points 
 function LambdaGetPossibleSpawns()
     local info_player_starts = FindByClass( "info_player_start" )
-    local info_player_teamspawns = FindByClass( "info_player_teamspawn" )
-    local info_player_terrorist = FindByClass( "info_player_terrorist" )
-    local info_player_counterterrorist = FindByClass( "info_player_counterterrorist" )
-    local info_player_combine = FindByClass( "info_player_combine" )
-    local info_player_rebel = FindByClass( "info_player_rebel" )
-    local info_player_allies = FindByClass( "info_player_allies" )
-    local info_player_axis = FindByClass( "info_player_axis" )
     local info_coop_spawn = FindByClass( "info_coop_spawn" )
+    local info_player_deathmatch = FindByClass("info_player_deathmatch")
+    local info_player_combine = FindByClass("info_player_combine")
+    local info_player_rebel = FindByClass("info_player_rebel")
+    -- CS Maps
+    local info_player_counterterrorist = FindByClass("info_player_counterterrorist")
+    local info_player_terrorist = FindByClass("info_player_terrorist")
+    -- DOD Maps
+    local info_player_axis = FindByClass("info_player_axis")
+    local info_player_allies = FindByClass("info_player_allies")
+    -- (Old) GMod Maps
+    local gmod_player_start = FindByClass("gmod_player_start")
+    -- TF Maps
+    local info_player_teamspawn = FindByClass("info_player_teamspawn")
+    -- INS Maps
+    local ins_spawnpoint = FindByClass("ins_spawnpoint")
+    -- AOC Maps
+    local aoc_spawnpoint = FindByClass("aoc_spawnpoint")
+    -- Dystopia Maps
+    local dys_spawn_point = FindByClass("dys_spawn_point")
+    -- PVKII Maps
+    local info_player_pirate = FindByClass("info_player_pirate")
+    local info_player_viking = FindByClass("info_player_viking")
+    local info_player_knight = FindByClass("info_player_knight")
+    -- DIPRIP Maps
+    local diprip_start_team_blue = FindByClass("diprip_start_team_blue")
+    local diprip_start_team_red = FindByClass("diprip_start_team_red")
+    -- OB Maps
+    local info_player_red = FindByClass("info_player_red")
+    local info_player_blue = FindByClass("info_player_blue")
+    -- SYN Maps
+    local info_player_coop = FindByClass("info_player_coop")
+    -- ZPS Maps
+    local info_player_human = FindByClass("info_player_human")
+    local info_player_zombie = FindByClass("info_player_zombie")
+    -- ZM Maps
+    local info_player_zombiemaster = FindByClass("info_player_zombiemaster")
+    -- FOF Maps
+    local info_player_fof = FindByClass("info_player_fof")
+    local info_player_desperado = FindByClass("info_player_desperado")
+    local info_player_vigilante = FindByClass("info_player_vigilante")
+    -- L4D Maps
+    local info_survivor_rescue = FindByClass("info_survivor_rescue")
     local info_survivor_position = FindByClass( "info_survivor_position" )
 
-
-    table_Add( info_player_starts, info_player_teamspawns )
-    table_Add( info_player_starts, info_player_terrorist )
-    table_Add( info_player_starts, info_player_counterterrorist )
+    table_Add( info_player_starts, info_coop_spawn )
+    table_Add( info_player_starts, info_player_deathmatch )
     table_Add( info_player_starts, info_player_combine )
     table_Add( info_player_starts, info_player_rebel )
-    table_Add( info_player_starts, info_player_allies )
+    table_Add( info_player_starts, info_player_counterterrorist )
+    table_Add( info_player_starts, info_player_terrorist )
     table_Add( info_player_starts, info_player_axis )
-    table_Add( info_player_starts, info_coop_spawn )
+    table_Add( info_player_starts, info_player_allies )
+    table_Add( info_player_starts, gmod_player_start )
+    table_Add( info_player_starts, info_player_teamspawn )
+    table_Add( info_player_starts, ins_spawnpoint )
+    table_Add( info_player_starts, aoc_spawnpoint )
+    table_Add( info_player_starts, dys_spawn_point )
+    table_Add( info_player_starts, info_player_pirate )
+    table_Add( info_player_starts, info_player_viking )
+    table_Add( info_player_starts, info_player_knight )
+    table_Add( info_player_starts, diprip_start_team_blue )
+    table_Add( info_player_starts, diprip_start_team_red )
+    table_Add( info_player_starts, info_player_red )
+    table_Add( info_player_starts, info_player_blue )
+    table_Add( info_player_starts, info_player_coop )
+    table_Add( info_player_starts, info_player_human )
+    table_Add( info_player_starts, info_player_zombie )
+    table_Add( info_player_starts, info_player_zombiemaster )
+    table_Add( info_player_starts, info_player_fof )
+    table_Add( info_player_starts, info_player_desperado )
+    table_Add( info_player_starts, info_player_vigilante )
+    table_Add( info_player_starts, info_survivor_rescue )
     table_Add( info_player_starts, info_survivor_position )
 
     if #info_player_starts == 0 then ErrorNoHaltWithStack( "LAMBDA PLAYERS: ATTEMPT TO GET SPAWN POINTS IN A MAP WITH NO PLAYER SPAWNS!" ) end

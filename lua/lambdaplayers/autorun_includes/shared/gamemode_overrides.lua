@@ -467,7 +467,7 @@ hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function()
     local olddamagehookfunc = GAMEMODE.EntityTakeDamage
     function GAMEMODE:EntityTakeDamage( targ, dmg )
         local result = hook.Run( "LambdaTakeDamage", targ, dmg )
-        if result == true then return true end
+        if result == true then hook.Run("PostEntityTakeDamage", targ, dmg, result) return true end
         olddamagehookfunc( self, targ, dmg )
     end
 
