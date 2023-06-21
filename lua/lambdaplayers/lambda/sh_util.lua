@@ -391,7 +391,7 @@ end
 
 -- Returns if we are currently speaking
 function ENT:IsSpeaking( voicetype )
-    return ( ( !voicetype or self:GetLastSpokenVoiceType() != voicetype ) and CurTime() < self:GetLastSpeakingTime() )
+    return ( ( !voicetype or self:GetLastSpokenVoiceType() == voicetype ) and CurTime() < self:GetLastSpeakingTime() )
 end
 
 if SERVER then

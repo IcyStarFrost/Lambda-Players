@@ -185,7 +185,7 @@ end )
 
 local Material = Material
 local voiceicon = Material( "voice/icntlk_pl" )
-
+local iconOffset = Vector( 0, 0, 80 )
 
 
 -- Voice icons, voice positioning, all that stuff will be handled in here.
@@ -214,7 +214,7 @@ local function PlaySoundFile( ent, soundname, index, is3d )
             local id = ent:EntIndex()
             local length = snd:GetLength()
             local pitch = IsValid( ent ) and ent:GetVoicePitch() or 100
-
+            local sndEndTime = ( RealTime() + length )
 
             local dist = LocalPlayer():GetPos():DistToSqr( IsValid( ent ) and ent:GetPos() or origin )
             if dist < ( 2000 * 2000 ) then
@@ -228,19 +228,29 @@ local function PlaySoundFile( ent, soundname, index, is3d )
             if usegmodpopups:GetBool() then hook.Run( "PlayerStartVoice", ent ) end
 
             -- Render the voice icon
-            hook.Add( "PreDrawEffects", "lambdavoiceicon" .. id,function()
-                followEnt = LambdaIsValid( ent ) and ent or IsValid( ent ) and IsValid( ent:GetNW2Entity( "lambda_serversideragdoll", nil ) ) and ent:GetNW2Entity( "lambda_serversideragdoll", nil ) or IsValid( ent.ragdoll ) and ent.ragdoll or followEnt
+            local iconHook = "lambdavoiceicon" .. id
+            hook.Add( "PreDrawEffects", iconHook, function()
+                if RealTime() >= sndEndTime or !IsValid( ent ) or !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then
+                    hook.Remove( "PreDrawEffects", iconHook )
+                    return
+                end
+                if ent:IsDormant() then return end
 
-                if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
-                if RealTime() > RealTime() + length then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
-                if !IsValid( followEnt ) then hook.Remove( "PreDrawEffects", "lambdavoiceicon" .. id ) return end
-                if IsValid( ent ) and ent:IsDormant() then return end
+                if !ent:GetIsDead() then
+                    followEnt = ent
+                else
+                    local ragdoll = ent.ragdoll
+                    if !IsValid( ragdoll ) then
+                        ragdoll = ent:GetNW2Entity( "lambda_serversideragdoll", nil )
+                    end
+                    followEnt = ( IsValid( ragdoll ) and ragdoll or ent )
+                end
 
+                local pos = ( followEnt:GetPos() + iconOffset )
                 local ang = EyeAngles()
-                local pos = followEnt:GetPos() + Vector( 0, 0, 80 )
                 ang:RotateAroundAxis( ang:Up(), -90 )
                 ang:RotateAroundAxis( ang:Forward(), 90 )
-            
+
                 cam.Start3D2D( pos, ang, 1 )
                     surface.SetMaterial( voiceicon )
                     surface.SetDrawColor( 255, 255, 255 )
@@ -284,16 +294,15 @@ local function PlaySoundFile( ent, soundname, index, is3d )
             local num2 
             local lastpos
             local tickent -- This variable is used so we don't redefine ent and can allow the sound to return to the Lambda when they respawn
-            local sndEndTime = ( RealTime() + length )
 
             -- This has proved to be a bit of a challenge.
             -- There were issues with the sounds not going back the Lambda player when they respawn and there were issues when the ragdoll gets removed.
             -- Right now this code seems to work just as I think I want it to. Unsure if it could be optimized better but to me it looks as good as it is gonna get
 
             hook.Add( "Tick", "lambdaplayersvoicetick" .. index, function()
-                if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED or !IsValid( ent ) or RealTime() >= sndEndTime then
+                if RealTime() >= sndEndTime or !IsValid( ent ) or !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then
                     if IsValid( snd ) then snd:Stop() end
-                    
+
                     if IsValid( ent ) then 
                         ent:SetVoiceLevel( 0 )
                         hook.Run( "PlayerEndVoice", ent ) 

@@ -117,7 +117,7 @@ if SERVER then
             local startTime = CurTime()
 
             LambdaCreateThread( function()
-                while ( CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( self ) and self:IsSpeaking() ) do 
+                while ( CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( self ) and self:IsSpeaking( "death" ) ) do 
                     if !IsValid( ragdoll ) then return end
                     coroutine.yield() 
                 end

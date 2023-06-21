@@ -297,7 +297,7 @@ function ENT:Initialize()
         end)
 
         self:SetLagCompensated( true )
-        self:AddFlags( FL_OBJECT + FL_NPC )
+        self:AddFlags( FL_OBJECT )
 
         local ap = self:LookupAttachment( "anim_attachment_RH" )
         local attachpoint = self:GetAttachmentPoint( "hand" )

@@ -58,7 +58,7 @@ else
         self:SetMaxHealth( hp )
 
         self:SetSkin( random( 0, ( self:SkinCount() - 1 ) ) )
-        self:AddFlags( FL_OBJECT + FL_NPC )
+        self:AddFlags( FL_OBJECT )
         self:SetShouldServerRagdoll( true )
 
         self.loco:SetAcceleration( 800 )
