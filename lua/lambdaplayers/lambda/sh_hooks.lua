@@ -74,6 +74,8 @@ if SERVER then
         ragdoll:SetParent( visualEnt )
         ragdoll:Spawn()
         ragdoll:SetCollisionGroup( COLLISION_GROUP_DEBRIS )
+        
+        ragdoll.GS2Player = self -- Fixes black player color when GibSplat'd
         ragdoll.LambdaOwner = self
         self.ragdoll = ragdoll
         ragdoll.IsLambdaSpawned = true
