@@ -8,15 +8,13 @@ local TraceHull = util.TraceHull
 local debugoverlay = debugoverlay
 local CurTime = CurTime
 local FrameTime = FrameTime
-local tracetable = {
-    ignoreworld = true
-}
+local tracetable = { ignoreworld = true }
 local unstucktable = {}
 local airtable = {}
 local laddermovetable = { collisiongroup = COLLISION_GROUP_PLAYER }
 local ents_FindByName = ents.FindByName
-local GetGroundHeight = navmesh.GetGroundHeight
-local navmesh_IsLoaded = navmesh.IsLoaded
+local GetGroundHeight = ( SERVER and navmesh.GetGroundHeight )
+local navmesh_IsLoaded = ( SERVER and navmesh.IsLoaded )
 local random = math.random
 local Rand = math.Rand
 local ipairs = ipairs
@@ -674,7 +672,7 @@ function ENT:PathGenerator()
     end
 end
 
-local GetNavArea = navmesh.GetNavArea
+local GetNavArea = ( SERVER and navmesh.GetNavArea )
 
 -- Using the A* algorithm and navmesh, finds out if we can reach the given area
 -- Was created because CLuaLocomotion's 'IsAreaTraversable' seems to be broken
