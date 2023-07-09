@@ -673,6 +673,8 @@ function ENT:OnRemove()
     if ( CLIENT ) then
         local flashlight = self.l_flashlight
         if IsValid( flashlight ) then flashlight:Remove() end
+
+        hook.Run( "PlayerEndVoice", self ) 
     end
 end
 

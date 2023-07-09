@@ -169,7 +169,9 @@ function ENT:TBaggingPosition()
     self:SetState( "Idle" )
 end
 
-local retreatOptions = { run = true }
+local retreatOptions = { run = true, callback = function( lambda )
+    if CurTime() >= lambda.l_retreatendtime then return false end
+end }
 function ENT:Retreat()
     local target = self:GetEnemy()
     if CurTime() > self.l_retreatendtime or IsValid( target ) and ( target.IsLambdaPlayer and ( !target:Alive() or target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 600 ) ) then 

@@ -22,44 +22,11 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 400,
         attackrange = 500,
 
-        OnDeploy = function( self, wepent )
-            wepent.DroppedSlams = ( wepent.DroppedSlams or {} )
-        end,
-
         OnThink = function( self, wepent, dead )
             if !dead and CurTime() > self.l_WeaponUseCooldown and random( 1, 80 ) == 1 and !self:InCombat() then
                 local randPos = self:GetRandomPosition( nil, 400 )
                 self:LookTo( randPos, 1.5 )
                 self:SimpleWeaponTimer( 1, function() self:UseWeapon( randPos ) end )
-            end
-
-            for _, slam in ipairs( wepent.DroppedSlams ) do
-                if !IsValid( slam ) or slam.l_BeingDetonated then continue end
-
-                local shouldExplode = dead
-                if !shouldExplode then
-                    for _, ent in ipairs( FindInSphere( slam:GetPos() - ( slam:GetVelocity() * 0.25 ), random( 125, 175 ) ) ) do
-                        shouldExplode = ( ent != self and ent != slam and IsValid( ent ) and self:CanTarget( ent ) and slam:Visible( ent ) )
-                        if shouldExplode then break end
-                    end
-                end
-
-                if shouldExplode then
-                    if !dead then wepent:EmitSound( "Weapon_SLAM.SatchelDetonate" ) end
-                    slam:EmitSound( "Weapon_SLAM.TripMineMode" )
-                    slam.l_BeingDetonated = true
-
-                    self:SimpleTimer( Rand( 0.25, 0.5 ), function() 
-                        if !IsValid( slam ) then return end
-
-                        local effData = EffectData()
-                        effData:SetOrigin( slam:GetPos() )
-                        util_Effect( "Explosion", effData, true, true )
-
-                        slam:Remove()
-                        BlastDamage( slam, self, slam:WorldSpaceCenter(), 200, 150 )
-                    end, true ) 
-                end
             end
 
             return 0.1
@@ -82,16 +49,45 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local phys = slam:GetPhysicsObject()
             if IsValid( phys ) then phys:ApplyForceCenter( self.loco:GetVelocity() + faceDir * 500 ) end
 
-            slam.l_BeingDetonated = false
             slam:SetColor( self:GetPlyColor():ToColor() )
-
             wepent:EmitSound( "Weapon_SLAM.SatchelThrow" )
-            wepent.DroppedSlams[ #wepent.DroppedSlams + 1 ] = slam
 
             self:DeleteOnRemove( slam )
             self.l_WeaponUseCooldown = ( CurTime() + 2.5 )
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM )
+
+            local nextThink = 0
+            slam:LambdaHookTick( "LambdaSLAM_OnThink", function()
+                if CurTime() < nextThink then return end
+                nextThink = ( CurTime() + 0.1 )
+
+                local shouldExplode = !self:Alive()
+                if !shouldExplode then
+                    for _, ent in ipairs( FindInSphere( slam:GetPos() - ( slam:GetVelocity() * 0.25 ), random( 125, 175 ) ) ) do
+                        shouldExplode = ( ent != self and ent != slam and IsValid( ent ) and self:CanTarget( ent ) and slam:Visible( ent ) )
+                        if shouldExplode then break end
+                    end
+                end
+
+                if shouldExplode then
+                    if self:Alive() then wepent:EmitSound( "Weapon_SLAM.SatchelDetonate" ) end
+                    slam:EmitSound( "Weapon_SLAM.TripMineMode" )
+
+                    self:SimpleTimer( Rand( 0.25, 0.5 ), function() 
+                        if !IsValid( slam ) then return end
+
+                        local effData = EffectData()
+                        effData:SetOrigin( slam:GetPos() )
+                        util_Effect( "Explosion", effData, true, true )
+
+                        BlastDamage( slam, self, slam:WorldSpaceCenter(), 200, 150 )
+                        slam:Remove()
+                    end, true )
+
+                    return true
+                end
+            end )
 
             return true
         end,

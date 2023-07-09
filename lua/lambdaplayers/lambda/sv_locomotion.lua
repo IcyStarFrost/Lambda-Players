@@ -1,3 +1,5 @@
+if ( CLIENT ) then return end
+
 local LambdaIsValid = LambdaIsValid
 local dev = GetConVar( "lambdaplayers_debug_path" )
 local IsValid = IsValid
@@ -13,8 +15,8 @@ local unstucktable = {}
 local airtable = {}
 local laddermovetable = { collisiongroup = COLLISION_GROUP_PLAYER }
 local ents_FindByName = ents.FindByName
-local GetGroundHeight = ( SERVER and navmesh.GetGroundHeight )
-local navmesh_IsLoaded = ( SERVER and navmesh.IsLoaded )
+local GetGroundHeight = navmesh.GetGroundHeight
+local navmesh_IsLoaded = navmesh.IsLoaded
 local random = math.random
 local Rand = math.Rand
 local ipairs = ipairs
@@ -124,7 +126,7 @@ function ENT:MoveToPos( pos, options )
         end
         
         if !self:IsDisabled() and CurTime() > self.l_moveWaitTime then
-            if callback and callback( pos, path, curGoal ) == false then returnMsg = "callback" break end 
+            if callback and callback( self, pos, path, curGoal ) == false then returnMsg = "callback" break end 
             path:Update( self )
 
             local selfPos = self:GetPos()
@@ -672,7 +674,7 @@ function ENT:PathGenerator()
     end
 end
 
-local GetNavArea = ( SERVER and navmesh.GetNavArea )
+local GetNavArea = navmesh.GetNavArea
 
 -- Using the A* algorithm and navmesh, finds out if we can reach the given area
 -- Was created because CLuaLocomotion's 'IsAreaTraversable' seems to be broken

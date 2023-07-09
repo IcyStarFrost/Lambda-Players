@@ -2,7 +2,7 @@ local IsValid = IsValid
 local GetConVar = GetConVar
 local net = net
 local print = print
-local CurTime = CurTime
+local RealTime = RealTime
 local concommand_Run = concommand.Run
 local hook_Run = hook.Run
 local ipairs = ipairs
@@ -13,7 +13,7 @@ local ipairs = ipairs
 net.Receive( "lambdaplayers_server_sendsoundduration", function( len, ply )
     local ent = net.ReadEntity()
     if !IsValid( ent ) or !ent.IsLambdaPlayer then return end
-    ent:SetLastSpeakingTime( CurTime() + net.ReadFloat() )
+    ent:SetLastSpeakingTime( RealTime() + net.ReadFloat() )
 end )
 
 net.Receive( "lambdaplayers_updateconvar", function( len, ply )

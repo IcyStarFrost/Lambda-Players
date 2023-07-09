@@ -5,6 +5,8 @@ local RandomPairs = RandomPairs
 local LambdaIsValid = LambdaIsValid
 local ipairs = ipairs
 local pairs = pairs
+local CurTime = CurTime
+local RealTime = RealTime
 local IsValid = IsValid
 local file_Find = file.Find
 local random = math.random
@@ -29,6 +31,7 @@ local tobool = tobool
 local isstring = isstring
 local table_insert = table.insert
 local isfunction = isfunction
+local isentity = isentity
 local tostring = tostring
 local visibilitytrace = {}
 local tracetable = {}
@@ -60,6 +63,7 @@ local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 local spawnBehavior = GetConVar( "lambdaplayers_combat_spawnbehavior" )
 local spawnBehavInitSpawn = GetConVar( "lambdaplayers_combat_spawnbehavior_initialspawnonly" )
 local ignoreFriendNPCs = GetConVar( "lambdaplayers_combat_ignorefriendlynpcs" )
+local slightDelay = GetConVar( "lambdaplayers_voice_slightdelay" )
 
 ---- Anything Shared can go here ----
 
@@ -391,7 +395,7 @@ end
 
 -- Returns if we are currently speaking
 function ENT:IsSpeaking( voicetype )
-    return ( ( !voicetype or self:GetLastSpokenVoiceType() == voicetype ) and CurTime() < self:GetLastSpeakingTime() )
+    return ( ( !voicetype or self:GetLastSpokenVoiceType() == voicetype ) and RealTime() < self:GetLastSpeakingTime() )
 end
 
 if SERVER then
@@ -684,7 +688,7 @@ if SERVER then
     
     -- Returns whether the given position or entity is at a given range
     function ENT:IsInRange( target, range )
-        return ( self:GetRangeSquaredTo( target ) <= ( range * range ) )
+        return ( ( !isentity( target ) or IsValid( target ) ) and self:GetRangeSquaredTo( target ) <= ( range * range ) )
     end
 
     -- Prevents the Lambda Player from switching weapons when this is true
@@ -756,6 +760,7 @@ if SERVER then
             net.WriteBool( false )
             net.WriteInt( self:GetFrags(), 11 )
             net.WriteInt( self:GetDeaths(), 11 )
+            net.WriteVector( self:GetPos() )
         net.Broadcast()
 
         local ragdoll = self.ragdoll
@@ -1055,12 +1060,14 @@ if SERVER then
             filepath = isVoiceType
         end
 
-        self:SetLastSpeakingTime( CurTime() + 4 )
+        self:SetLastSpeakingTime( RealTime() + 4 )
 
         net.Start( "lambdaplayers_playsoundfile" )
             net.WriteEntity( self )
             net.WriteString( filepath )
             net.WriteUInt( self:GetCreationID(), 32 )
+            net.WriteVector( self:GetPos() )
+            net.WriteFloat( slightDelay:GetBool() and Rand( 0.1, 0.75 ) or 0 )
         net.Broadcast()
     end
 
@@ -1247,8 +1254,6 @@ if SERVER then
 end
 
 if ( CLIENT ) then
-
-    local RealTime = RealTime
 
     -- This is to keep all VTF pfps unique.
     local framerateconvar = GetConVar( "lambdaplayers_animatedpfpsprayframerate" )
