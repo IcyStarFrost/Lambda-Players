@@ -59,19 +59,17 @@ local function InitializeRagdoll( ragdoll, color, lambda, force, offset )
         if IsValid( phys ) then phys:ApplyForceOffset( force, offset ) end
     end
 
-    if cleanuptime:GetInt() != 0 then 
-        local startTime = CurTime()
-        LambdaCreateThread( function()
-            while ( CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and CurTime() < lambda:GetLastSpeakingTime() ) do 
-                if !IsValid( ragdoll ) then return end
-                coroutine_yield() 
-            end
+    local startTime = CurTime()
+    LambdaCreateThread( function()
+        while ( cleanuptime:GetInt() == 0 or CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and !lambda:IsSpeaking() ) do 
             if !IsValid( ragdoll ) then return end
+            coroutine_yield() 
+        end
+        if !IsValid( ragdoll ) then return end
 
-            if cleaneffect:GetBool() then ragdoll:LambdaDisintegrate() return end 
-            ragdoll:Remove()
-        end ) 
-    end
+        if cleaneffect:GetBool() then ragdoll:LambdaDisintegrate() return end 
+        ragdoll:Remove()
+    end ) 
 end
 
 net.Receive( "lambdaplayers_serversideragdollplycolor", function()
@@ -180,19 +178,17 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
         phys:ApplyForceOffset( force, dmgpos )
     end
 
-    if cleanuptime:GetInt() != 0 then 
-        local startTime = CurTime()
-        LambdaCreateThread( function()
-            while ( CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and CurTime() < lambda:GetLastSpeakingTime() ) do 
-                if !IsValid( cs_prop ) then return end
-                coroutine_yield() 
-            end
+    local startTime = CurTime()
+    LambdaCreateThread( function()
+        while ( cleanuptime:GetInt() == 0 or CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and !lambda:IsSpeaking() ) do 
             if !IsValid( cs_prop ) then return end
+            coroutine_yield() 
+        end
+        if !IsValid( cs_prop ) then return end
 
-            if cleaneffect:GetBool() then cs_prop:LambdaDisintegrate() return end 
-            cs_prop:Remove()
-        end ) 
-    end
+        if cleaneffect:GetBool() then cs_prop:LambdaDisintegrate() return end 
+        cs_prop:Remove()
+    end ) 
 end )
 
 -- Voice icons, voice positioning, all that stuff will be handled in here.

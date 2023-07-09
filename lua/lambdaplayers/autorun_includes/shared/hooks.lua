@@ -115,10 +115,8 @@ elseif CLIENT then
 
             local name = traceent:GetLambdaName()
             local color = traceent:GetDisplayColor()
-            local hp = traceent:GetNW2Float( "lambda_health", "NAN" )
             local hpW = 2
             local armor = traceent:GetArmor()
-            hp = hp == "NAN" and traceent:GetNWFloat( "lambda_health", "NAN" ) or hp
 
             if armor > 0 and displayArmor:GetBool() then
                 hpW = 2.1
@@ -126,7 +124,7 @@ elseif CLIENT then
             end
 
             DrawText( name, "lambdaplayers_displayname", ( sw / 2 ), ( sh / 1.95 ) , color, TEXT_ALIGN_CENTER )
-            DrawText( tostring( hp ) .. "%", "lambdaplayers_healthfont", ( sw / hpW ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), color, TEXT_ALIGN_CENTER)
+            DrawText( tostring( traceent:Health() ) .. "%", "lambdaplayers_healthfont", ( sw / hpW ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), color, TEXT_ALIGN_CENTER)
         end
     
     end )

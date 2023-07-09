@@ -207,7 +207,6 @@ function ENT:Initialize()
         self:SetMaxHealth( maxHealth:GetInt() )
         self:SetNWMaxHealth( maxHealth:GetInt() )
         self:SetHealth( spawnHealth:GetInt() )
-        self:UpdateHealthDisplay()
 
         self:SetArmor( spawnArmor:GetInt() ) -- Our current armor
         self:SetMaxArmor( maxArmor:GetInt() ) -- Our maximum armor

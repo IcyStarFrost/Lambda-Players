@@ -599,14 +599,6 @@ if SERVER then
     
     end
 
-    -- Updates our networked health
-    -- We use both NW2 and NW because in multiplayer NW2 sometimes fails so we use NW as a backup
-    function ENT:UpdateHealthDisplay( overrideHP )
-        overrideHP = overrideHP or self:Health()
-        self:SetNW2Float( "lambda_health", overrideHP )
-        self:SetNWFloat( "lambda_health", overrideHP )
-    end
-
     -- Gets a name that is currently not being used.
     -- If all names are being used, a random name will be picked anyways even if it is used
     function ENT:GetOpenName()
@@ -749,7 +741,6 @@ if SERVER then
         self:SetArmor( spawnArmor:GetInt() )
         self:AddFlags( FL_OBJECT )
         self:SwitchToSpawnWeapon()
-        self:UpdateHealthDisplay()
         
         self:SetState( "Idle" )
         self:SetCrouch( false )

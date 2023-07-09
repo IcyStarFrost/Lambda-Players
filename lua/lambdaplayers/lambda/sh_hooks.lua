@@ -745,8 +745,6 @@ function ENT:InitializeMiniHooks()
                 self:LambdaOnKilled( info )
                 return true
             end
-        
-            self:SimpleTimer( 0, function() self:UpdateHealthDisplay() end, true )
         end, true )
 
         self:Hook( "OnEntityCreated", "NPCRelationshipHandle", function( ent )
