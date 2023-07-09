@@ -61,7 +61,7 @@ local function InitializeRagdoll( ragdoll, color, lambda, force, offset )
 
     local startTime = CurTime()
     LambdaCreateThread( function()
-        while ( cleanuptime:GetInt() == 0 or CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and !lambda:IsSpeaking() ) do 
+        while ( cleanuptime:GetInt() == 0 or CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and !lambda:Alive() and lambda:IsSpeaking() ) do 
             if !IsValid( ragdoll ) then return end
             coroutine_yield() 
         end
@@ -180,7 +180,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
 
     local startTime = CurTime()
     LambdaCreateThread( function()
-        while ( cleanuptime:GetInt() == 0 or CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and !lambda:IsSpeaking() ) do 
+        while ( cleanuptime:GetInt() == 0 or CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and !lambda:Alive() and lambda:IsSpeaking() ) do 
             if !IsValid( cs_prop ) then return end
             coroutine_yield() 
         end
