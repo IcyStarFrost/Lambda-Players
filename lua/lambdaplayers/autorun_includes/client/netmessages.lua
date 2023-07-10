@@ -40,6 +40,7 @@ local voicevolume = GetConVar( "lambdaplayers_voice_voicevolume" )
 local voicedistance = GetConVar( "lambdaplayers_voice_voicedistance" )
 local usegmodpopups = GetConVar( "lambdaplayers_voice_usegmodvoicepopups" )
 local removeCorpse = GetConVar( "lambdaplayers_removecorpseonrespawn" )
+local dropWeapon = GetConVar( "lambdaplayers_dropweaponondeath" )
 
 -- Applies all values to clientside ragdoll
 local function InitializeRagdoll( ragdoll, color, lambda, force, offset )
@@ -123,6 +124,8 @@ net.Receive( "lambdaplayers_disintegrationeffect", function()
 end )
 
 net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
+    if !dropWeapon:GetBool() then return end
+
     local ent = net.ReadEntity()
     if !IsValid( ent ) then return end
     local lambda = net.ReadEntity()

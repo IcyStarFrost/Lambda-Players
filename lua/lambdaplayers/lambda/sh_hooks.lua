@@ -115,28 +115,25 @@ if SERVER then
             end )
         end
 
-        if serversidecleanup:GetInt() != 0 then 
-            local startTime = CurTime()
-
-            LambdaCreateThread( function()
-                while ( CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( self ) and self:IsSpeaking( "death" ) ) do 
-                    if !IsValid( ragdoll ) then return end
-                    coroutine.yield() 
-                end
-                
+        local startTime = CurTime()
+        LambdaCreateThread( function()
+            while ( serversidecleanup:GetInt() == 0 or CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( self ) and self:IsSpeaking( "death" ) ) do 
                 if !IsValid( ragdoll ) then return end
-                if serversidecleanupeffect:GetBool() then
-                    net.Start( "lambdaplayers_disintegrationeffect" )
-                        net.WriteEntity( ragdoll )
-                    net.Broadcast()
+                coroutine.yield() 
+            end
+            
+            if !IsValid( ragdoll ) then return end
+            if serversidecleanupeffect:GetBool() then
+                net.Start( "lambdaplayers_disintegrationeffect" )
+                    net.WriteEntity( ragdoll )
+                net.Broadcast()
 
-                    coroutine.wait( 5 )
-                end
+                coroutine.wait( 5 )
+            end
 
-                if !IsValid( ragdoll ) then return end
-                ragdoll:Remove()
-            end ) 
-        end
+            if !IsValid( ragdoll ) then return end
+            ragdoll:Remove()
+        end ) 
 
         -- Required for other addons to detect and get Lambda's ragdoll
         if _LambdaGamemodeHooksOverriden then
@@ -292,16 +289,25 @@ if SERVER then
 
     function ENT:OnInjured( info )
         local attacker = info:GetAttacker()
+        if attacker == self or !IsValid( attacker ) then return end
+        
+        if retreatLowHP:GetBool() and !self:IsPanicking() then
+            local chance = ( 100 - self:GetCombatChance() )
+            if chance <= 20 then
+                chance = ( chance * rand( 1.0, 2.5 ) )
+            elseif chance > 60 then
+                chance = ( chance / rand( 1.5, 2.5 ) )
+            end
 
-        if attacker != self and random( 1, 2 ) == 1 and LambdaIsValid( attacker ) and retreatLowHP:GetBool() then
-            local hpThreshold = ( 100 - self:GetCombatChance() )
-            if hpThreshold > 40 then hpThreshold = hpThreshold / random( 2, 5 ) end
-            if hpThreshold < 15 then hpThreshold = hpThreshold * random( 1, 3 ) end
-            if ( self:Health() - info:GetDamage() ) <= hpThreshold then self:RetreatFrom( attacker ) return end
+            local hpThreshold = random( ( chance / 4 ), chance )
+            local predHp = ( self:Health() - ( info:GetDamage() * rand( 1.0, 1.5 ) ) )
+            if predHp <= hpThreshold then 
+                self:RetreatFrom( attacker ) 
+                return 
+            end
         end
 
-        if ( self:ShouldTreatAsLPlayer( attacker ) and random( 1, 3 ) == 1 or !self:ShouldTreatAsLPlayer( attacker ) and true ) and self:CanTarget( attacker ) and self:GetEnemy() != attacker and attacker != self and self:CanSee( attacker ) then
-            if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
+        if self:GetEnemy() != attacker and ( !self:ShouldTreatAsLPlayer( attacker ) or random( 3 ) == 1 ) and self:CanTarget( attacker ) and self:CanSee( attacker ) then
             self:AttackTarget( attacker )
         end
     end
@@ -312,41 +318,24 @@ if SERVER then
 
     function ENT:OnOtherKilled( victim, info )
         local attacker = info:GetAttacker()
-        local preventDefaultActions = LambdaRunHook( "LambdaOnOtherKilled", self, victim, info )
-
-        if !preventDefaultActions and !self:InCombat() and self:IsInRange( victim, 2000 ) and self:CanSee( victim ) then
-            local witnessChance = random( 1, 10 )
-            if witnessChance == 1 then
-                self:LaughAt( victim ) 
-            elseif witnessChance == 2 and !self.l_preventdefaultspeak and attacker != self then
-                self:LookTo( victimPos, random( 1, 3 ) )
-                self:SimpleTimer( rand( 0.1, 1.0 ), function()
-                    if IsValid( victim ) and ( victim:IsPlayer() or victim.IsLambdaPlayer ) and random( 1, 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() and !self:InCombat() then
-                        self.l_keyentity = victim
-                        local line = self:GetTextLine( "witness" )
-                        line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "witness" ) or line )
-                        self:TypeMessage( line )
-                    elseif self:GetVoiceChance() > 0 then
-                        self:PlaySoundFile( "witness" )
-                    end
-                end )
-            elseif witnessChance == 3 and retreatLowHP:GetBool() then
-                self:DebugPrint( "I'm running away, I saw someone die." )
-                self:RetreatFrom()
-                self:SetEnemy( NULL )
-                self:CancelMovement()
-            end
-        end
-
-        local enemy = self:GetEnemy()
-
-        -- If we killed the victim
         if attacker == self then
             self:DebugPrint( "killed ", victim )
             self:SetFrags( self:GetFrags() + 1 )
             if !victim.IsLambdaPlayer then LambdaKillFeedAdd( victim, attacker, info:GetInflictor() ) end
+        end
 
-            if !preventDefaultActions and victim == enemy then
+        local enemy = self:GetEnemy()
+        if victim == enemy then
+            self:DebugPrint( "Enemy was killed by", attacker )
+            self:SetEnemy( NULL )
+            self:CancelMovement()
+        end
+
+        local preventDefaultActions = LambdaRunHook( "LambdaOnOtherKilled", self, victim, info )
+        if preventDefaultActions == true then return end
+        
+        if attacker == self then
+            if victim == enemy then
                 if !self.l_preventdefaultspeak then
                     if random( 1, 100 ) <= self:GetVoiceChance() then
                         self:PlaySoundFile( "kill" )
@@ -362,27 +351,43 @@ if SERVER then
                 if killerActionChance == 1 then 
                     self.l_tbagpos = victim:GetPos()
                     self:SetState( "TBaggingPosition" )
-                elseif killerActionChance == 2 and !self:IsSpeaking() and retreatLowHP:GetBool() then
+                elseif killerActionChance == 10 and !self:IsSpeaking() and retreatLowHP:GetBool() then
                     self:DebugPrint( "I'm running away, I killed someone." )
-                    self:RetreatFrom()
-                    self:SetEnemy( NULL )
+                    self:RetreatFrom( victim )
                     self:CancelMovement()
                 end
             end
-        else -- Someone else killed the victim
-            if !preventDefaultActions and !self.l_preventdefaultspeak and victim == enemy and self:InCombat() and random( 1, 100 ) <= self:GetVoiceChance() and ( attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot() ) and self:CanSee( attacker ) then
-                self:LookTo( attacker, 1 )
-                self:SimpleTimer( rand( 0.1, 1.0 ), function()
-                    if !IsValid( attacker ) then return end
-                    self:PlaySoundFile( "assist" )
-                end )
-            end
-        end
+        else
+            if victim == enemy then
+                if !self.l_preventdefaultspeak and random( 1, 100 ) <= self:GetVoiceChance() and ( attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot() ) then
+                    if self:CanSee( attacker ) then
+                        self:LookTo( attacker, 1 )
+                    end
+                    self:PlaySoundFile( "assist", rand( 0.1, 1.0 ) )
+                end
+            elseif self:IsInRange( victim, 2000 ) and self:CanSee( victim ) then
+                local witnessChance = random( 1, 10 )
+                print( self:Nick(), witnessChance )
 
-        if victim == enemy then
-            self:DebugPrint( "Enemy was killed by", attacker )
-            self:SetEnemy( NULL )
-            self:CancelMovement()
+                if witnessChance == 1 then
+                    self:LaughAt( victim ) 
+                elseif witnessChance == 2 and !self.l_preventdefaultspeak then
+                    self:LookTo( victimPos, random( 1, 3 ) )
+                    
+                    if random( 1, 100 ) <= self:GetVoiceChance() then
+                        self:PlaySoundFile( "witness", rand( 0.1, 1.0 ) )
+                    elseif random( 1, 100 ) <= self:GetTextChance() and ( victim.IsLambdaPlayer or victim:IsPlayer() ) and !self:IsSpeaking() and self:CanType() then
+                        self.l_keyentity = victim
+                        local line = self:GetTextLine( "witness" )
+                        line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "witness" ) or line )
+                        self:TypeMessage( line )
+                    end
+                elseif witnessChance == 10 and !self:InCombat() and retreatLowHP:GetBool() then
+                    self:DebugPrint( "I'm running away, I saw someone die." )
+                    self:RetreatFrom( victim )
+                    self:CancelMovement()
+                end
+            end
         end
     end
 
@@ -540,7 +545,6 @@ if SERVER then
         end
     } 
 
-    
     function ENT:OnSpawnedByPlayer( ply )
         local respawn = tobool( ply:GetInfoNum( "lambdaplayers_lambda_shouldrespawn", 0 ) )
         local weapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )
@@ -564,18 +568,12 @@ if SERVER then
 
             SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
         end
-        
 
         self:DebugPrint( "Applied client settings from ", ply )
     end
 
     -- Fall damage handling
     -- Note that this doesn't always work due to nextbot quirks but that's alright.
-
-    local realisticfalldamage = GetConVar( "lambdaplayers_lambda_realisticfalldamage" )
-    local maxsafefallspeed = 526.5 -- sqrt( 2 * gravity * 20 * 12 )
-    local fatalfallspeed = 922.5 -- sqrt( 2 * gravity * 60 * 12 ) but right now this will do
-
     function ENT:OnLandOnGround( ent )
         if self:IsUsingLadder() or self:IsInNoClip() then return end
         
@@ -587,14 +585,7 @@ if SERVER then
 
         local fallSpeed = self.l_FallVelocity
         if !self:GetPos():IsUnderwater() then
-            local damage = 0
-            if realisticfalldamage:GetBool() then
-                local damageforfall = ( 100 / ( fatalfallspeed - maxsafefallspeed ) ) -- Simulate the same fall damage as players
-                damage = ( ( fallSpeed - maxsafefallspeed ) * damageforfall ) -- If the fall isn't long enough it gives us a negative number and that's fine, we check for higher than 0 anyway. 
-            elseif fallSpeed > maxsafefallspeed then
-                damage = 10
-            end
-
+            local damage = self:GetFallDamage( fallSpeed )
             if damage > 0 then
                 local info = DamageInfo()
                 info:SetDamage( damage )
@@ -619,35 +610,20 @@ if SERVER then
             end
         end
 
-        self:RecomputePath()
+        if self:IsSpeaking( "fall" ) and !self:IsPanicking() then
+            self:StopCurrentVoiceLine()
+        end
+
+        local moveOpt = self.l_moveoptions
+        if moveOpt and !moveOpt.update then
+            self:RecomputePath()
+        end
 
         self.l_FallVelocity = 0
     end
 
     function ENT:OnLeaveGround( ent ) 
         LambdaRunHook( "LambdaOnLeaveGround", self, ent )
-
-        -- Fall Voiceline Handling
-        if !self.l_preventdefaultspeak and !self:IsUsingLadder() then
-            local selfPos = self:WorldSpaceCenter()
-            local mins, maxs = self:GetCollisionBounds()
-            
-            fallTrTbl.start = selfPos
-            fallTrTbl.endpos = ( selfPos - vector_up * 32756 )
-            fallTrTbl.filter = self
-            fallTrTbl.mins = mins
-            fallTrTbl.maxs = maxs
-            local fallTr = TraceHull( fallTrTbl )
-            
-            local hitPos = fallTr.HitPos
-            if hitPos:IsUnderwater() then return end
-
-            local deathDist = 800
-            if realisticfalldamage:GetBool() then deathDist = max( 256, 800 * ( self:Health() / self:GetMaxHealth() ) ) end
-            if hitPos:DistToSqr( selfPos ) < ( deathDist * deathDist ) then return end
-
-            self:PlaySoundFile( "fall" )
-        end
     end
 
     function ENT:OnBeginTyping( text )
@@ -657,7 +633,6 @@ if SERVER then
     function ENT:OnEndMessage( text )
         self:RemoveGesture( ACT_GMOD_IN_CHAT )
     end
-
 end
 
 ------ SHARED ------
@@ -681,7 +656,6 @@ end
 -- A function for holding self:Hook() functions. Called in the ENT:Initialize() in npc_lambdaplayer
 function ENT:InitializeMiniHooks()
     if ( SERVER ) then
-
         self:Hook( "PostEntityTakeDamage", "OnOtherInjured", function( target, info, tookdamage )
             if target == self or ( !target:IsNPC() and !target:IsNextBot() and !target:IsPlayer() ) then return end
             LambdaRunHook( "LambdaOnOtherInjured", self, target, info, tookdamage )
@@ -745,6 +719,8 @@ function ENT:InitializeMiniHooks()
                 self:LambdaOnKilled( info )
                 return true
             end
+        
+            self:SimpleTimer( 0, function() self:UpdateHealthDisplay() end, true )
         end, true )
 
         self:Hook( "OnEntityCreated", "NPCRelationshipHandle", function( ent )
@@ -763,77 +739,63 @@ function ENT:InitializeMiniHooks()
         end, true )
 
         self:Hook( "LambdaPlayerSay", "lambdatextchat", function( ply, text )
-            if aidisabled:GetBool() then return end
-            if ply == self or self:IsDisabled() or self.l_preventdefaultspeak then return end
-
-            if random( 1, 200 ) < self:GetTextChance() and !self:GetIsTyping() and !self:IsSpeaking() and self:CanType() then
-                self.l_keyentity = ply
-                local line = self:GetTextLine( "response" )
-                line = LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line
-                self:TypeMessage( line )
-            end
+            if self.l_preventdefaultspeak or ply == self or self:GetIsTyping() or random( 1, 200 ) > self:GetTextChance() or self:IsSpeaking() or !self:CanType() or aidisabled:GetBool() then return end
+            self.l_keyentity = ply
+            local line = self:GetTextLine( "response" )
+            line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
+            self:TypeMessage( line )
         end, true )
 
         self:Hook( "PlayerSay", "lambdarespondtoplayertextchat", function( ply, text )
-            if aidisabled:GetBool() then return end
-            if self:IsSpeaking() or self.l_preventdefaultspeak then return end
+            if self.l_preventdefaultspeak or self:IsSpeaking() or aidisabled:GetBool() then return end
 
             if random( 1, 100 ) <= self:GetVoiceChance() and self:IsInRange( ply, 300 ) then
                 self:PlaySoundFile( "idle" )
             elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                 self.l_keyentity = ply
                 local line = self:GetTextLine( "response" )
-                line = LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line
+                line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
                 self:TypeMessage( line )
             end
         end, true )
 
         self:Hook( "LambdaOnRealPlayerEndVoice", "lambdarespondtoplayervoicechat", function( ply )
-            if aidisabled:GetBool() then return end
-            if self:IsSpeaking() or !self:IsInRange( ply, 300 ) or self.l_preventdefaultspeak then return end
-            
+            if self.l_preventdefaultspeak or self:IsSpeaking() or aidisabled:GetBool() or !self:IsInRange( ply, 300 ) then return end
+
             if random( 1, 100 ) <= self:GetVoiceChance() then
                 self:PlaySoundFile( "idle" )
             elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                 self.l_keyentity = ply
                 local line = self:GetTextLine( "response" )
-                line = LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line
+                line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
                 self:TypeMessage( line )
             end
         end, true )
-
     end
 
     if ( CLIENT ) then
-
         self:Hook( "PreDrawEffects", "CustomWeaponRenderEffects", function()
             if self:GetIsDead() or !self:IsBeingDrawn() or !self:GetHasCustomDrawFunction() then return end
             local func = _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ].Draw or _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ].OnDraw
             if func then func( self, self:GetWeaponENT() ) end
         end, true )
 
-
         local DrawSprite = render.DrawSprite
+        local DrawBeam = render.DrawBeam
         local SetMaterial = render.SetMaterial
         local color_white = color_white
         self:Hook( "PreDrawEffects", "flashlighteffects", function()
-            if self:GetIsDead() or !self:IsBeingDrawn() then return end
+            if !self.l_flashlighton or self:GetIsDead() or !self:IsBeingDrawn() then return end
 
-            if self.l_flashlighton then
-                local hand = self:GetAttachmentPoint( "hand" )
-                local start = hand.Pos + hand.Ang:Forward() * 3
-                local endpos = hand.Pos + hand.Ang:Forward() * 150
+            local hand = self:GetAttachmentPoint( "hand" )
+            local start = hand.Pos + hand.Ang:Forward() * 3
+            local endpos = hand.Pos + hand.Ang:Forward() * 150
 
-                SetMaterial( flashlightsprite )
-                DrawSprite(start, 4, 4, color_white )
+            SetMaterial( flashlightsprite )
+            DrawSprite( start, 4, 4, color_white )
 
-                SetMaterial( flashlightbeam )
-                
-                render.DrawBeam( start, endpos, 40, 0, 0.9, faded )
-            end
-
+            SetMaterial( flashlightbeam )
+            DrawBeam( start, endpos, 40, 0, 0.9, faded )
         end, true )
-
     end
-
 end

@@ -311,6 +311,12 @@ function EntMeta:RemoveLambdaHookTick( name )
 end
 
 if ( SERVER ) then
+    _LambdaOldEntitySetHealth = _LambdaOldEntitySetHealth or EntMeta.SetHealth
+    function EntMeta:SetHealth( newHealth )
+        if self.IsLambdaPlayer then self:UpdateHealthDisplay( newHealth ) end
+        _LambdaOldEntitySetHealth( self, newHealth )
+    end
+
     _LambdaOldDrG_RagdollDeath = _LambdaOldDrG_RagdollDeath or EntMeta.DrG_RagdollDeath
     function EntMeta:DrG_RagdollDeath( dmginfo )
         if !self.IsLambdaPlayer then return _LambdaOldDrG_RagdollDeath( self, dmginfo ) end

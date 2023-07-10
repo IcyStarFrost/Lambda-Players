@@ -33,6 +33,8 @@ hook.Add( "PreDrawEffects", "lambdaplayers-debughelper", function()
             local ang = ( lambda:GetPos() - LocalPlayer():GetPos() ):Angle()
             local pos = lambda:GetPos() + lambda:GetUp() * ( lambda:GetModelRadius()  * 1.2 )
             local queue = {}
+            local hp = lambda:GetNW2Float( "lambda_health", "NAN" )
+            hp = hp == "NAN" and lambda:GetNWFloat( "lambda_health", "NAN" ) or hp
 
             ang:RotateAroundAxis( ang:Up(), -90 )
             ang:RotateAroundAxis( ang:Forward(), 90 )
@@ -81,7 +83,7 @@ hook.Add( "PreDrawEffects", "lambdaplayers-debughelper", function()
                 AddTextToQueue( queue, "LAMBDA MAX ARMOR: " .. lambda:GetMaxArmor(), color_white )
                 AddTextToQueue( queue, "LAMBDA MAX HEALTH: " .. lambda:GetNWMaxHealth(), color_white )
                 AddTextToQueue( queue, "LAMBDA ARMOR: " .. lambda:GetArmor(), color_white )
-                AddTextToQueue( queue, "LAMBDA HEALTH: " .. lambda:Health(), color_white )
+                AddTextToQueue( queue, "LAMBDA HEALTH: " .. hp, color_white )
                 AddTextToQueue( queue, "LAMBDA NAME: " .. lambda:GetLambdaName(), stringcol )
 
                 for i = 1, #queue do

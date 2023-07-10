@@ -140,9 +140,11 @@ end
 
 function ENT:Laughing()
     if !self.l_preventdefaultspeak then self:PlaySoundFile( "laugh" ) end
-    
     self:PlayGestureAndWait( ACT_GMOD_TAUNT_LAUGH )
-    self:SetState( "Idle" )
+    
+    if self:GetState() == "Laughing" then
+        self:SetState( self.l_LaughAt_PrevState or "Idle" )
+    end
 end
 
 local acts = { ACT_GMOD_TAUNT_DANCE, ACT_GMOD_TAUNT_ROBOT, ACT_GMOD_TAUNT_MUSCLE, ACT_GMOD_TAUNT_CHEER }
@@ -153,12 +155,13 @@ end
 
 
 -- MW2/Halo lives in us forever
-local t_options = { run = true }
+local t_options = { run = true, callback = function( lambda )
+    if lambda:GetState() != "TBaggingPosition" then return false end
+end }
 function ENT:TBaggingPosition()
-
     self:MoveToPos( self.l_tbagpos, t_options )
 
-    for i=1, random( 2, 8 ) do
+    for i = 1, random( 2, 8 ) do
         if self:GetState() != "TBaggingPosition" then return end
         self:SetCrouch( true )
         coroutine_wait( 0.2 )
@@ -174,12 +177,16 @@ local retreatOptions = { run = true, callback = function( lambda )
 end }
 function ENT:Retreat()
     local target = self:GetEnemy()
-    if CurTime() > self.l_retreatendtime or IsValid( target ) and ( target.IsLambdaPlayer and ( !target:Alive() or target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 600 ) ) then 
+    if CurTime() > self.l_retreatendtime or IsValid( target ) and ( ( target.IsLambdaPlayer or target:IsPlayer() ) and !target:Alive() or !self:IsInRange( target, 2000 ) ) then 
         self:SetState( "Idle" ) 
         return
     end
 
-    local rndPos = self:GetRandomPosition( nil, 4000 )
+    local rndPos = self:GetRandomPosition( nil, 4000, function( selfPos, area, rndPoint )
+        if IsValid( target ) and ( target:GetPos() - selfPos ):GetNormalized():Dot( ( rndPoint - selfPos ):GetNormalized() ) > 0.2 then 
+            return true 
+        end
+    end )
     self:MoveToPos( rndPos, retreatOptions )
 end
 

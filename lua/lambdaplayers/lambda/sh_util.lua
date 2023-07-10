@@ -400,8 +400,10 @@ end
 
 if SERVER then
 
+    local sqrt = math.sqrt
     local GetAllNavAreas = navmesh.GetAllNavAreas
     local ignoreplayer = GetConVar( "ai_ignoreplayers" )
+    local realisticfalldamage = GetConVar( "lambdaplayers_lambda_realisticfalldamage" )
 
     -- Applies info data from :ExportLambdaInfo() to the Lambda Player
     function ENT:ApplyLambdaInfo( info )
@@ -546,7 +548,7 @@ if SERVER then
             if self:GetVoiceChance() > 0 then self:PlaySoundFile( "panic" ) end
         end
 
-        local retreatTime = ( CurTime() + ( timeout or random( 5, 15 ) ) )
+        local retreatTime = ( CurTime() + ( timeout or random( 15, 25 ) ) )
         if retreatTime > self.l_retreatendtime then self.l_retreatendtime = retreatTime end
 
         local target = self:GetEnemy()
@@ -562,6 +564,7 @@ if SERVER then
             self:SetState( "Laughing" )
             self:LookTo( pos, 1 )
         end )
+        self.l_LaughAt_PrevState = self:GetState()
     end
 
     -- PlaySequenceAndWait but without t-posing
@@ -597,6 +600,14 @@ if SERVER then
         self.l_UpdateAnimations = true
         self.l_CurrentPlayedGesture = -1
     
+    end
+
+    -- Updates our networked health
+    -- We use both NW2 and NW because in multiplayer NW2 sometimes fails so we use NW as a backup
+    function ENT:UpdateHealthDisplay( overrideHP )
+        overrideHP = overrideHP or self:Health()
+        self:SetNW2Float( "lambda_health", overrideHP )
+        self:SetNWFloat( "lambda_health", overrideHP )
     end
 
     -- Gets a name that is currently not being used.
@@ -741,6 +752,7 @@ if SERVER then
         self:SetArmor( spawnArmor:GetInt() )
         self:AddFlags( FL_OBJECT )
         self:SwitchToSpawnWeapon()
+        self:UpdateHealthDisplay()
         
         self:SetState( "Idle" )
         self:SetCrouch( false )
@@ -823,17 +835,20 @@ if SERVER then
     end
     
     -- Returns a random position near the position 
-    function ENT:GetRandomPosition( pos, dist )
+    function ENT:GetRandomPosition( pos, dist, filter )
+        pos = ( pos or self:GetPos() )
+
         -- If the navmesh is loaded then find a nav area to go to
         if IsNavmeshLoaded() then
             for _, area in RandomPairs( self:GetNavAreas( pos, dist ) ) do
                 if !IsValid( area ) or !self:IsAreaTraversable( area ) then continue end
-                return area:GetRandomPoint()
+                local rndPoint = area:GetRandomPoint()
+                if filter and filter( pos, area, rndPoint ) == true then continue end
+                return rndPoint
             end
         end
 
         -- If not, try to go to a entirely random spot
-        pos = ( pos or self:GetPos() )
         dist = ( dist or 1500 )
         return ( pos + VectorRand( -dist, dist ) )
     end
@@ -1042,8 +1057,14 @@ if SERVER then
     end
 
     -- Makes the Lambda say the specified file
-    function ENT:PlaySoundFile( filepath )
+    function ENT:PlaySoundFile( filepath, delay )
         if !filepath then return end
+        
+        if delay == nil then 
+            delay = ( slightDelay:GetBool() and Rand( 0.1, 0.75 ) or 0 ) 
+        elseif delay == false then
+            delay = 0
+        end
 
         local isVoiceType = self:GetVoiceLine( filepath )
         if isVoiceType then 
@@ -1058,7 +1079,29 @@ if SERVER then
             net.WriteString( filepath )
             net.WriteUInt( self:GetCreationID(), 32 )
             net.WriteVector( self:GetPos() )
-            net.WriteFloat( slightDelay:GetBool() and Rand( 0.1, 0.75 ) or 0 )
+            net.WriteFloat( delay )
+        net.Broadcast()
+    end
+
+    function ENT:GetFallDamage( speed )
+        local gravity = self.loco:GetGravity()
+        local maxSafeFallSpeed = sqrt( 2 * gravity * 20 * 12 )
+
+        speed = ( speed or self.l_FallVelocity )
+        if !realisticfalldamage:GetBool() and speed > maxsafefallspeed then
+            return 10
+        end
+
+        local fatalFallSpeed = sqrt( 2 * gravity * 60 * 12 )
+        local damageForFall = ( 100 / ( fatalFallSpeed - maxSafeFallSpeed ) )
+        return ( ( speed - maxSafeFallSpeed ) * damageForFall )
+    end
+
+    function ENT:StopCurrentVoiceLine()
+        if !self:IsSpeaking() then return end
+
+        net.Start( "lambdaplayers_stopcurrentsound" )
+            net.WriteEntity( self )
         net.Broadcast()
     end
 

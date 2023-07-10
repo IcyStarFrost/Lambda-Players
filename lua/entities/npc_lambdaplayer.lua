@@ -207,6 +207,7 @@ function ENT:Initialize()
         self:SetMaxHealth( maxHealth:GetInt() )
         self:SetNWMaxHealth( maxHealth:GetInt() )
         self:SetHealth( spawnHealth:GetInt() )
+        self:UpdateHealthDisplay()
 
         self:SetArmor( spawnArmor:GetInt() ) -- Our current armor
         self:SetMaxArmor( maxArmor:GetInt() ) -- Our maximum armor
@@ -516,19 +517,19 @@ function ENT:Think()
             self.l_nextfootsteptime = curTime + self:GetStepSoundTime()
         end
 
-        -- Play random Idle lines depending on current state
+        -- Play random Idle lines depending on current state or speak in text chat
         if curTime > self.l_nextidlesound then
-            if !isDisabled and !self:GetIsTyping() and !self:IsSpeaking() and !self.l_preventdefaultspeak then
+            if !isDisabled and !self.l_preventdefaultspeak and !self:GetIsTyping() and !self:IsSpeaking() then
                 if random( 1, 100 ) <= self:GetVoiceChance() then
                     self:PlaySoundFile( self:IsPanicking() and "panic" or ( self:InCombat() and "taunt" or "idle" ) )
                 elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                     local line = self:GetTextLine( "idle" )
-                    line = LambdaRunHook( "LambdaOnStartTyping", self, line, "idle" ) or line
+                    line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "idle" ) or line )
                     self:TypeMessage( line )
                 end
             end
 
-            self.l_nextidlesound = curTime + 5
+            self.l_nextidlesound = ( curTime + 5 )
         end
 
         -- Update our speed after some time
@@ -563,7 +564,7 @@ function ENT:Think()
                 local attackRange = self.l_CombatAttackRange
 
                 if attackRange and ( !isPanicking or useWeaponPanic:GetBool() ) then 
-                    if isPanicking then attackRange = ( attackRange * 0.5 ) end
+                    if isPanicking then attackRange = ( attackRange * 0.8 ) end
 
                     if canSee then 
                         if self:IsInRange( target, attackRange * ( self.l_HasMelee and 3 or 1 ) ) then
@@ -698,8 +699,8 @@ function ENT:Think()
                     self.l_FallVelocity = fallSpeed
                 end
 
-                if !self.l_preventdefaultspeak and self.l_FallVelocity > 1000 and !self:IsSpeaking( "fall" ) then
-                    self:PlaySoundFile( "fall" )
+                if !self.l_preventdefaultspeak and !self:IsSpeaking( "fall" ) and self:GetFallDamage() > 0 then
+                    self:PlaySoundFile( "fall", false )
                 end
             end
         end
