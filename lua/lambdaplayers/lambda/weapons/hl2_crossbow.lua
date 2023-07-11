@@ -1,6 +1,7 @@
 local CurTime = CurTime
 local CreateEntity = ents.Create
 local IsValid = IsValid
+local Rand = math.Rand
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
@@ -28,7 +29,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if !IsValid( bolt ) then return end
 
             self.l_Clip = self.l_Clip - 1
-            self.l_WeaponUseCooldown = CurTime() + 0.4
+            self.l_WeaponUseCooldown = CurTime() + Rand( 0.4, 1.0 )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )

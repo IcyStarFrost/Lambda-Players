@@ -21,7 +21,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         OnAttack = function( self, wepent, target )
             self.l_WeaponUseCooldown = CurTime() + Rand( 1.0, 1.15 )
-            wepent:EmitSound( "lambdaplayers/weapons/left4dead2/golf_club/wpn_golf_club_swing_miss_0" .. random( 1, 2 ) .. ".mp3", 65 )
+            wepent:EmitSound( "lambdaplayers/weapons/left4dead2/golf_club/wpn_golf_club_swing_miss_0" .. random( 2 ) .. ".mp3", 65 )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
@@ -40,7 +40,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 dmginfo:SetDamageForce( dmgAng:Forward() * ( dmg * 150 ) + dmgAng:Up() * ( dmg * 125 ) )
 
                 target:TakeDamageInfo( dmginfo )
-                target:EmitSound( "lambdaplayers/weapons/left4dead2/golf_club/wpn_golf_club_melee_0" .. random( 1, 2 ) .. ".mp3" )
+                target:EmitSound( "lambdaplayers/weapons/left4dead2/golf_club/wpn_golf_club_melee_0" .. random( 2 ) .. ".mp3" )
             end)
 
             return true

@@ -126,7 +126,7 @@ end
 
 -- Creates a simple timer that won't run if we are invalid or dead. ignoredead var will run the timer even if self:GetIsDead() is true
 function ENT:SimpleTimer( delay, func, ignoredead )
-    local id = tostring( func ) .. random( 1, 100000 )
+    local id = tostring( func ) .. random( 100000 )
     self.l_SimpleTimers[ id ] = !ignoredead
     timer_simple( delay, function()
         if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) or !ignoredead and !self.l_SimpleTimers[ id ] then return end
@@ -137,7 +137,7 @@ end
 
 -- Same as ENT:SimpleTimer(), but also checks if our weapon is valid and weapon name is the same one we created this timer with
 function ENT:SimpleWeaponTimer( delay, func, ignoredead, ignorewepname )
-    local id = tostring( func ) .. random( 1, 100000 )
+    local id = tostring( func ) .. random( 100000 )
     self.l_SimpleTimers[ id ] = !ignoredead
     
     local wepent = self:GetWeaponENT()
@@ -307,7 +307,7 @@ function ENT:ExportLambdaInfo()
         health = self:GetNWMaxHealth(),
 
         mdlSkin = self:GetSkin(),
-        bodygroups = self.l_BodyGroupData,
+        bodygroups = self:GetBodyGroupData(),
 
         plycolor = self:GetPlyColor(),
         physcolor = self:GetPhysColor(),
@@ -322,6 +322,7 @@ function ENT:ExportLambdaInfo()
         -- Non personal data --
         respawn = self:GetRespawn(),
         spawnwep = self:GetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon ),
+        favwep = self.l_FavoriteWeapon,
         frags = self:GetFrags(),
         deaths = self:GetDeaths(),
 
@@ -373,6 +374,18 @@ function ENT:GetDisplayColor( ply )
     end
 end
 
+function ENT:GetBodyGroupData()
+    local data = {}
+    for _, group in ipairs( self:GetBodyGroups() ) do
+        local subMdls = #group.submodels
+        if subMdls == 0 then continue end 
+        
+        local index = group.id
+        data[ index ] = self:GetBodygroup( index )
+    end
+    return data
+end
+
 -- Obviously returns the current state
 function ENT:GetState()
     return self:GetNW2String( "lambda_state", "Idle" )
@@ -421,13 +434,12 @@ if SERVER then
             local model = ( info.model or self:GetModel() )
             if !IsValidModel( model ) then model = "models/player/kleiner.mdl" end
             self:SetModel( model )
-
             self:SetSkin( info.mdlSkin or 0 )
+
             local bodygroups = info.bodygroups
             if bodygroups and !table_IsEmpty( bodygroups ) then
-                self.l_BodyGroupData = bodygroups
-                for _, v in ipairs( self:GetBodyGroups() ) do
-                    self:SetBodygroup( v.id, ( bodygroups[ v.id ] or 0 ) )
+                for index, submdl in pairs( bodygroups ) do
+                    self:SetBodygroup( index, submdl )
                 end
             end
 
@@ -456,6 +468,8 @@ if SERVER then
             local spawnwep = self:WeaponDataExists( info.spawnwep ) and info.spawnwep or self.l_SpawnWeapon
             self:SwitchToSpawnWeapon()
             self:SetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon )
+            
+            self.l_FavoriteWeapon = ( info.favwep or self.l_FavoriteWeapon )
 
             self:SetFrags( info.frags or self:GetFrags() )
             self:SetDeaths( info.deaths or self:GetDeaths() )
@@ -533,7 +547,7 @@ if SERVER then
         self:SetEnemy( ent )
         if !forceAttack and self:IsPanicking() then return end
 
-        if random( 1, 100 ) <= self:GetVoiceChance() and !self:IsSpeaking( "taunt" ) then self:PlaySoundFile( "taunt" ) end
+        if random( 100 ) <= self:GetVoiceChance() and !self:IsSpeaking( "taunt" ) then self:PlaySoundFile( "taunt" ) end
         self:SetState( "Combat" )
         self:CancelMovement()
     end
@@ -556,15 +570,18 @@ if SERVER then
     end
 
     -- Makes the Lambda laugh towards a position/entity
-    function ENT:LaughAt( pos )
-        pos = ( isentity( pos ) and IsValid( pos ) and pos:GetPos() or pos)
-        self:LookTo( pos, 3 )
-        self:SimpleTimer( Rand( 0.2, 0.66 ), function()
+    function ENT:LaughAt( target )
+        self:LookTo( target, 3 )
+        self.l_LaughAt_PrevState = self:GetState()
+
+        local laughDelay = Rand( 0.1, 0.5 )
+        self:PlaySoundFile( "laugh", laughDelay )
+
+        self:SimpleTimer( laughDelay * Rand( 1.0, 1.5 ), function()
             self:CancelMovement()
             self:SetState( "Laughing" )
-            self:LookTo( pos, 1 )
+            self:LookTo( ( ( isentity( target ) and IsValid( target ) ) and target:GetPos() or target ), 1 )
         end )
-        self.l_LaughAt_PrevState = self:GetState()
     end
 
     -- PlaySequenceAndWait but without t-posing
@@ -655,17 +672,16 @@ if SERVER then
         return isfunction( self[ state ] )
     end
 
-    -- Sets our state
-    function ENT:SetState( state )
-        local curState = self.l_State
-        if state == curState then return end
+    -- Sets our state. If the 'prevState' argument is set, the state will only change
+    -- If our current state is the one set there
+    function ENT:SetState( state, prevState )
+        state = ( state or "Idle" )
+        local curState = self:GetState()
+        if state == curState or prevState and curState != prevState then return end
         if LambdaRunHook( "LambdaOnChangeState", self, curState, state ) == true then return end
-        self:DebugPrint( "Changed state from " .. curState .. " to " .. state )
 
-        self.l_LastState = curState
-        self.l_State = state
-        
-        self:SetNW2String( "lambda_laststate", self.l_LastState )
+        self:DebugPrint( "Changed state from " .. curState .. " to " .. state )
+        self:SetNW2String( "lambda_laststate", self.l_BehaviorState )
         self:SetNW2String( "lambda_state", state )
     end
 
@@ -749,12 +765,12 @@ if SERVER then
         self:SetWalkSpeed( walkingSpeed:GetInt() )
 
         self:SetHealth( self:GetMaxHealth() )
-        self:SetArmor( spawnArmor:GetInt() )
-        self:AddFlags( FL_OBJECT )
+        self:SetArmor( self.l_SpawnArmor ) 
+        -- self:AddFlags( FL_OBJECT )
         self:SwitchToSpawnWeapon()
         self:UpdateHealthDisplay()
         
-        self:SetState( "Idle" )
+        self:SetState()
         self:SetCrouch( false )
         self:SetEnemy( nil )
         
@@ -860,7 +876,7 @@ if SERVER then
         for i = 1, 10 do
             local files, directories = file_Find( dir .. "*", "GAME", "nameasc" )
 
-            if #files > 0 and ( i != 10 and random( 1, 2 ) ==  1 ) then
+            if #files > 0 and ( i != 10 and random( 2 ) ==  1 ) then
                 local selectedfile = files[ random( #files ) ]
                 if selectedfile and EndsWith( selectedfile, ".mp3" ) or selectedfile and EndsWith( selectedfile, ".wav" ) then return string.Replace( dir .. selectedfile, "sound/", "" ) end
             else
@@ -936,9 +952,9 @@ if SERVER then
          for k, word in ipairs( textsplit ) do
              local preword = word
              
-             if #preword > 3 and random( 1, 2 ) == 1 then
+             if #preword > 3 and random( 2 ) == 1 then
                  preword = validwords[ random( #validwords ) ]
-             elseif #preword < 3 and random( 1, 6 ) == 1 then
+             elseif #preword < 3 and random( 6 ) == 1 then
                  preword = smallwords[ random( #smallwords ) ]
              end    
              

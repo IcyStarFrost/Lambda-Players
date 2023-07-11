@@ -23,7 +23,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 500,
 
         OnThink = function( self, wepent, dead )
-            if !dead and CurTime() > self.l_WeaponUseCooldown and random( 1, 80 ) == 1 and !self:InCombat() then
+            if !dead and CurTime() > self.l_WeaponUseCooldown and random( 80 ) == 1 and !self:InCombat() then
                 local randPos = self:GetRandomPosition( nil, 400 )
                 self:LookTo( randPos, 1.5 )
                 self:SimpleWeaponTimer( 1, function() self:UseWeapon( randPos ) end )
@@ -79,7 +79,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                         local effData = EffectData()
                         effData:SetOrigin( slam:GetPos() )
-                        util_Effect( "Explosion", effData, true, true )
+                        util_Effect( "Explosion", effData )
 
                         BlastDamage( slam, self, slam:WorldSpaceCenter(), 200, 150 )
                         slam:Remove()

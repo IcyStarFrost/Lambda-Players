@@ -302,45 +302,47 @@ function ENT:CanEquipWeapon( weaponname )
     return false
 end
 
-function ENT:SwitchToRandomWeapon()
+function ENT:SwitchToRandomWeapon( returnOnly )
+    local wepList = {}
     local curWep = self.l_Weapon
-    for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if k == curWep or !self:CanEquipWeapon( k ) then continue end
-        if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
-        if v.cantbeselected then continue end
-        
-        self:SwitchWeapon( k )
-        return
+
+    local favWep = self.l_FavoriteWeapon
+    local hasFavWep = false
+
+    for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
+        if name == curWep or data.cantbeselected or !self:CanEquipWeapon( name ) then continue end
+        if LambdaRunHook( "LambdaCanSwitchWeapon", self, name, data ) then continue end
+
+        if !hasFavWep then hasFavWep = ( name == favWep ) end
+        wepList[ #wepList + 1 ] = name
     end
 
-    self:SwitchWeapon( "none", true )
+    local rndWeapon = ( ( hasFavWep and random( #wepList * 2 ) >= #wepList ) and favWep or wepList[ random( #wepList ) ] )
+    if !returnOnly then self:SwitchWeapon( returnOnly, true ) end
+    return rndWeapon
 end
 
 function ENT:SwitchToLethalWeapon()
+    local wepList = {}
     local curWep = self.l_Weapon
-    for k, v in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-        if k == curWep or !v.islethal or !self:CanEquipWeapon( k ) then continue end
-        if LambdaRunHook( "LambdaCanSwitchWeapon", self, k, v ) then continue end
-        if v.cantbeselected then continue end
-        
-        self:SwitchWeapon( k )
-        return
+
+    local favWep = self.l_FavoriteWeapon
+    local hasFavWep = false
+
+    for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
+        if name == curWep or !data.islethal or data.cantbeselected or !self:CanEquipWeapon( name ) then continue end
+        if LambdaRunHook( "LambdaCanSwitchWeapon", self, name, data ) then continue end
+
+        if !hasFavWep then hasFavWep = ( name == favWep ) end
+        wepList[ #wepList + 1 ] = name
     end
-    
-    self:SwitchWeapon( curWep )
+
+    self:SwitchWeapon( ( hasFavWep and random( #wepList * 2 ) >= #wepList ) and favWep or wepList[ random( #wepList ) ] )
 end
 
 function ENT:SwitchToSpawnWeapon()
     local weapon = self.l_SpawnWeapon
-
-    if weapon == "random" then
-        for wepName, wepData in RandomPairs( _LAMBDAPLAYERSWEAPONS ) do
-            if !self:CanEquipWeapon( wepName ) then continue end 
-            if LambdaRunHook( "LambdaCanSwitchWeapon", self, wepName, wepData ) then continue end
-            if wepData.cantbeselected then continue end
-            weapon = wepName; break
-        end
-    end
+    if weapon == "random" then weapon = self:SwitchToRandomWeapon( true ) end
 
     if !self:WeaponDataExists( weapon ) then
         weapon = "physgun"

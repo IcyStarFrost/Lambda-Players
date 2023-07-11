@@ -164,6 +164,7 @@ local function OpenProfilePanel( ply )
             if v.model and !file.Exists( v.model, "GAME" ) then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a error playermodel! ( " .. v.model .. " )" ) end
             if v.voiceprofile and !file.Exists( "sound/lambdaplayers/voiceprofiles/" .. v.voiceprofile, "GAME" ) and !file.Exists( "sound/zetaplayer/custom_vo/" .. v.voiceprofile, "GAME" ) then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a non existent Voice Profile! ( " .. v.voiceprofile .. " )" ) end
             if v.spawnwep and !_LAMBDAPLAYERSWEAPONS[ v.spawnwep ] then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a non existent Spawn Weapon! ( " .. v.spawnwep .. " )" ) end
+            if v.favwep and !_LAMBDAPLAYERSWEAPONS[ v.favwep ] then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a non existent Favorite Weapon! ( " .. v.favwep .. " )" ) end
             if v.profilepicture and !file.Exists( "materials/" .. v.profilepicture, "GAME" ) then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a non existent Profile Picture! ( " .. v.profilepicture .. " )" ) end
 
         end
@@ -192,7 +193,7 @@ local function OpenProfilePanel( ply )
                         voicepitch = profiletbl.voicepitch and round( profiletbl.voicepitch, 0 ) or 100,
                         voice = profiletbl.personality and round( profiletbl.personality.voice, 0 ) or 30,
                         voiceprofile = profiletbl.voicepack or nil,
-                        pingrange = random( 1, 120 ),
+                        pingrange = random( 60 ),
 
                         personality = {
                             Build = profiletbl.personality and profiletbl.personality.build or 30,
@@ -387,15 +388,20 @@ local function OpenProfilePanel( ply )
     LAMBDAPANELS:CreateLabel( "Voice Pitch", mainscroll, TOP )
     local voicepitch = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 100, "Voice Pitch", 30, 255, 0 )
 
+    local wpnCopy = table_Copy( _LAMBDAWEAPONCLASSANDPRINTS )
+    wpnCopy[ "No Weapon" ] = "/NIL"
+
     LAMBDAPANELS:CreateLabel( "Spawn Weapon", mainscroll, TOP )
     LAMBDAPANELS:CreateLabel( "The weapon to spawn with", mainscroll, TOP )
-    local copy = table_Copy( _LAMBDAWEAPONCLASSANDPRINTS )
-    copy[ "No Weapon" ] = "/NIL"
-    local spawnweapon = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, copy )
+    local spawnweapon = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, wpnCopy )
+
+    LAMBDAPANELS:CreateLabel( "Favorite Weapon", mainscroll, TOP )
+    LAMBDAPANELS:CreateLabel( "The weapon this Lambda will prefer to use when switching", mainscroll, TOP )
+    local favoriteweapon = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, wpnCopy )
 
     LAMBDAPANELS:CreateLabel( "Ping", mainscroll, TOP )
     LAMBDAPANELS:CreateLabel( "The lowest point this Lambda's Ping can get", mainscroll, TOP )
-    local pingrange = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 100, "Ping Range", 1, 130, 0 )
+    local pingrange = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 40, "Ping Range", 1, 130, 0 )
 
     LAMBDAPANELS:CreateLabel( "Health", mainscroll, TOP )
     LAMBDAPANELS:CreateLabel( "The Health this Lambda will have", mainscroll, TOP )
@@ -598,10 +604,10 @@ local function OpenProfilePanel( ply )
         if name:GetText() == "" then chat.AddText( "No name is set!" ) return end
         local _, vp = voiceprofile:GetSelected()
         local _, tp = textprofile:GetSelected()
-        
         local _, weapon = spawnweapon:GetSelected()
-        local infotable = {
+        local _, favweapon = favoriteweapon:GetSelected()
 
+        local infotable = {
             name = name:GetText(),
             model = model:GetText() != "" and model:GetText() or nil,
             profilepicture = profilepicture:GetText() != "" and "lambdaplayers/custom_profilepictures/" .. profilepicture:GetText() or nil,
@@ -622,8 +628,8 @@ local function OpenProfilePanel( ply )
 
             externalvars = profileinfo and profileinfo.externalvars or nil,
 
-            spawnwep = weapon != "/NIL" and weapon or nil
-
+            spawnwep = weapon != "/NIL" and weapon or nil,
+            favwep = favweapon != "/NIL" and favweapon or nil
         }
 
         infotable.bodygroups = {}
@@ -696,6 +702,7 @@ local function OpenProfilePanel( ply )
         pingrange:SetValue( infotable.pingrange )
 
         if infotable.spawnwep then spawnweapon:SelectOptionByKey( infotable.spawnwep ) else spawnweapon:SelectOptionByKey( "/NIL" ) end
+        if infotable.favwep then favoriteweapon:SelectOptionByKey( infotable.favwep ) else favoriteweapon:SelectOptionByKey( "/NIL" ) end
 
         if externalpanels then
             for k, v in pairs( externalpanels ) do

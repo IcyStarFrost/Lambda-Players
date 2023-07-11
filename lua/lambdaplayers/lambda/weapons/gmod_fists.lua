@@ -38,7 +38,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                 local ene = self:GetEnemy()
                 if LambdaIsValid( ene ) and ene.IsLambdaPlayer and ene.l_HasMelee and ene:GetState() == "Combat" and ene:GetEnemy() == self and useReworkedVariant:GetBool() then
-                    if random( 1, 4 ) == 1 then keepDist = 64 end
+                    if random( 4 ) == 1 then keepDist = 64 end
                     if self.l_movepos == ene and self:IsInRange( ene, 300 ) then speedScale = Rand( 0.66, 1.2 ) end
                 end
 

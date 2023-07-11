@@ -98,7 +98,7 @@ function ENT:SteamID()
 end
 
 function ENT:IsPlayingTaunt()
-    return self:GetState() == "UsingAct"
+    return ( self.l_CurrentPlayedGesture > 0 )
 end
 
 function ENT:IsSprinting()
@@ -128,7 +128,7 @@ function ENT:PlayStepSound( volume )
     local sndPitch, sndName = 100
     local waterLvl = self:GetWaterLevel()
     if waterLvl != 0 and waterLvl != 3 and self:IsOnGround() then
-        sndName = "player/footsteps/wade" .. random( 1, 8 ) .. ".wav"
+        sndName = "player/footsteps/wade" .. random( 8 ) .. ".wav"
         sndPitch = random( 90, 110 )
         if !volume then volume = 0.65 end
     else

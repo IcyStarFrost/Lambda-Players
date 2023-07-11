@@ -30,7 +30,7 @@ function TOOL:LeftClick( tr )
     if tr.Entity != Entity( 0 ) then return end
     local spray = LambdaPlayerSprays[ math.random( #LambdaPlayerSprays ) ]
     if !spray then self:GetOwner():ChatPrint( "You do not have any sprays loaded!" ) return end
-    LambdaPlayers_Spray( spray, tr.HitPos, tr.HitNormal, math.random( 0, 10000000000 ) )
+    LambdaPlayers_Spray( spray, tr.HitPos, tr.HitNormal )
    
     return true
 end
@@ -42,7 +42,7 @@ function TOOL:RightClick( tr )
 
     if val == "" then return end
 
-    LambdaPlayers_Spray( val, tr.HitPos, tr.HitNormal, math.random( 0, 10000000000 ) )
+    LambdaPlayers_Spray( val, tr.HitPos, tr.HitNormal )
    
     return true
 end

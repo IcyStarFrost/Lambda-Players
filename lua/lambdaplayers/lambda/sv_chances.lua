@@ -17,8 +17,8 @@ function ENT:ComputeChance()
    
     local hundreds = Get100Percents( self.l_Personality )
     for k, v in ipairs( self.l_Personality ) do
-        if v[ 2 ] == 100 and hundreds > 1 and random( 1, 2 ) == 1 then hundreds = hundreds - 1 self:DebugPrint( v[ 1 ] .. " one of their hundred percent chances failed" ) continue end
-        local rnd = random( 1, 100 )
+        if v[ 2 ] == 100 and hundreds > 1 and random( 2 ) == 1 then hundreds = hundreds - 1 self:DebugPrint( v[ 1 ] .. " one of their hundred percent chances failed" ) continue end
+        local rnd = random( 100 )
         if rnd < v[ 2 ] then
             
             self:DebugPrint( v[ 1 ] .. " chance succeeded in its chance. ( " .. rnd .. " to " .. v[ 2 ] .. " )" )

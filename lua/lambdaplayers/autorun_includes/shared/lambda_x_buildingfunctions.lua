@@ -22,7 +22,7 @@ end
 local function SpawnAProp( self )
     if !self:IsUnderLimit( "Prop" ) then return end
 
-    for i=1, random( 1, 4 ) do
+    for i=1, random( 4 ) do
         if !self:IsUnderLimit( "Prop" ) then return end
 
         self:LookTo( self:GetPos() + VectorRand( -100, 100 ), 2 )
@@ -102,7 +102,7 @@ local function Spray( self )
     local trace = Trace( spraytbl )
     if !trace.Hit then return end
 
-    LambdaPlayers_Spray( LambdaPlayerSprays[ random( #LambdaPlayerSprays ) ], trace.HitPos, trace.HitNormal, self:GetCreationID() )
+    LambdaPlayers_Spray( LambdaPlayerSprays[ random( #LambdaPlayerSprays ) ], trace.HitPos, trace.HitNormal )
     self:EmitSound( "player/sprayer.wav", 65 )
 
     coroutine.wait( rand( 0.2, 0.6 ) )

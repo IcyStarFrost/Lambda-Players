@@ -78,7 +78,7 @@ function ENT:SpawnProp()
     end
 
     if GetConVar( "lambdaplayers_building_freezeprops" ):GetBool() then
-        if random( 1, 2 ) == 1 then
+        if random( 2 ) == 1 then
             local phys = prop:GetPhysicsObject()
             if IsValid( phys ) then phys:EnableMotion( false ) end
         else

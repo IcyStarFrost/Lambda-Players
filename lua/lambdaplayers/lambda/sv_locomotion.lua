@@ -77,6 +77,7 @@ function ENT:MoveToPos( pos, options )
     local loco = self.loco
     local runSpeed = self:GetRunSpeed()
     local stepH = loco:GetStepHeight()
+    local jumpH = loco:GetJumpHeight()
     local curGoal, prevGoal
     local nextJumpT = CurTime() + 0.5
     local returnMsg = "ok"
@@ -155,11 +156,16 @@ function ENT:MoveToPos( pos, options )
             elseif moveType == 2 and ( prevGoal.pos.z - selfPos.z ) <= 0 then
                 hasJumped = true
             else
-                -- Close up jumping
+                -- Jumping over ledges and close up jumping
                 local stepAhead = ( selfPos + vector_up * stepH )
                 curArea = self.l_currentnavarea
                 local grHeight, grNormal = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 60 )
                 if grHeight and grNormal.z > 0.9 and ( grHeight - selfPos.z ) > stepH then hasJumped = true end
+
+                if !hasJumped then
+                    grHeight = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 30 )
+                    if grHeight and ( grHeight - selfPos.z ) < -jumpH then hasJumped = true end
+                end
             end
 
             if hasJumped and CurTime() > nextJumpT then
@@ -634,7 +640,7 @@ function ENT:PathGenerator()
         local cost = ( CNavArea_GetCostSoFar( fromArea ) + dist )
 
         if randomizeCost then
-            if !updates or random( 1, 20 ) == 1 then
+            if !updates or random( 20 ) == 1 then
                 randCost = Rand( minRandCost, maxRandCost )
             end
 

@@ -65,7 +65,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 if CurTime() > wepent.NextUnreadyTime then
                     if wepent.IsGripReady then
                         wepent.IsGripReady = false
-                        wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 1, 2 ) .. ".mp3", 65 )
+                        wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 2 ) .. ".mp3", 65 )
                         wepent:SetBodygroup( 0, 1 )
                     end
 
@@ -80,7 +80,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 else
                     if !wepent.IsGripReady then
                         wepent.IsGripReady = true
-                        wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 1, 2 ) .. ".mp3", 65 )
+                        wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 2 ) .. ".mp3", 65 )
                         wepent:SetBodygroup( 0, 0 )
                         self.l_HoldType = "melee2"
                     end
@@ -103,11 +103,11 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         OnTakeDamage = function( self, wepent, dmginfo )
-            if CurTime() > wepent.NextUnreadyTime then wepent.NextUnreadyTime = CurTime() + random( 1, 4 ) end
+            if CurTime() > wepent.NextUnreadyTime then wepent.NextUnreadyTime = CurTime() + random( 4 ) end
 
             if dmginfo:IsBulletDamage()then
                 if CurTime() <= wepent.DodgeTime then return true end
-                if random( 1, 2 ) == 1 and self:IsOnGround() and self.l_issmoving and !self:IsDisabled() then
+                if random( 2 ) == 1 and self:IsOnGround() and self.l_issmoving and !self:IsDisabled() then
                     local selfCenter, selfPos = self:WorldSpaceCenter(), self:GetPos()
                     local stepHeight = self:GetUp() * -self.loco:GetStepHeight()
 
@@ -115,14 +115,14 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     local dmgSrc = ( IsValid( inflictor ) and inflictor:WorldSpaceCenter() or dmginfo:GetAttacker():WorldSpaceCenter() )
 
                     local dmgAng = ( dmgSrc - selfCenter ):Angle(); dmgAng.z = 0
-                    local dodgeDir = ( dmgAng:Right() * ( random( 1, 2 ) == 1 and -1500 or 1500 ) )
+                    local dodgeDir = ( dmgAng:Right() * ( random( 2 ) == 1 and -1500 or 1500 ) )
 
                     local realVel = ( dodgeDir / 5 )
                     if self:Trace( selfCenter + realVel, selfCenter ).Hit or !self:Trace( selfPos + realVel + stepHeight, selfPos + realVel ).Hit then dodgeDir = -dodgeDir end
 
                     if !self:Trace( selfCenter + realVel, selfCenter ).Hit and self:Trace( selfPos + realVel + stepHeight, selfPos + realVel ).Hit then 
                         self.loco:SetVelocity( dodgeDir )
-                        wepent:EmitSound( "lambdaplayers/weapons/katana/katana_dodge" .. random( 1, 2 ) .. ".mp3", 70 )
+                        wepent:EmitSound( "lambdaplayers/weapons/katana/katana_dodge" .. random( 2 ) .. ".mp3", 70 )
                         wepent.DodgeTime = CurTime() + 0.2
                         return true
                     end
@@ -134,7 +134,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         OnAttack = function( self, wepent, target )
-            wepent.NextUnreadyTime = CurTime() + random( 1, 4 )
+            wepent.NextUnreadyTime = CurTime() + random( 4 )
             wepent:EmitSound( "lambdaplayers/weapons/katana/katana_swing_miss" .. random( 4 ) .. ".mp3", 70 )
 
             self.l_WeaponUseCooldown = CurTime() + Rand( 0.4, 0.8 )
@@ -172,7 +172,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                         end
 
                         local bleedInfo = DamageInfo()
-                        bleedInfo:SetDamage( random( 1, 3 ) )
+                        bleedInfo:SetDamage( random( 3 ) )
                         bleedInfo:SetDamageType( DMG_SLASH )
                         bleedInfo:SetInflictor( IsValid( wepent ) and wepent or IsValid( self ) and self or target )
                         bleedInfo:SetAttacker( IsValid( self ) and self or target )

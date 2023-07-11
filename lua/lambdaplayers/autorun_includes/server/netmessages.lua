@@ -43,16 +43,10 @@ net.Receive( "lambdaplayers_getlambdavisuals", function()
     local lambda = net.ReadEntity()
     if !IsValid( lambda ) then return end
 
-    local mdlBGs, groupID = {}
-    for _, v in ipairs( lambda:GetBodyGroups() ) do
-        groupID = v.id
-        mdlBGs[ groupID ] = lambda:GetBodygroup( groupID )
-    end
-
     net.Start( "lambdaplayers_sendlambdavisuals" )
         net.WriteString( lambda:GetModel() )
         net.WriteUInt( lambda:GetSkin(), 5 )
-        net.WriteTable( mdlBGs )
+        net.WriteTable( lambda:GetBodyGroupData() )
         net.WriteVector( lambda:WorldSpaceCenter() )
     net.Broadcast()
 end )

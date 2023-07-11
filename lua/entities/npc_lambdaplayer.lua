@@ -43,6 +43,7 @@ end
     local eyetracing = GetConVar( "lambdaplayers_debug_eyetracing" )
     local isfunction = isfunction
     local isnumber = isnumber
+    local isstring = isstring
     local Lerp = Lerp
     local LerpVector = LerpVector
     local isentity = isentity
@@ -143,8 +144,7 @@ function ENT:Initialize()
             self[ "l_Spawned" .. name ] = {}
         end
 
-        self.l_State = "Idle" -- The current state we are in
-        self.l_LastState = "Idle" -- The last state we were in
+        self.l_BehaviorState = "Idle" -- The state our behavior thread is currently running
         self.l_Weapon = "" -- The weapon we currently have
         self.l_queuedtext = nil -- The text that we want to send in chat
         self.l_typedtext = nil -- The current text we have typed out so far
@@ -209,7 +209,8 @@ function ENT:Initialize()
         self:SetHealth( spawnHealth:GetInt() )
         self:UpdateHealthDisplay()
 
-        self:SetArmor( spawnArmor:GetInt() ) -- Our current armor
+        self.l_SpawnArmor = spawnArmor:GetInt()
+        self:SetArmor( self.l_SpawnArmor ) -- Our current armor
         self:SetMaxArmor( maxArmor:GetInt() ) -- Our maximum armor
 
         self:SetPlyColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
@@ -217,26 +218,22 @@ function ENT:Initialize()
         self.l_PlyRealColor = self:GetPlyColor():ToColor()
         self.l_PhysRealColor = self:GetPhysColor():ToColor()
 
-        local rndpingrange = random( 1, 120 )
+        local rndpingrange = random( 60 )
         self:SetAbsPing( rndpingrange )  -- The lowest point our fake ping can get
         self:SetPing( rndpingrange ) -- Our actual fake ping
-        self:SetSteamID64( 90071996842377216 + random( 1, 10000000 ) )
+        self:SetSteamID64( 90071996842377216 + random( 10000000 ) )
         self:SetTextPerMinute( 400 ) -- The amount of characters we can type within a minute
-        self:SetNW2String( "lambda_steamid", "STEAM_0:0:" .. random( 1, 200000000 ) )
+        self:SetNW2String( "lambda_steamid", "STEAM_0:0:" .. random( 200000000 ) )
         self:SetNW2String( "lambda_ip", "192." .. random( 10, 200 ) .. "." .. random( 10 ).. "." .. random( 10, 200 ) .. ":27005" )
         self:SetNW2String( "lambda_state", "Idle" )
         self:SetNW2String( "lambda_laststate", "Idle" )
         
-        self.l_BodyGroupData = {}
         if rndBodyGroups:GetBool() then
             -- Randomize my model's bodygroups
             for _, v in ipairs( self:GetBodyGroups() ) do
                 local subMdls = #v.submodels
                 if subMdls == 0 then continue end 
-                    
-                local rndID = random( 0, subMdls )
-                self:SetBodygroup( v.id, rndID )
-                self.l_BodyGroupData[ v.id ] = rndID
+                self:SetBodygroup( v.id, random( 0, subMdls ) )
             end
 
             -- Randomize my model's skingroup
@@ -246,8 +243,8 @@ function ENT:Initialize()
 
         -- Personality function was relocated to the start of the code since it needs to be shared so clients can have Get functions
         
-        self:SetVoiceChance( random( 1, 100 ) )
-        self:SetTextChance( random( 1, 100 ))
+        self:SetVoiceChance( random( 100 ) )
+        self:SetTextChance( random( 100 ) )
         self:SetVoicePitch( random( voicepitchmin:GetInt(), voicepitchmax:GetInt() ) )
 
         local modelVP = LambdaModelVoiceProfiles[ lower( self:GetModel() ) ]
@@ -255,7 +252,7 @@ function ENT:Initialize()
             self.l_VoiceProfile = modelVP
         else
             local vpchance = voiceprofilechance:GetInt()
-            if vpchance > 0 and random( 1, 100 ) <= vpchance then 
+            if vpchance > 0 and random( 100 ) <= vpchance then 
                 local vps = table_GetKeys( LambdaVoiceProfiles ) 
                 self.l_VoiceProfile = vps[ random( #vps ) ] 
             end
@@ -263,7 +260,7 @@ function ENT:Initialize()
         self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
 
         local tpchance = textprofilechance:GetInt()
-        if tpchance > 0 and random( 1, 100 ) < tpchance then local tps = table_GetKeys( LambdaTextProfiles ) self.l_TextProfile = tps[ random( #tps ) ] end
+        if tpchance > 0 and random( 100 ) < tpchance then local tps = table_GetKeys( LambdaTextProfiles ) self.l_TextProfile = tps[ random( #tps ) ] end
         self:SetNW2String( "lambda_tp", self.l_TextProfile )
 
         ----
@@ -313,6 +310,7 @@ function ENT:Initialize()
         self:SetWeaponENT( self.WeaponEnt )
         self.l_SpawnWeapon = "physgun" -- The weapon we spawned with
         self:SetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon )
+        self.l_FavoriteWeapon = false -- Our favorite weapon
 
         self:InitializeMiniHooks()
         self:SwitchWeapon( "physgun", true )
@@ -461,7 +459,7 @@ function ENT:Think()
 
     -- Handle our ping rising or dropping
     local updateRate = ( ( SERVER or !self:IsDormant() ) and 125 or 500 )
-    if random( 1, updateRate ) == 1 then
+    if random( updateRate ) == 1 then
         local ping, absPing = self:GetPing(), self:GetAbsPing()
         self:SetPing( Clamp( ping + random( -20, ( 24 - ( ping / absPing ) ) ), absPing, 999 ) )
     end
@@ -520,9 +518,9 @@ function ENT:Think()
         -- Play random Idle lines depending on current state or speak in text chat
         if curTime > self.l_nextidlesound then
             if !isDisabled and !self.l_preventdefaultspeak and !self:GetIsTyping() and !self:IsSpeaking() then
-                if random( 1, 100 ) <= self:GetVoiceChance() then
+                if random( 100 ) <= self:GetVoiceChance() then
                     self:PlaySoundFile( self:IsPanicking() and "panic" or ( self:InCombat() and "taunt" or "idle" ) )
-                elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
+                elseif random( 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                     local line = self:GetTextLine( "idle" )
                     line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "idle" ) or line )
                     self:TypeMessage( line )
@@ -560,60 +558,63 @@ function ENT:Think()
             local isPanicking = self:IsPanicking()
 
             if LambdaIsValid( target ) and ( isPanicking or self:GetState() == "Combat" ) then
-                local canSee = self:CanSee( target )
-                local attackRange = self.l_CombatAttackRange
+                local behavState = self.l_BehaviorState
+                if behavState == "Retreat" or behavState == "Combat" then
+                    local canSee = self:CanSee( target )
+                    local attackRange = self.l_CombatAttackRange
 
-                if attackRange and ( !isPanicking or useWeaponPanic:GetBool() ) then 
-                    if isPanicking then attackRange = ( attackRange * 0.8 ) end
+                    if attackRange and ( !isPanicking or useWeaponPanic:GetBool() ) then 
+                        if isPanicking then attackRange = ( attackRange * 0.8 ) end
 
-                    if canSee then 
-                        if self:IsInRange( target, attackRange * ( self.l_HasMelee and 3 or 1 ) ) then
-                            self.Face = target
-                            self.l_Faceend = ( CurTime() + rand( 0.5, 2.0 ) )
+                        if canSee then 
+                            if self:IsInRange( target, attackRange * ( self.l_HasMelee and 3 or 1 ) ) then
+                                self.Face = target
+                                self.l_Faceend = ( CurTime() + rand( 0.5, 2.0 ) )
+                            end
+
+                            if self:IsInRange( target, attackRange ) then
+                                isFiring = true
+                                self:UseWeapon( target )
+                            end
+                        end
+                    end
+
+                    if !isPanicking and canSee then
+                        local keepDist, myOrigin = self.l_CombatKeepDistance, self:GetPos()
+                        local posCopy = target:GetPos(); posCopy.z = myOrigin.z
+
+                        if keepDist and self:IsInRange( posCopy, keepDist ) then
+                            local moveAng = ( myOrigin - posCopy ):Angle()
+                            local potentialPos = ( myOrigin + moveAng:Forward() * random( -self:GetRunSpeed(), keepDist ) + moveAng:Right() * random( -keepDist, keepDist ) )
+                            self.l_movepos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )
+                        else
+                            self.l_movepos = target
+                        end
+                    end
+
+                    if random( 40 ) == 1 and jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.9 ) then
+                        combatjumptbl.start = self:GetPos()
+                        combatjumptbl.endpos = ( combatjumptbl.start + locoVel )
+                        combatjumptbl.filter = self
+
+                        local jumpTr = TraceHull( combatjumptbl )
+                        local hitNorm = jumpTr.HitNormal
+                        local invertVel = false
+                        local canJump = ( hitNorm.x == 0 and hitNorm.y == 0 and hitNorm.z <= 0 )
+
+                        if !canJump then 
+                            invertVel = Vector( -locoVel.x, -locoVel.y, locoVel.z )
+                            combatjumptbl.endpos = ( combatjumptbl.start + invertVel )
+                            jumpTr = TraceHull( combatjumptbl )
+                            hitNorm = jumpTr.HitNormal
+
+                            canJump = ( hitNorm.z < 0 and hitNorm.x == 0 and hitNorm.y == 0 )
                         end
 
-                        if self:IsInRange( target, attackRange ) then
-                            isFiring = true
-                            self:UseWeapon( target )
+                        if canJump and self:LambdaJump() and invertVel then
+                            locoVel = invertVel
+                            self.loco:SetVelocity( locoVel )
                         end
-                    end
-                end
-
-                if !isPanicking and canSee then
-                    local keepDist, myOrigin = self.l_CombatKeepDistance, self:GetPos()
-                    local posCopy = target:GetPos(); posCopy.z = myOrigin.z
-
-                    if keepDist and self:IsInRange( posCopy, keepDist ) then
-                        local moveAng = ( myOrigin - posCopy ):Angle()
-                        local potentialPos = ( myOrigin + moveAng:Forward() * random( -self:GetRunSpeed(), keepDist ) + moveAng:Right() * random( -keepDist, keepDist ) )
-                        self.l_movepos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )
-                    else
-                        self.l_movepos = target
-                    end
-                end
-
-                if random( 1, 40 ) == 1 and jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.9 ) then
-                    combatjumptbl.start = self:GetPos()
-                    combatjumptbl.endpos = ( combatjumptbl.start + locoVel )
-                    combatjumptbl.filter = self
-
-                    local jumpTr = TraceHull( combatjumptbl )
-                    local hitNorm = jumpTr.HitNormal
-                    local invertVel = false
-                    local canJump = ( hitNorm.x == 0 and hitNorm.y == 0 and hitNorm.z <= 0 )
-
-                    if !canJump then 
-                        invertVel = Vector( -locoVel.x, -locoVel.y, locoVel.z )
-                        combatjumptbl.endpos = ( combatjumptbl.start + invertVel )
-                        jumpTr = TraceHull( combatjumptbl )
-                        hitNorm = jumpTr.HitNormal
-
-                        canJump = ( hitNorm.z < 0 and hitNorm.x == 0 and hitNorm.y == 0 )
-                    end
-
-                    if canJump and self:LambdaJump() and invertVel then
-                        locoVel = invertVel
-                        self.loco:SetVelocity( locoVel )
                     end
                 end
             else
@@ -721,7 +722,7 @@ function ENT:Think()
                 -- Randomly change height
                 if curTime > self.l_nextnoclipheightchange then
                     self.l_noclipheight = random( 0, 500 )
-                    self.l_nextnoclipheightchange = curTime + random( 1, 20 )
+                    self.l_nextnoclipheightchange = curTime + random( 20 )
                 end
 
                 local pathPos = ( isvector( self.l_CurrentPath ) and self.l_CurrentPath or ( IsValid( self.l_CurrentPath ) and self.l_CurrentPath:GetEnd() or nil ) )
@@ -1024,8 +1025,14 @@ function ENT:RunBehaviour()
 
     while true do
         if !self:GetIsDead() and !self:IsDisabled() then
-            local statefunc = self[ self:GetState() ] -- I forgot this was possible. See sv_states.lua
-            if statefunc then statefunc( self ) end
+            local curState = self:GetState()
+            local statefunc = self[ curState ] -- I forgot this was possible. See sv_states.lua
+            if statefunc then
+                self.l_BehaviorState = curState
+
+                local returnState = statefunc( self )
+                if returnState then self:SetState( ( isstring( returnState ) and returnState ), curState ) end
+            end
         end
 
         local time = ( InSinglePlayer() and thinkrate:GetFloat() or 0.2 )

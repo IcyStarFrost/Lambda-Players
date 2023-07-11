@@ -50,7 +50,7 @@ local personalitypresets = {
     [ "builder" ] = function( self ) -- Focused on Building
         local tbl = {}
         for k, v in ipairs( LambdaPersonalityConVars ) do
-            tbl[ v[ 1 ] ] = random( 1, 100 )
+            tbl[ v[ 1 ] ] = random( 100 )
         end
         tbl[ "Build" ] = 80
         tbl[ "Combat" ] = 5

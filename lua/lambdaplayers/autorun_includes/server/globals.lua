@@ -439,12 +439,11 @@ function LambdaKillFeedAdd( victim, attacker, inflictor )
 end
 
 -- Sprays the path relative to the materials folder to the position.
-function LambdaPlayers_Spray( path, tracehitpos, tracehitnormal, index )
+function LambdaPlayers_Spray( path, tracehitpos, tracehitnormal )
     net.Start( "lambdaplayers_spray" )
         net.WriteString( path )
         net.WriteVector( tracehitpos )
         net.WriteNormal( tracehitnormal )
-        net.WriteUInt( index, 32 )
     net.Broadcast()
 end
 

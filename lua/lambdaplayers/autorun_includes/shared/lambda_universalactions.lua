@@ -16,7 +16,7 @@ end
 
 -- Random weapon switching
 AddUActionToLambdaUA( function( self )
-    if random( 1, 3 ) != 1 then return end
+    if random( 3 ) != 1 then return end
     if self:GetState() == "Idle" then
         self:SwitchToRandomWeapon()
     elseif self:InCombat() then
@@ -26,7 +26,7 @@ end )
 
 -- Use a random act
 AddUActionToLambdaUA( function( self )
-    if self:GetState() != "Idle" or random( 1, 2 ) != 1 then return end
+    if self:GetState() != "Idle" or random( 2 ) != 1 then return end
     self:CancelMovement()
     self:SetState( "UsingAct" )
 end )
@@ -34,7 +34,7 @@ end )
 -- Undo entities
 AddUActionToLambdaUA( function( self )
     if self:GetState() != "Idle" then return end
-    self:NamedTimer( "Undoentities", rand( 0.3, 0.6 ), random( 1, 6 ), function() self:UndoLastSpawnedEnt() end )
+    self:NamedTimer( "Undoentities", rand( 0.3, 0.6 ), random( 6 ), function() self:UndoLastSpawnedEnt() end )
 end )
 
 local isbutton = {
@@ -58,7 +58,7 @@ end )
 
 -- Crouch
 AddUActionToLambdaUA( function( self )
-    if random( 1, 2 ) != 1 then return end
+    if random( 2 ) != 1 then return end
     self:SetCrouch( true )
 
     local lastState = self:GetState()
@@ -75,7 +75,7 @@ end )
 local noclip = GetConVar( "lambdaplayers_lambda_allownoclip" )
 -- NoClip
 AddUActionToLambdaUA( function( self )
-    if random( 1, 2 ) != 1 or !noclip:GetBool() then return end
+    if random( 2 ) != 1 or !noclip:GetBool() then return end
     self:NoClipState( true )
 
     local Nocliptime = CurTime() + rand( 1, 120 )
@@ -87,9 +87,9 @@ AddUActionToLambdaUA( function( self )
     end )
 end )
 
--- Jump around ( Disabled because caused to many stuck situations )
+-- Jump around ( Disabled due to causes of many 'stuck in wall or ceiling' situations )
 -- AddUActionToLambdaUA( function( self )
---     if random( 1, 2 ) != 1 or self:GetState() != "Idle" then return end
+--     if random( 2 ) != 1 or self:GetState() != "Idle" then return end
 --     self:LambdaJump()
 
 --     if self.l_issmoving then
@@ -104,15 +104,9 @@ end )
 local killbind = GetConVar( "lambdaplayers_lambda_allowkillbind" )
 -- Use Killbind
 AddUActionToLambdaUA( function( self )
-    if random( 100 ) != 1 or !killbind:GetBool() then return end
-
-    local dmginfo = DamageInfo()
-    dmginfo:SetDamage( 0 )
-    dmginfo:SetAttacker( self )
-    dmginfo:SetInflictor( self )
-    self:LambdaOnKilled( dmginfo )
+    if random( self:IsPlayingTaunt() and 50 or 150 ) != 1 or !killbind:GetBool() then return end
+    self:Kill()
 end )
-
 
 -- Equip and use medkit on myself if it's allowed, we are hurt and not in combat
 AddUActionToLambdaUA( function( self )

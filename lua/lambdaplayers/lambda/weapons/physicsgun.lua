@@ -121,7 +121,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 lambda:Thread( function()
 
                     while true do 
-                        if lambda:GetState() == "Idle" and !lambda:IsDisabled() and !physgunactive and random( 1, 3 ) == 1 then
+                        if lambda:GetState() == "Idle" and !lambda:IsDisabled() and !physgunactive and random( 3 ) == 1 then
                             local possibleents = lambda:FindInSphere( nil, 1500, function( ent ) return !ignoreentclasses[ ent:GetClass() ] and lambda:HasVPhysics( ent ) and lambda:HasPermissionToEdit( ent ) and lambda:CanSee( ent ) end )
                             local ent = possibleents[ random( #possibleents ) ]
 
@@ -148,7 +148,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                             end
 
-                        elseif physgunactive and !lambda.l_allowdropphys and random( 1, 6 ) == 1 then
+                        elseif physgunactive and !lambda.l_allowdropphys and random( 6 ) == 1 then
                             lambda.l_physgungrabbedent = nil
                             wepent:SetNW2Bool( "lambda_physgundraw", false )
                         end
@@ -229,18 +229,18 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         
                 render.StartBeam( segments + 2 )
         
-                    render.AddBeam( s, random( 1, 2 ), random( 1, 10 ), color )
+                    render.AddBeam( s, random( 2 ), random( 10 ), color )
         
                     for i=1, segments do
                         
                         -- This actually makes a pretty decent beam
                         local lerp = LerpVector( i / 15, s + forward * ( 2 + i * 10 ), e )
         
-                        render.AddBeam( lerp, random( 1, 2 ), random( 1, 10 ), color )
+                        render.AddBeam( lerp, random( 2 ), random( 10 ), color )
         
                     end
         
-                    render.AddBeam( e, random( 1, 2 ), random( 1, 10 ), color )
+                    render.AddBeam( e, random( 2 ), random( 10 ), color )
         
                 render.EndBeam()
         

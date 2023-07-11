@@ -29,13 +29,15 @@ local function Chance_Build( self )
 
     for index, buildtable in RandomPairs( LambdaBuildingFunctions ) do
         if !buildtable[ 2 ]:GetBool() then continue end
-        if LambdaRunHook( "LambdaOnUseBuildFunction", self, buildtable[ 1 ] ) == true then return end
-        local result 
+        
+        local name = buildtable[ 1 ]
+        if LambdaRunHook( "LambdaOnUseBuildFunction", self, name ) == true then break end
 
+        local result 
         local ok, msg = pcall( function() result = buildtable[ 3 ]( self ) end )
 
-        if !ok and buildtable[ 1 ] != "entity" and buildtable[ 1 ] != "npc" then ErrorNoHaltWithStack( buildtable[ 1 ] .. " Building function had a error! If this is from a addon, report it to the author!", msg ) end
-        if result then self:DebugPrint( "Used a building function: " .. buildtable[ 1 ] ) break end
+        if !ok and name != "entity" and name != "npc" then ErrorNoHaltWithStack( name .. " Building function had a error! If this is from a addon, report it to the author!", msg ) end
+        if result then self:DebugPrint( "Used a building function: " .. name ) break end
     end
 
     self:PreventWeaponSwitch( false )
@@ -53,18 +55,18 @@ local function Chance_Tool( self )
     local target = find[ random( #find ) ]
 
     -- Loops through random tools and only stops if a tool tells us it actually got used by returning true 
-    
     for index, tooltable in RandomPairs( LambdaToolGunTools ) do
         if !tooltable[ 2 ]:GetBool() then continue end -- If the tool is allowed
-        if LambdaRunHook( "LambdaOnToolUse", self, tooltable[ 1 ] ) == true then return end
+ 
+        local name = tooltable[ 1 ]
+        if LambdaRunHook( "LambdaOnToolUse", self, name ) == true then break end
+
         local result
-        
         local ok, msg = pcall( function() result = tooltable[ 3 ]( self, target ) end )
 
-        if !ok then ErrorNoHaltWithStack( tooltable[ 1 ] .. " Tool had a error! If this is from a addon, report it to the author!", msg ) end
-        if result then self:DebugPrint( "Used " .. tooltable[ 1 ] .. " Tool" ) break end
+        if !ok then ErrorNoHaltWithStack( name .. " Tool had a error! If this is from a addon, report it to the author!", msg ) end
+        if result then self:DebugPrint( "Used " .. name .. " Tool" ) break end
     end
-
 
     self:PreventWeaponSwitch( false )
 end
@@ -76,7 +78,7 @@ local function Chance_Combat( self )
     spawnEntities = spawnEntities or GetConVar( "lambdaplayers_building_allowentity" )
     local allowEntities = spawnEntities:GetBool()
     
-    local rndCombat = random( 1, 4 )
+    local rndCombat = random( 4 )
     if rndCombat == 1 and allowEntities and spawnBatteries:GetBool() and self:Armor() < self:GetMaxArmor() then
         self:SetState( "ArmorUp" )
     elseif rndCombat == 2 and allowEntities and spawnMedkits:GetBool() and self:Health() < self:GetMaxHealth() then
