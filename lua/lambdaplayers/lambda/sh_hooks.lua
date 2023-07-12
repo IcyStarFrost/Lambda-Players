@@ -152,7 +152,7 @@ if SERVER then
         local inflictor = info:GetInflictor()
 
         if !silent then
-            self:DebugPrint( "was killed by ", attacker )
+            self:DebugPrint( "I was killed by", attacker )
 
             self:EmitSound( info:IsDamageType( DMG_FALL ) and "Player.FallGib" or "Player.Death" )
             
@@ -312,15 +312,17 @@ if SERVER then
 
     function ENT:OnOtherKilled( victim, info )
         local attacker = info:GetAttacker()
+        local inflictor = info:GetInflictor()
+
         if attacker == self then
-            self:DebugPrint( "killed ", victim )
+            self:DebugPrint( "I killed", victim )
             self:SetFrags( self:GetFrags() + 1 )
-            if !victim.IsLambdaPlayer then LambdaKillFeedAdd( victim, attacker, info:GetInflictor() ) end
+            if !victim.IsLambdaPlayer then LambdaKillFeedAdd( victim, attacker, inflictor ) end
         end
 
         local enemy = self:GetEnemy()
         if victim == enemy then
-            self:DebugPrint( "Enemy was killed by", attacker )
+            self:DebugPrint( "My enemy was killed by", attacker )
             self:SetEnemy( NULL )
             self:CancelMovement()
         end
@@ -329,6 +331,8 @@ if SERVER then
         if preventDefaultActions == true then return end
 
         if attacker == self then
+            local killerActionChance = random( 10 )
+
             if victim == enemy then
                 if !self.l_preventdefaultspeak then
                     if random( 100 ) <= self:GetVoiceChance() then
@@ -341,18 +345,19 @@ if SERVER then
                     end
                 end
 
-                local killerActionChance = random( 10 )
                 if killerActionChance == 1 then 
                     self.l_tbagpos = victim:GetPos()
                     self:SetState( "TBaggingPosition" )
+                    self:DebugPrint( "I killed my enemy. It's t-bagging time..." )
                     return
                 end
-                if killerActionChance == 10 and !self:IsSpeaking() and retreatLowHP:GetBool() then
-                    self:DebugPrint( "I'm running away, I killed someone." )
-                    self:RetreatFrom( victim )
-                    self:CancelMovement()
-                    return
-                end
+            end
+
+            if killerActionChance == 10 and retreatLowHP:GetBool() then
+                self:DebugPrint( "I killed someone. Retreating..." )
+                self:RetreatFrom( victim )
+                self:CancelMovement()
+                return
             end
         elseif victim == enemy and !self.l_preventdefaultspeak and random( 100 ) <= self:GetVoiceChance() and ( attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot() ) then
             if self:CanSee( attacker ) then
@@ -365,6 +370,7 @@ if SERVER then
             local witnessChance = random( 10 )
             if witnessChance == 1 or ( attacker == victim or attacker:IsWorld() ) and witnessChance >= 6 then
                 self:LaughAt( victim ) 
+                self:DebugPrint( "I killed or saw someone die. Laugh at this man!" )
             elseif attacker != self and victim != enemy then
                 if witnessChance == 2 and !self.l_preventdefaultspeak then
                     self:LookTo( victimPos, random( 3 ) )
@@ -378,7 +384,7 @@ if SERVER then
                         self:TypeMessage( line )
                     end
                 elseif witnessChance == 10 and !self:InCombat() and retreatLowHP:GetBool() then
-                    self:DebugPrint( "I'm running away, I saw someone die." )
+                    self:DebugPrint( "I saw someone die. Retreating..." )
                     self:RetreatFrom( victim )
                     self:CancelMovement()
                 end
@@ -566,7 +572,7 @@ if SERVER then
             SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
         end
 
-        self:DebugPrint( "Applied client settings from ", ply )
+        self:DebugPrint( "Applied client settings from", ply )
     end
 
     -- Fall damage handling

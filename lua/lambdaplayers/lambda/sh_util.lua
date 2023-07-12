@@ -62,6 +62,7 @@ local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
 local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 local spawnBehavior = GetConVar( "lambdaplayers_combat_spawnbehavior" )
 local spawnBehavInitSpawn = GetConVar( "lambdaplayers_combat_spawnbehavior_initialspawnonly" )
+local spawnBehavUseRange = GetConVar( "lambdaplayers_combat_spawnbehavior_usedistance" )
 local ignoreFriendNPCs = GetConVar( "lambdaplayers_combat_ignorefriendlynpcs" )
 local slightDelay = GetConVar( "lambdaplayers_voice_slightdelay" )
 
@@ -574,10 +575,10 @@ if SERVER then
         self:LookTo( target, 3 )
         self.l_LaughAt_PrevState = self:GetState()
 
-        local laughDelay = Rand( 0.1, 0.5 )
+        local laughDelay = Rand( 0.25, 1.0 )
         self:PlaySoundFile( "laugh", laughDelay )
 
-        self:SimpleTimer( laughDelay * Rand( 1.0, 1.5 ), function()
+        self:SimpleTimer( laughDelay * Rand( 1.0, 1.33 ), function()
             self:CancelMovement()
             self:SetState( "Laughing" )
             self:LookTo( ( ( isentity( target ) and IsValid( target ) ) and target:GetPos() or target ), 1 )
@@ -1099,12 +1100,12 @@ if SERVER then
         net.Broadcast()
     end
 
-    function ENT:GetFallDamage( speed )
+    function ENT:GetFallDamage( speed, realDmg )
         local gravity = self.loco:GetGravity()
         local maxSafeFallSpeed = sqrt( 2 * gravity * 20 * 12 )
 
         speed = ( speed or self.l_FallVelocity )
-        if !realisticfalldamage:GetBool() and speed > maxSafeFallSpeed then
+        if !realDmg and speed > maxSafeFallSpeed and !realisticfalldamage:GetBool() then
             return 10
         end
 
@@ -1261,12 +1262,25 @@ if SERVER then
         return stepTime
     end
 
+    local jumpTr = {}
+    local TraceHull = util.TraceHull
+
     function ENT:LambdaJump()
         if !self:IsOnGround() then return end
         local curNav = self.l_currentnavarea
         if obeynav:GetBool() and IsValid( curNav ) and ( curNav:HasAttributes( NAV_MESH_NO_JUMP ) or curNav:HasAttributes( NAV_MESH_STAIRS ) ) then return end       
         if LambdaRunHook( "LambdaOnJump", self, curNav ) == true then return end
-        
+            
+        local mins, maxs = self:GetCollisionBounds()
+        jumpTr.start = self:GetPos()
+        jumpTr.endpos = jumpTr.start + ( self.loco:GetVelocity() * FrameTime() )
+        jumpTr.filter = self
+        jumpTr.mins = mins
+        jumpTr.maxs = maxs
+
+        local jumpTrace = TraceHull( jumpTr )
+        if jumpTrace.Hit then self:SetPos( jumpTrace.HitPos ) end
+
         self.loco:Jump()
         self:PlayStepSound( 1.0 )
         return true
@@ -1288,15 +1302,29 @@ if SERVER then
         if spawnBehav == 0 then return end
 
         if spawnBehav == 1 then
-            for _, ply in RandomPairs( player_GetAll() ) do
-                if !IsValid( ply ) or !self:CanTarget( ply ) then continue end
-                self:AttackTarget( ply ); break
+            if !spawnBehavUseRange:GetBool() then
+                for _, ply in RandomPairs( player_GetAll() ) do
+                    if !IsValid( ply ) or !self:CanTarget( ply ) then continue end
+                    self:AttackTarget( ply ); break
+                end
+            else
+                local closePly = self:GetClosestEntity( nil, math.huge, function( ent )
+                    return ( ent:IsPlayer() and self:CanTarget( ent ) )
+                end )
+                if closePly then self:AttackTarget( closePly ) end
             end
         else
-            for _, ent in RandomPairs( ents_GetAll() ) do
-                if ent == self or !IsValid( ent ) or !self:CanTarget( ent ) then continue end
-                if spawnBehav == 2 and ( ent.IsLambdaPlayer or !ent:IsNPC() and !ent:IsNextBot() ) then continue end
-                self:AttackTarget( ent ); break
+            if !spawnBehavUseRange:GetBool() then
+                for _, ent in RandomPairs( ents_GetAll() ) do
+                    if ent == self or !IsValid( ent ) or !self:CanTarget( ent ) then continue end
+                    if spawnBehav == 2 and ( ent.IsLambdaPlayer or !ent:IsNPC() and !ent:IsNextBot() ) then continue end
+                    self:AttackTarget( ent ); break
+                end
+            else
+                local closeEnt = self:GetClosestEntity( nil, math.huge, function( ent ) 
+                    return ( ( spawnBehav != 2 or !ent.IsLambdaPlayer and ( ent:IsNPC() or ent:IsNextBot() ) ) and self:CanTarget( ent ) )
+                end )
+                if closeEnt then self:AttackTarget( closeEnt ) end
             end
         end
     end

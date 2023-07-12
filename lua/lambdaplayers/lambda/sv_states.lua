@@ -96,16 +96,24 @@ end
 local ft_options = { callback = function( lambda )
     if lambda:InCombat() or lambda:GetState() != "FindTarget" then return false end
     
+    local ene = lambda:GetEnemy()
+    if LambdaIsValid( ene ) and lambda:CanTarget( ene ) then
+        lambda:AttackTarget( ene )
+        return false
+    end
+    lambda:SetEnemy( NULL )
+
     local dontRDMLambdas = ignoreLambdas:GetBool()
     local findTargets = lambda:FindInSphere( nil, 1500, function( ent )
         if ent.IsLambdaPlayer and dontRDMLambdas then return false end
         return ( lambda:CanTarget( ent ) and lambda:CanSee( ent ) )
     end )
-
     if #findTargets != 0 then
         lambda:AttackTarget( findTargets[ random( #findTargets ) ] )
         return false
     end
+
+    return 0.1
 end }
 function ENT:FindTarget()
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end

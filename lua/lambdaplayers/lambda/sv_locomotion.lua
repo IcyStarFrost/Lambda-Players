@@ -81,6 +81,7 @@ function ENT:MoveToPos( pos, options )
     local curGoal, prevGoal
     local nextJumpT = CurTime() + 0.5
     local returnMsg = "ok"
+    local callbackRunT = 0
 
     LambdaRunHook( "LambdaOnBeginMove", self, pos, true )
 
@@ -126,23 +127,26 @@ function ENT:MoveToPos( pos, options )
             self.l_recomputepath = nil
         end
         
-        if !self:IsDisabled() and CurTime() > self.l_moveWaitTime then
-            if callback and callback( self, pos, path, curGoal ) == false then returnMsg = "callback" break end 
+        if !self:IsDisabled() and CurTime() >= self.l_moveWaitTime then
+            if callback and CurTime() >= callbackRunT then 
+                local returnVal = callback( self, pos, path, curGoal )
+                if returnVal == false then returnMsg = "callback" break end
+                if isnumber( returnVal ) then callbackRunT = ( CurTime() + returnVal ) end
+            end
             path:Update( self )
 
             local selfPos = self:GetPos()
-            self:ObstacleCheck( ( curGoal.pos - selfPos ):GetNormalized() )
+            local lastGoal = path:LastSegment()
+            local goalNormal = ( ( ( lastGoal and curGoal.area == lastGoal.area ) and pos or curGoal.pos ) - selfPos ):GetNormalized()
+            self:ObstacleCheck( goalNormal )
 
             if shouldavoid:GetBool() then
                 self:AvoidCheck()
             end
-
-            local moveType = curGoal.type
-            local hasJumped = false
-
-            local goalNormal = ( curGoal.pos - selfPos ):GetNormalized()
             goalNormal.z = 0
-            
+
+            local shouldJump = false
+            local moveType = curGoal.type
             if moveType == 4 or moveType == 5 then -- Ladder climbing ( 4 - Up, 5 - Down )
                 local ladder = curGoal.ladder
                 if IsValid( ladder ) and self:IsInRange( ( moveType == 4 and ladder:GetBottom() or ladder:GetTop() ), 64 ) then
@@ -153,22 +157,24 @@ function ENT:MoveToPos( pos, options )
                     pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
                     if pos then path:Compute( self, pos, costFunctor ) end
                 end
+            elseif moveType == 3 and curGoal.pos:DistToSqr( selfPos ) <= 2000 then
+                shouldJump = true
             elseif moveType == 2 and ( prevGoal.pos.z - selfPos.z ) <= 0 then
-                hasJumped = true
+                shouldJump = true
             else
                 -- Jumping over ledges and close up jumping
                 local stepAhead = ( selfPos + vector_up * stepH )
                 curArea = self.l_currentnavarea
                 local grHeight, grNormal = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 60 )
-                if grHeight and grNormal.z > 0.9 and ( grHeight - selfPos.z ) > stepH then hasJumped = true end
+                if grHeight and grNormal.z > 0.9 and ( grHeight - selfPos.z ) > stepH then shouldJump = true end
 
-                if !hasJumped then
+                if !shouldJump then
                     grHeight = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 30 )
-                    if grHeight and ( grHeight - selfPos.z ) < -jumpH then hasJumped = true end
+                    if grHeight and ( grHeight - selfPos.z ) < -jumpH then shouldJump = true end
                 end
             end
 
-            if hasJumped and CurTime() > nextJumpT then
+            if shouldJump and CurTime() > nextJumpT then
                 self:LambdaJump() 
                 nextJumpT = CurTime() + 0.5
             end

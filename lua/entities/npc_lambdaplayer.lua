@@ -50,6 +50,7 @@ end
     local VectorRand = VectorRand
     local Vector = Vector
     local IsValid = IsValid
+    local IsValidModel = util.IsValidModel
     local coroutine_status = coroutine.status
     local coroutine_wait = coroutine.wait
     local undo = undo
@@ -107,6 +108,7 @@ end
     local lethalWaters = GetConVar( "lambdaplayers_lambda_lethalwaters" )
     local useWeaponPanic = GetConVar( "lambdaplayers_combat_useweapononretreat" )
     local jumpInCombat = GetConVar( "lambdaplayers_combat_usejumpsincombat" )
+    local forcePlyMdl = GetConVar( "lambdaplayers_lambda_forceplayermodel" )
 --
 
 if CLIENT then
@@ -129,12 +131,19 @@ function ENT:Initialize()
 
     if SERVER then
         
-        local mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels
-        if allowaddonmodels:GetBool() then
-            mdlTbl = ( onlyaddonmodels:GetBool() and _LAMBDAPLAYERS_AddonPlayermodels or _LAMBDAPLAYERS_AllPlayermodels )
-            if #mdlTbl == 0 then mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels end
+        local spawnMdl = "models/player/kleiner.mdl"
+        local forceMdl = forcePlyMdl:GetString()
+        if forceMdl != "" and IsValidModel( forceMdl ) then
+            spawnMdl = forceMdl
+        else
+            local mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels
+            if allowaddonmodels:GetBool() then
+                mdlTbl = ( onlyaddonmodels:GetBool() and _LAMBDAPLAYERS_AddonPlayermodels or _LAMBDAPLAYERS_AllPlayermodels )
+                if #mdlTbl == 0 then mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels end
+            end
+            spawnMdl = mdlTbl[ random( #mdlTbl ) ]
         end    
-        self:SetModel( mdlTbl[ random( #mdlTbl ) ] )
+        self:SetModel( spawnMdl )
 
         self.l_SpawnedEntities = {} -- The table holding every entity we have spawned
         self.l_ExternalVars = {} -- The table holding any custom variables external addons want saved onto the Lambda so it can exported along with other Lambda Info
@@ -552,77 +561,71 @@ function ENT:Think()
             self.l_nextnpccheck = ( curTime + 1 )
         end
 
+        local isFiring = false
         if !isDisabled then 
             local target = self:GetEnemy()
-            local isFiring = false
-            local isPanicking = self:IsPanicking()
+            local behavState = self.l_BehaviorState
+            local isPanicking = ( behavState == "Retreat" )
+            if LambdaIsValid( target ) and ( isPanicking or behavState == "Combat" ) then
+                local canSee = self:CanSee( target )
+                local attackRange = self.l_CombatAttackRange
 
-            if LambdaIsValid( target ) and ( isPanicking or self:GetState() == "Combat" ) then
-                local behavState = self.l_BehaviorState
-                if behavState == "Retreat" or behavState == "Combat" then
-                    local canSee = self:CanSee( target )
-                    local attackRange = self.l_CombatAttackRange
+                if attackRange and ( !isPanicking or useWeaponPanic:GetBool() ) then 
+                    if isPanicking then attackRange = ( attackRange * 0.8 ) end
 
-                    if attackRange and ( !isPanicking or useWeaponPanic:GetBool() ) then 
-                        if isPanicking then attackRange = ( attackRange * 0.8 ) end
-
-                        if canSee then 
-                            if self:IsInRange( target, attackRange * ( self.l_HasMelee and 3 or 1 ) ) then
-                                self.Face = target
-                                self.l_Faceend = ( CurTime() + rand( 0.5, 2.0 ) )
-                            end
-
-                            if self:IsInRange( target, attackRange ) then
-                                isFiring = true
-                                self:UseWeapon( target )
-                            end
-                        end
-                    end
-
-                    if !isPanicking and canSee then
-                        local keepDist, myOrigin = self.l_CombatKeepDistance, self:GetPos()
-                        local posCopy = target:GetPos(); posCopy.z = myOrigin.z
-
-                        if keepDist and self:IsInRange( posCopy, keepDist ) then
-                            local moveAng = ( myOrigin - posCopy ):Angle()
-                            local potentialPos = ( myOrigin + moveAng:Forward() * random( -self:GetRunSpeed(), keepDist ) + moveAng:Right() * random( -keepDist, keepDist ) )
-                            self.l_movepos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )
-                        else
-                            self.l_movepos = target
-                        end
-                    end
-
-                    if random( 40 ) == 1 and jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.9 ) then
-                        combatjumptbl.start = self:GetPos()
-                        combatjumptbl.endpos = ( combatjumptbl.start + locoVel )
-                        combatjumptbl.filter = self
-
-                        local jumpTr = TraceHull( combatjumptbl )
-                        local hitNorm = jumpTr.HitNormal
-                        local invertVel = false
-                        local canJump = ( hitNorm.x == 0 and hitNorm.y == 0 and hitNorm.z <= 0 )
-
-                        if !canJump then 
-                            invertVel = Vector( -locoVel.x, -locoVel.y, locoVel.z )
-                            combatjumptbl.endpos = ( combatjumptbl.start + invertVel )
-                            jumpTr = TraceHull( combatjumptbl )
-                            hitNorm = jumpTr.HitNormal
-
-                            canJump = ( hitNorm.z < 0 and hitNorm.x == 0 and hitNorm.y == 0 )
+                    if canSee then 
+                        if self:IsInRange( target, attackRange * ( self.l_HasMelee and 3 or 1 ) ) then
+                            self.Face = target
+                            self.l_Faceend = ( CurTime() + rand( 0.5, 2.0 ) )
                         end
 
-                        if canJump and self:LambdaJump() and invertVel then
-                            locoVel = invertVel
-                            self.loco:SetVelocity( locoVel )
+                        if self:IsInRange( target, attackRange ) then
+                            isFiring = true
+                            self:UseWeapon( target )
                         end
                     end
                 end
-            else
-                self:SetEnemy( NULL )
-            end
 
-            self:SetIsFiring( isFiring )
+                if !isPanicking and canSee then
+                    local keepDist, myOrigin = self.l_CombatKeepDistance, self:GetPos()
+                    local posCopy = target:GetPos(); posCopy.z = myOrigin.z
+
+                    if keepDist and self:IsInRange( posCopy, keepDist ) then
+                        local moveAng = ( myOrigin - posCopy ):Angle()
+                        local potentialPos = ( myOrigin + moveAng:Forward() * random( -self:GetRunSpeed(), keepDist ) + moveAng:Right() * random( -keepDist, keepDist ) )
+                        self.l_movepos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )
+                    else
+                        self.l_movepos = target
+                    end
+                end
+
+                if random( 40 ) == 1 and jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.9 ) then
+                    combatjumptbl.start = self:GetPos()
+                    combatjumptbl.endpos = ( combatjumptbl.start + locoVel )
+                    combatjumptbl.filter = self
+
+                    local jumpTr = TraceHull( combatjumptbl )
+                    local hitNorm = jumpTr.HitNormal
+                    local invertVel = false
+                    local canJump = ( hitNorm.x == 0 and hitNorm.y == 0 and hitNorm.z <= 0 )
+
+                    if !canJump then 
+                        invertVel = Vector( -locoVel.x, -locoVel.y, locoVel.z )
+                        combatjumptbl.endpos = ( combatjumptbl.start + invertVel )
+                        jumpTr = TraceHull( combatjumptbl )
+                        hitNorm = jumpTr.HitNormal
+
+                        canJump = ( hitNorm.z < 0 and hitNorm.x == 0 and hitNorm.y == 0 )
+                    end
+
+                    if canJump and self:LambdaJump() and invertVel then
+                        locoVel = invertVel
+                        self.loco:SetVelocity( locoVel )
+                    end
+                end
+            end
         end
+        self:SetIsFiring( isFiring )
 
         -- Ladder Physics Failure (LPF to sound cool) fallback
         if !loco:IsUsingLadder() then
@@ -700,7 +703,8 @@ function ENT:Think()
                     self.l_FallVelocity = fallSpeed
                 end
 
-                if !self.l_preventdefaultspeak and !self:IsSpeaking( "fall" ) and self:GetFallDamage() > 0 then
+                local fallDmg = self:GetFallDamage( nil, true )
+                if !self.l_preventdefaultspeak and !self:IsSpeaking( "fall" ) and ( fallDmg >= self:Health() or fallDmg >= 20 ) then
                     self:PlaySoundFile( "fall", false )
                 end
             end
