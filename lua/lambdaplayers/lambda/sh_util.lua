@@ -1104,7 +1104,7 @@ if SERVER then
         local maxSafeFallSpeed = sqrt( 2 * gravity * 20 * 12 )
 
         speed = ( speed or self.l_FallVelocity )
-        if !realisticfalldamage:GetBool() and speed > maxsafefallspeed then
+        if !realisticfalldamage:GetBool() and speed > maxSafeFallSpeed then
             return 10
         end
 
