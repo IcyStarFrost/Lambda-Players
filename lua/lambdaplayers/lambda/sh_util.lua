@@ -1094,7 +1094,7 @@ if SERVER then
     function ENT:PlaySoundFile( filepath, delay )
         if !filepath then return end
         
-        if !delay then
+        if !isnumber( delay ) then
             delay = ( ( delay == nil and slightDelay:GetBool() ) and Rand( 0.1, 0.75 ) or 0 ) 
         end
 
