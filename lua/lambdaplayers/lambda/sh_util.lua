@@ -26,6 +26,7 @@ local timer_Remove = timer.Remove
 local table_Merge = table.Merge
 local coroutine = coroutine
 local Trace = util.TraceLine
+local TraceHull = util.TraceHull
 local EndsWith = string.EndsWith
 local tobool = tobool
 local isstring = isstring
@@ -35,6 +36,7 @@ local isentity = isentity
 local tostring = tostring
 local visibilitytrace = {}
 local tracetable = {}
+local jumpTr = {}
 local GetLambdaPlayers = GetLambdaPlayers
 local color_white = color_white
 local ents_Create = ents and ents.Create or nil
@@ -323,7 +325,6 @@ function ENT:ExportLambdaInfo()
         -- Non personal data --
         respawn = self:GetRespawn(),
         spawnwep = self:GetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon ),
-        favwep = self.l_FavoriteWeapon,
         frags = self:GetFrags(),
         deaths = self:GetDeaths(),
 
@@ -563,7 +564,7 @@ if SERVER then
             if self:GetVoiceChance() > 0 then self:PlaySoundFile( "panic" ) end
         end
 
-        local retreatTime = ( CurTime() + ( timeout or random( 15, 25 ) ) )
+        local retreatTime = ( CurTime() + ( timeout or random( 10, 25 ) ) )
         if retreatTime > self.l_retreatendtime then self.l_retreatendtime = retreatTime end
 
         local target = self:GetEnemy()
@@ -575,10 +576,10 @@ if SERVER then
         self:LookTo( target, 3 )
         self.l_LaughAt_PrevState = self:GetState()
 
-        local laughDelay = Rand( 0.25, 1.0 )
+        local laughDelay = Rand( 0.2, 0.8 )
         self:PlaySoundFile( "laugh", laughDelay )
 
-        self:SimpleTimer( laughDelay * Rand( 1.0, 1.33 ), function()
+        self:SimpleTimer( laughDelay * Rand( 1.0, 1.25 ), function()
             self:CancelMovement()
             self:SetState( "Laughing" )
             self:LookTo( ( ( isentity( target ) and IsValid( target ) ) and target:GetPos() or target ), 1 )
@@ -731,10 +732,10 @@ if SERVER then
         self:SetIsReloading( false )
 
         self:SetSolidMask( MASK_SOLID_BRUSHONLY ) -- This should maybe help with the issue where the nextbot can't set pos because it's in something
-        self:SetPos( rasp:GetBool() and ( LambdaSpawnPoints and #LambdaSpawnPoints > 0 ) and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos ) -- Rasp aka Respawn at Spawn Points
+        self:SetPos( ( LambdaSpawnPoints and #LambdaSpawnPoints > 0 and rasp:GetBool() ) and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos ) -- Rasp aka Respawn at Spawn Points
         self:SetSolidMask( MASK_PLAYERSOLID )
 
-        self.loco:SetVelocity( Vector( 0, 0, 0 ) )
+        self.loco:SetVelocity( vector_origin )
 
         if !collisionPly:GetBool() then
             self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
@@ -814,10 +815,26 @@ if SERVER then
         self:SimpleTimer( 0.1, function() self:Remove() end, true )
         if !ignoreprehook and shouldblock == true then return end
 
+        local pos, ang = self.l_SpawnPos, self.l_SpawnAngles
+        if self:Alive() then
+            if spawnPos then
+                tracetable.start = spawnPos
+                tracetable.endpos = spawnPos
+                tracetable.filter = self
+
+                local mins, maxs = self:GetCollisionBounds()
+                tracetable.mins = mins
+                tracetable.maxs = maxs
+
+                pos = TraceHull( tracetable ).HitPos 
+            end
+            if spawnAng then ang = spawnAng end
+        end
+
         local exportinfo = self:ExportLambdaInfo()
         local newlambda = ents_Create( "npc_lambdaplayer" )
-        newlambda:SetPos( spawnPos or self.l_SpawnPos )
-        newlambda:SetAngles( spawnAng or self.l_SpawnAngles )
+        newlambda:SetPos( pos )
+        newlambda:SetAngles( ang )
         newlambda:SetCreator( self:GetCreator() )
         newlambda:Spawn()
         newlambda:ApplyLambdaInfo( exportinfo )
@@ -859,7 +876,7 @@ if SERVER then
         if IsNavmeshLoaded() then
             for _, area in RandomPairs( self:GetNavAreas( pos, dist ) ) do
                 if !IsValid( area ) or !self:IsAreaTraversable( area ) then continue end
-                local rndPoint = area:GetRandomPoint()
+                local rndPoint = self:GetAreaRandomPoint( area )
                 if filter and filter( pos, area, rndPoint ) == true then continue end
                 return rndPoint
             end
@@ -1077,10 +1094,8 @@ if SERVER then
     function ENT:PlaySoundFile( filepath, delay )
         if !filepath then return end
         
-        if delay == nil then 
-            delay = ( slightDelay:GetBool() and Rand( 0.1, 0.75 ) or 0 ) 
-        elseif delay == false then
-            delay = 0
+        if !delay then
+            delay = ( ( delay == nil and slightDelay:GetBool() ) and Rand( 0.1, 0.75 ) or 0 ) 
         end
 
         local isVoiceType = self:GetVoiceLine( filepath )
@@ -1262,9 +1277,6 @@ if SERVER then
         return stepTime
     end
 
-    local jumpTr = {}
-    local TraceHull = util.TraceHull
-
     function ENT:LambdaJump()
         if !self:IsOnGround() then return end
         local curNav = self.l_currentnavarea
@@ -1289,7 +1301,7 @@ if SERVER then
     local panicAnimations = GetConVar( "lambdaplayers_lambda_panicanimations" )
 
     function ENT:GetWeaponHoldType()
-        if self:IsPanicking() and panicAnimations:GetBool() then
+        if self:IsPanicking() and !self:GetIsFiring() and panicAnimations:GetBool() then
             return _LAMBDAPLAYERSHoldTypeAnimations[ "panic" ]
         end
 

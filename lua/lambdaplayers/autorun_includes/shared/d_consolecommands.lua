@@ -3,6 +3,8 @@ local ents_GetAll = ents.GetAll
 local ents_FindInSphere = ents.FindInSphere
 local ipairs = ipairs
 local random = math.random
+local undo = undo
+local ents_Create = ents.Create
 local IsValid = IsValid
 local distance = GetConVar( "lambdaplayers_force_radius" )
 local spawnatplayerpoints = GetConVar( "lambdaplayers_lambda_spawnatplayerspawns" )
@@ -107,125 +109,93 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cacheplayermodels", function( ply
     LambdaPlayers_Notify( ply, "Playermodels cached!", 0, "plats/elevbell1.wav" )
 end, false, "WARNING: Your game will freeze for a few seconds. This will vary on the amount of playermodels you have installed.", { name = "Cache Playermodels", category = "Utilities" } )
 
+local navmesh_Find = ( SERVER and navmesh.Find )
+local navmesh_IsLoaded = ( SERVER and navmesh.IsLoaded )
+local navmesh_GetAllNavAreas = ( SERVER and navmesh.GetAllNavAreas )
+
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply ) 
 	if IsValid( ply ) and !ply:IsSuperAdmin() then return end
-    if !navmesh.IsLoaded() then return end
+    if !navmesh_IsLoaded() then return end
 
-    local function GetRandomNavmesh()
-        local FindAllNavMesh_NearPly = navmesh.Find( ply:GetPos(), plyradius:GetInt(), 30, 50 )
-        local NavMesh_NearPly = FindAllNavMesh_NearPly[ random( #FindAllNavMesh_NearPly ) ]
+    local pos = vector_origin
+    local ang = Angle( 0, random( -180, 180 ), 0 )
 
-        local FindAllNavMesh_Random = navmesh.Find( ply:GetPos(), random( 250, 99999 ), 30, 50 )
-        local NavMesh_Random = FindAllNavMesh_Random[ random( #FindAllNavMesh_Random ) ]
-        
-        -- Once we got all nearby NavMesh areas near the player, pick out a random
-        -- navmesh spot to spawn around with the set radius.
-        -- BUG: it doesn't get different heights, unless our player is on that level
-        if plyradius:GetInt() > 1 then
-            for k, v in ipairs( FindAllNavMesh_NearPly ) do
-                if IsValid( v ) and v:GetSizeX() > 35 and v:GetSizeY() > 35 then -- We don't want to spawn them in smaller nav areas, or water.
-                    return NavMesh_NearPly:GetRandomPoint() -- We found a suitable location, spawn it!
-                end
-            end
-        else -- If the radius is 0, find a random navmesh around the player at any range
-            for k, v in ipairs( FindAllNavMesh_Random ) do
-                if IsValid( v ) and v:GetSizeX() > 35 and v:GetSizeY() > 35 then
-                    return NavMesh_Random:GetRandomPoint()
-                end
-            end
+    -- Spawning at player spawn points
+    LambdaSpawnPoints = ( LambdaSpawnPoints or LambdaGetPossibleSpawns() )
+    if LambdaSpawnPoints and #LambdaSpawnPoints > 0 and spawnatplayerpoints:GetBool() then
+        pos = LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos()
+    else
+        local searchRange = plyradius:GetInt()
+        for _, area in ipairs( searchRange > 0 and navmesh_Find( ply:GetPos(), searchRange, searchRange, searchRange ) or navmesh_GetAllNavAreas() ) do
+            if !IsValid( area ) or area:IsUnderwater() or area:GetSizeX() < 75 or area:GetSizeY() < 75 then continue end
+            pos = area:GetRandomPoint(); break
         end
     end
 
-    local pos
-    local ang
-    local spawns
-
-    -- Spawning at player spawn points
-    if spawnatplayerpoints:GetBool() then
-		spawns = LambdaGetPossibleSpawns()
-		local spawn = spawns[ random( #spawns ) ]
-        
-        pos = spawn:GetPos()
-        ang = Angle( 0, random( -180, 180 ), 0 )
-    else -- We spawn at a random navmesh
-        pos = GetRandomNavmesh()
-        ang = Angle( 0, random( -180, 180 ), 0 )
-    end
-
-
-	local lambda = ents.Create( "npc_lambdaplayer" )
+	local lambda = ents_Create( "npc_lambdaplayer" )
 	lambda:SetPos( pos )
 	lambda:SetAngles( ang )
+    lambda:SetCreator( ply )
 	lambda:Spawn()
+    lambda:OnSpawnedByPlayer( ply )
 
-    lambda.l_SpawnWeapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )
-    lambda:SwitchToSpawnWeapon()
+    local undoName = "Lambda Player ( " .. lambda:GetLambdaName() .. " )"
+    undo.Create( undoName )
+        undo.SetPlayer( ply )
+        undo.AddEntity( lambda )
+        undo.SetCustomUndoText( "Undone " .. undoName )
+    undo.Finish( undoName )
 
-	undo.Create( "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
-		undo.SetPlayer( ply )
-		undo.SetCustomUndoText( "Undone " .. "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
-		undo.AddEntity( lambda )
-	undo.Finish( "Lambda Player ( " .. lambda:GetLambdaName() .. " )" )
-
-	local dynLight = ents.Create( "light_dynamic" )
+	local dynLight = ents_Create( "light_dynamic" )
 	dynLight:SetKeyValue( "brightness", "2" )
 	dynLight:SetKeyValue( "distance", "90" )
-	dynLight:SetPos( lambda:GetPos() )
-	dynLight:SetLocalAngles( lambda:GetAngles() )
+	dynLight:SetPos( pos )
+	dynLight:SetLocalAngles( ang )
 	dynLight:Fire( "Color", "255 145 0" )
 	dynLight:Spawn()
 	dynLight:Activate()
 	dynLight:Fire( "TurnOn", "", 0 )
 	dynLight:Fire( "Kill", "", 0.75 )
-
 end, false, "Spawns a Lambda Player at a random area", { name = "Spawn Lambda Player At Random Area", category = "Force Menu" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombat", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
-    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance:GetInt() ) ) do
-        if IsValid( v ) and v.IsLambdaPlayer then v:AttackTarget( ply ) end
+    for _, v in ipairs( ents_FindInSphere( ply:GetPos(), distance:GetInt() ) ) do
+        if IsValid( v ) and v.IsLambdaPlayer then v:AttackTarget( ply, true ) end
     end
-
 end, false, "Forces all Lambda Players to attack you", { name = "Lambda Players Attack You", category = "Force Menu" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombatlambda", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
-    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance:GetInt() ) ) do
-        if IsValid( v ) and v.IsLambdaPlayer then
-			local npcs = v:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() ) end )
-			v:AttackTarget( npcs[ random( #npcs ) ] )
-		end
+    local dist = distance:GetInt()
+    for _, lambda in ipairs( GetLambdaPlayers() ) do
+		if !lambda:IsInRange( ply, dist ) then continue end
+        local npcs = lambda:FindInSphere( nil, math.huge, function( ent ) return ( lambda:CanTarget( ent ) ) end )
+		if #npcs == 0 then continue end
+        lambda:AttackTarget( npcs[ random( #npcs ) ] )
     end
-
-end, false, "Forces all Lambda Players to attack anything", { name = "Lambda Players Attack Anything", category = "Force Menu" } )
+end, false, "Forces all Lambda Players to attack anything that they can target", { name = "Lambda Players Attack Anything", category = "Force Menu" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcekill", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
-    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance:GetInt() ) ) do
-        if v.IsLambdaPlayer then
-            local dmginfo = DamageInfo()
-            dmginfo:SetDamage( 1000 )
-            dmginfo:SetDamageForce( v:GetForward()*2000 or v:GetForward()*500 )
-            dmginfo:SetAttacker( v )
-            dmginfo:SetInflictor( v )
-            v:TakeDamageInfo( dmginfo )
-        end
+    local dist = distance:GetInt()
+    for _, lambda in ipairs( GetLambdaPlayers() ) do
+        if !lambda:IsInRange( ply, dist ) then continue end
+        lambda:Kill()
     end
-
 end, false, "Kill any Lambda Players in the radius set", { name = "Kill Nearby Lambda Players", category = "Force Menu" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcepanic", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
-    for k, v in ipairs( ents_FindInSphere( ply:GetPos(), distance:GetInt() ) ) do
-        if v.IsLambdaPlayer then
-            v:RetreatFrom( ply )
-        end
+    local dist = distance:GetInt()
+    for _, lambda in ipairs( GetLambdaPlayers() ) do
+        if !lambda:IsInRange( ply, dist ) then continue end
+        lambda:RetreatFrom()
     end
-
 end, false, "Forces any Lambda Players around will panic", { name = "Lambda Players Panic Nearby", category = "Force Menu" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_debugtogglegod", function( ply ) 

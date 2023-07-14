@@ -39,6 +39,7 @@ end
 
     local random = math.random
     local rand = math.Rand
+    local abs = math.abs
     local SortTable = table.sort
     local eyetracing = GetConVar( "lambdaplayers_debug_eyetracing" )
     local isfunction = isfunction
@@ -102,6 +103,7 @@ end
     local collisionPly = GetConVar( "lambdaplayers_lambda_noplycollisions" )
     local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
     local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
+    local jumpHeight = GetConVar( "lambdaplayers_lambda_jumpheight" )
     local ignorePlys = GetConVar( "ai_ignoreplayers" )
     local sv_gravity = GetConVar( "sv_gravity" )
     local physUpdateTime = GetConVar( "lambdaplayers_lambda_physupdatetime" )
@@ -118,9 +120,6 @@ if CLIENT then
 end
 
 function ENT:Initialize()
-
-    self.l_SpawnPos = self:GetPos() -- Used for Respawning
-    self.l_SpawnAngles = self:GetAngles()
     self.l_Hooks = {} -- The table holding all our created hooks
     self.l_Timers = {} -- The table holding all named timers
     self.l_SimpleTimers = {} -- The table holding all simple timers
@@ -130,7 +129,7 @@ function ENT:Initialize()
     self:BuildPersonalityTable() -- Builds all personality chances from autorun_includes/shared/lambda_personalityfuncs.lua for use in chance testing and creates Get/Set functions for each one
 
     if SERVER then
-        
+
         local spawnMdl = "models/player/kleiner.mdl"
         local forceMdl = forcePlyMdl:GetString()
         if forceMdl != "" and IsValidModel( forceMdl ) then
@@ -198,6 +197,7 @@ function ENT:Initialize()
         self.l_PreDeathDamage = 0 -- The damage we took before running our death function and setting it to zero
         self.l_NextSprayUseTime = 0 -- The next time we can use sprays to spray
         self.l_DStepsWhichFoot = 1 -- The foot that is used in DSteps for stepping. 0 for left, 1 for right
+        self.l_NextFallScreamCheck = CurTime() + 0.1 -- The time we wait until we check if we should play our fall voiceline
 
         self.l_ladderarea = NULL -- The ladder nav area we are currenly using to climb
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
@@ -209,6 +209,10 @@ function ENT:Initialize()
         local nearArea = navmesh_GetNavArea( self:WorldSpaceCenter(), 400 ) -- The current nav area we are in
         if IsValid( nearArea ) then self.l_currentnavarea = nearArea; self:OnNavAreaChanged( nearArea, nearArea ) end
 
+        -- Used for Respawning
+        self:SetExternalVar( "l_SpawnPos", self:GetPos() ) -- Our favorite weapon
+        self:SetExternalVar( "l_SpawnAngles", self:GetAngles() ) -- Our favorite weapon
+        
         -- Personal Stats --
         self:SetLambdaName( self:GetOpenName() )
         self:SetProfilePicture( #Lambdaprofilepictures > 0 and Lambdaprofilepictures[ random( #Lambdaprofilepictures ) ] or "spawnicons/".. sub( self:GetModel(), 1, #self:GetModel() - 4 ).. ".png" )
@@ -276,7 +280,7 @@ function ENT:Initialize()
 
         SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
-        self.loco:SetJumpHeight( 50 )
+        self.loco:SetJumpHeight( jumpHeight:GetInt() )
         self.loco:SetAcceleration( 2000 )
         self.loco:SetDeceleration( 1000000 )
         self.loco:SetStepHeight( 30 )
@@ -311,7 +315,7 @@ function ENT:Initialize()
         self.WeaponEnt = ents_Create( "base_anim" )
         self.WeaponEnt:SetPos( attachpoint.Pos )
         self.WeaponEnt:SetAngles( attachpoint.Ang )
-        self.WeaponEnt:SetParent( self, ap )
+        self.WeaponEnt:SetParent( self, ( ap > 0 and ap ) )
         self.WeaponEnt:Spawn()
         self.WeaponEnt.IsLambdaWeapon = true
         self.WeaponEnt:SetNW2Vector( "lambda_weaponcolor", self:GetPhysColor() )
@@ -319,7 +323,7 @@ function ENT:Initialize()
         self:SetWeaponENT( self.WeaponEnt )
         self.l_SpawnWeapon = "physgun" -- The weapon we spawned with
         self:SetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon )
-        self.l_FavoriteWeapon = false -- Our favorite weapon
+        self:SetExternalVar( "l_FavoriteWeapon", false ) -- Our favorite weapon
 
         self:InitializeMiniHooks()
         self:SwitchWeapon( "physgun", true )
@@ -599,7 +603,7 @@ function ENT:Think()
                     end
                 end
 
-                if random( 40 ) == 1 and jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.9 ) then
+                if random( isPanicking and 30 or 40 ) == 1 and jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.8 ) then
                     combatjumptbl.start = self:GetPos()
                     combatjumptbl.endpos = ( combatjumptbl.start + locoVel )
                     combatjumptbl.filter = self
@@ -609,7 +613,7 @@ function ENT:Think()
                     local invertVel = false
                     local canJump = ( hitNorm.x == 0 and hitNorm.y == 0 and hitNorm.z <= 0 )
 
-                    if !canJump then 
+                    if !canJump and !isPanicking then 
                         invertVel = Vector( -locoVel.x, -locoVel.y, locoVel.z )
                         combatjumptbl.endpos = ( combatjumptbl.start + invertVel )
                         jumpTr = TraceHull( combatjumptbl )
@@ -629,7 +633,7 @@ function ENT:Think()
 
         -- Ladder Physics Failure (LPF to sound cool) fallback
         if !loco:IsUsingLadder() then
-            self.l_ladderfailtimer = curTime + 15
+            self.l_ladderfailtimer = curTime + 5
         elseif curTime > self.l_ladderfailtimer then
             self:Recreate( true, selfPos, selfAngles )
             self.l_ladderfailtimer = curTime + 1
@@ -703,9 +707,14 @@ function ENT:Think()
                     self.l_FallVelocity = fallSpeed
                 end
 
-                local fallDmg = self:GetFallDamage( nil, true )
-                if !self.l_preventdefaultspeak and !self:IsSpeaking( "fall" ) and ( fallDmg >= self:Health() or fallDmg >= 20 ) then
-                    self:PlaySoundFile( "fall", false )
+                if !self.l_preventdefaultspeak and curTime >= self.l_NextFallScreamCheck and !self:IsSpeaking( "fall" ) then
+                    self.l_NextFallScreamCheck = CurTime() + 0.1
+
+                    local airSpeed = ( abs( locoVel.x / 4 ) + abs( locoVel.y / 4 ) + ( locoVel.z > 0 and ( locoVel.z / 4 ) or abs( locoVel.z ) ) )
+                    local fallDmg = self:GetFallDamage( airSpeed, true )
+                    if fallDmg >= 20 or fallDmg >= self:Health() then
+                        self:PlaySoundFile( "fall", false )
+                    end
                 end
             end
         end

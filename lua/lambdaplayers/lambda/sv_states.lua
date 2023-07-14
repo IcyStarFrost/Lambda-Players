@@ -93,7 +93,7 @@ function ENT:ArmorUp()
 end
 
 -- Wander around until we find someone to jump
-local ft_options = { callback = function( lambda )
+local ft_options = { cbTime = 0.5, callback = function( lambda )
     if lambda:InCombat() or lambda:GetState() != "FindTarget" then return false end
     
     local ene = lambda:GetEnemy()
@@ -112,8 +112,6 @@ local ft_options = { callback = function( lambda )
         lambda:AttackTarget( findTargets[ random( #findTargets ) ] )
         return false
     end
-
-    return 0.1
 end }
 function ENT:FindTarget()
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
@@ -186,9 +184,12 @@ function ENT:Retreat()
     end
 
     local rndPos = self:GetRandomPosition( nil, 4000, function( selfPos, area, rndPoint )
-        if IsValid( target ) and ( target:GetPos() - selfPos ):GetNormalized():Dot( ( rndPoint - selfPos ):GetNormalized() ) > 0.2 then 
-            return true 
-        end
+        if !IsValid( target ) then return end 
+
+        local targetPos = target:GetPos()
+        if rndPoint:DistToSqr( targetPos ) > 250000 and ( targetPos - selfPos ):GetNormalized():Dot( ( rndPoint - selfPos ):GetNormalized() ) <= 0.2 then return end
+
+        return true 
     end )
     self:MoveToPos( rndPos, retreatOptions )
 end

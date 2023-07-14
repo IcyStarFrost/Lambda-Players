@@ -342,9 +342,9 @@ end
 
 function ENT:SwitchToSpawnWeapon()
     local weapon = self.l_SpawnWeapon
-    if weapon == "random" then weapon = self:SwitchToRandomWeapon( true ) end
-
-    if !self:WeaponDataExists( weapon ) then
+    if weapon == "random" then 
+        weapon = self:SwitchToRandomWeapon( true ) 
+    elseif !self:WeaponDataExists( weapon ) then
         weapon = "physgun"
         self.l_SpawnWeapon = weapon
     end

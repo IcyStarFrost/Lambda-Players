@@ -16,7 +16,6 @@ local surface_SetMaterial = surface.SetMaterial
 local surface_DrawTexturedRect = surface.DrawTexturedRect
 local surface_PlaySound = surface.PlaySound
 local notification_AddLegacy = notification.AddLegacy
-local chat_AddText = chat.AddText
 local net = net
 local hook_Run = hook.Run
 local LocalPlayer = LocalPlayer
@@ -399,7 +398,7 @@ net.Receive( "lambdaplayers_updatedata", function()
     LambdaTextProfiles = LAMBDAFS:GetTextProfiles()
     LambdaModelVoiceProfiles = LAMBDAFS:GetModelVoiceProfiles()
     LambdaPersonalProfiles = file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
-    chat_AddText( "Lambda Data was updated by the Server" )
+    chat.AddText( "Lambda Data was updated by the Server" )
 end )
 
 net.Receive( "lambdaplayers_playsoundfile", function()
@@ -496,7 +495,7 @@ net.Receive( "lambdaplayers_chatadd", function()
     args = JSONToTable( args )
     RestoreColorMetas( args )
 
-    chat_AddText( unpack( args ) )
+    chat.AddText( unpack( args ) )
 end )
 
 net.Receive( "lambdaplayers_addtokillfeed", function() 
@@ -601,12 +600,12 @@ local RunConsoleCommand = RunConsoleCommand
 
 net.Receive( "lambdaplayers_reloadaddon", function()
     LambdaReloadAddon()
-    chat_AddText( color_client, "Reloaded all Lambda Lua Files for your Client" )
+    chat.AddText( color_client, "Reloaded all Lambda Lua Files for your Client" )
     RunConsoleCommand( "spawnmenu_reload" )
 end )
 
 net.Receive( "lambdaplayers_mergeweapons", function()
     LambdaMergeWeapons()
-    chat_AddText( color_client, "Merged all Lambda Weapon Lua Files for your Client" )
+    chat.AddText( color_client, "Merged all Lambda Weapon Lua Files for your Client" )
     RunConsoleCommand( "spawnmenu_reload" )
 end )

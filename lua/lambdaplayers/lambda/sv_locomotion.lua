@@ -13,6 +13,7 @@ local FrameTime = FrameTime
 local tracetable = { ignoreworld = true }
 local unstucktable = {}
 local airtable = {}
+local rndpointtable = { collisiongroup = COLLISION_GROUP_PLAYER }
 local laddermovetable = { collisiongroup = COLLISION_GROUP_PLAYER }
 local ents_FindByName = ents.FindByName
 local GetGroundHeight = navmesh.GetGroundHeight
@@ -69,6 +70,7 @@ function ENT:MoveToPos( pos, options )
 
     local timeout = options.timeout
     local callback = options.callback
+    local cbTime = options.cbTime
 
     local run = options.run or false
     local autorun = options.autorun
@@ -81,11 +83,11 @@ function ENT:MoveToPos( pos, options )
     local curGoal, prevGoal
     local nextJumpT = CurTime() + 0.5
     local returnMsg = "ok"
-    local callbackRunT = 0
+    local callbackRunT = ( CurTime() + ( cbTime or 0 ) )
 
     LambdaRunHook( "LambdaOnBeginMove", self, pos, true )
 
-	while ( IsValid( path ) ) do
+    while ( IsValid( path ) ) do
         if self:GetIsDead() then returnMsg = "invalid" break end
         if self.AbortMovement then 
             self.AbortMovement = false 
@@ -96,7 +98,7 @@ function ENT:MoveToPos( pos, options )
         pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
         if !pos then returnMsg = "invalid" break end
 
-		if loco:IsStuck() then
+        if loco:IsStuck() then
             -- This prevents the stuck handling from running if we are right next to the entity we are going to            
             if isvector( pos ) or !self:IsInRange( pos, 100 ) then 
                 local result = self:HandleStuck()
@@ -104,7 +106,7 @@ function ENT:MoveToPos( pos, options )
             else
                 loco:ClearStuck()
             end
-		end
+        end
 
         local goal = path:GetCurrentGoal()
         if !curGoal or curGoal != goal then
@@ -112,15 +114,15 @@ function ENT:MoveToPos( pos, options )
             curGoal = goal
         end
 
-		if update then
+        if update then
             local updateTime = math_max( update, update * ( path:GetLength() / runSpeed ) )
-			if update > updateTime then 
+            if update > updateTime then 
                 updateTime = update
             elseif updateTime > 1.0 then
                 updateTime = 1.0
             end
             if path:GetAge() > updateTime then path:Compute( self, pos, costFunctor ) end
-		end
+        end
 
         if self.l_recomputepath then
             path:Compute( self, pos, costFunctor )
@@ -131,7 +133,7 @@ function ENT:MoveToPos( pos, options )
             if callback and CurTime() >= callbackRunT then 
                 local returnVal = callback( self, pos, path, curGoal )
                 if returnVal == false then returnMsg = "callback" break end
-                if isnumber( returnVal ) then callbackRunT = ( CurTime() + returnVal ) end
+                if cbTime then callbackRunT = ( CurTime() + cbTime ) end
             end
             path:Update( self )
 
@@ -149,7 +151,7 @@ function ENT:MoveToPos( pos, options )
             local moveType = curGoal.type
             if moveType == 4 or moveType == 5 then -- Ladder climbing ( 4 - Up, 5 - Down )
                 local ladder = curGoal.ladder
-                if IsValid( ladder ) and self:IsInRange( ( moveType == 4 and ladder:GetBottom() or ladder:GetTop() ), 64 ) then
+                if IsValid( ladder ) and self:IsInRange( ( moveType == 4 and ladder:GetBottom() or ladder:GetTop() ), 70 ) then
                     self.l_ladderarea = ladder
                     self:ClimbLadder( ladder, ( moveType == 5 ), curGoal.pos )
                     self.l_ladderarea = NULL 
@@ -198,14 +200,14 @@ function ENT:MoveToPos( pos, options )
 
         if dev:GetBool() then path:Draw() end
         coroutine_yield()
-	end
+    end
 
     self.l_issmoving = false 
     self.l_movepos = nil
     self.l_moveoptions = nil
     self.l_CurrentPath = nil
 
-	return returnMsg
+    return returnMsg
 end
 
 -- If the map we are on does not have a navmesh, the Lambda Players will default their movement to this so they can actually move
@@ -217,7 +219,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
     self.l_movepos = pos
     self.l_CurrentPath = pos
 
-	options = options or {}
+    options = options or {}
     self.l_moveoptions = options
 
     local callback = options.callback
@@ -245,7 +247,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
         pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
         if !pos then returnMsg = "invalid" break end
 
-		if loco:IsStuck() then
+        if loco:IsStuck() then
             -- This prevents the stuck handling from running if we are right next to the entity we are going to            
             if isvector( pos ) or !self:IsInRange( pos, 100 ) then 
                 local result = self:HandleStuck()
@@ -253,7 +255,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
             else
                 loco:ClearStuck()
             end
-		end
+        end
 
         local selfPos = self:GetPos()
         local posSelfZ = pos; posSelfZ.z = selfPos.z
@@ -261,7 +263,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
         if self:IsInRange( posSelfZ, tolerance ) then
             break
         elseif !self:IsDisabled() and CurTime() > self.l_moveWaitTime then
-            if callback and callback( pos ) == false then returnMsg = "callback" break end 
+            if callback and callback( self, pos ) == false then returnMsg = "callback" break end 
 
             loco:FaceTowards( pos )
             loco:Approach( pos, 1 )
@@ -328,7 +330,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
     laddermovetable.endpos = ( finishPos + endDir * 48 )
     laddermovetable.filter = self
     laddermovetable.ignoreworld = false
-    finishPos = Trace( laddermovetable ).HitPos
+    finishPos = TraceHull( laddermovetable ).HitPos
 
     local climbFract = 0
     local climbState = 1
@@ -340,6 +342,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
     local climbDist = climbStart:Distance( climbEnd )
 
     local stuckTime = CurTime() + 5
+    local climbSpeed = random( 200, 400 )
 
     while ( true ) do
         if !LambdaIsValid( self ) or self:IsInNoClip() then return end
@@ -358,7 +361,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
         laddermovetable.ignoreworld = true
 
         if !IsValid( TraceHull( laddermovetable ).Entity ) and ( !self:IsDisabled() and CurTime() > self.l_moveWaitTime or climbState != 2 ) then
-            climbFract = climbFract + ( 200 * FrameTime() )
+            climbFract = climbFract + ( climbSpeed * FrameTime() )
             stuckTime = CurTime() + 5
 
             if climbFract >= climbDist then
@@ -573,7 +576,9 @@ end
 -- CNavArea --
 local CNavAreaMeta                                   = FindMetaTable( "CNavArea" )
 local CNavArea_GetCenter                             = CNavAreaMeta.GetCenter
-local CNavArea_GetAdjacentAreas                      = CNavAreaMeta.GetAdjacentAreas
+local CNavArea_GetRandomPoint                        = CNavAreaMeta.GetRandomPoint
+local CNavArea_GetAdjacentAreasAtSide                = CNavAreaMeta.GetAdjacentAreasAtSide
+local CNavArea_GetLaddersAtSide                      = CNavAreaMeta.GetLaddersAtSide
 local CNavArea_ClearSearchLists                      = CNavAreaMeta.ClearSearchLists
 local CNavArea_AddToOpenList                         = CNavAreaMeta.AddToOpenList
 local CNavArea_SetCostSoFar                          = CNavAreaMeta.SetCostSoFar
@@ -595,6 +600,11 @@ local CNavArea_HasAttributes                         = CNavAreaMeta.HasAttribute
 -- CNavLadder --
 local CNavLadderMeta                                 = FindMetaTable( "CNavLadder" )
 local CNavLadder_GetLength                           = CNavLadderMeta.GetLength
+local CNavLadder_GetTopForwardArea                   = CNavLadderMeta.GetTopForwardArea
+local CNavLadder_GetTopLeftArea                      = CNavLadderMeta.GetTopLeftArea
+local CNavLadder_GetTopRightArea                     = CNavLadderMeta.GetTopRightArea
+local CNavLadder_GetTopBehindArea                    = CNavLadderMeta.GetTopBehindArea
+local CNavLadder_GetBottomArea                       = CNavLadderMeta.GetBottomArea
 --
 
 -- CLuaLocomotion --
@@ -609,6 +619,18 @@ local VectorMeta                                     = FindMetaTable( "Vector" )
 local GetDistTo                                      = VectorMeta.Distance
 local GetDistToSqr                                   = VectorMeta.DistToSqr
 --
+
+function ENT:GetAreaRandomPoint( area )
+    rndpointtable.start = CNavArea_GetRandomPoint( area )
+    rndpointtable.endpos = rndpointtable.start
+    rndpointtable.filter = self
+
+    local mins, maxs = self:GetCollisionBounds()
+    rndpointtable.mins = mins
+    rndpointtable.maxs = maxs
+
+    return TraceHull( rndpointtable ).HitPos
+end
 
 -- Returns a pathfinding function for the :Compute() function
 function ENT:PathGenerator()
@@ -689,9 +711,9 @@ end
 local GetNavArea = navmesh.GetNavArea
 
 -- Using the A* algorithm and navmesh, finds out if we can reach the given area
--- Was created because CLuaLocomotion's 'IsAreaTraversable' seems to be broken
+-- Was created because base CLuaLocomotion's 'IsAreaTraversable' seems to be broken
 -- Not recommended to use in loops with large tables
--- The area variable can be a vector or a nav area
+-- The 'area' and 'startArea' variables can be either a vector or a navmesh area
 function ENT:IsAreaTraversable( area, startArea, pathGenerator )
     if isvector( area ) then area = GetNavArea( area, 120 ) end 
     if !IsValid( area ) then return false end
@@ -716,15 +738,75 @@ function ENT:IsAreaTraversable( area, startArea, pathGenerator )
         local curArea = CNavArea_PopOpenList( myArea )
         if curArea == area then return true end
 
-        local adjAreas = CNavArea_GetAdjacentAreas( curArea )
-        for i = 1, #adjAreas do
-            local newArea = adjAreas[ i ]
+        local ladderList
+        local searchIndex = 1
+        local searchLadders = false
+        local searchDir = 0
+        local ladderUp = true
+        local ladderTopDir = 0
+        local floorList = CNavArea_GetAdjacentAreasAtSide( curArea, searchDir )
 
-            local newCostSoFar = pathGenerator( newArea, curArea, NULL, NULL, -1 )
-            if !isnumber( newCostSoFar ) then newCostSoFar = 1e30 end
-            if newCostSoFar < 0 then continue end
+        while ( true ) do
+            local newArea, ladder
+
+            if !searchLadders then
+                if searchIndex > #floorList then
+                    searchDir = ( searchDir + 1 )
+                    if searchDir == 4 then
+                        searchLadders = true
+                        ladderList = CNavArea_GetLaddersAtSide( curArea, 0 )
+                    else
+                        floorList = CNavArea_GetAdjacentAreasAtSide( curArea, searchDir )
+                    end
+
+                    searchIndex = 1
+                    continue
+                end
+
+                newArea = floorList[ searchIndex ]
+                searchIndex = ( searchIndex + 1 )
+            else
+                if searchIndex > #ladderList then
+                    if !ladderUp then break end
+                    ladderUp = false
+                    ladderList = CNavArea_GetLaddersAtSide( curArea, 1 )
+                    searchIndex = 1
+                    continue
+                end
+
+                ladder = ladderList[ searchIndex ]
+                if ladderUp then
+                    if ladderTopDir == 0 then
+                        newArea = CNavLadder_GetTopForwardArea( ladder )
+                    elseif ladderTopDir == 1 then
+                        newArea = CNavLadder_GetTopLeftArea( ladder )
+                    elseif ladderTopDir == 2 then
+                        newArea = CNavLadder_GetTopRightArea( ladder )
+                    elseif ladderTopDir == 3 then
+                        newArea = CNavLadder_GetTopBehindArea( ladder )
+                    else
+                        searchIndex = ( searchIndex + 1 )
+                        ladderTopDir = 0
+                        continue
+                    end
+
+                    ladderTopDir = ( ladderTopDir + 1 )
+                else
+                    newArea = CNavLadder_GetBottomArea( ladder )
+                    searchIndex = ( searchIndex + 1 )
+                end
+            end
+            if !IsValid( newArea ) or newArea == curArea then continue end
+
+            local newCostSoFar = pathGenerator( newArea, curArea, ladder, NULL, -1 )
+            if !isnumber( newCostSoFar ) then 
+                newCostSoFar = 1e30 
+            elseif newCostSoFar < 0 then 
+                continue
+            end
 
             if ( CNavArea_IsOpen( newArea ) or CNavArea_IsClosed( newArea ) ) and CNavArea_GetCostSoFar( newArea ) <= newCostSoFar then continue end
+
             CNavArea_SetCostSoFar( newArea, newCostSoFar )
             CNavArea_SetTotalCost( newArea, newCostSoFar + GetDistToSqr( CNavArea_GetCenter( newArea ), areaPos ) )
 

@@ -242,10 +242,10 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
     ["panic"] = {
         idle = ACT_HL2MP_IDLE_SCARED,
         run = ACT_HL2MP_RUN_PANICKED,
-        walk = ACT_HL2MP_RUN_PANICKED,
+        walk = ACT_HL2MP_WALK,
         jump = ACT_HL2MP_JUMP_SLAM,
-        crouchIdle = ACT_HL2MP_IDLE_SCARED,
-        crouchWalk = ACT_HL2MP_RUN_PANICKED,
+        crouchIdle = ACT_HL2MP_IDLE_CROUCH,
+        crouchWalk = ACT_HL2MP_WALK_CROUCH,
         swimIdle = ACT_HL2MP_SWIM_IDLE,
         swimMove = ACT_HL2MP_SWIM
     }
