@@ -30,6 +30,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     local weapondata = _LAMBDAPLAYERSWEAPONS[ weaponname ]
 
     self.l_Weapon = weaponname
+    self.l_WeaponOrigin = weapondata.origin
     self:SetNW2String( "lambda_spawnweapon", weaponname )
     self:SetNW2String( "lambda_weaponprettyname", weapondata.notagprettyname )
     self.l_WeaponPrettyName = weapondata.notagprettyname
@@ -76,7 +77,6 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     wepent:SetModel( weapondata.model )
     wepent:SetModelScale( ( weapondata.weaponscale or 1 ), 0 )
 
-    local weapondata = _LAMBDAPLAYERSWEAPONS[ weaponname ]
     if weapondata.bonemerge then 
         wepent:AddEffects( EF_BONEMERGE ) 
     else 
@@ -87,6 +87,19 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
 
     local onDeployFunc = ( weapondata.OnDeploy or weapondata.OnEquip )
     if onDeployFunc then onDeployFunc( self, wepent ) end
+
+    local deploySnd = weapondata.deploysound
+    if deploySnd then
+        if istable( deploySnd ) then
+            for _, tbl in ipairs( snds ) do
+                self:SimpleWeaponTimer( tbl[ 1 ], function()
+                    wep:EmitSound( tbl[ 2 ], 65, 100, 1, CHAN_WEAPON )
+                end )
+            end
+        else
+            wep:EmitSound( deploySnd, 65, 100, 1, CHAN_WEAPON )
+        end
+    end
 
     self:SetIsReloading( false )
 
@@ -247,13 +260,13 @@ end
 -- 1 = Regular
 -- 5 = Combine
 -- 7 Regular but bigger
-function ENT:HandleMuzzleFlash( type, offpos, offang )
+function ENT:HandleMuzzleFlash( type, offpos, offang, attachIndex )
     if !type or !IsFirstTimePredicted() then return end
 
     local wepent = self:GetWeaponENT()
     if !IsValid( wepent ) then return end
 
-    local attach = wepent:GetAttachment( 1 )
+    local attach = wepent:GetAttachment( attachIndex or 1 )
     if !attach then
         if offpos and offang then 
             attach = { Pos = offpos, Ang = offang }

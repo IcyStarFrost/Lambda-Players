@@ -1,6 +1,7 @@
 local random = math.random
 local tobool = tobool
 local ents_GetAll = ents.GetAll
+local ents_Create = ents.Create
 local isfunction = isfunction
 local ipairs = ipairs
 local bor = bit.bor
@@ -13,8 +14,6 @@ local FrameTime = FrameTime
 local ceil = math.ceil
 local band = bit.band
 local rand = math.Rand
-local TraceHull = util.TraceHull
-local fallTrTbl = {}
 local debugvar = GetConVar( "lambdaplayers_debug" )
 local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 local callnpchook = GetConVar( "lambdaplayers_lambda_callonnpckilledhook" )
@@ -96,7 +95,15 @@ if SERVER then
             if IsValid( phys ) then phys:AddVelocity( vel ) end
         end
     
-        if info then ragdoll:TakePhysicsDamage( info ) end
+        if info then 
+            ragdoll:TakePhysicsDamage( info )
+            if info:IsDamageType( DMG_DISSOLVE ) then
+                local dissolver = ents_Create( "env_entity_dissolver" )
+                dissolver:SetKeyValue( "target", "!activator" )
+                dissolver:Input( "dissolve", ragdoll )
+                dissolver:Remove()
+            end
+        end
 
         -- Fixes playercolor not being assigned in multiplayer
         if IsSinglePlayer() then
@@ -166,7 +173,7 @@ if SERVER then
             self:SetDeaths( self:GetDeaths() + 1 )
             if attacker == self then self:SetFrags( self:GetFrags() - 1 ) end
 
-            if !serversideragdolls:GetBool() then
+            if !serversideragdolls:GetBool() and !info:IsDamageType( DMG_DISSOLVE ) then
                 self:CreateClientsideRagdoll( info )
             else
                 self:CreateServersideRagdoll( info )
@@ -210,7 +217,6 @@ if SERVER then
         for k, v in ipairs( self.l_Hooks ) do if !v[ 3 ] then self:RemoveHook( v[ 1 ], v[ 2 ] ) end end -- Remove all non preserved hooks
         self:RemoveTimers()
         self:TerminateNonIgnoredDeadTimers()
-        -- self:RemoveFlags( FL_OBJECT )
 
         self.l_BecomeRagdollEntity = NULL
 
@@ -788,7 +794,7 @@ function ENT:InitializeMiniHooks()
         local SetMaterial = render.SetMaterial
         local color_white = color_white
         self:Hook( "PreDrawEffects", "flashlighteffects", function()
-            if !self.l_flashlighton or self:GetIsDead() or !self:IsBeingDrawn() then return end
+            if !self.l_flashlighton or self:GetIsDead() or self:IsDormant() then return end
 
             local hand = self:GetAttachmentPoint( "hand" )
             local start = hand.Pos + hand.Ang:Forward() * 3

@@ -3,9 +3,11 @@ local ents_GetAll = ents.GetAll
 local ents_FindInSphere = ents.FindInSphere
 local ipairs = ipairs
 local random = math.random
+local abs = math.abs
 local undo = undo
 local ents_Create = ents.Create
 local IsValid = IsValid
+local RandomPairs = RandomPairs
 local distance = GetConVar( "lambdaplayers_force_radius" )
 local spawnatplayerpoints = GetConVar( "lambdaplayers_lambda_spawnatplayerspawns" )
 local plyradius = GetConVar( "lambdaplayers_force_spawnradiusply" )
@@ -109,34 +111,77 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cacheplayermodels", function( ply
     LambdaPlayers_Notify( ply, "Playermodels cached!", 0, "plats/elevbell1.wav" )
 end, false, "WARNING: Your game will freeze for a few seconds. This will vary on the amount of playermodels you have installed.", { name = "Cache Playermodels", category = "Utilities" } )
 
-local navmesh_Find = ( SERVER and navmesh.Find )
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_debugtogglegod", function( ply ) 
+
+    if IsValid( ply ) and !ply:IsAdmin() then return end
+    ply.l_godmode = !ply.l_godmode
+    LambdaPlayers_ChatAdd( ply, ( ply.l_godmode and "Enabled" or "Disabled" ) .. " the God Mode for themself" )
+
+end, false, "Toggles God Mode, preventing any further damage to you", { name = "Toggle God Mode", category = "Debugging" } )
+
+local dispClrR, dispClrG, dispClrB
+if ( CLIENT ) then
+    dispClrR = GetConVar( "lambdaplayers_displaycolor_r" )
+    dispClrG = GetConVar( "lambdaplayers_displaycolor_g" )
+    dispClrB = GetConVar( "lambdaplayers_displaycolor_b" )
+
+    _LambdaDisplayColor = Color( dispClrR:GetInt(), dispClrG:GetInt(), dispClrB:GetInt() )
+end
+
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedisplaycolor", function( ply ) 
+
+    _LambdaDisplayColor.r = dispClrR:GetInt()
+    _LambdaDisplayColor.g = dispClrG:GetInt()
+    _LambdaDisplayColor.b = dispClrB:GetInt()
+
+end, true, "Applies any changes done to Display Color", { name = "Update Display Color", category = "Misc" } )
+
+-- Force stuff
+
 local navmesh_IsLoaded = ( SERVER and navmesh.IsLoaded )
 local navmesh_GetAllNavAreas = ( SERVER and navmesh.GetAllNavAreas )
+local forceSpawnAng = Angle()
+
+local function FindRandomPositions( pos, radius, height )
+    radius = ( radius * radius )
+
+    for _, area in RandomPairs( navmesh_GetAllNavAreas() ) do
+        if !IsValid( area ) or area:GetSizeX() <= 32 or area:GetSizeY() <= 32 then continue end
+
+        local closePos = area:GetClosestPointOnArea( pos )
+        if abs( pos.z - closePos.z ) > height or closePos:DistToSqr( pos ) > radius then continue end
+
+        return area:GetRandomPoint()
+    end
+
+    return false
+end
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply ) 
-	if IsValid( ply ) and !ply:IsSuperAdmin() then return end
+    if IsValid( ply ) and !ply:IsSuperAdmin() then return end
     if !navmesh_IsLoaded() then return end
 
     local pos = vector_origin
-    local ang = Angle( 0, random( -180, 180 ), 0 )
+    forceSpawnAng.y = random( -180, 180 )
+
+    LambdaSpawnPoints = ( LambdaSpawnPoints or LambdaGetPossibleSpawns() )
+    local plyRadius = plyradius:GetInt()
+    local rndPos = FindRandomPositions( ply:GetPos(), ( plyRadius > 0 and plyRadius or 32756 ), ( plyRadius > 0 and ( plyRadius / 2.5 ) or 32756 ) )
 
     -- Spawning at player spawn points
-    LambdaSpawnPoints = ( LambdaSpawnPoints or LambdaGetPossibleSpawns() )
-    if LambdaSpawnPoints and #LambdaSpawnPoints > 0 and spawnatplayerpoints:GetBool() then
+    if LambdaSpawnPoints and #LambdaSpawnPoints > 0 and ( !rndPos or spawnatplayerpoints:GetBool() ) then
         pos = LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos()
+    elseif rndPos then
+        pos = rndPos
     else
-        local searchRange = plyradius:GetInt()
-        for _, area in ipairs( searchRange > 0 and navmesh_Find( ply:GetPos(), searchRange, searchRange, searchRange ) or navmesh_GetAllNavAreas() ) do
-            if !IsValid( area ) or area:IsUnderwater() or area:GetSizeX() < 75 or area:GetSizeY() < 75 then continue end
-            pos = area:GetRandomPoint(); break
-        end
+        return
     end
 
-	local lambda = ents_Create( "npc_lambdaplayer" )
-	lambda:SetPos( pos )
-	lambda:SetAngles( ang )
+    local lambda = ents_Create( "npc_lambdaplayer" )
+    lambda:SetPos( pos )
+    lambda:SetAngles( forceSpawnAng )
     lambda:SetCreator( ply )
-	lambda:Spawn()
+    lambda:Spawn()
     lambda:OnSpawnedByPlayer( ply )
 
     local undoName = "Lambda Player ( " .. lambda:GetLambdaName() .. " )"
@@ -145,40 +190,36 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply 
         undo.AddEntity( lambda )
         undo.SetCustomUndoText( "Undone " .. undoName )
     undo.Finish( undoName )
-
-	local dynLight = ents_Create( "light_dynamic" )
-	dynLight:SetKeyValue( "brightness", "2" )
-	dynLight:SetKeyValue( "distance", "90" )
-	dynLight:SetPos( pos )
-	dynLight:SetLocalAngles( ang )
-	dynLight:Fire( "Color", "255 145 0" )
-	dynLight:Spawn()
-	dynLight:Activate()
-	dynLight:Fire( "TurnOn", "", 0 )
-	dynLight:Fire( "Kill", "", 0.75 )
-end, false, "Spawns a Lambda Player at a random area", { name = "Spawn Lambda Player At Random Area", category = "Force Menu" } )
+end, false, "Spawns a Lambda Player at a random area. NOTE: Requires the map to have a navmesh to work!", { name = "Spawn Lambda Player At Random Area", category = "Force Menu" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombat", function( ply ) 
-    if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
-    for _, v in ipairs( ents_FindInSphere( ply:GetPos(), distance:GetInt() ) ) do
-        if IsValid( v ) and v.IsLambdaPlayer then v:AttackTarget( ply, true ) end
-    end
-end, false, "Forces all Lambda Players to attack you", { name = "Lambda Players Attack You", category = "Force Menu" } )
-
-CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombatlambda", function( ply ) 
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
     local dist = distance:GetInt()
     for _, lambda in ipairs( GetLambdaPlayers() ) do
-		if !lambda:IsInRange( ply, dist ) then continue end
+        if !lambda:IsInRange( ply, dist ) then continue end
+        lambda:AttackTarget( ply, true )
+    end
+
+end, false, "Forces all Lambda Players in the radius set to attack you", { name = "Lambda Players Attack You", category = "Force Menu" } )
+
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombatlambda", function( ply ) 
+
+    if IsValid( ply ) and !ply:IsSuperAdmin() then return end
+
+    local dist = distance:GetInt()
+    for _, lambda in ipairs( GetLambdaPlayers() ) do
+        if !lambda:IsInRange( ply, dist ) then continue end
         local npcs = lambda:FindInSphere( nil, math.huge, function( ent ) return ( lambda:CanTarget( ent ) ) end )
-		if #npcs == 0 then continue end
+        if #npcs == 0 then continue end
         lambda:AttackTarget( npcs[ random( #npcs ) ] )
     end
-end, false, "Forces all Lambda Players to attack anything that they can target", { name = "Lambda Players Attack Anything", category = "Force Menu" } )
+
+end, false, "Forces all Lambda Players in the radius set to attack anything that they can target", { name = "Lambda Players Attack Anything", category = "Force Menu" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcekill", function( ply ) 
+
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
     local dist = distance:GetInt()
@@ -186,9 +227,11 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcekill", function( ply )
         if !lambda:IsInRange( ply, dist ) then continue end
         lambda:Kill()
     end
+
 end, false, "Kill any Lambda Players in the radius set", { name = "Kill Nearby Lambda Players", category = "Force Menu" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcepanic", function( ply ) 
+
     if IsValid( ply ) and !ply:IsSuperAdmin() then return end
 
     local dist = distance:GetInt()
@@ -196,30 +239,5 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcepanic", function( ply )
         if !lambda:IsInRange( ply, dist ) then continue end
         lambda:RetreatFrom()
     end
-end, false, "Forces any Lambda Players around will panic", { name = "Lambda Players Panic Nearby", category = "Force Menu" } )
 
-CreateLambdaConsoleCommand( "lambdaplayers_cmd_debugtogglegod", function( ply ) 
-    if IsValid( ply ) and !ply:IsAdmin() then return end
-
-    ply.l_godmode = !ply.l_godmode
-
-    LambdaPlayers_ChatAdd( ply, ply.l_godmode and "Enabled God mode" or "Disabled God mode" )
-end, false, "Toggles God Mode, preventing any further damage to you", { name = "Toggle God Mode", category = "Debugging" } )
-
-
-if CLIENT then
-    local r = GetConVar( "lambdaplayers_displaycolor_r" )
-    local g = GetConVar( "lambdaplayers_displaycolor_g" )
-    local b = GetConVar( "lambdaplayers_displaycolor_b" )
-
-    _LambdaDisplayColor = Color( r:GetInt(), g:GetInt(), b:GetInt() )
-end
-
-CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedisplaycolor", function( ply ) 
-    local r = GetConVar( "lambdaplayers_displaycolor_r" )
-    local g = GetConVar( "lambdaplayers_displaycolor_g" )
-    local b = GetConVar( "lambdaplayers_displaycolor_b" )
-
-    _LambdaDisplayColor = Color( r:GetInt(), g:GetInt(), b:GetInt() )
-
-end, true, "Applies any changes done to Display Color", { name = "Update Display Color", category = "Misc" } )
+end, false, "Forces any Lambda Players in the radius set to panic", { name = "Lambda Players Panic Nearby", category = "Force Menu" } )

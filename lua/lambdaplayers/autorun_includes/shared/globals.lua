@@ -311,6 +311,18 @@ function EntMeta:RemoveLambdaHookTick( name )
 end
 
 if ( SERVER ) then
+    function EntMeta:GetBodyGroupData()
+        local data = {}
+        for _, group in ipairs( self:GetBodyGroups() ) do
+            local subMdls = #group.submodels
+            if subMdls == 0 then continue end 
+            
+            local index = group.id
+            data[ index ] = self:GetBodygroup( index )
+        end
+        return data
+    end
+
     _LambdaOldEntitySetHealth = _LambdaOldEntitySetHealth or EntMeta.SetHealth
     function EntMeta:SetHealth( newHealth )
         if self.IsLambdaPlayer then self:UpdateHealthDisplay( newHealth ) end

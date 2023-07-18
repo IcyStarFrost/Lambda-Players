@@ -153,7 +153,7 @@ end
 local acts = { ACT_GMOD_TAUNT_DANCE, ACT_GMOD_TAUNT_ROBOT, ACT_GMOD_TAUNT_MUSCLE, ACT_GMOD_TAUNT_CHEER }
 function ENT:UsingAct()
     self:PlayGestureAndWait( acts[ random( #acts ) ] )
-    return self:GetLastState()
+    return true
 end
 
 -- MW2/Halo lives in us forever

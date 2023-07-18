@@ -37,8 +37,11 @@ end
 
 -- Localization
 
+    local GetLightColor
+
     local random = math.random
     local rand = math.Rand
+    local max = math.max
     local abs = math.abs
     local SortTable = table.sort
     local eyetracing = GetConVar( "lambdaplayers_debug_eyetracing" )
@@ -114,6 +117,8 @@ end
 --
 
 if CLIENT then
+
+    GetLightColor = render.GetLightColor
 
     language.Add( "npc_lambdaplayer", "Lambda Player" )
 
@@ -197,7 +202,6 @@ function ENT:Initialize()
         self.l_PreDeathDamage = 0 -- The damage we took before running our death function and setting it to zero
         self.l_NextSprayUseTime = 0 -- The next time we can use sprays to spray
         self.l_DStepsWhichFoot = 1 -- The foot that is used in DSteps for stepping. 0 for left, 1 for right
-        self.l_NextFallScreamCheck = CurTime() + 0.1 -- The time we wait until we check if we should play our fall voiceline
 
         self.l_ladderarea = NULL -- The ladder nav area we are currenly using to climb
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
@@ -210,8 +214,8 @@ function ENT:Initialize()
         if IsValid( nearArea ) then self.l_currentnavarea = nearArea; self:OnNavAreaChanged( nearArea, nearArea ) end
 
         -- Used for Respawning
-        self:SetExternalVar( "l_SpawnPos", self:GetPos() ) -- Our favorite weapon
-        self:SetExternalVar( "l_SpawnAngles", self:GetAngles() ) -- Our favorite weapon
+        self:SetExternalVar( "l_SpawnPos", self:GetPos() )
+        self:SetExternalVar( "l_SpawnAngles", self:GetAngles() )
         
         -- Personal Stats --
         self:SetLambdaName( self:GetOpenName() )
@@ -307,23 +311,33 @@ function ENT:Initialize()
         end)
 
         self:SetLagCompensated( true )
-        self:AddFlags( FL_OBJECT )
+        self:AddFlags( FL_OBJECT + FL_NPC )
 
-        local ap = self:LookupAttachment( "anim_attachment_RH" )
-        local attachpoint = self:GetAttachmentPoint( "hand" )
+        local wepent = ents_Create( "base_anim" )
+        local attachPoint = self:GetAttachmentPoint( "hand" )
+        wepent:SetPos( attachPoint.Pos )
+        wepent:SetAngles( attachPoint.Ang )
+        
+        wepent:SetParent( self, attachPoint.Index )
+        if attachPoint.Bone then wepent:FollowBone( self, attachPoint.Bone ) end
 
-        self.WeaponEnt = ents_Create( "base_anim" )
-        self.WeaponEnt:SetPos( attachpoint.Pos )
-        self.WeaponEnt:SetAngles( attachpoint.Ang )
-        self.WeaponEnt:SetParent( self, ( ap > 0 and ap ) )
-        self.WeaponEnt:Spawn()
-        self.WeaponEnt.IsLambdaWeapon = true
-        self.WeaponEnt:SetNW2Vector( "lambda_weaponcolor", self:GetPhysColor() )
-        self.WeaponEnt:SetNoDraw( true )
-        self:SetWeaponENT( self.WeaponEnt )
+        wepent:Spawn()
+        wepent:SetNW2Vector( "lambda_weaponcolor", self:GetPhysColor() )
+        wepent:SetNoDraw( true )
+
+        wepent.IsLambdaWeapon = true
+        wepent.AutomaticFrameAdvance = true
+
+        wepent.Think = function( entity )
+            entity:NextThink( CurTime() )
+            return true
+        end
+
         self.l_SpawnWeapon = "physgun" -- The weapon we spawned with
-        self:SetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon )
         self:SetExternalVar( "l_FavoriteWeapon", false ) -- Our favorite weapon
+        self.WeaponEnt = wepent
+        self:SetWeaponENT( wepent )
+        self:SetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon )
 
         self:InitializeMiniHooks()
         self:SwitchWeapon( "physgun", true )
@@ -364,6 +378,11 @@ function ENT:Initialize()
                 local deadFunc = self.GetIsDead
                 if deadFunc and deadFunc( self ) then return end
                 entity:DrawModel()
+            end
+
+            wep.Think = function( entity )
+                entity:NextThink( 0 )
+                return true
             end
         end )
 
@@ -699,7 +718,7 @@ function ENT:Think()
 
         -- How fast we are falling
         if !onGround then
-            if self:IsUsingLadder() then
+            if waterLvl == 3 or self:IsUsingLadder() then
                 self.l_FallVelocity = 0
             else
                 local fallSpeed = -locoVel.z
@@ -707,12 +726,9 @@ function ENT:Think()
                     self.l_FallVelocity = fallSpeed
                 end
 
-                if !self.l_preventdefaultspeak and curTime >= self.l_NextFallScreamCheck and !self:IsSpeaking( "fall" ) then
-                    self.l_NextFallScreamCheck = CurTime() + 0.1
-
-                    local airSpeed = ( abs( locoVel.x / 4 ) + abs( locoVel.y / 4 ) + ( locoVel.z > 0 and ( locoVel.z / 4 ) or abs( locoVel.z ) ) )
-                    local fallDmg = self:GetFallDamage( airSpeed, true )
-                    if fallDmg >= 20 or fallDmg >= self:Health() then
+                if !self.l_preventdefaultspeak and !self:IsSpeaking( "fall" ) then
+                    local fallDmg = self:GetFallDamage( fallSpeed, true )
+                    if ( fallDmg >= 20 or fallDmg >= self:Health() ) and !self:Trace( ( selfPos + locoVel ), selfPos ).HitPos:IsUnderwater() then
                         self:PlaySoundFile( "fall", false )
                     end
                 end
@@ -942,46 +958,50 @@ function ENT:Think()
         -- -- -- -- --
 
     end
-    
+
     if ( CLIENT ) then
-        
         local selfCenter = self:WorldSpaceCenter()
         local selfAngles = self:GetAngles()
+        local flashlight = self.l_flashlight
 
         -- Update our flashlight
-        if curTime > self.l_lightupdate then
-            local lightvec = render.GetLightColor( selfCenter )
+        if curTime >= self.l_lightupdate then
+            self.l_lightupdate = ( curTime + 1 )
+        
+            local isAtLight = ( GetLightColor( selfCenter ):LengthSqr() > 0.0004 )
+            local beingDrawn = !self:IsDormant()
 
-            if lightvec:LengthSqr() < ( 0.02 ^ 2 ) and !self:GetIsDead() and drawflashlight:GetBool() and self:IsBeingDrawn() then
-                if !IsValid( self.l_flashlight ) then
-                    self:SetFlashlightOn( true )
-                    self.l_flashlighton = true
-                    self.l_flashlight = ProjectedTexture() 
-                    self.l_flashlight:SetTexture( "effects/flashlight001" ) 
-                    self.l_flashlight:SetFarZ( 600 ) 
-                    self.l_flashlight:SetEnableShadows( false )
-                    self.l_flashlight:SetPos( selfCenter )
-                    self.l_flashlight:SetAngles( selfAngles )
-                    self.l_flashlight:Update()
-    
-                    self:EmitSound( "items/flashlight1.wav", 60 )
-                end
-            elseif IsValid( self.l_flashlight ) then
+            if isDead or !beingDrawn or isAtLight then
                 self:SetFlashlightOn( false )
                 self.l_flashlighton = false
-                self.l_flashlight:Remove()
-                self:EmitSound( "items/flashlight1.wav", 60 )
+
+                if IsValid( flashlight ) then
+                    flashlight:Remove()
+                    if !isDead and beingDrawn then self:EmitSound( "HL2Player.FlashLightOff" ) end
+                end
+            elseif !isAtLight then
+                self:SetFlashlightOn( true )
+                self.l_flashlighton = true
+
+                if !IsValid( flashlight ) then
+                    flashlight = ProjectedTexture() 
+                    flashlight:SetTexture( "effects/flashlight001" ) 
+                    flashlight:SetFarZ( 600 ) 
+                    flashlight:SetEnableShadows( false )
+                    flashlight:SetPos( selfCenter )
+                    flashlight:SetAngles( selfAngles )
+                    flashlight:Update()
+                    
+                    self.l_flashlight = flashlight
+                    if beingDrawn then self:EmitSound( "HL2Player.FlashLightOn" ) end
+                end
             end
-
-            self.l_lightupdate = curTime + 1
         end
-
-        if IsValid( self.l_flashlight ) then
-            self.l_flashlight:SetPos( selfCenter )
-            self.l_flashlight:SetAngles( selfAngles )
-            self.l_flashlight:Update()
+        if IsValid( flashlight ) then
+            flashlight:SetPos( selfCenter )
+            flashlight:SetAngles( selfAngles )
+            flashlight:Update()
         end
-
     end
 
     -- Think Delay
@@ -1048,7 +1068,7 @@ function ENT:RunBehaviour()
             end
         end
 
-        local time = ( InSinglePlayer() and thinkrate:GetFloat() or 0.2 )
+        local time = ( InSinglePlayer() and max( 0.1, thinkrate:GetFloat() ) or 0.2 )
         coroutine_wait( time )
     end
 end

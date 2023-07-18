@@ -10,6 +10,7 @@ local RealTime = RealTime
 local IsValid = IsValid
 local file_Find = file.Find
 local random = math.random
+local abs = math.abs
 local FindInSphere = ents.FindInSphere
 local file_Find = file.Find
 local table_Empty = table.Empty
@@ -255,13 +256,13 @@ function ENT:GetBoneTransformation( bone )
             ang = matrix:GetAngles()
         end
     end
-    return { Pos = pos, Ang = ang }
+    return { Pos = pos, Ang = ang, Bone = bone }
 end
 
 -- Returns a table that contains a position and angle with the specified type. hand or eyes
 local eyeOffAng = Angle( 20, 0, 0 )
 function ENT:GetAttachmentPoint( pointtype )
-    local attachData = { Pos = self:WorldSpaceCenter(), Ang = self:GetForward():Angle() }
+    local attachData = { Pos = self:WorldSpaceCenter(), Ang = self:GetForward():Angle(), Index = 0 }
 
     if pointtype == "hand" then
         local lookup = self:LookupAttachment( "anim_attachment_RH" )
@@ -270,6 +271,7 @@ function ENT:GetAttachmentPoint( pointtype )
             if isnumber( bone ) then attachData = self:GetBoneTransformation( bone ) end
         else
             attachData = self:GetAttachment( lookup )
+            attachData.Index = lookup
         end
     elseif pointtype == "eyes" then
         local lookup = self:LookupAttachment( "eyes" )
@@ -278,6 +280,7 @@ function ENT:GetAttachmentPoint( pointtype )
             attachData.Ang = ( attachData.Ang + eyeOffAng )
         else
             attachData = self:GetAttachment( lookup )
+            attachData.Index = lookup
         end
     end
 
@@ -344,10 +347,10 @@ function ENT:ExportLambdaInfo()
 end
 
 -- Performs a Trace from ourselves or the overridestart to the postion
-function ENT:Trace( pos, overridestart )
+function ENT:Trace( pos, overridestart, ignoreEnt )
     tracetable.start = overridestart or self:WorldSpaceCenter()
     tracetable.endpos = ( isentity( pos ) and IsValid( pos ) and pos:GetPos() or pos )
-    tracetable.filter = self 
+    tracetable.filter = ( ignoreEnt and { self, ignoreEnt } or self ) 
     return Trace( tracetable )
 end
 
@@ -374,18 +377,6 @@ function ENT:GetDisplayColor( ply )
         local overridecolor = LambdaRunHook( "LambdaGetDisplayColor", self, ply )
         return overridecolor != nil and overridecolor or useplycolorasdisplay and self:GetPlyColor():ToColor() or Color( ply:GetInfoNum( "lambdaplayers_displaycolor_r", 255 ), ply:GetInfoNum( "lambdaplayers_displaycolor_g", 136 ), ply:GetInfoNum( "lambdaplayers_displaycolor_b", 0 ) )
     end
-end
-
-function ENT:GetBodyGroupData()
-    local data = {}
-    for _, group in ipairs( self:GetBodyGroups() ) do
-        local subMdls = #group.submodels
-        if subMdls == 0 then continue end 
-        
-        local index = group.id
-        data[ index ] = self:GetBodygroup( index )
-    end
-    return data
 end
 
 -- Obviously returns the current state
@@ -724,58 +715,58 @@ if SERVER then
 
     -- Respawns the Lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time
     function ENT:LambdaRespawn()
-        LambdaSpawnPoints = LambdaSpawnPoints or LambdaGetPossibleSpawns()
-
         self:DebugPrint( "Respawned" )
-        self:SetIsDead( false )
-        self.l_Clip = self.l_MaxClip
-        self:SetIsReloading( false )
 
         self:SetSolidMask( MASK_SOLID_BRUSHONLY ) -- This should maybe help with the issue where the nextbot can't set pos because it's in something
-        self:SetPos( ( LambdaSpawnPoints and #LambdaSpawnPoints > 0 and rasp:GetBool() ) and LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos() or self.l_SpawnPos ) -- Rasp aka Respawn at Spawn Points
+        local spawnPos, spawnAng = self.l_SpawnPos, self.l_SpawnAngles
+        if rasp:GetBool() then
+            LambdaSpawnPoints = ( LambdaSpawnPoints or LambdaGetPossibleSpawns() )
+            if LambdaSpawnPoints and #LambdaSpawnPoints > 0 then 
+                local rndPoint = LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]
+                spawnPos = rndPoint:GetPos()
+                spawnAng = rndPoint:GetAngles()
+            end
+        end
+        self:SetPos( spawnPos )
         self:SetSolidMask( MASK_PLAYERSOLID )
 
+        self:SetAngles( spawnAng )
         self.loco:SetVelocity( vector_origin )
-
-        if !collisionPly:GetBool() then
-            self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
-        else
-            self:SetCollisionGroup( COLLISION_GROUP_PASSABLE_DOOR )
-        end
+        self:SetCollisionGroup( !collisionPly:GetBool() and COLLISION_GROUP_PLAYER or COLLISION_GROUP_PASSABLE_DOOR )
 
         local phys = self:GetPhysicsObject()
         if IsValid( phys ) then phys:EnableCollisions( true ) end
-
 
         self:ClientSideNoDraw( self, false )
         self:SetNoDraw( false )
         self:DrawShadow( true )
 
+        local wepent = self.WeaponEnt
+        local isMarked = self:IsWeaponMarkedNodraw()
+        self:ClientSideNoDraw( wepent, isMarked )
+        wepent:SetNoDraw( isMarked )
+        wepent:DrawShadow( !isMarked )  
 
-
-
-        self:ClientSideNoDraw( self.WeaponEnt, self:IsWeaponMarkedNodraw() )
-        self.WeaponEnt:SetNoDraw( self:IsWeaponMarkedNodraw() )
-        self.WeaponEnt:DrawShadow( !self:IsWeaponMarkedNodraw() )
-
-
-        self:PreventDefaultComs( false )
-        self.l_UpdateAnimations = true
-        self:PreventWeaponSwitch( false )
-        self.l_ladderarea = NULL
-        self:SetRunSpeed( runningSpeed:GetInt() )
-        self:SetWalkSpeed( walkingSpeed:GetInt() )
-
+        self:SetIsDead( false )
         self:SetHealth( self:GetMaxHealth() )
         self:SetArmor( self.l_SpawnArmor ) 
-        -- self:AddFlags( FL_OBJECT )
-        self:SwitchToSpawnWeapon()
-        self:UpdateHealthDisplay()
-        
         self:SetState()
         self:SetCrouch( false )
-        self:SetEnemy( nil )
-        
+        self:SetEnemy( NULL )
+        self:SetRunSpeed( runningSpeed:GetInt() )
+        self:SetWalkSpeed( walkingSpeed:GetInt() )
+        self:SetIsReloading( false )
+
+        self:PreventDefaultComs( false )
+        self:PreventWeaponSwitch( false )
+
+        self.l_ladderarea = NULL
+        self.l_UpdateAnimations = true
+        self.l_Clip = self.l_MaxClip
+
+        self:SwitchToSpawnWeapon()
+        self:UpdateHealthDisplay()
+
         net.Start( "lambdaplayers_updatecsstatus" )
             net.WriteEntity( self )
             net.WriteBool( false )
@@ -790,7 +781,7 @@ if SERVER then
                 net.Start( "lambdaplayers_disintegrationeffect" )
                     net.WriteEntity( ragdoll )
                 net.Broadcast()
-                
+
                 self:SimpleTimer( 5.0, function()
                     if IsValid( ragdoll ) then ragdoll:Remove() end
                 end )
@@ -1313,34 +1304,33 @@ if SERVER then
         local spawnBehav = spawnBehavior:GetInt()
         if spawnBehav == 0 then return end
 
-        if spawnBehav == 1 then
-            if !spawnBehavUseRange:GetBool() then
-                for _, ply in RandomPairs( player_GetAll() ) do
-                    if !IsValid( ply ) or !self:CanTarget( ply ) then continue end
-                    self:AttackTarget( ply ); break
-                end
-            else
-                local closePly = self:GetClosestEntity( nil, math.huge, function( ent )
-                    return ( ent:IsPlayer() and self:CanTarget( ent ) )
-                end )
-                if closePly then self:AttackTarget( closePly ) end
+        local findClosest = spawnBehavUseRange:GetBool()
+        local closeTarget
+        local searchDist = math.huge
+        local selfZ = self:GetPos().z
+
+        local pairGen = ( findClosest and ipairs or RandomPairs )
+        for _, ent in pairGen( ents_GetAll() ) do
+            if ent == self or !IsValid( ent ) or !self:CanTarget( ent ) then continue end
+            if spawnBehav == 1 and !ent:IsPlayer() or spawnBehav == 2 and ( ent.IsLambdaPlayer or !ent:IsNPC() and !ent:IsNextBot() ) then continue end
+
+            if !findClosest then
+                self:AttackTarget( ent )
+                return
             end
-        else
-            if !spawnBehavUseRange:GetBool() then
-                for _, ent in RandomPairs( ents_GetAll() ) do
-                    if ent == self or !IsValid( ent ) or !self:CanTarget( ent ) then continue end
-                    if spawnBehav == 2 and ( ent.IsLambdaPlayer or !ent:IsNPC() and !ent:IsNextBot() ) then continue end
-                    self:AttackTarget( ent ); break
-                end
-            else
-                local closeEnt = self:GetClosestEntity( nil, math.huge, function( ent ) 
-                    return ( ( spawnBehav != 2 or !ent.IsLambdaPlayer and ( ent:IsNPC() or ent:IsNextBot() ) ) and self:CanTarget( ent ) )
-                end )
-                if closeEnt then self:AttackTarget( closeEnt ) end
-            end
+
+            local entDist = self:GetRangeSquaredTo( ent )
+            local heightDiff = abs( selfZ - ent:GetPos().z )
+            if ( entDist + ( heightDiff * heightDiff ) ) > searchDist then continue end
+
+            closeTarget = ent
+            searchDist = entDist
+        end
+
+        if closeTarget then
+            self:AttackTarget( closeTarget ) 
         end
     end
-
 end
 
 if ( CLIENT ) then

@@ -341,13 +341,20 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
     local climbNormal = ( climbEnd - climbStart ):GetNormalized()
     local climbDist = climbStart:Distance( climbEnd )
 
-    local stuckTime = CurTime() + 5
+    local stuckTime = CurTime() + random( 3, 8 )
     local climbSpeed = random( 200, 400 )
 
     while ( true ) do
         if !LambdaIsValid( self ) or self:IsInNoClip() then return end
-        if CurTime() > stuckTime then 
-            self:SetPos( finishPos )
+        if CurTime() > stuckTime then
+            if self:IsInRange( finishPos, 32 ) then
+                self:SetPos( finishPos )
+            else
+                local dir = ladder:GetNormal()
+                self:SetPos( self:GetPos() + dir * 20 )
+                self.loco:SetVelocity( dir * 200 )
+            end
+
             return 
         end
         
@@ -362,7 +369,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
 
         if !IsValid( TraceHull( laddermovetable ).Entity ) and ( !self:IsDisabled() and CurTime() > self.l_moveWaitTime or climbState != 2 ) then
             climbFract = climbFract + ( climbSpeed * FrameTime() )
-            stuckTime = CurTime() + 5
+            stuckTime = CurTime() + random( 3, 8 )
 
             if climbFract >= climbDist then
                 if climbState == 1 then
