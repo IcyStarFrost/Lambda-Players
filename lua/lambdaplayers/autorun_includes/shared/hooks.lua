@@ -36,7 +36,7 @@ if SERVER then
         end
 
         local inflictor = dmginfo:GetInflictor()
-        if IsValid( inflictor ) and inflictor.IsLambdaWeapon then
+        if IsValid( inflictor ) and ( inflictor.IsLambdaWeapon or inflictor.l_UseLambdaDmgModifier ) then
             dmginfo:ScaleDamage( LambdaGetWeaponDamageScale( ent ) )
         end
     end )

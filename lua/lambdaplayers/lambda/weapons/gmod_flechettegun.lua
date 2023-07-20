@@ -40,6 +40,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             ent:SetOwner( self )
             ent:Spawn()
             ent:Activate()
+            
+            ent.l_UseLambdaDmgModifier = true
             ent:SetVelocity( targetAng:Forward() * 2000 + targetAng:Right() * random( -100, 100 ) + targetAng:Up() * random( -100, 100 ) )
 
             return true

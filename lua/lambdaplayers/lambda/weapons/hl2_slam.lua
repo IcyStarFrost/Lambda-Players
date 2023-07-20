@@ -49,6 +49,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local phys = slam:GetPhysicsObject()
             if IsValid( phys ) then phys:ApplyForceCenter( self.loco:GetVelocity() + faceDir * 500 ) end
 
+            slam.l_UseLambdaDmgModifier = true
             slam:SetColor( self:GetPlyColor():ToColor() )
             wepent:EmitSound( "Weapon_SLAM.SatchelThrow" )
 

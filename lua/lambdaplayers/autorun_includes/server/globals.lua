@@ -427,7 +427,7 @@ function LambdaKillFeedAdd( victim, attacker, inflictor )
     local attackerteam = ( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and attacker:Team() or -1 )
 
     local attackerWep = attacker.GetActiveWeapon
-    local inflictorname = ( !IsValid( inflictor ) and "suicide" or ( inflictor.IsLambdaWeapon and inflictor.l_killiconname or ( ( inflictor == attacker and attackerWep and IsValid( attackerWep( attacker ) ) ) and attackerWep( attacker ):GetClass() or inflictor:GetClass() ) ) )    
+    local inflictorname = ( !IsValid( inflictor ) and "suicide" or ( inflictor.l_killiconname or ( ( inflictor == attacker and attackerWep and IsValid( attackerWep( attacker ) ) ) and attackerWep( attacker ):GetClass() or inflictor:GetClass() ) ) )    
 
     net.Start( "lambdaplayers_addtokillfeed" )
         net.WriteString( attackername )

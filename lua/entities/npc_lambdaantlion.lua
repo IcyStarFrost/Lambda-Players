@@ -64,6 +64,7 @@ else
         self.loco:SetAcceleration( 800 )
         self.loco:SetDesiredSpeed( 500 )
 
+        self.l_UseLambdaDmgModifier = true
         self.NextFootstepT = 0
         self.NextProcessT = 0
         self.Enemy = NULL
@@ -258,7 +259,7 @@ else
                         local dmginfo = DamageInfo()
                         dmginfo:SetDamage( dealDmg:GetInt() )
                         dmginfo:SetDamageType( DMG_SLASH )
-                        dmginfo:SetInflictor(self)
+                        dmginfo:SetInflictor( self )
 
                         local owner = self:GetOwner()
                         dmginfo:SetAttacker( IsValid( owner ) and owner or self )

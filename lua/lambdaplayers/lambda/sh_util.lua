@@ -357,11 +357,15 @@ end
 -- Returns if we can see the ent in question.
 -- Simple trace 
 function ENT:CanSee( ent )
-    if !IsValid( ent ) then return end
+    if !IsValid( ent ) then return false end
+
     visibilitytrace.start = self:GetAttachmentPoint( "eyes" ).Pos
     visibilitytrace.endpos = ent:WorldSpaceCenter()
     visibilitytrace.filter = self
+
     local result = Trace( visibilitytrace )
+    if LambdaRunHook( "LambdaOnCanSeeEntity", self, ent, result ) == true then return false end
+
     return ( result.Fraction == 1.0 or result.Entity == ent )
 end
 
@@ -535,8 +539,11 @@ if SERVER then
     -- Attacks the specified entity
     function ENT:AttackTarget( ent, forceAttack )
         if !LambdaIsValid( ent ) then return end
-        if LambdaRunHook( "LambdaOnAttackTarget", self, ent ) == true then return end
+        
+        local overrideTarget = LambdaRunHook( "LambdaOnAttackTarget", self, ent )
+        if overrideTarget == true then return end
 
+        if IsValid( overrideTarget ) then ent = overrideTarget end
         self:SetEnemy( ent )
         if !forceAttack and self:IsPanicking() then return end
 

@@ -1,7 +1,7 @@
 --- Include files in the corresponding folders
 -- Autorun files are seperated in folders unlike the ENT include lua files
 
-
+LambdaIsForked = true -- For some things...
 
 -- Base Addon includes --
 
