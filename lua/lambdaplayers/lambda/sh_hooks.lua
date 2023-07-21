@@ -203,6 +203,7 @@ if SERVER then
         wepent:SetNoDraw( true )
         wepent:DrawShadow( false )
         self:LookTo( nil )
+        self:SwitchWeapon( "none", true )
 
         self:GetPhysicsObject():EnableCollisions( false )
 
@@ -652,6 +653,14 @@ function ENT:OnRemove()
     if ( SERVER ) then
         self:RemoveTimers()
         self:CleanSpawnedEntities()
+        
+        if self:Alive() then
+            local wepData = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
+            if wepData then 
+                local onHolsterFunc = ( wepData.OnHolster or wepData.OnUnequip )
+                if onHolsterFunc then onHolsterFunc( self, self:GetWeaponENT() ) end
+            end
+        end
     end
 
     if ( CLIENT ) then

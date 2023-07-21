@@ -728,7 +728,7 @@ function ENT:Think()
 
                 if !self.l_preventdefaultspeak and !self:IsSpeaking( "fall" ) then
                     local fallDmg = self:GetFallDamage( fallSpeed, true )
-                    if ( fallDmg >= 20 or fallDmg >= self:Health() ) and !self:Trace( ( selfPos + locoVel ), selfPos ).HitPos:IsUnderwater() then
+                    if ( fallDmg > 30 or fallDmg >= self:Health() ) and !self:Trace( ( selfPos + locoVel ), selfPos ).HitPos:IsUnderwater() then
                         self:PlaySoundFile( "fall", false )
                     end
                 end
@@ -891,7 +891,7 @@ function ENT:Think()
         --
 
         -- Handles facing positions or entities --
-        local lookAng = Angle( 0, 0, 0 )
+        local lookAng = angle_zero
         local faceTarg = self.Face
 
         if faceTarg then
@@ -900,7 +900,7 @@ function ENT:Think()
                 self.l_Faceend = nil 
                 self.l_PoseOnly = nil 
             else
-                local pos = ( isentity( faceTarg ) and ( isfunction( faceTarg.EyePos ) and faceTarg:EyePos() or faceTarg:WorldSpaceCenter() ) or faceTarg )
+                local pos = ( isentity( faceTarg ) and ( faceTarg.IsLambdaPlayer and faceTarg:EyePos2() or ( isfunction( faceTarg.EyePos ) and faceTarg:EyePos() or faceTarg:WorldSpaceCenter() ) ) or faceTarg )
                 if !self.l_PoseOnly then loco:FaceTowards( pos ); loco:FaceTowards( pos ) end
                 lookAng = self:WorldToLocalAngles( ( pos - eyeAttach.Pos ):Angle() )
             end

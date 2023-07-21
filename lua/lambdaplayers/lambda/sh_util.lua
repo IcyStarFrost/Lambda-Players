@@ -1275,12 +1275,14 @@ if SERVER then
         return stepTime
     end
 
-    function ENT:LambdaJump()
-        if !self:IsOnGround() then return end
-        local curNav = self.l_currentnavarea
-        if obeynav:GetBool() and IsValid( curNav ) and ( curNav:HasAttributes( NAV_MESH_NO_JUMP ) or curNav:HasAttributes( NAV_MESH_STAIRS ) ) then return end       
-        if LambdaRunHook( "LambdaOnJump", self, curNav ) == true then return end
-            
+    function ENT:LambdaJump( forceJump )
+        if !forceJump then
+            if !self:IsOnGround() then return end
+            local curNav = self.l_currentnavarea
+            if obeynav:GetBool() and IsValid( curNav ) and ( curNav:HasAttributes( NAV_MESH_NO_JUMP ) or curNav:HasAttributes( NAV_MESH_STAIRS ) ) then return end       
+            if LambdaRunHook( "LambdaOnJump", self, curNav ) == true then return end
+        end
+
         local mins, maxs = self:GetCollisionBounds()
         jumpTr.start = self:GetPos()
         jumpTr.endpos = jumpTr.start + ( self.loco:GetVelocity() * FrameTime() )
