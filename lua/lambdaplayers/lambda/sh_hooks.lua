@@ -203,6 +203,8 @@ if SERVER then
         wepent:SetNoDraw( true )
         wepent:DrawShadow( false )
         self:LookTo( nil )
+
+        local onDeathFunc = self.l_OnDeathfunction
         self:SwitchWeapon( "none", true )
 
         self:GetPhysicsObject():EnableCollisions( false )
@@ -288,7 +290,6 @@ if SERVER then
             net.WriteInt( self:GetDeaths(), 11 )
         net.Broadcast()
 
-        local onDeathFunc = self.l_OnDeathfunction
         if isfunction( onDeathFunc ) then onDeathFunc( self, wepent, info ) end
     end
 
