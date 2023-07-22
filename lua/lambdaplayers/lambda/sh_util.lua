@@ -31,6 +31,12 @@ local TraceHull = util.TraceHull
 local EndsWith = string.EndsWith
 local tobool = tobool
 local isstring = isstring
+local string_sub = string.sub
+local next = next
+local floor = math.floor
+local table_concat = table.concat
+local string_Replace = string.Replace
+local string_Explode = string.Explode
 local table_insert = table.insert
 local isfunction = isfunction
 local isentity = isentity
@@ -985,108 +991,95 @@ if SERVER then
          return mod
      end ]]
 
-     -- Markov Chain Generator --
-     -- Source code from https://github.com/hay/markov
-     -- I simply got it converted from PHP to GLua
-     local function generate_markov_table( text, look_forward )
-      look_forward = look_forward or 4
-      local charactertable = {}
-    
-      for i = 1, #text do
-        local char = string.sub( text, i, i + look_forward - 1 )
-        if !charactertable[ char ] then charactertable[ char ] = {} end
-      end
-    
-      for i = 1, #text - look_forward do
-        local char_index = string.sub( text, i, i + look_forward - 1 )
-        local char_count = string.sub( text, i + look_forward, i + look_forward * 2 - 1 )
-    
-        if charactertable[ char_index][ char_count ] then
-          charactertable[ char_index ][ char_count ] = charactertable[ char_index ][ char_count ] + 1
-        else
-          charactertable[ char_index ][ char_count ] = 1
+    -- Markov Chain Generator --
+    -- Source code from https://github.com/hay/markov
+    -- I simply got it converted from PHP to GLua
+    local function generate_markov_table( text, look_forward )
+        look_forward = ( look_forward or 4 )
+
+        local charactertable = {}
+        for i = 1, #text do
+            local char = string_sub( text, i, ( i + look_forward - 1 ) )
+            if !charactertable[ char ] then charactertable[ char ] = {} end
         end
-      end
     
-      return charactertable
+        for i = 1, #text - look_forward do
+            local char_index = string_sub( text, i, ( i + look_forward - 1 ) )
+            local char_count = string_sub( text, ( i + look_forward ), ( i + look_forward * 2 - 1 ) )
+            local char_total = charactertable[ char_index ][ char_count ]
+            charactertable[ char_index ][ char_count ] = ( ( char_total or 0 ) + 1 )
+        end
+
+        return charactertable
     end
     
     local function return_weighted_char( array )
-      if !next( array ) then return false end
+        if !next( array ) then return false end
     
-      local items = {}
-      local total = 0
-    
-      for item, weight in pairs( array ) do
-        items[ #items + 1 ] = item
-        total = total + weight
-      end
-
-      local rand = random( total )
-      for i, item in ipairs( items ) do
-        local weight = array[ item ]
-        if rand <= weight then return item end
-        rand = rand - weight
-      end
-    end
-    
-    local function generate_markov_text(length, markov_table, look_forward)
-      look_forward = look_forward or 4
-      local char = next( markov_table )
-      local o = char
-    
-      for i = 1, math.floor(length / look_forward) do
-        local newchar = return_weighted_char( markov_table[ char ] )
-    
-        if newchar then
-          char = newchar
-          o = o .. newchar
-        else
-          char = next( markov_table )
+        local items, total = {}, 0
+        for item, weight in pairs( array ) do
+            items[ #items + 1 ] = item
+            total = total + weight
         end
-      end
+
+        local rand = random( total )
+        for _, item in ipairs( items ) do
+            local weight = array[ item ]
+            if rand <= weight then return item end
+            rand = ( rand - weight )
+        end
+    end
+
+    local function generate_markov_text( length, markov_table, look_forward )
+        look_forward = ( look_forward or 4 )
+        
+        local char = next( markov_table )
+        local o = char
     
-      return o
+        for i = 1, floor( length / look_forward ) do
+            local newchar = return_weighted_char( markov_table[ char ] )
+            if newchar then
+                char = newchar
+                o = ( o .. newchar )
+            else
+                char = next( markov_table )
+            end
+        end
+    
+        return o
     end
 
     local function GetRandomMarkovLine( tbl )
-        tbl = table_Copy( tbl )
-
-        for keyword, func in pairs( LambdaConditionalKeyWords ) do  
-            for i = 1, #tbl do tbl[ i ] = string.Replace( tbl[ i ], keyword, "" ) end
+        local copy = table_Copy( tbl )
+        for keyword, _ in pairs( LambdaConditionalKeyWords ) do  
+            for i = 1, #copy do 
+                copy[ i ] = string_Replace( copy[ i ], keyword, "" ) 
+            end
         end
 
-        local markovtable = generate_markov_table( table.concat( tbl, "\n" ), 4 )
+        local markovtable = generate_markov_table( table_concat( copy, "\n" ), 4 )
         local generated = generate_markov_text( 1000, markovtable, 4 )
-        local lines = string.Explode( "\n", generated )
+        local lines = string_Explode( "\n", generated )
         return lines[ random( #lines ) ]
     end
 
     -- Literally the same thing as :GetVoiceLine() but for Text Lines
     function ENT:GetTextLine( texttype )
-        if self.l_TextProfile and LambdaTextProfiles[ self.l_TextProfile ] then
-            local texttable = LambdaTextProfiles[ self.l_TextProfile ][ texttype ]
-            if texttable and #texttable > 0 then
-                
-                for k, textline in RandomPairs( texttable ) do
-                    local line = usemarkovgenerator:GetBool() and GetRandomMarkovLine( texttable ) or textline
-                    local condition, modifiedline = LambdaConditionalKeyWordCheck( self, line )
-                    if condition then
-                        return modifiedline
-                    end
-                end
-
-            end
-        end
         local tbl = LambdaTextTable[ texttype ]
 
-        if !tbl then return "" end
+        local textPfl = self.l_TextProfile
+        if textPfl and LambdaTextProfiles[ textPfl ] then
+            local texttable = LambdaTextProfiles[ textPfl ][ texttype ]
+            if texttable and #texttable > 0 then tbl = texttable end
+        end
 
-        for k, textline in RandomPairs( tbl ) do
-            local line = usemarkovgenerator:GetBool() and GetRandomMarkovLine( tbl ) or textline
-            local condition, modifiedline = LambdaConditionalKeyWordCheck( self, line )
-            if condition then
-                return modifiedline
+        if tbl then
+            local useMarkov = usemarkovgenerator:GetBool()
+            
+            for _, textline in RandomPairs( tbl ) do
+                local line = ( useMarkov and GetRandomMarkovLine( tbl ) or textline )
+                local condition, modifiedline = LambdaConditionalKeyWordCheck( self, line )
+                if condition then return modifiedline end
             end
         end
 
@@ -1214,6 +1207,7 @@ if SERVER then
         net.Broadcast()
     end
 
+    -- Gets our relationship with entity
     function ENT:Relations( ent )        
         if ent.IsVJBaseSNPC then
             if ent.PlayerFriendly then return D_LI end
@@ -1263,6 +1257,7 @@ if SERVER then
         return ( self:GetAttachmentPoint( "eyes" ).Pos:IsUnderwater() and 3 or self:WorldSpaceCenter():IsUnderwater() and 2 or self:GetPos():IsUnderwater() and 1 or 0 )
     end
 
+    -- Returns the time we will play our next footsteps ound
     function ENT:GetStepSoundTime()
         local stepTime = 0.35
 
@@ -1280,6 +1275,7 @@ if SERVER then
         return stepTime
     end
 
+    -- Makes us jump
     function ENT:LambdaJump( forceJump )
         if !forceJump then
             if !self:IsOnGround() then return end
@@ -1305,6 +1301,7 @@ if SERVER then
 
     local panicAnimations = GetConVar( "lambdaplayers_lambda_panicanimations" )
 
+    -- Gets out weapon's holdtype we'll use for animations
     function ENT:GetWeaponHoldType()
         if self:IsPanicking() and !self:GetIsFiring() and panicAnimations:GetBool() then
             return _LAMBDAPLAYERSHoldTypeAnimations[ "panic" ]
@@ -1314,6 +1311,7 @@ if SERVER then
         return ( istable( hType ) and hType or _LAMBDAPLAYERSHoldTypeAnimations[ hType ] )
     end
 
+    -- Applies the combat behavior on our initial spawn or respawn
     function ENT:ApplyCombatSpawnBehavior()
         local spawnBehav = spawnBehavior:GetInt()
         if spawnBehav == 0 then return end

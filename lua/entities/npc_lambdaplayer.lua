@@ -332,7 +332,19 @@ function ENT:Initialize()
         wepent.AutomaticFrameAdvance = true
 
         wepent.Think = function( entity )
-            entity:NextThink( CurTime() )
+            if !IsValid( self ) then return end
+            local curTime = CurTime()
+
+            -- Run our weapon's think callback if possible
+            if curTime >= self.l_NextWeaponThink then
+                local wepThinkFunc = self.l_WeaponThinkFunction
+                if wepThinkFunc then
+                    local thinkTime = wepThinkFunc( self, entity, self:GetIsDead() )
+                    if isnumber( thinkTime ) and thinkTime > 0 then self.l_NextWeaponThink = curTime + thinkTime end 
+                end
+            end
+
+            entity:NextThink( curTime )
             return true
         end
 
@@ -497,16 +509,6 @@ function ENT:Think()
     if random( updateRate ) == 1 then
         local ping, absPing = self:GetPing(), self:GetAbsPing()
         self:SetPing( Clamp( ping + random( -20, ( 24 - ( ping / absPing ) ) ), absPing, 999 ) )
-    end
-    -- -- -- -- --
-
-    -- Run our weapon's think callback if possible
-    if SERVER and curTime > self.l_NextWeaponThink then
-        local wepThinkFunc = self.l_WeaponThinkFunction
-        if wepThinkFunc then
-            local thinkTime = wepThinkFunc( self, wepent, isDead )
-            if isnumber( thinkTime ) and thinkTime > 0 then self.l_NextWeaponThink = curTime + thinkTime end 
-        end
     end
     -- -- -- -- --
 
@@ -930,17 +932,19 @@ function ENT:Think()
 
         -- Handles facing positions or entities --
         local lookAng = angle_zero
-        local faceTarg = self.Face
 
-        if faceTarg then
-            if self.l_Faceend and curTime > self.l_Faceend or isentity( faceTarg ) and !IsValid( faceTarg ) then 
-                self.Face = nil 
-                self.l_Faceend = nil 
-                self.l_PoseOnly = nil 
-            else
-                local pos = ( isentity( faceTarg ) and ( faceTarg.IsLambdaPlayer and faceTarg:EyePos2() or ( isfunction( faceTarg.EyePos ) and faceTarg:EyePos() or faceTarg:WorldSpaceCenter() ) ) or faceTarg )
-                if !self.l_PoseOnly then loco:FaceTowards( pos ); loco:FaceTowards( pos ) end
-                lookAng = self:WorldToLocalAngles( ( pos - eyeAttach.Pos ):Angle() )
+        if !self:IsPlayingTaunt() then
+            local faceTarg = self.Face
+            if faceTarg then
+                if self.l_Faceend and curTime > self.l_Faceend or isentity( faceTarg ) and !IsValid( faceTarg ) then 
+                    self.Face = nil 
+                    self.l_Faceend = nil 
+                    self.l_PoseOnly = nil 
+                else
+                    local pos = ( isentity( faceTarg ) and ( faceTarg.IsLambdaPlayer and faceTarg:EyePos2() or ( isfunction( faceTarg.EyePos ) and faceTarg:EyePos() or faceTarg:WorldSpaceCenter() ) ) or faceTarg )
+                    if !self.l_PoseOnly then loco:FaceTowards( pos ); loco:FaceTowards( pos ) end
+                    lookAng = self:WorldToLocalAngles( ( pos - eyeAttach.Pos ):Angle() )
+                end
             end
         end
 
