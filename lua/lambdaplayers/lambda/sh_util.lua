@@ -652,11 +652,11 @@ if SERVER then
     -- Checks if our name has a profile. If so, apply the profile info
     function ENT:ProfileCheck()
         local info = LambdaPersonalProfiles and LambdaPersonalProfiles[ self:GetLambdaName() ] or nil
-        if info then
-            self:ApplyLambdaInfo( info )
-            self.l_usingaprofile = true
-            self:SimpleTimer( 0, function() LambdaRunHook( "LambdaOnProfileApplied", self, info ) end, true )
-        end
+        if !info then return end
+        
+        self:ApplyLambdaInfo( info )
+        self.l_usingaprofile = true
+        self:SimpleTimer( 0, function() LambdaRunHook( "LambdaOnProfileApplied", self, info ) end, true )
     end
 
     -- Makes the Lambda face the position or a entity if provided
@@ -833,16 +833,21 @@ if SERVER then
         local newlambda = ents_Create( "npc_lambdaplayer" )
         newlambda:SetPos( pos )
         newlambda:SetAngles( ang )
-        newlambda:SetCreator( self:GetCreator() )
+        
+        local creator = self:GetCreator()
+        newlambda:SetCreator( creator )
+
+        newlambda.l_IsRecreating = true
         newlambda:Spawn()
         newlambda:ApplyLambdaInfo( exportinfo )
+        newlambda.l_IsRecreating = false
 
         table_Merge( newlambda.l_SpawnedEntities, self.l_SpawnedEntities )
 
-        if IsValid( self:GetCreator() ) then
+        if IsValid( creator ) then
             local undoName = "Lambda Player ( " .. self:GetLambdaName() .. " )"
             undo.Create( undoName )
-                undo.SetPlayer( self:GetCreator() )
+                undo.SetPlayer( creator )
                 undo.AddEntity( newlambda )
                 undo.SetCustomUndoText( "Undone " .. undoName )
             undo.Finish( undoName )
@@ -859,7 +864,7 @@ if SERVER then
         local neartbl = {}
         local limitDist = !unlimiteddistance:GetBool()
         for _, area in ipairs( GetAllNavAreas() ) do
-            if !IsValid( area ) or area:IsUnderwater() or area:GetSizeX() < 75 or area:GetSizeY() < 75 or limitDist and pos:DistToSqr( area:GetClosestPointOnArea( pos ) ) > dist then continue end
+            if !IsValid( area ) or area:GetSizeX() < 75 or area:GetSizeY() < 75 or area:GetCenter():IsUnderwater() or limitDist and pos:DistToSqr( area:GetClosestPointOnArea( pos ) ) > dist then continue end
             neartbl[ #neartbl + 1 ] = area
         end
 
@@ -874,7 +879,7 @@ if SERVER then
         if IsNavmeshLoaded() then
             for _, area in RandomPairs( self:GetNavAreas( pos, dist ) ) do
                 if !IsValid( area ) or !self:IsAreaTraversable( area ) then continue end
-                local rndPoint = self:GetAreaRandomPoint( area )
+                local rndPoint = area:GetRandomPoint()
                 if filter and filter( pos, area, rndPoint ) == true then continue end
                 return rndPoint
             end

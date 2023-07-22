@@ -42,6 +42,7 @@ end
     local random = math.random
     local rand = math.Rand
     local max = math.max
+    local min = math.min
     local abs = math.abs
     local SortTable = table.sort
     local eyetracing = GetConVar( "lambdaplayers_debug_eyetracing" )
@@ -114,6 +115,7 @@ end
     local useWeaponPanic = GetConVar( "lambdaplayers_combat_useweapononretreat" )
     local jumpInCombat = GetConVar( "lambdaplayers_combat_usejumpsincombat" )
     local forcePlyMdl = GetConVar( "lambdaplayers_lambda_forceplayermodel" )
+    local drownTime = GetConVar( "lambdaplayers_lambda_drowntime" )
 --
 
 if CLIENT then
@@ -136,17 +138,19 @@ function ENT:Initialize()
     if SERVER then
 
         local spawnMdl = "models/player/kleiner.mdl"
-        local forceMdl = forcePlyMdl:GetString()
-        if forceMdl != "" and IsValidModel( forceMdl ) then
-            spawnMdl = forceMdl
-        else
-            local mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels
-            if allowaddonmodels:GetBool() then
-                mdlTbl = ( onlyaddonmodels:GetBool() and _LAMBDAPLAYERS_AddonPlayermodels or _LAMBDAPLAYERS_AllPlayermodels )
-                if #mdlTbl == 0 then mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels end
-            end
-            spawnMdl = mdlTbl[ random( #mdlTbl ) ]
-        end    
+        if !self.l_IsRecreating then
+            local forceMdl = forcePlyMdl:GetString()
+            if forceMdl != "" and IsValidModel( forceMdl ) then
+                spawnMdl = forceMdl
+            else
+                local mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels
+                if allowaddonmodels:GetBool() then
+                    mdlTbl = ( onlyaddonmodels:GetBool() and _LAMBDAPLAYERS_AddonPlayermodels or _LAMBDAPLAYERS_AllPlayermodels )
+                    if #mdlTbl == 0 then mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels end
+                end
+                spawnMdl = mdlTbl[ random( #mdlTbl ) ]
+            end    
+        end
         self:SetModel( spawnMdl )
 
         self.l_SpawnedEntities = {} -- The table holding every entity we have spawned
@@ -194,7 +198,7 @@ function ENT:Initialize()
         self.l_NextPickupCheck = 0 -- The next time we will check for nearby items to pickup
         self.l_moveWaitTime = 0 -- The time we will wait until continuing moving through our path
         self.l_nextswimposupdate = 0 -- the next time we will update our swimming position
-        self.l_ladderfailtimer = CurTime() + 15 -- The time until we are removed and recreated due to Gmod issues with nextbots and ladders. Thanks Facepunch
+        self.l_ladderfailtimer = CurTime() + 5 -- The time until we are removed and recreated due to Gmod issues with nextbots and ladders. Thanks Facepunch
         self.l_NextWeaponThink = 0 -- The next time we will run the currenly held weapon's think callback
         self.l_CurrentPlayedGesture = -1 -- Gesture ID that is assigned when the ENT:PlayGestureAndWait( id ) function is ran
         self.l_retreatendtime = 0 -- The time until we stop retreating
@@ -202,6 +206,9 @@ function ENT:Initialize()
         self.l_PreDeathDamage = 0 -- The damage we took before running our death function and setting it to zero
         self.l_NextSprayUseTime = 0 -- The next time we can use sprays to spray
         self.l_DStepsWhichFoot = 1 -- The foot that is used in DSteps for stepping. 0 for left, 1 for right
+        self.l_DrownStartTime = false -- The time we will start drowning in water
+        self.l_DrownLostHealth = 0 -- The amount of health we lost while drowning
+        self.l_DrownActionTime = 0 -- The next time we start losing or recovering lost health when drowning
 
         self.l_ladderarea = NULL -- The ladder nav area we are currenly using to climb
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
@@ -305,13 +312,9 @@ function ENT:Initialize()
             self:SetCollisionGroup( COLLISION_GROUP_PASSABLE_DOOR )
         end
 
-        self:SetSolidMask( MASK_PLAYERSOLID )
-        self:AddCallback( "PhysicsCollide", function( self, data )
-            self:HandleCollision( data )
-        end)
-
         self:SetLagCompensated( true )
         self:AddFlags( FL_OBJECT + FL_NPC )
+        self:SetSolidMask( MASK_PLAYERSOLID )
 
         local wepent = ents_Create( "base_anim" )
         local attachPoint = self:GetAttachmentPoint( "hand" )
@@ -782,6 +785,41 @@ function ENT:Think()
             self.l_noclipheight = 0
             self:RemoveGesture( ACT_GMOD_NOCLIP_LAYER )
             self.l_noclippos = selfPos
+        end
+
+        -- Drowning Mechanic
+        if waterLvl == 3 then
+            if !self.l_DrownStartTime then 
+                local airTime = drownTime:GetFloat()
+                if airTime > 0 then self.l_DrownStartTime = ( curTime + airTime ) end
+            elseif curTime >= self.l_DrownStartTime and curTime >= self.l_DrownActionTime then
+                local preDmgHp = self:Health()
+
+                local drownDmg = DamageInfo()
+                drownDmg:SetDamage( 10 )
+                drownDmg:SetAttacker( Entity( 0 ) )
+                drownDmg:SetDamageType( DMG_DROWN )
+                self:TakeDamageInfo( drownDmg )
+
+                local lostHp = ( preDmgHp - self:Health() )
+                if lostHp > 0 then
+                    if self:Health() > 0 then
+                        self.l_DrownLostHealth = ( self.l_DrownLostHealth + lostHp )
+                    end
+                    
+                    self:EmitSound( "Player.DrownContinue" )
+                end
+                self.l_DrownActionTime = ( curTime + 1 )
+            end
+        else
+            self.l_DrownStartTime = false
+
+            if self.l_DrownLostHealth > 0 and curTime >= self.l_DrownActionTime then
+                local recoverHp = min( self.l_DrownLostHealth, 10 )
+                self.l_DrownLostHealth = max( self.l_DrownLostHealth - recoverHp, 0 )
+                self:SetHealth( self:Health() + recoverHp )
+                self.l_DrownActionTime = ( curTime + 3 )
+            end
         end
 
         -- Handle swimming

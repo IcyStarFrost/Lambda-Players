@@ -159,6 +159,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_noplycollisions", 0, true, false, fals
 CreateLambdaConvar( "lambdaplayers_lambda_panicanimations", 0, true, false, false, "If panicking Lambda Players should use Panic Animations", 0, 1, { type = "Bool", name = "Use Panic Animations", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_physupdatetime", 0.5, true, false, false, "The time it takes for Lambda Player to update its physics object. Lower the value if you have problems with projectiles not colliding with them", 0, 1, { type = "Slider", decimals = 2, name = "Physics Update Time", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_lethalwaters", 0, true, false, false, "If Lambda Players should die after few seconds of submerging into any water. Useful for maps with water where players can't get out with normal ways", 0, 1, { type = "Bool", name = "Lethal Waters", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_drowntime", 0, true, false, false, "The time Lambda Players can be fully submerged in water before they start drowning. Set to zero to disable drowning", 0, 1, { type = "Slider", decimals = 1, name = "Drown Time", category = "Lambda Server Settings" } )
 --
 
 -- Combat Convars 

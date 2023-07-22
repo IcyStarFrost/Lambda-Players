@@ -110,6 +110,7 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
                 if IsValid( phys ) then phys:SetPos( entPos, true ) end
             end
 
+            hook_Run( "CreateClientsideRagdoll", ent, ragdoll )
             table_insert( _LAMBDAPLAYERS_ClientSideRagdolls, ragdoll ) -- These ragdolls don't get removed on map cleanup, so we instead store them and delete in map cleanup's hook
             InitializeRagdoll( ragdoll, plyColor, ent, force, offset )
         end )

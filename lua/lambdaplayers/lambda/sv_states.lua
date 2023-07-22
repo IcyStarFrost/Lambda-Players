@@ -116,6 +116,7 @@ end }
 function ENT:FindTarget()
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
     self:MoveToPos( self:GetRandomPosition(), ft_options )
+    return ( random( 1, 8 ) == 1 )
 end
 
 -- We look for a button and press it

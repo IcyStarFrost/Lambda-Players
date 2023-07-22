@@ -13,8 +13,7 @@ local FrameTime = FrameTime
 local tracetable = { ignoreworld = true }
 local unstucktable = {}
 local airtable = {}
-local rndpointtable = { collisiongroup = COLLISION_GROUP_PLAYER }
-local laddermovetable = { collisiongroup = COLLISION_GROUP_PLAYER }
+local laddermovetable = { collisiongroup = COLLISION_GROUP_PLAYER, ignoreworld = true }
 local ents_FindByName = ents.FindByName
 local GetGroundHeight = navmesh.GetGroundHeight
 local navmesh_IsLoaded = navmesh.IsLoaded
@@ -291,10 +290,6 @@ end
 function ENT:ClimbLadder( ladder, isDown, movePos )
     if !IsValid( ladder ) then return end
 
-    local mins, maxs = self:GetCollisionBounds()
-    laddermovetable.mins = mins
-    laddermovetable.maxs = maxs
-
     local startPos, goalPos, finishPos
     if isDown then
         startPos = ladder:GetTop()
@@ -324,13 +319,6 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
             finishPos = closePoint
         end
     end
-
-    local endDir = ( finishPos - goalPos ):GetNormalized(); endDir.z = 0
-    laddermovetable.start = finishPos
-    laddermovetable.endpos = ( finishPos + endDir * 48 )
-    laddermovetable.filter = self
-    laddermovetable.ignoreworld = false
-    finishPos = TraceHull( laddermovetable ).HitPos
 
     local climbFract = 0
     local climbState = 1
@@ -365,7 +353,10 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
         laddermovetable.start = climbPos
         laddermovetable.endpos = ( climbPos + climbNormal * 20 )
         laddermovetable.filter = self
-        laddermovetable.ignoreworld = true
+
+        local mins, maxs = self:GetCollisionBounds()
+        laddermovetable.mins = mins
+        laddermovetable.maxs = maxs
 
         if !IsValid( TraceHull( laddermovetable ).Entity ) and ( !self:IsDisabled() and CurTime() > self.l_moveWaitTime or climbState != 2 ) then
             climbFract = climbFract + ( climbSpeed * FrameTime() )
@@ -583,7 +574,6 @@ end
 -- CNavArea --
 local CNavAreaMeta                                   = FindMetaTable( "CNavArea" )
 local CNavArea_GetCenter                             = CNavAreaMeta.GetCenter
-local CNavArea_GetRandomPoint                        = CNavAreaMeta.GetRandomPoint
 local CNavArea_GetAdjacentAreasAtSide                = CNavAreaMeta.GetAdjacentAreasAtSide
 local CNavArea_GetLaddersAtSide                      = CNavAreaMeta.GetLaddersAtSide
 local CNavArea_ClearSearchLists                      = CNavAreaMeta.ClearSearchLists
@@ -599,7 +589,6 @@ local CNavArea_IsOpen                                = CNavAreaMeta.IsOpen
 local CNavArea_IsClosed                              = CNavAreaMeta.IsClosed
 local CNavArea_RemoveFromClosedList                  = CNavAreaMeta.RemoveFromClosedList
 local CNavArea_ComputeAdjacentConnectionHeightChange = CNavAreaMeta.ComputeAdjacentConnectionHeightChange
-local CNavArea_IsUnderwater                          = CNavAreaMeta.IsUnderwater
 local CNavArea_GetAttributes                         = CNavAreaMeta.GetAttributes
 local CNavArea_HasAttributes                         = CNavAreaMeta.HasAttributes
 --
@@ -626,18 +615,6 @@ local VectorMeta                                     = FindMetaTable( "Vector" )
 local GetDistTo                                      = VectorMeta.Distance
 local GetDistToSqr                                   = VectorMeta.DistToSqr
 --
-
-function ENT:GetAreaRandomPoint( area )
-    rndpointtable.start = CNavArea_GetRandomPoint( area )
-    rndpointtable.endpos = rndpointtable.start
-    rndpointtable.filter = self
-
-    local mins, maxs = self:GetCollisionBounds()
-    rndpointtable.mins = mins
-    rndpointtable.maxs = maxs
-
-    return TraceHull( rndpointtable ).HitPos
-end
 
 -- Returns a pathfinding function for the :Compute() function
 function ENT:PathGenerator()
@@ -685,9 +662,9 @@ function ENT:PathGenerator()
         if !isInNoClip then 
             if !IsValid( ladder ) then
                 local deltaZ = CNavArea_ComputeAdjacentConnectionHeightChange( fromArea, area )
-                if deltaZ < deathHeight and !CNavArea_IsUnderwater( area ) then return -1 end
+                if deltaZ < deathHeight and !areaPos:IsUnderwater() then return -1 end
 
-                if !CNavArea_IsUnderwater( fromArea ) then
+                if !fromPos:IsUnderwater() then
                     if deltaZ > jumpHeight then
                         return -1
                     elseif deltaZ > stepHeight then

@@ -243,7 +243,7 @@ local function GetRandomSpawnPoint()
     local allAreas = GetAllNavAreas()
     local areaCount = #allAreas
     for index, area in RandomPairs( allAreas ) do
-        if !IsValid( area ) or area:IsUnderwater() or area:GetSizeX() <= 50 or area:GetSizeY() <= 50 then continue end
+        if !IsValid( area ) or area:GetSizeX() <= 50 or area:GetSizeY() <= 50 or area:GetCenter():IsUnderwater() then continue end
         if plys and index != areaCount then
             local outofreach = true
             for _, ply in ipairs( plys ) do

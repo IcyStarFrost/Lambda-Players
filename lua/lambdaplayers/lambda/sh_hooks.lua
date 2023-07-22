@@ -220,6 +220,9 @@ if SERVER then
         self:TerminateNonIgnoredDeadTimers()
 
         self.l_BecomeRagdollEntity = NULL
+        self.l_DrownStartTime = false
+        self.l_DrownLostHealth = 0
+        self.l_DrownActionTime = 0
 
         info:SetDamage( self.l_PreDeathDamage )
         LambdaRunHook( "LambdaOnKilled", self, info, silent )
@@ -453,7 +456,7 @@ if SERVER then
     end
 
     -- Called when we collide with something
-    function ENT:HandleCollision( data )
+    function ENT:PhysicsCollide( data, myCollider )
         if self:GetIsDead() or self:GetNoClip() then return end
         local collider = data.HitEntity
         if !IsValid( collider ) then return end
