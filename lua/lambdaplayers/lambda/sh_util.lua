@@ -568,7 +568,7 @@ if SERVER then
             if self:GetVoiceChance() > 0 then self:PlaySoundFile( "panic" ) end
         end
 
-        local retreatTime = ( CurTime() + ( timeout or random( 10, 25 ) ) )
+        local retreatTime = ( CurTime() + ( timeout or random( 8, 20 ) ) )
         if retreatTime > self.l_retreatendtime then self.l_retreatendtime = retreatTime end
 
         local target = self:GetEnemy()
@@ -851,8 +851,12 @@ if SERVER then
         newlambda:SetCreator( creator )
 
         newlambda.l_IsRecreating = true
+
         newlambda:Spawn()
         newlambda:ApplyLambdaInfo( exportinfo )
+        newlambda.l_SpawnPos = self.l_SpawnPos
+        newlambda.l_SpawnAngles = self.l_SpawnAngles
+
         newlambda.l_IsRecreating = false
 
         table_Merge( newlambda.l_SpawnedEntities, self.l_SpawnedEntities )
@@ -1310,7 +1314,7 @@ if SERVER then
 
     -- Gets out weapon's holdtype we'll use for animations
     function ENT:GetWeaponHoldType()
-        if self:IsPanicking() and !self:GetIsFiring() and panicAnimations:GetBool() then
+        if self:IsPanicking() and !self:GetIsFiring() and !self:GetIsReloading() and panicAnimations:GetBool() then
             return _LAMBDAPLAYERSHoldTypeAnimations[ "panic" ]
         end
 

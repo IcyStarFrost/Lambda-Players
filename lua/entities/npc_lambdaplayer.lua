@@ -221,9 +221,9 @@ function ENT:Initialize()
         if IsValid( nearArea ) then self.l_currentnavarea = nearArea; self:OnNavAreaChanged( nearArea, nearArea ) end
 
         -- Used for Respawning
-        self:SetExternalVar( "l_SpawnPos", self:GetPos() )
-        self:SetExternalVar( "l_SpawnAngles", self:GetAngles() )
-        
+        self.l_SpawnPos = self:GetPos()
+        self.l_SpawnAngles = self:GetAngles()
+
         -- Personal Stats --
         self:SetLambdaName( self:GetOpenName() )
         self:SetProfilePicture( #Lambdaprofilepictures > 0 and Lambdaprofilepictures[ random( #Lambdaprofilepictures ) ] or "spawnicons/".. sub( self:GetModel(), 1, #self:GetModel() - 4 ).. ".png" )
@@ -615,11 +615,10 @@ function ENT:Think()
                     end
                 end
 
-                if !isPanicking and canSee then
+                if !isPanicking then
                     local keepDist, myOrigin = self.l_CombatKeepDistance, self:GetPos()
                     local posCopy = target:GetPos(); posCopy.z = myOrigin.z
-
-                    if keepDist and self:IsInRange( posCopy, keepDist ) then
+                    if canSee and keepDist and self:IsInRange( posCopy, keepDist ) then
                         local moveAng = ( myOrigin - posCopy ):Angle()
                         local potentialPos = ( myOrigin + moveAng:Forward() * random( -self:GetRunSpeed(), keepDist ) + moveAng:Right() * random( -keepDist, keepDist ) )
                         self.l_movepos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )

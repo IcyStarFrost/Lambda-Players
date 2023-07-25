@@ -54,7 +54,7 @@ function ENT:MoveToPos( pos, options )
     self.l_moveoptions = options
 
     local path = Path( "Follow" )
-    path:SetGoalTolerance( options.tol or 20 )
+    path:SetGoalTolerance( options.tol or 40 )
     path:SetMinLookAheadDistance( self.l_LookAheadDistance )
 
     local update = options.update

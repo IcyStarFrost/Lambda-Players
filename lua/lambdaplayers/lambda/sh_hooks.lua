@@ -210,9 +210,6 @@ if SERVER then
         wepent:DrawShadow( false )
         self:LookTo( nil )
 
-        local onDeathFunc = self.l_OnDeathfunction
-        self:SwitchWeapon( "none", true )
-
         self:GetPhysicsObject():EnableCollisions( false )
 
         -- Restart our coroutine thread
@@ -235,6 +232,10 @@ if SERVER then
         info:SetDamage( self.l_PreDeathDamage )
         LambdaRunHook( "LambdaOnKilled", self, info, silent )
         --hook.Run( "PlayerDeath", self, info:GetInflictor(), info:GetAttacker() )
+
+        local onDeathFunc = self.l_OnDeathfunction
+        if isfunction( onDeathFunc ) then onDeathFunc( self, wepent, info ) end
+        self:SwitchWeapon( "none", true )
 
         local deathTime = CurTime()
         local canRespawn = self:GetRespawn()
@@ -295,8 +296,6 @@ if SERVER then
             net.WriteInt( self:GetFrags(), 11 )
             net.WriteInt( self:GetDeaths(), 11 )
         net.Broadcast()
-
-        if isfunction( onDeathFunc ) then onDeathFunc( self, wepent, info ) end
     end
 
     function ENT:OnInjured( info )
