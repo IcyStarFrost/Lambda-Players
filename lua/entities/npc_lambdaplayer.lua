@@ -592,8 +592,9 @@ function ENT:Think()
         local isFiring = false
         if !isDisabled then 
             local target = self:GetEnemy()
-            local behavState = self.l_BehaviorState
+            local behavState = self:GetBehaviorState()
             local isPanicking = ( behavState == "Retreat" )
+            
             if LambdaIsValid( target ) and ( isPanicking or behavState == "Combat" ) then
                 local canSee = self:CanSee( target )
                 local attackRange = self.l_CombatAttackRange

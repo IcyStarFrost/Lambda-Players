@@ -678,6 +678,11 @@ if SERVER then
         return isfunction( self[ state ] )
     end
 
+    -- Return the state that our behavior coroutine is currenly running
+    function ENT:GetBehaviorState()
+        return self.l_BehaviorState
+    end
+
     -- Sets our state. If the 'prevState' argument is set, the state will only change
     -- If our current state is the one set there
     function ENT:SetState( state, prevState )
@@ -686,9 +691,11 @@ if SERVER then
         if state == curState or prevState and curState != prevState then return end
         if LambdaRunHook( "LambdaOnChangeState", self, curState, state ) == true then return end
 
-        self:DebugPrint( "Changed state from " .. curState .. " to " .. state )
-        self:SetNW2String( "lambda_laststate", self.l_BehaviorState )
+        local behavState = self:GetBehaviorState()
+        if behavState != state then self:SetNW2String( "lambda_laststate", behavState ) end
+
         self:SetNW2String( "lambda_state", state )
+        self:DebugPrint( "Changed state from " .. curState .. " to " .. state )
     end
 
     -- Returns if our ai is disabled

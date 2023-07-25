@@ -53,10 +53,11 @@ if SERVER then
 
         net.Start( "lambdaplayers_becomeragdoll" )
             net.WriteEntity( self )
+            net.WriteEntity( overrideEnt )
+            net.WriteVector( self:GetPos() )
             net.WriteVector( self:GetPlyColor() )
             net.WriteVector( dmgforce )
             net.WriteVector( dmgpos )
-            net.WriteEntity( overrideEnt )
         net.Broadcast()
     end
 
@@ -182,8 +183,13 @@ if SERVER then
             if self.l_DropWeaponOnDeath and !self:IsWeaponMarkedNodraw() then
                 net.Start( "lambdaplayers_createclientsidedroppedweapon" )
                     net.WriteEntity( wepent )
-                    net.WriteEntity( self )
+                    net.WriteString( wepent:GetModel() )
+                    net.WriteVector( wepent:GetPos() )
+                    net.WriteUInt( wepent:GetSkin(), 5 )
+                    net.WriteString( wepent:GetSubMaterial( 1 ) )
+                    net.WriteFloat( wepent:GetModelScale() )
                     net.WriteVector( self:GetPhysColor() )
+                    net.WriteEntity( self )
                     net.WriteString( self:GetWeaponName() )
                     net.WriteVector( info:GetDamageForce() )
                     net.WriteVector( info:GetDamagePosition() )

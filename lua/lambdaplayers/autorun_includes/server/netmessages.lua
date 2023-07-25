@@ -38,24 +38,3 @@ net.Receive( "lambdaplayers_onclosebirthdaypanel", function( len, ply )
     print( "Lambda Players: " .. ply:Name() .. " changed their birthday setting")
     _LambdaPlayerBirthdays[ ply:SteamID() ] = { month = month, day = net.ReadUInt( 5 ) }
 end )
-
-net.Receive( "lambdaplayers_getlambdavisuals", function()
-    local lambda = net.ReadEntity()
-    if !IsValid( lambda ) then return end
-
-    net.Start( "lambdaplayers_sendlambdavisuals" )
-        net.WriteString( lambda:GetModel() )
-        net.WriteUInt( lambda:GetSkin(), 5 )
-        net.WriteTable( lambda:GetBodyGroupData() )
-        net.WriteVector( lambda:WorldSpaceCenter() )
-    net.Broadcast()
-end )
-
-net.Receive( "lambdaplayers_server_getpos", function()
-    local ent = net.ReadEntity()
-    if !IsValid( ent ) then return end
-
-    net.Start( "lambdaplayers_server_sendpos" )
-        net.WriteVector( ent:GetPos() )
-    net.Broadcast()
-end )

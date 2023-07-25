@@ -80,105 +80,92 @@ net.Receive( "lambdaplayers_serversideragdollplycolor", function()
     ragdoll.GetPlayerColor = function() return color end
 end )
 
--- Net sent from ENT:OnKilled()
-net.Receive( "lambdaplayers_becomeragdoll", function() 
-    local ent = net.ReadEntity()
-    if !IsValid( ent ) then return end
-
-    local plyColor = net.ReadVector()
-    local force = net.ReadVector()
-    local offset = net.ReadVector()
-    local overrideEnt = net.ReadEntity()
-
-    if !ent:IsDormant() then -- If we are currenly tracked in client realm, do it in normal way
-        local ragdoll = ( IsValid( overrideEnt ) and overrideEnt or ent ):BecomeRagdollOnClient()
-        InitializeRagdoll( ragdoll, plyColor, ent, force, offset )
-    else -- If not, do some networking
-        net.Start( "lambdaplayers_getlambdavisuals" ) -- Get the Lambda's visuals from the server
-            net.WriteEntity( IsValid( overrideEnt ) and overrideEnt or ent )
-        net.SendToServer()
-
-        net.Receive( "lambdaplayers_sendlambdavisuals", function() -- Is successful, receive and create a standalone ragdoll entity
-            local ragdoll = ClientsideRagdoll( net.ReadString() )
-            ragdoll:SetSkin( net.ReadUInt( 5 ) )
-            for k, v in ipairs( net.ReadTable() ) do ragdoll:SetBodygroup( k, v ) end
-
-            -- Normal SetPos() won't work, so we instead use ragdoll's physics objects
-            local entPos = net.ReadVector()
-            for i = 0, ragdoll:GetPhysicsObjectCount() - 1 do
-                local phys = ragdoll:GetPhysicsObjectNum( i )
-                if IsValid( phys ) then phys:SetPos( entPos, true ) end
-            end
-
-            hook_Run( "CreateClientsideRagdoll", ent, ragdoll )
-            table_insert( _LAMBDAPLAYERS_ClientSideRagdolls, ragdoll ) -- These ragdolls don't get removed on map cleanup, so we instead store them and delete in map cleanup's hook
-            InitializeRagdoll( ragdoll, plyColor, ent, force, offset )
-        end )
-    end
-end )
-
 net.Receive( "lambdaplayers_disintegrationeffect", function()
     local ent = net.ReadEntity()
     if !IsValid( ent ) then return end
     ent:LambdaDisintegrate()
 end )
 
+-- Net sent from ENT:OnKilled()
+net.Receive( "lambdaplayers_becomeragdoll", function() 
+    local lambda = net.ReadEntity()
+    if !IsValid( lambda ) then return end
+
+    local overrideEnt = net.ReadEntity()
+    local ragdoll = ( IsValid( overrideEnt ) and overrideEnt or lambda ):BecomeRagdollOnClient()
+    if !IsValid( ragdoll ) then return end
+
+    local entPos = net.ReadVector()
+    if lambda:IsDormant() then
+        for i = 0, ragdoll:GetPhysicsObjectCount() - 1 do
+            local phys = ragdoll:GetPhysicsObjectNum( i )
+            if IsValid( phys ) then phys:SetPos( entPos, true ) end
+        end
+    end
+
+    ragdoll:SetNoDraw( false )
+    ragdoll:DrawShadow( true )
+    ragdoll.isclientside = true
+    ragdoll.LambdaOwner = lambda
+
+    local plyColor = net.ReadVector()
+    ragdoll.GetPlayerColor = function() return plyColor end
+
+    lambda.ragdoll = ragdoll
+    table_insert( _LAMBDAPLAYERS_ClientSideEnts, ragdoll )
+
+    local force, offset = net.ReadVector(), net.ReadVector()
+    for i = 1, 3 do
+        local phys = ragdoll:GetPhysicsObjectNum( i )
+        if IsValid( phys ) then phys:ApplyForceOffset( force, offset ) end
+    end
+
+    local startTime = CurTime()
+    LambdaCreateThread( function()
+        while ( cleanuptime:GetInt() == 0 or CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and lambda:GetIsDead() and lambda:IsSpeaking() ) do 
+            if !IsValid( ragdoll ) then return end
+            coroutine_yield() 
+        end
+        if !IsValid( ragdoll ) then return end
+
+        if cleaneffect:GetBool() then ragdoll:LambdaDisintegrate() return end 
+        ragdoll:Remove()
+    end )
+end )
+
 net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     if !dropWeapon:GetBool() then return end
 
-    local ent = net.ReadEntity()
-    if !IsValid( ent ) then return end
-    local lambda = net.ReadEntity()
-    local colvec = net.ReadVector()
-    local wpnName = net.ReadString()
-    local force = net.ReadVector()
-    local dmgpos = net.ReadVector()
-
-    local cs_prop = CreateClientProp( ent:GetModel() )
+    local wepent = net.ReadEntity()
+    if !IsValid( wepent ) then return end
     
-    if IsValid( lambda ) and lambda:IsDormant() then
-        net.Start( "lambdaplayers_server_getpos" )
-            net.WriteEntity( ent )
-        net.SendToServer()
-
-        net.Receive( "lambdaplayers_server_sendpos", function()
-            if !IsValid( cs_prop ) then return end
-
-            local svPos = net.ReadVector()
-            if !svPos then cs_prop:Remove() return end
-
-            cs_prop:SetPos( svPos )
-        end )
-    else
-        cs_prop:SetPos( ent:GetPos() )
-    end
-
-    cs_prop:SetAngles( ent:GetAngles() )
-    cs_prop:SetSkin( ent:GetSkin() )
-    cs_prop:SetSubMaterial( 1, ent:GetSubMaterial( 1 ) )
-    cs_prop:SetModelScale( ent:GetModelScale(), 0 )
-
-    
-    cs_prop:SetNW2Vector( "lambda_weaponcolor", colvec )
-
+    local cs_prop = CreateClientProp( net.ReadString() )
+    cs_prop:SetPos( net.ReadVector() )
+    cs_prop:SetAngles( wepent:GetAngles() )
+    cs_prop:SetSkin( net.ReadUInt( 5 ) )
+    cs_prop:SetSubMaterial( 1, net.ReadString() )
+    cs_prop:SetModelScale( net.ReadFloat(), 0 )
+    cs_prop:SetNW2Vector( "lambda_weaponcolor", net.ReadVector() )
     cs_prop:Spawn()
 
+    local lambda = net.ReadEntity()
     if IsValid( lambda ) then lambda.cs_prop = cs_prop end 
+    
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, cs_prop )
     cs_prop.isclientside = true
-    
-    local wpnData = _LAMBDAPLAYERSWEAPONS[ wpnName ]
+
+    local wpnData = _LAMBDAPLAYERSWEAPONS[ net.ReadString() ]
     if istable( wpnData ) then
         local dropFunc = wpnData.OnDrop
-        if isfunction( dropFunc ) then dropFunc( lambda, ent, cs_prop ) end
+        if isfunction( dropFunc ) then dropFunc( lambda, wepent, cs_prop ) end
     end
 
     local phys = cs_prop:GetPhysicsObject()
     if IsValid( phys ) then
-        force = force / 2
-
         phys:SetMass( 20 )
-        phys:ApplyForceOffset( force, dmgpos )
+
+        local force = ( net.ReadVector() / 2 )
+        phys:ApplyForceOffset( force, net.ReadVector() )
     end
 
     local startTime = CurTime()
