@@ -14,6 +14,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 500,
         attackrange = 1000,
+        dropentity = "weapon_frag",
         
         OnAttack = function( self, wepent, target )
             local grenade = ents_Create( "npc_grenade_frag" )

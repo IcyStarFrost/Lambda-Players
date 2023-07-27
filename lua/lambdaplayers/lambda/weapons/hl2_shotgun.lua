@@ -21,6 +21,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 150,
         attackrange = 500,
+        dropentity = "weapon_shotgun",
 
         clip = 6,
         OnAttack = function( self, wepent, target )

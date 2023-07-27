@@ -26,6 +26,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         killicon = "weapon_physcannon", -- No idea if this is needed but why not
         bonemerge = true,
         holdtype = "physgun",
+        dropentity = "weapon_physcannon",
 
         OnDraw = function( lambda, wepent )
             if IsValid( wepent ) then

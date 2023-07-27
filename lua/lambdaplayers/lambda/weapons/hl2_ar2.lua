@@ -1,9 +1,14 @@
 local IsValid = IsValid
 local CurTime = CurTime
+local ents_Create = ents.Create
 local random = math.random
+local Rand = math.Rand
+local ballIntertia = Vector( 500, 500, 500 )
+
 local ballMass = GetConVar( "sk_weapon_ar2_alt_fire_mass" )
 local ballRadius = GetConVar( "sk_weapon_ar2_alt_fire_radius" )
 local ballTime = GetConVar( "sk_weapon_ar2_alt_fire_duration" )
+
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
@@ -16,6 +21,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 400,
         attackrange = 2500,
+        islethal = true,
+        dropentity = "weapon_ar2",
 
         clip = 30,
         tracername = "AR2Tracer",
@@ -34,46 +41,41 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             { 0.63, "Weapon_AR2.Reload_Push" }
         },
 
-        islethal = true,
-
         OnAttack = function( self, wepent, target )
-            -- Secondary orb launcher
-            if random( 75 ) == 1 then
-                self.l_WeaponUseCooldown = CurTime() + 1.25
-                wepent:EmitSound( "Weapon_CombineGuard.Special1" )
+            if random( 75 ) != 1 then return true end
 
-                self:SimpleWeaponTimer( 0.75, function()
-                    local comBall = ents.Create( "prop_combine_ball" )
-                    if IsValid( comBall ) then 
-                        wepent:EmitSound( "Weapon_IRifle.Single" )
+            self.l_WeaponUseCooldown = ( CurTime() + Rand( 1.25, 1.5 ) )
+            wepent:EmitSound( "Weapon_CombineGuard.Special1" )
 
-                        self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
+            self:SimpleWeaponTimer( 0.75, function()
+                local comBall = ents_Create( "prop_combine_ball" )
+                if !IsValid( comBall ) then return end 
 
-                        local launchAng = ( IsValid( target ) and ( target:WorldSpaceCenter() - self:EyePos() ):Angle() or self:GetAngles() )
-                        local launchVel = ( launchAng:Forward() * 1000 )
-                        
-                        comBall:SetSaveValue( "m_flRadius", ballRadius:GetFloat() )
-                        comBall:SetPos( self:EyePos() + launchAng:Forward() * 32 + launchAng:Up() * 32 )
-                        comBall:SetOwner( self )
-                        comBall:Spawn()
-                        comBall:SetSaveValue( "m_nState", 2 )
-                        comBall:SetSaveValue( "m_flSpeed", launchVel:Length() )
-                        comBall:Fire( "Explode", nil, ballTime:GetInt() )
+                wepent:EmitSound( "Weapon_IRifle.Single" )
+                self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
 
-                        local phys = comBall:GetPhysicsObject()
-                        if IsValid( phys ) then
-                            phys:SetVelocity( launchVel )
-                            phys:AddGameFlag( FVPHYSICS_WAS_THROWN )
-
-                            phys:SetMass( ballMass:GetFloat() )
-                            phys:SetInertia( Vector( 500, 500, 500 ) )
-                        end
-                    end
-                end)
+                local wepPos = wepent:GetPos()
+                local launchAng = ( IsValid( target ) and ( target:WorldSpaceCenter() - wepPos ):Angle() or self:GetAngles() )
+                local launchVel = ( launchAng:Forward() * 1000 )
                 
-                return true
-            end
+                comBall:SetSaveValue( "m_flRadius", 10 )
+                comBall:SetPos( wepPos + launchAng:Forward() * 32 + launchAng:Up() * 32 )
+                comBall:SetOwner( self )
+                comBall:Spawn()
+                comBall:SetSaveValue( "m_nState", 2 )
+                comBall:SetSaveValue( "m_flSpeed", launchVel:Length() )
+                comBall:Fire( "Explode", nil, 2 )
+
+                local phys = comBall:GetPhysicsObject()
+                if !IsValid( phys ) then return end
+
+                phys:SetVelocity( launchVel )
+                phys:AddGameFlag( FVPHYSICS_WAS_THROWN )
+                phys:SetMass( 150 )
+                phys:SetInertia( ballIntertia )
+            end)
+            
+            return true
         end
     }
-
-})
+} )

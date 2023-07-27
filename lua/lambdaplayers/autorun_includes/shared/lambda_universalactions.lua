@@ -10,30 +10,30 @@ local rand = math.Rand
 LambdaUniversalActions = {}
 
 -- The first arg in the functions is the Lambda Player who called the function
-function AddUActionToLambdaUA( func )
-    table_insert( LambdaUniversalActions, func )
+function AddUActionToLambdaUA( func, name )
+    LambdaUniversalActions[ name or tostring( func ) ] = func
 end
 
 -- Random weapon switching
 AddUActionToLambdaUA( function( self )
     if random( 3 ) != 1 then return end
-    if self:GetState() == "Idle" then
+    if self:GetState( "Idle" ) then
         self:SwitchToRandomWeapon()
-    elseif self:InCombat() then
+    elseif self:InCombat() or self:IsPanicking() then
         self:SwitchToLethalWeapon()
     end
-end )
+end, "SwitchToRandomWeapon" )
 
 -- Use a random act
 AddUActionToLambdaUA( function( self )
-    if self:GetState() != "Idle" or random( 2 ) != 1 then return end
+    if !self:GetState( "Idle" ) or random( 2 ) != 1 then return end
     self:CancelMovement()
     self:SetState( "UsingAct" )
-end )
+end, "Do 'act *'" )
 
 -- Undo entities
 AddUActionToLambdaUA( function( self )
-    if self:GetState() != "Idle" then return end
+    if !self:GetState( "Idle" ) then return end
     self:NamedTimer( "Undoentities", rand( 0.3, 0.6 ), random( 6 ), function() self:UndoLastSpawnedEnt() end )
 end )
 
@@ -44,17 +44,16 @@ local isbutton = {
 }
 -- Look for and press a button
 AddUActionToLambdaUA( function( self )
-    if self:GetState() != "Idle" then return end
-    
-    local find = self:FindInSphere( self:GetPos(), 2000, function( ent ) 
+    if !self:GetState( "Idle" ) then return end
+
+    local find = self:FindInSphere( nil, 2000, function( ent ) 
         return ( isbutton[ ent:GetClass() ] and self:CanSee( ent ) )
     end )
     if #find == 0 then return end
 
-    self.l_buttonentity = find[ random( #find ) ]
     self:CancelMovement()
-    self:SetState( "PushButton" )
-end )
+    self:SetState( "PushButton", find[ random( #find ) ] )
+end, "FindButton" )
 
 -- Crouch
 AddUActionToLambdaUA( function( self )
@@ -62,14 +61,14 @@ AddUActionToLambdaUA( function( self )
     self:SetCrouch( true )
 
     local lastState = self:GetState()
-    local crouchTime = CurTime() + rand( 1, 30 )
+    local crouchTime = ( CurTime() + random( 1, 15 ) )
     self:NamedTimer( "UnCrouch", 1, 0, function() 
         if self:GetState() != lastState or CurTime() >= crouchTime then
             self:SetCrouch( false )
             return true
         end
     end )
-end )
+end, "Crouch" )
 
 
 local noclip = GetConVar( "lambdaplayers_lambda_allownoclip" )
@@ -78,14 +77,14 @@ AddUActionToLambdaUA( function( self )
     if random( 2 ) != 1 or !noclip:GetBool() then return end
     self:NoClipState( true )
 
-    local Nocliptime = CurTime() + rand( 1, 120 )
+    local noclipTime = ( CurTime() + rand( 1, 120 ) )
     self:NamedTimer( "UnNoclip", 1, 0, function() 
-        if CurTime() >= Nocliptime or !noclip:GetBool() then
+        if CurTime() >= noclipTime or !noclip:GetBool() then
             self:NoClipState( false )
             return true
         end
     end )
-end )
+end, "Noclip" )
 
 -- Jump around ( Disabled due to causes of many 'stuck in wall or ceiling' situations )
 -- AddUActionToLambdaUA( function( self )
@@ -106,10 +105,10 @@ local killbind = GetConVar( "lambdaplayers_lambda_allowkillbind" )
 AddUActionToLambdaUA( function( self )
     if random( self:IsPlayingTaunt() and 50 or 150 ) != 1 or !killbind:GetBool() then return end
     self:Kill()
-end )
+end, "Killbind" )
 
 -- Equip and use medkit on myself if it's allowed, we are hurt and not in combat
 AddUActionToLambdaUA( function( self )
     if self:Health() >= self:GetMaxHealth() or self:InCombat() or !self:CanEquipWeapon( "gmod_medkit" ) then return end
     self:SwitchWeapon( "gmod_medkit" )
-end )
+end, "HealWithMedkit" )

@@ -1,6 +1,8 @@
 local EffectData = EffectData
 local IsFirstTimePredicted = IsFirstTimePredicted
 local isfunction = isfunction
+local istable = istable
+local isstring = isstring
 local random = math.random
 local RandomPairs = RandomPairs
 local Rand = math.Rand
@@ -49,6 +51,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self.l_WeaponUseCooldown = CurTime() + ( weapondata.deploydelay or 0.1 )
     self.l_DropWeaponOnDeath = ( weapondata.dropondeath == nil and true or weapondata.dropondeath )
     self.l_WeaponThinkFunction = CurTime()
+    self.l_WeaponDropEntity = weapondata.dropentity
 
     local killicon_ = weapondata.killicon
     if killicon_ then
@@ -122,7 +125,10 @@ local function TranslateRandomization( string )
     end
 end
 
-local bullettbl = {}
+local bullettbl = {
+    HullSize = 5,
+    Spread = Vector()
+}
 
 -- I like this way more than before 
 local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabletbl )
@@ -130,43 +136,51 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
     
     disabletbl = disabletbl or {}
     
-    if !disabletbl.cooldown then 
+    local fireRate = ( disabletbl.cooldown or weapondata.rateoffire or Rand( weapondata.rateoffiremin, weapondata.rateoffiremax ) )
+    if fireRate and fireRate != true then 
         local cooldown = weapondata.rateoffire or Rand( weapondata.rateoffiremin, weapondata.rateoffiremax )
         self.l_WeaponUseCooldown = CurTime() + cooldown
     end
 
-    if !disabletbl.sound then 
-        wepent:EmitSound( TranslateRandomization( weapondata.attacksnd ), 80, random( 98, 102 ), 1, CHAN_WEAPON ) 
+    local fireSnd = ( disabletbl.sound or weapondata.attacksnd )
+    if fireSnd and fireSnd != true then 
+        wepent:EmitSound( TranslateRandomization( fireSnd ), 80, random( 98, 102 ), 1, CHAN_WEAPON ) 
     end
     
-    if !disabletbl.muzzleflash then 
-        self:HandleMuzzleFlash( weapondata.muzzleflash, weapondata.muzzleoffpos, weapondata.muzzleoffang ) 
-    end
-    
-    if !disabletbl.shell then 
-        self:HandleShellEject( weapondata.shelleject, weapondata.shelloffpos, weapondata.shelloffang ) 
+    local muzzleFlash = ( disabletbl.muzzleflash or weapondata.muzzleflash )
+    if muzzleFlash and muzzleFlash != true then 
+        self:HandleMuzzleFlash( muzzleFlash, weapondata.muzzleoffpos, weapondata.muzzleoffang ) 
     end
 
-    if !disabletbl.anim then
-        self:RemoveGesture( weapondata.attackanim )
-        self:AddGesture( weapondata.attackanim )
+    local shellEject = ( disabletbl.shell or weapondata.shelleject )
+    if shellEject and shellEject != true then 
+        self:HandleShellEject( shellEject, weapondata.shelloffpos, weapondata.shelloffang ) 
     end
 
-    if !disabletbl.clipdrain then 
-        self.l_Clip = self.l_Clip - 1 
+    local fireAnim = ( disabletbl.anim or weapondata.attackanim )
+    if fireAnim and fireAnim != true then
+        self:RemoveGesture( fireAnim )
+        self:AddGesture( fireAnim )
     end
 
-    if !disabletbl.damage then
+    local clipCost = ( disabletbl.clipdrain or 1 )
+    if clipCost and clipCost != true then self.l_Clip = ( self.l_Clip - clipCost ) end
+
+    local bulletData = ( disabletbl.damage or {} )
+    if bulletData != true then
         bullettbl.Attacker = self
-        bullettbl.Damage = weapondata.damage
-        bullettbl.Force = weapondata.damage
-        bullettbl.HullSize = 5
-        bullettbl.Num = weapondata.bulletcount or 1
-        bullettbl.TracerName = weapondata.tracername or "Tracer"
-        bullettbl.Dir = ( target:WorldSpaceCenter() - wepent:GetPos() ):GetNormalized()
-        bullettbl.Src = wepent:GetPos()
-        bullettbl.Spread = Vector( weapondata.spread, weapondata.spread, 0 )
         bullettbl.IgnoreEntity = self
+
+        bullettbl.Damage = ( bulletData.Damage or weapondata.damage )
+        bullettbl.Force = ( bulletData.Force or weapondata.damage )
+        bullettbl.Num = ( bulletData.Num or weapondata.bulletcount or 1 )
+        bullettbl.TracerName = ( bulletData.TracerName or weapondata.tracername or "Tracer" )
+        bullettbl.Dir = ( bulletData.Dir or ( target:WorldSpaceCenter() - wepent:GetPos() ):GetNormalized() )
+        bullettbl.Src = ( bulletData.Src or wepent:GetPos() )
+
+        local spread = ( bulletData.Spread or weapondata.spread )
+        bullettbl.Spread.x = spread
+        bullettbl.Spread.y = spread
 
         wepent:FireBullets( bullettbl )
     end    
@@ -175,28 +189,36 @@ end
 local function DefaultMeleeWeaponUse( self, wepent, target, weapondata, disabletbl )
     disabletbl = disabletbl or {}
 
-    if !disabletbl.cooldown then 
+    local fireRate = ( disabletbl.cooldown or weapondata.rateoffire or Rand( weapondata.rateoffiremin, weapondata.rateoffiremax ) )
+    if fireRate and fireRate != true then 
         local cooldown = weapondata.rateoffire or Rand( weapondata.rateoffiremin, weapondata.rateoffiremax )
         self.l_WeaponUseCooldown = CurTime() + cooldown
     end
-    
-    if !disabletbl.sound then 
-        wepent:EmitSound( TranslateRandomization( weapondata.attacksnd ), 75, random( 98, 102 ), 1, CHAN_WEAPON ) 
-        target:EmitSound( TranslateRandomization( weapondata.hitsnd ), 70 )
-    end
-    
-    if !disabletbl.anim then
-        self:RemoveGesture( weapondata.attackanim )
-        self:AddGesture( weapondata.attackanim )
+
+    local attackSnd = ( disabletbl.sound or weapondata.attacksnd )
+    if attackSnd and attackSnd != true then 
+        wepent:EmitSound( TranslateRandomization( attackSnd ), 75, random( 98, 102 ), 1, CHAN_WEAPON ) 
     end
 
-    if !disabletbl.damage then
+    local hitSnd = ( disabletbl.hitsound or weapondata.hitsnd )
+    if hitSnd and hitSnd != true then 
+        target:EmitSound( TranslateRandomization( hitSnd ), 70 ) 
+    end
+
+    local attackAnim = ( disabletbl.anim or weapondata.attackanim )
+    if attackAnim and attackAnim != true then
+        self:RemoveGesture( attackAnim )
+        self:AddGesture( attackAnim )
+    end
+
+    local dmgData = ( disabletbl.damage or {} )
+    if dmgData != true then
         local dmg = DamageInfo() 
-        dmg:SetDamage( weapondata.damage )
-        dmg:SetAttacker( self )
-        dmg:SetInflictor( wepent )
-        dmg:SetDamageType( DMG_CLUB )
-        dmg:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * weapondata.damage )
+        dmg:SetDamage( dmgData.Damage or weapondata.damage )
+        dmg:SetAttacker( dmgData.Attacker or self )
+        dmg:SetInflictor( dmgData.Inflictor or wepent )
+        dmg:SetDamageType( dmgData.DamageType or DMG_CLUB )
+        dmg:SetDamageForce( dmgData.DamageForce or ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg:GetDamage() )
 
         target:TakeDamageInfo( dmg )
     end
@@ -230,20 +252,24 @@ function ENT:ReloadWeapon()
     local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
     
     local onReloadFunc = weapondata.OnReload
-    if onReloadFunc and onReloadFunc( self, wep ) == true then return end
+    if onReloadFunc and onReloadFunc( self, wep, weapondata ) == true then return end
 
     local snds = weapondata.reloadsounds
-    if snds and #snds > 0 then
-        for k, tbl in ipairs( snds ) do
-            self:SimpleWeaponTimer( tbl[ 1 ], function()
-                wep:EmitSound( tbl[ 2 ], 65, 100, 1, CHAN_WEAPON )
-            end )
+    if snds then 
+        if istable( snds ) and #snds > 0 then
+            for k, tbl in ipairs( snds ) do
+                self:SimpleWeaponTimer( tbl[ 1 ], function()
+                    wep:EmitSound( tbl[ 2 ], 65, 100, 1, CHAN_WEAPON )
+                end )
+            end
+        else
+            wep:EmitSound( tbl[ 2 ], 65, 100, 1, CHAN_WEAPON )
         end
     end
 
     local anim = weapondata.reloadanim
     if anim then
-        local id = self:AddGesture( anim )
+        local id = ( isstring( anim ) and self:AddGestureSequence( anim ) or self:AddGesture( anim ) )
         self:SetLayerPlaybackRate( id, ( weapondata.reloadanimspeed or 1 ) )
     end
 
@@ -254,7 +280,6 @@ function ENT:ReloadWeapon()
         self.l_Clip = self.l_MaxClip
         self:SetIsReloading( false )
     end )
-
 end
 
 -- 1 = Regular

@@ -15,6 +15,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         prettyname = "Bug Bait",
         holdtype = "grenade",
         bonemerge = true,
+        dropentity = "weapon_bugbait",
         
         islethal = true,
         keepdistance = 600,

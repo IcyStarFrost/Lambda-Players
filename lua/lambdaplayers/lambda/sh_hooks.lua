@@ -6,6 +6,8 @@ local isfunction = isfunction
 local ipairs = ipairs
 local bor = bit.bor
 local CurTime = CurTime
+local coroutine_yield = coroutine.yield
+local coroutine_wait = coroutine.wait
 local max = math.max
 local SortTable = table.sort
 local IsSinglePlayer = game.SinglePlayer
@@ -29,6 +31,7 @@ local flashlightbeam = Material( "effects/lamp_beam" )
 local aidisabled = GetConVar( "ai_disabled" )
 local faded = Color( 100, 100, 100, 100 )
 local serversideragdolls = GetConVar( "lambdaplayers_lambda_serversideragdolls" )
+local dropweaponents = GetConVar( "lambdaplayers_allowweaponentdrop" )
 
 if SERVER then
 
@@ -127,7 +130,7 @@ if SERVER then
         LambdaCreateThread( function()
             while ( serversidecleanup:GetInt() == 0 or CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( self ) and self:IsSpeaking() ) do 
                 if !IsValid( ragdoll ) then return end
-                coroutine.yield() 
+                coroutine_yield() 
             end
             
             if !IsValid( ragdoll ) then return end
@@ -136,7 +139,7 @@ if SERVER then
                     net.WriteEntity( ragdoll )
                 net.Broadcast()
 
-                coroutine.wait( 5 )
+                coroutine_wait( 5 )
             end
 
             if !IsValid( ragdoll ) then return end
@@ -181,19 +184,70 @@ if SERVER then
             end
 
             if self.l_DropWeaponOnDeath and !self:IsWeaponMarkedNodraw() then
-                net.Start( "lambdaplayers_createclientsidedroppedweapon" )
-                    net.WriteEntity( wepent )
-                    net.WriteString( wepent:GetModel() )
-                    net.WriteVector( wepent:GetPos() )
-                    net.WriteUInt( wepent:GetSkin(), 5 )
-                    net.WriteString( wepent:GetSubMaterial( 1 ) )
-                    net.WriteFloat( wepent:GetModelScale() )
-                    net.WriteVector( self:GetPhysColor() )
-                    net.WriteEntity( self )
-                    net.WriteString( self:GetWeaponName() )
-                    net.WriteVector( info:GetDamageForce() )
-                    net.WriteVector( info:GetDamagePosition() )
-                net.Broadcast()
+                local dropEnt = self.l_WeaponDropEntity
+                if !dropEnt or !dropweaponents:GetBool() then
+                    net.Start( "lambdaplayers_createclientsidedroppedweapon" )
+                        net.WriteEntity( wepent )
+                        net.WriteString( wepent:GetModel() )
+                        net.WriteVector( wepent:GetPos() )
+                        net.WriteUInt( wepent:GetSkin(), 5 )
+                        net.WriteString( wepent:GetSubMaterial( 1 ) )
+                        net.WriteFloat( wepent:GetModelScale() )
+                        net.WriteVector( self:GetPhysColor() )
+                        net.WriteEntity( self )
+                        net.WriteString( self:GetWeaponName() )
+                        net.WriteVector( info:GetDamageForce() )
+                        net.WriteVector( info:GetDamagePosition() )
+                    net.Broadcast()
+                else
+                    dropEnt = ents_Create( dropEnt )
+                    
+                    if IsValid( dropEnt ) then
+                        dropEnt:SetPos( wepent:GetPos() )
+                        dropEnt:SetAngles( wepent:GetAngles() )
+                        dropEnt:SetOwner( self )
+                        dropEnt:Spawn()
+
+                        dropEnt:SetSubMaterial( 1, wepent:GetSubMaterial( 1 ) )
+                        dropEnt:SetNW2Vector( "lambda_weaponcolor", self:GetPhysColor() )
+
+                        dropEnt.LambdaOwner = self
+                        dropEnt.IsLambdaSpawned = true
+
+                        local phys = dropEnt:GetPhysicsObject()
+                        if IsValid( phys ) then
+                            local force = ( info:GetDamageForce() / 7 )
+                            phys:ApplyForceOffset( force, info:GetDamagePosition() )
+                        end
+
+                        self.weapondrop = dropEnt
+                        local wpnData = _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ]
+                        if wpnData then
+                            local dropFunc = wpnData.OnDrop
+                            if isfunction( dropFunc ) then dropFunc( lambda, wepent, dropEnt ) end
+                        end
+
+                        local startTime = CurTime()
+                        LambdaCreateThread( function()
+                            while ( serversidecleanup:GetInt() == 0 or CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( self ) and self:IsSpeaking() ) do 
+                                if !IsValid( dropEnt ) or dropEnt:GetOwner() != self then return end
+                                coroutine_yield() 
+                            end
+                            if !IsValid( dropEnt ) then return end
+
+                            if serversidecleanupeffect:GetBool() then
+                                net.Start( "lambdaplayers_disintegrationeffect" )
+                                    net.WriteEntity( dropEnt )
+                                net.Broadcast()
+
+                                coroutine_wait( 5 )
+                            end
+
+                            if !IsValid( dropEnt ) then return end
+                            dropEnt:Remove()
+                        end ) 
+                    end
+                end
             end
         end
 
@@ -241,7 +295,7 @@ if SERVER then
         local canRespawn = self:GetRespawn()
         self:Thread( function()
             while ( ( CurTime() - deathTime ) < ( canRespawn and respawnTime:GetFloat() or 0.1 ) or self:GetIsTyping() or self:IsSpeaking( "death" ) and ( !canRespawn or respawnSpeech:GetBool() ) ) do
-                coroutine.yield() 
+                coroutine_yield() 
             end
 
             if !canRespawn then
@@ -362,8 +416,7 @@ if SERVER then
                 end
 
                 if killerActionChance == 1 then 
-                    self.l_tbagpos = victim:GetPos()
-                    self:SetState( "TBaggingPosition" )
+                    self:SetState( "TBaggingPosition", victim:GetPos() )
                     self:DebugPrint( "I killed my enemy. It's t-bagging time..." )
                     return
                 end
@@ -382,10 +435,11 @@ if SERVER then
             self:PlaySoundFile( "assist", rand( 0.1, 1.0 ) )
         end
 
-        if self:IsInRange( victim, 2000 ) and self:CanSee( victim ) then
+        if self:IsInRange( victim, 1500 ) and self:CanSee( victim ) then
             local witnessChance = random( 10 )
             if witnessChance == 1 or ( attacker == victim or attacker:IsWorld() ) and witnessChance >= 6 then
-                self:LaughAt( victim ) 
+                self:SetState( "Laughing", { victim, self.l_movepos } )
+                self:CancelMovement() 
                 self:DebugPrint( "I killed or saw someone die. Laugh at this man!" )
             elseif attacker != self and victim != enemy then
                 if witnessChance == 2 and !self.l_preventdefaultspeak then
@@ -419,6 +473,9 @@ if SERVER then
         end,
         [ NAV_MESH_RUN ] = function( self ) 
             self:SetRun( true ) 
+        end,
+        [ NAV_MESH_PRECISE ] = function( self ) 
+            self:SetRun( false ) 
         end,
         [ NAV_MESH_WALK ] = function( self, hasEntered ) 
             self:SetSlowWalk( hasEntered ) 

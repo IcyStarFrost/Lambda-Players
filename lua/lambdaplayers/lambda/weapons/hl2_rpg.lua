@@ -23,6 +23,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         holdtype = "rpg",
         killicon = "rpg_missile",
         bonemerge = true,
+        dropentity = "weapon_rpg",
         
         keepdistance = 800,
         attackrange = 5000,

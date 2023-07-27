@@ -54,7 +54,7 @@ function ENT:MoveToPos( pos, options )
     self.l_moveoptions = options
 
     local path = Path( "Follow" )
-    path:SetGoalTolerance( options.tol or 40 )
+    path:SetGoalTolerance( options.tol or 30 )
     path:SetMinLookAheadDistance( self.l_LookAheadDistance )
 
     local update = options.update
@@ -222,7 +222,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
     self.l_moveoptions = options
 
     local callback = options.callback
-    local tolerance = options.tol or 20
+    local tolerance = options.tol or 30
     
     local timeout = options.timeout
     if timeout then timeout = CurTime() + timeout end

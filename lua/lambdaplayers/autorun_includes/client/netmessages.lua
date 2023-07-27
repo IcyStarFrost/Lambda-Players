@@ -82,8 +82,10 @@ end )
 
 net.Receive( "lambdaplayers_disintegrationeffect", function()
     local ent = net.ReadEntity()
-    if !IsValid( ent ) then return end
-    ent:LambdaDisintegrate()
+    if IsValid( ent ) then ent:LambdaDisintegrate() end
+
+    local addEnt = net.ReadEntity()
+    if IsValid( addEnt ) then addEnt:LambdaDisintegrate() end
 end )
 
 -- Net sent from ENT:OnKilled()
@@ -162,9 +164,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
 
     local phys = cs_prop:GetPhysicsObject()
     if IsValid( phys ) then
-        phys:SetMass( 20 )
-
-        local force = ( net.ReadVector() / 2 )
+        local force = ( net.ReadVector() / 7 )
         phys:ApplyForceOffset( force, net.ReadVector() )
     end
 

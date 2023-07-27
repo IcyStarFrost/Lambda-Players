@@ -19,18 +19,20 @@ local wandertbl = { autorun = true }
 function ENT:Idle()
     if random( 100 ) < 70 then
         self:ComputeChance()
-    else
-        local pos = self:GetRandomPosition()
-        if random( 3 ) == 1 then
-            local triggers = self:FindInSphere( nil, 2000, function( ent ) 
-                return ( ent:GetClass() == "trigger_teleport" and !ent:GetInternalVariable( "StartDisabled" ) and bit_band( ent:GetInternalVariable( "spawnflags" ), 2 ) == 2 and self:Visible( ent ) )
-            end )
-
-            if #triggers == 0 then return end
-            pos = triggers[ random( #triggers ) ]:WorldSpaceCenter()
-        end
-        self:MoveToPos( pos, wandertbl )
+        return
     end
+
+    local pos
+    if random( 3 ) == 1 then
+        local triggers = self:FindInSphere( nil, 2000, function( ent ) 
+            return ( ent:GetClass() == "trigger_teleport" and !ent:GetInternalVariable( "StartDisabled" ) and bit_band( ent:GetInternalVariable( "spawnflags" ), 2 ) == 2 and self:CanSee( ent ) )
+        end )
+
+        if #triggers == 0 then return end
+        pos = triggers[ random( #triggers ) ]:WorldSpaceCenter()
+    end
+
+    self:MoveToPos( ( pos or self:GetRandomPosition() ), wandertbl )
 end
 
 local combattbl = { update = 0.2, run = true, tol = 10 }
@@ -116,38 +118,55 @@ end }
 function ENT:FindTarget()
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
     self:MoveToPos( self:GetRandomPosition(), ft_options )
-    return ( random( 1, 8 ) == 1 )
+    return ( random( 100 ) > self:GetCombatChance() )
 end
 
 -- We look for a button and press it
-function ENT:PushButton()
-    local button = self.l_buttonentity
-    if !IsValid( button ) then return true end
+function ENT:PushButton( button )
+    if IsValid( button ) then
+        self:LookTo( button, 1 )
+        coroutine_wait( 1 )
 
-    self:LookTo( button, 1 )
-    coroutine_wait( 1 )
-    if !IsValid( button ) then return true end
+        if IsValid( button ) then
+            local pos = button:GetPos()
+            self:MoveToPos( pos + self:GetNormalTo( pos ) * -60 )
 
-    local pos = ( button:GetPos() + self:GetNormalTo( button:GetPos() ) * -60 )
-    self:MoveToPos( pos )
-    if !IsValid( button ) then return true end
+            if IsValid( button ) then
+                local class = button:GetClass()
+                if class == "func_button" then
+                    button:Fire( "Press" )
+                elseif class == "gmod_button" then
+                    button:Toggle( !button:GetOn(), self )
+                elseif class == "gmod_wire_button" then
+                    button:Switch( !button:GetOn() )
+                end
 
-    local class = button:GetClass()
-    if class == "func_button" then
-        button:Fire( "Press" )
-    elseif class == "gmod_button" then
-        button:Toggle( !button:GetOn(), self )
-    elseif class == "gmod_wire_button" then
-        button:Switch( !button:GetOn() )
+                button:EmitSound( "HL2Player.Use" )
+            end
+        end
     end
-    button:EmitSound( "HL2Player.Use" )
 
     return true
 end
 
-function ENT:Laughing()
+function ENT:Laughing( args )
+    local target = args[ 1 ]
+    self:LookTo( target, 1 )
+
+    local laughDelay = ( random( 1, 6 ) * 0.1 )
+    self:PlaySoundFile( "laugh", laughDelay )
+
+    local movePos = args[ 2 ]
+    local actTime = ( laughDelay * Rand( 0.8, 1.2 ) )
+    if !movePos then
+        coroutine_wait( actTime )
+    else
+        self:MoveToPos( movePos, { run = false, cbTime = actTime, callback = function( self ) return false end } )
+    end
+
     if !self.l_preventdefaultspeak and !self:IsSpeaking( "laugh" ) then self:PlaySoundFile( "laugh", false ) end
-    self:PlayGestureAndWait( ACT_GMOD_TAUNT_LAUGH )
+    if self:GetState( "Laughing" ) then self:PlayGestureAndWait( ACT_GMOD_TAUNT_LAUGH ) end
+    
     return self:GetLastState()
 end
 
@@ -161,13 +180,15 @@ end
 local t_options = { run = true, callback = function( lambda )
     if lambda:GetState() != "TBaggingPosition" then return false end
 end }
-function ENT:TBaggingPosition()
-    self:MoveToPos( self.l_tbagpos, t_options )
+function ENT:TBaggingPosition( pos )
+    self:MoveToPos( pos, t_options )
 
     for i = 1, random( 2, 8 ) do
         if self:GetState() != "TBaggingPosition" then return end
+
         self:SetCrouch( true )
         coroutine_wait( 0.2 )
+        
         self:SetCrouch( false )
         coroutine_wait( 0.2 )
     end
@@ -195,39 +216,37 @@ function ENT:Retreat()
     self:MoveToPos( rndPos, retreatOptions )
 end
 
-local heal_options = { run = true, update = 0.33, tol = 48 }
-function ENT:HealSomeone()
-    if !LambdaIsValid( self.l_HealTarget ) or self.l_HealTarget:Health() >= self.l_HealTarget:GetMaxHealth() or self.l_HealTarget.IsLambdaPlayer and self.l_HealTarget:InCombat() and self.l_HealTarget:GetEnemy() == self then
+function ENT:HealSomeone( target )
+    if !LambdaIsValid( target ) or target:Health() >= target:GetMaxHealth() or target.IsLambdaPlayer and target:GetEnemy() == self then
         return true
     end
 
-    if self.l_Weapon != "gmod_medkit" then 
-        self:SwitchWeapon( "gmod_medkit" ) 
+    if self.l_Weapon != "gmod_medkit" then
+        if !self:CanEquipWeapon( "gmod_medkit" ) then return true end 
+        self:SwitchWeapon( "gmod_medkit" )
     end
 
-    if self:IsInRange( self.l_HealTarget, 64 ) then
-        self:LookTo( self.l_HealTarget, 1 )
-        self:UseWeapon( self.l_HealTarget )
+    if self:IsInRange( target, 64 ) then
+        self:LookTo( target, 1 )
+        self:UseWeapon( target )
 
-        if self.l_HealTarget.IsLambdaPlayer and self.l_HealTarget:Health() >= self.l_HealTarget:GetMaxHealth() then
-            self.l_HealTarget:LookTo( self, 1 )
-            if !self.l_preventdefaultspeak then self.l_HealTarget:PlaySoundFile( "assist" ) end
+        if target.IsLambdaPlayer and target:Health() >= target:GetMaxHealth() then
+            target:LookTo( self, 1 )
+            if !target.l_preventdefaultspeak then target:PlaySoundFile( "assist" ) end
         end
     else
         local cancelled = false
         self:PreventWeaponSwitch( true )
-        
-        heal_options.callback = function()
-            if self:GetState() != "HealSomeone" or self:Health() < self:GetMaxHealth() then self:CancelMovement(); cancelled = true return end
-            if !LambdaIsValid( self.l_HealTarget ) then self:CancelMovement(); cancelled = true return end
-            if self.l_HealTarget:Health() >= self.l_HealTarget:GetMaxHealth() then self:CancelMovement(); cancelled = true return end
-            if self.l_HealTarget.IsLambdaPlayer and self.l_HealTarget:InCombat() and self.l_HealTarget:GetEnemy() == self then self:CancelMovement(); cancelled = true return end
-            if self:IsInRange( self.l_HealTarget, 64 ) then self:CancelMovement() return end
-        end
 
-        self:MoveToPos( self.l_HealTarget, heal_options )
-        if cancelled then return true end
+        self:MoveToPos( target, { run = true, update = 0.33, tol = 48, callback = function()
+            if !self:GetState( "HealSomeone" ) or self:Health() < self:GetMaxHealth() then cancelled = true return false end
+            if !LambdaIsValid( target ) then cancelled = true return false end
+            if target:Health() >= target:GetMaxHealth() then cancelled = true return false end
+            if target.IsLambdaPlayer and target:GetEnemy() == self then cancelled = true return false end
+            if self:IsInRange( target, 64 ) then return false end
+        end } )
 
         self:PreventWeaponSwitch( false ) 
+        if cancelled then return true end
     end
 end

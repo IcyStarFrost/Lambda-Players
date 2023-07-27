@@ -21,6 +21,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 400,
         attackrange = 500,
+        dropentity = "weapon_slam",
 
         OnThink = function( self, wepent, dead )
             if !dead and CurTime() > self.l_WeaponUseCooldown and random( 80 ) == 1 and !self:InCombat() then

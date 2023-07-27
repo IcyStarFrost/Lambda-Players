@@ -11,6 +11,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         prettyname = "Toolgun",
         holdtype = "revolver",
         bonemerge = true,
+        dropentity = "gmod_tool",
 
         OnAttack = function( self, wepent, target )
 

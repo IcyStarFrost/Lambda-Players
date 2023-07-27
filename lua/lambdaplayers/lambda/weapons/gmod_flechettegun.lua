@@ -18,6 +18,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 400,
         attackrange = 1500,
+        dropentity = "weapon_flechettegun",
 
         OnAttack = function( self, wepent, target )
             local ent = CreateEntity( "hunter_flechette" )

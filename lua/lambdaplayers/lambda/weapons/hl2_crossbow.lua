@@ -14,6 +14,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 400,
         attackrange = 3500,
+        dropentity = "weapon_crossbow",
 
         clip = 1,
 

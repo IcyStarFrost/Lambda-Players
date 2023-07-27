@@ -45,6 +45,8 @@ end
     local min = math.min
     local abs = math.abs
     local SortTable = table.sort
+    local CopyTable = table.Copy
+    local table_Random = table.Random
     local eyetracing = GetConVar( "lambdaplayers_debug_eyetracing" )
     local isfunction = isfunction
     local isnumber = isnumber
@@ -52,6 +54,7 @@ end
     local Lerp = Lerp
     local LerpVector = LerpVector
     local isentity = isentity
+    local istable = istable
     local VectorRand = VectorRand
     local Vector = Vector
     local IsValid = IsValid
@@ -209,6 +212,7 @@ function ENT:Initialize()
         self.l_DrownStartTime = false -- The time we will start drowning in water
         self.l_DrownLostHealth = 0 -- The amount of health we lost while drowning
         self.l_DrownActionTime = 0 -- The next time we start losing or recovering lost health when drowning
+        self.l_CombatPosUpdateTime = 0 -- The next time we'll update the combat position
 
         self.l_ladderarea = NULL -- The ladder nav area we are currenly using to climb
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
@@ -216,7 +220,9 @@ function ENT:Initialize()
         self.l_moveoptions = nil -- The move position's options, such as updating, goal tolerance, etc.
         self.l_noclippos = self:GetPos() -- The position we want to noclip to
         self.l_swimpos = self:GetPos() -- The position we are currently swimming to
-        
+        self.l_combatpos = self:GetPos() -- The position we are moving to in combat
+        self.l_statearg = nil -- Our state's optional arguments we set in
+
         local nearArea = navmesh_GetNavArea( self:WorldSpaceCenter(), 400 ) -- The current nav area we are in
         if IsValid( nearArea ) then self.l_currentnavarea = nearArea; self:OnNavAreaChanged( nearArea, nearArea ) end
 
@@ -616,15 +622,21 @@ function ENT:Think()
                 end
 
                 if !isPanicking then
-                    local keepDist, myOrigin = self.l_CombatKeepDistance, self:GetPos()
-                    local posCopy = target:GetPos(); posCopy.z = myOrigin.z
-                    if canSee and keepDist and self:IsInRange( posCopy, keepDist ) then
-                        local moveAng = ( myOrigin - posCopy ):Angle()
-                        local potentialPos = ( myOrigin + moveAng:Forward() * random( -self:GetRunSpeed(), keepDist ) + moveAng:Right() * random( -keepDist, keepDist ) )
-                        self.l_movepos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )
-                    else
-                        self.l_movepos = target
+                    if curTime >= self.l_CombatPosUpdateTime then
+                        self.l_CombatPosUpdateTime = ( curTime + 0.2 )
+                        local keepDist, myOrigin = self.l_CombatKeepDistance, self:GetPos()
+                        local posCopy = target:GetPos(); posCopy.z = myOrigin.z
+
+                        if canSee and keepDist and self:IsInRange( posCopy, keepDist ) then
+                            local moveAng = ( myOrigin - posCopy ):Angle()
+                            local potentialPos = ( myOrigin + moveAng:Forward() * random( -self:GetRunSpeed(), keepDist ) + moveAng:Right() * random( -keepDist, keepDist ) )
+                            self.l_combatpos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )
+                        else
+                            self.l_combatpos = target
+                        end
                     end
+
+                    self.l_movepos = self.l_combatpos
                 end
 
                 if random( isPanicking and 30 or 40 ) == 1 and jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.8 ) then
@@ -708,10 +720,10 @@ function ENT:Think()
 
         -- UA, Universal Actions
         -- See sv_x_universalactions.lua
-        if curTime > self.l_nextUA and !isDisabled then
-            local UAfunc = LambdaUniversalActions[ random( #LambdaUniversalActions ) ]
+        if !isDisabled and curTime >= self.l_nextUA then
+            local UAfunc = table_Random( LambdaUniversalActions )
             UAfunc( self )
-            self.l_nextUA = curTime + rand( 1, 15 )
+            self.l_nextUA = ( curTime + rand( 1, 15 ) )
         end
 
         local eyeAttach = self:GetAttachmentPoint( "eyes" )
@@ -825,7 +837,7 @@ function ENT:Think()
         end
 
         -- Handle swimming
-        if waterLvl >= 2 and !self:IsInNoClip() then -- Don't swim if we are noclipping
+        if waterLvl == 3 and !self:IsInNoClip() then -- Don't swim if we are noclipping
             if curTime > self.l_nextswimposupdate then -- Update our swimming position over time
                 self.l_nextswimposupdate = curTime + 0.1
 
@@ -833,7 +845,7 @@ function ENT:Think()
                 local movePos = self.l_movepos
                 local newSwimPos = self.l_CurrentPath
                 if movePos and self:GetState() == "Combat" and LambdaIsValid( ene ) and ene:WaterLevel() != 0 and self:CanSee( ene ) then -- Move to enemy's position if valid
-                    newSwimPos = ( !isvector( movePos ) and movePos:GetPos() or movePos )
+                    newSwimPos = ( ( isentity( movePos ) and IsValid( movePos ) ) and movePos:GetPos() or movePos )
                     if self.l_HasMelee then newSwimPos = newSwimPos + VectorRand( -50, 50 ) end -- Prevents not moving when enclose with enemy
                     self.l_nextswimposupdate = self.l_nextswimposupdate + rand( 0.1, 0.2 ) -- Give me more time to update my swim position
                 elseif newSwimPos and !isvector( newSwimPos ) then 
@@ -1105,8 +1117,12 @@ function ENT:RunBehaviour()
             if statefunc then
                 self.l_BehaviorState = curState
 
-                local returnState = statefunc( self )
-                if returnState then self:SetState( ( isstring( returnState ) and returnState ), curState ) end
+                local stateArg = self.l_statearg
+                local returnState = statefunc( self, ( istable( stateArg ) and CopyTable( stateArg ) or stateArg ) )
+
+                if returnState and curState == self:GetState() then 
+                    self:SetState( ( isstring( returnState ) and returnState ) ) 
+                end
             end
         end
 
@@ -1116,7 +1132,7 @@ function ENT:RunBehaviour()
 end
 
 list.Set( "NPC", "npc_lambdaplayer", {
-	Name = "Lambda Player",
-	Class = "npc_lambdaplayer",
-	Category = "Lambda Players"
+    Name = "Lambda Player",
+    Class = "npc_lambdaplayer",
+    Category = "Lambda Players"
 } )

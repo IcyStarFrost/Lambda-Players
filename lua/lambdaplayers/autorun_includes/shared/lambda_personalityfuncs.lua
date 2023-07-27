@@ -90,17 +90,15 @@ end
 
 local ignorePlys = GetConVar( "ai_ignoreplayers" )
 local function Chance_Friendly( self )
-    if self:InCombat() or !self:CanEquipWeapon( "gmod_medkit" ) then return end
+    if self:InCombat() or self:IsPanicking() or !self:CanEquipWeapon( "gmod_medkit" ) then return end
 
     local nearbyEnts = self:FindInSphere( nil, 1000, function( ent )
         if !LambdaIsValid( ent ) or !ent.Health or !ent:IsNPC() and !ent:IsNextBot() and ( !ent:IsPlayer() or !ent:Alive() or ignorePlys:GetBool() ) then return false end
         return ( ent:Health() < ent:GetMaxHealth() and self:CanSee( ent ) )
     end )
     
-    if #nearbyEnts > 0 then
-        self.l_HealTarget = nearbyEnts[ random( #nearbyEnts ) ]
-        self:SetState( "HealSomeone" )
-    end
+    if #nearbyEnts == 0 then return end
+    self:SetState( "HealSomeone", nearbyEnts[ random( #nearbyEnts ) ] )
 end
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_opencustompersonalitypresetpanel", function( ply ) 

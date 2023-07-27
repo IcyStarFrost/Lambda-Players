@@ -390,7 +390,9 @@ function ENT:GetDisplayColor( ply )
 end
 
 -- Obviously returns the current state
-function ENT:GetState()
+-- If the 'checkState' argument is set, returns if current state is the set one instead
+function ENT:GetState( checkState )
+    if checkState then return ( checkState == self:GetNW2String( "lambda_state", "Idle" ) ) end
     return self:GetNW2String( "lambda_state", "Idle" )
 end
 
@@ -575,23 +577,16 @@ if SERVER then
         if !alreadyPanic or LambdaIsValid( target ) then self:SetEnemy( target ) end
     end
 
-    -- Makes the Lambda laugh towards a position/entity
-    function ENT:LaughAt( target )
-        self:LookTo( target, 3 )
-        self.l_LaughAt_PrevState = self:GetState()
-
-        local laughDelay = Rand( 0.2, 0.8 )
-        self:PlaySoundFile( "laugh", laughDelay )
-
-        self:SimpleTimer( laughDelay * Rand( 1.0, 1.25 ), function()
-            self:CancelMovement()
-            self:SetState( "Laughing" )
-            self:LookTo( ( ( isentity( target ) and IsValid( target ) ) and target:GetPos() or target ), 1 )
-        end )
-    end
-
     -- PlaySequenceAndWait but without t-posing
     function ENT:PlayGestureAndWait( id, speed )
+
+        local hookId, hookSpeed = LambdaRunHook( "LambdaOnPlayGestureAndWait", self, id, speed )
+        if hookId == true then 
+            return 
+        else
+            id = ( hookId or id )
+            speed = ( hookSpeed or speed )
+        end
 
         local isSeq = isstring( id )
         if isSeq then id = self:LookupSequence( id ) end
@@ -683,18 +678,19 @@ if SERVER then
         return self.l_BehaviorState
     end
 
-    -- Sets our state. If the 'prevState' argument is set, the state will only change
-    -- If our current state is the one set there
-    function ENT:SetState( state, prevState )
+    -- Sets our state
+    -- The 'arg' is an optional variable that can be used by a state
+    function ENT:SetState( state, arg )
         state = ( state or "Idle" )
         local curState = self:GetState()
-        if state == curState or prevState and curState != prevState then return end
-        if LambdaRunHook( "LambdaOnChangeState", self, curState, state ) == true then return end
+        if state == curState then return end
+        if LambdaRunHook( "LambdaOnChangeState", self, curState, state, arg ) == true then return end
 
         local behavState = self:GetBehaviorState()
         if behavState != state then self:SetNW2String( "lambda_laststate", behavState ) end
 
         self:SetNW2String( "lambda_state", state )
+        self.l_statearg = arg
         self:DebugPrint( "Changed state from " .. curState .. " to " .. state )
     end
 
@@ -795,21 +791,27 @@ if SERVER then
             net.WriteVector( self:GetPos() )
         net.Broadcast()
 
-        local ragdoll = self.ragdoll
-        if IsValid( ragdoll ) and serversidecleanup:GetBool() then             
-            if serversidecleanupeffect:GetBool() then
+        if serversidecleanup:GetBool() then
+            local ragdoll = self.ragdoll
+            local dropEnt = self.weapondrop
+            if IsValid( dropEnt ) and dropEnt:GetOwner() != self then dropEnt = nil end
+
+            self.ragdoll = nil
+            self.weapondrop = nil
+            
+            local disintegrate = serversidecleanupeffect:GetBool()
+            if disintegrate then
                 net.Start( "lambdaplayers_disintegrationeffect" )
                     net.WriteEntity( ragdoll )
+                    net.WriteEntity( dropEnt )
                 net.Broadcast()
-
-                self:SimpleTimer( 5.0, function()
-                    if IsValid( ragdoll ) then ragdoll:Remove() end
-                end )
-            else
-                ragdoll:Remove()
             end
+
+            self:SimpleTimer( ( disintegrate and 5 or 0 ), function()
+                if IsValid( ragdoll ) then ragdoll:Remove() end
+                if IsValid( dropEnt ) then dropEnt:Remove() end
+            end, true )
         end
-        self.ragdoll = nil
 
         if !spawnBehavInitSpawn:GetBool() then
             self:ApplyCombatSpawnBehavior()
