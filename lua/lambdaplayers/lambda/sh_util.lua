@@ -329,7 +329,7 @@ function ENT:ExportLambdaInfo()
         text = self:GetTextChance(),
         voiceprofile = self:GetNW2String( "lambda_vp", self.l_VoiceProfile ),
         textprofile = self:GetNW2String( "lambda_tp", self.l_TextProfile ),
-        pingrange = self:GetAbsPing(),
+        averageping = self:GetAvgPing(),
 
         -- Non personal data --
         respawn = self:GetRespawn(),
@@ -460,7 +460,7 @@ if SERVER then
             self:SetTextChance( info.text or self:GetTextChance() )
             SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
 
-            self:SetAbsPing( info.pingrange or self:GetAbsPing() )
+            self:SetAvgPing( info.averageping or info.pingrange or self:GetAvgPing() )
             self:SetVoicePitch( info.voicepitch or self:GetVoicePitch() )
             self.l_VoiceProfile = info.voiceprofile or self.l_VoiceProfile
             self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
@@ -852,14 +852,11 @@ if SERVER then
         local creator = self:GetCreator()
         newlambda:SetCreator( creator )
 
-        newlambda.l_IsRecreating = true
-
+        newlambda.l_NoRandomModel = true
         newlambda:Spawn()
         newlambda:ApplyLambdaInfo( exportinfo )
         newlambda.l_SpawnPos = self.l_SpawnPos
         newlambda.l_SpawnAngles = self.l_SpawnAngles
-
-        newlambda.l_IsRecreating = false
 
         table_Merge( newlambda.l_SpawnedEntities, self.l_SpawnedEntities )
 

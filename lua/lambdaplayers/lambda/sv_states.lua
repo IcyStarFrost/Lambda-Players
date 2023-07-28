@@ -10,7 +10,7 @@ local Rand = math.Rand
 local ceil = math.ceil
 local IsValid = IsValid
 local bit_band = bit.band
-local VectorRand = VectorRand
+local Vector = Vector
 local coroutine_wait = coroutine.wait
 local table_insert = table.insert
 local ignoreLambdas = GetConVar( "lambdaplayers_combat_dontrdmlambdas" )
@@ -44,13 +44,14 @@ end
 
 -- Heal ourselves when hurt
 function ENT:HealUp()
-    local spawnRate = Rand( 0.25, 0.4 )
+    local spawnRate = Rand( 0.2, 0.4 )
     local spawnCount = ceil( ( self:GetMaxHealth() - self:Health() ) / 25 )
-    local rndVec = VectorRand( -32, 32 )
+    local rndVec = Vector( 0, 0, random( -32, 32 ) )
 
     coroutine_wait( spawnRate )
     for i = 1, random( ( spawnCount / 2 ), spawnCount ) do
-        if self:GetState() != "HealUp" or !self:IsUnderLimit( "Entity" ) then break end
+        if !self:GetState( "HealUp" ) or !self:IsUnderLimit( "Entity" ) then break end
+        if self:Health() >= self:GetMaxHealth() then break end
 
         local lookPos = ( self:GetPos() + rndVec )
         self:LookTo( lookPos, spawnRate )
@@ -58,7 +59,7 @@ function ENT:HealUp()
         local healthkit = LambdaSpawn_SENT( self, "item_healthkit", self:Trace( lookPos, self:GetAttachmentPoint( "eyes" ).Pos ) )
         if !IsValid( healthkit ) then break end
         
-        self:DebugPrint( "spawned a Entity item_healthkit" )
+        self:DebugPrint( "spawned an entity item_healthkit" )
         self:ContributeEntToLimit( healthkit, "Entity" )
         table_insert( self.l_SpawnedEntities, 1, healthkit )
 
@@ -70,21 +71,22 @@ end
 
 -- Armor ourselves for better chance at surviving in combat
 function ENT:ArmorUp()
-    local spawnRate = Rand( 0.25, 0.4 )
+    local spawnRate = Rand( 0.2, 0.4 )
     local spawnCount = ceil( ( self:GetMaxArmor() - self:Armor() ) / 15 )
-    local rndVec = VectorRand( -32, 32 )
+    local rndVec = Vector( 0, 0, random( -32, 32 ) )
 
     coroutine_wait( spawnRate )
     for i = 1, random( ( spawnCount / 3 ), spawnCount ) do
-        if self:GetState() != "ArmorUp" or !self:IsUnderLimit( "Entity" ) then break end
+        if !self:GetState( "ArmorUp" ) or !self:IsUnderLimit( "Entity" ) then break end
+        if self:Armor() >= self:GetMaxArmor() then break end
 
         local lookPos = ( self:GetPos() + rndVec )
         self:LookTo( lookPos, spawnRate )
-        
+
         local battery = LambdaSpawn_SENT( self, "item_battery", self:Trace( lookPos, self:GetAttachmentPoint( "eyes" ).Pos ) )
         if !IsValid( battery ) then break end
-        
-        self:DebugPrint( "spawned a Entity item_battery" )
+
+        self:DebugPrint( "spawned an entity item_battery" )
         self:ContributeEntToLimit( battery, "Entity" )
         table_insert( self.l_SpawnedEntities, 1, battery )
 
@@ -151,6 +153,10 @@ end
 
 function ENT:Laughing( args )
     local target = args[ 1 ]
+    if target:IsPlayer() then
+        local ragdoll = target:GetRagdollEntity()
+        if IsValid( ragdoll ) then target = ragdoll end
+    end
     self:LookTo( target, 1 )
 
     local laughDelay = ( random( 1, 6 ) * 0.1 )

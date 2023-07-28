@@ -400,8 +400,8 @@ local function OpenProfilePanel( ply )
     local favoriteweapon = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, wpnCopy )
 
     LAMBDAPANELS:CreateLabel( "Ping", mainscroll, TOP )
-    LAMBDAPANELS:CreateLabel( "The lowest point this Lambda's Ping can get", mainscroll, TOP )
-    local pingrange = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 40, "Ping Range", 1, 130, 0 )
+    LAMBDAPANELS:CreateLabel( "The average ping of this Lambda", mainscroll, TOP )
+    local averageping = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 40, "Ping Range", 1, 130, 0 )
 
     LAMBDAPANELS:CreateLabel( "Health", mainscroll, TOP )
     LAMBDAPANELS:CreateLabel( "The Health this Lambda will have", mainscroll, TOP )
@@ -622,7 +622,7 @@ local function OpenProfilePanel( ply )
             text = usepersonality:GetChecked() and round( textchance:GetValue(), 0 ) or nil,
             voiceprofile = vp != "/NIL" and vp or nil,
             textprofile = tp != "/NIL" and tp or nil,
-            pingrange = round( pingrange:GetValue(), 0 ),
+            averageping = round( averageping:GetValue(), 0 ),
             health = round( health:GetValue(), 0 ),
             armor = round( armor:GetValue(), 0 ),
 
@@ -699,7 +699,7 @@ local function OpenProfilePanel( ply )
         if infotable.voiceprofile then voiceprofile:SelectOptionByKey( infotable.voiceprofile ) else voiceprofile:SelectOptionByKey( "/NIL" ) end
         if infotable.textprofile then textprofile:SelectOptionByKey( infotable.textprofile ) else textprofile:SelectOptionByKey( "/NIL" ) end
         
-        pingrange:SetValue( infotable.pingrange )
+        averageping:SetValue( infotable.averageping or infotable.pingrange )
 
         if infotable.spawnwep then spawnweapon:SelectOptionByKey( infotable.spawnwep ) else spawnweapon:SelectOptionByKey( "/NIL" ) end
         if infotable.favwep then favoriteweapon:SelectOptionByKey( infotable.favwep ) else favoriteweapon:SelectOptionByKey( "/NIL" ) end

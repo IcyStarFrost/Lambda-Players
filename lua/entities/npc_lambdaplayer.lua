@@ -141,7 +141,7 @@ function ENT:Initialize()
     if SERVER then
 
         local spawnMdl = "models/player/kleiner.mdl"
-        if !self.l_IsRecreating then
+        if !self.l_NoRandomModel then
             local forceMdl = forcePlyMdl:GetString()
             if forceMdl != "" and IsValidModel( forceMdl ) then
                 spawnMdl = forceMdl
@@ -248,8 +248,8 @@ function ENT:Initialize()
         self.l_PlyRealColor = self:GetPlyColor():ToColor()
         self.l_PhysRealColor = self:GetPhysColor():ToColor()
 
-        local rndpingrange = random( 60 )
-        self:SetAbsPing( rndpingrange )  -- The lowest point our fake ping can get
+        local rndpingrange = random( 150 )
+        self:SetAvgPing( rndpingrange )  -- Our average ping we'll use for calculations
         self:SetPing( rndpingrange ) -- Our actual fake ping
         self:SetSteamID64( 90071996842377216 + random( 10000000 ) )
         self:SetTextPerMinute( 400 ) -- The amount of characters we can type within a minute
@@ -459,7 +459,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 3, "Frags" )
     self:NetworkVar( "Int", 4, "Deaths" )
     self:NetworkVar( "Int", 5, "Ping" )
-    self:NetworkVar( "Int", 6, "AbsPing" )
+    self:NetworkVar( "Int", 6, "AvgPing" )
     self:NetworkVar( "Int", 7, "Armor" )
     self:NetworkVar( "Int", 8, "MaxArmor" )
     self:NetworkVar( "Int", 9, "SteamID64" )
@@ -473,6 +473,7 @@ function ENT:SetupDataTables()
 
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
     self:NetworkVar( "Float", 1, "VoiceLevel" )
+    self:NetworkVar( "Float", 2, "PingUpdateTime" )
 
 end
 
@@ -511,10 +512,14 @@ function ENT:Think()
     local wepent = self:GetWeaponENT()
 
     -- Handle our ping rising or dropping
-    local updateRate = ( ( SERVER or !self:IsDormant() ) and 125 or 500 )
-    if random( updateRate ) == 1 then
-        local ping, absPing = self:GetPing(), self:GetAbsPing()
-        self:SetPing( Clamp( ping + random( -20, ( 24 - ( ping / absPing ) ) ), absPing, 999 ) )
+    if curTime >= self:GetPingUpdateTime() then
+        self:SetPingUpdateTime( curTime + 1 )
+
+        if ( SERVER or self:IsDormant() ) and random( 3 ) == 1 then
+            local curPing, avgPing = self:GetPing(), self:GetAvgPing()
+            local newPing = Clamp( random( avgPing - ( avgPing / 2 ), avgPing + ( avgPing / ( random( 15, 20 ) * 0.1 ) ) ), 0, 999 )            
+            self:SetPing( newPing )
+        end
     end
     -- -- -- -- --
 

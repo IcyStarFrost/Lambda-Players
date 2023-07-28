@@ -24,10 +24,11 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         dropentity = "weapon_slam",
 
         OnThink = function( self, wepent, dead )
-            if !dead and CurTime() > self.l_WeaponUseCooldown and random( 80 ) == 1 and !self:InCombat() then
-                local randPos = self:GetRandomPosition( nil, 400 )
+            if !dead and CurTime() >= self.l_WeaponUseCooldown and ( self:GetState( "FindTarget" ) or self:IsPanicking() ) and random( 50 ) == 1 then
+                local randPos = self:GetRandomPosition( nil, 500 )
                 self:LookTo( randPos, 1.5 )
                 self:SimpleWeaponTimer( 1, function() self:UseWeapon( randPos ) end )
+                return 1.0
             end
 
             return 0.1
