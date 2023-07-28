@@ -1294,12 +1294,10 @@ if SERVER then
             if LambdaRunHook( "LambdaOnJump", self, curNav ) == true then return end
         end
 
-        local mins, maxs = self:GetCollisionBounds()
         jumpTr.start = self:GetPos()
         jumpTr.endpos = jumpTr.start + ( self.loco:GetVelocity() * FrameTime() )
         jumpTr.filter = self
-        jumpTr.mins = mins
-        jumpTr.maxs = maxs
+        jumpTr.mins, jumpTr.maxs = self:GetCollisionBounds()
 
         local jumpTrace = TraceHull( jumpTr )
         if jumpTrace.Hit then self:SetPos( jumpTrace.HitPos ) end
