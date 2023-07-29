@@ -35,7 +35,7 @@ end, "Do 'act *'" )
 AddUActionToLambdaUA( function( self )
     if !self:GetState( "Idle" ) then return end
     self:NamedTimer( "Undoentities", rand( 0.3, 0.6 ), random( 6 ), function() self:UndoLastSpawnedEnt() end )
-end )
+end, "UndoEntities" )
 
 local isbutton = {
     [ "func_button" ] = true,
@@ -103,8 +103,10 @@ end, "Noclip" )
 local killbind = GetConVar( "lambdaplayers_lambda_allowkillbind" )
 -- Use Killbind
 AddUActionToLambdaUA( function( self )
-    if random( self:IsPlayingTaunt() and 50 or 150 ) != 1 or !killbind:GetBool() then return end
+    if !killbind:GetBool() or random( self:IsPlayingTaunt() and 50 or 150 ) != 1 then return end
+    self.l_killbinded = true
     self:Kill()
+    self.l_killbinded = false
 end, "Killbind" )
 
 -- Equip and use medkit on myself if it's allowed, we are hurt and not in combat

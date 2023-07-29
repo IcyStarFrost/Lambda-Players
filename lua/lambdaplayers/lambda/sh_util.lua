@@ -272,20 +272,24 @@ function ENT:GetAttachmentPoint( pointtype )
 
     if pointtype == "hand" then
         local lookup = self:LookupAttachment( "anim_attachment_RH" )
-        if lookup <= 0 then
+        local handAttach = self:GetAttachment( lookup )
+
+        if !handAttach then
             local bone = self:LookupBone( "ValveBiped.Bip01_R_Hand" )
             if isnumber( bone ) then attachData = self:GetBoneTransformation( bone ) end
         else
-            attachData = self:GetAttachment( lookup )
+            attachData = handAttach
             attachData.Index = lookup
         end
     elseif pointtype == "eyes" then
         local lookup = self:LookupAttachment( "eyes" )
-        if lookup <= 0 then 
+        local eyeAttach = self:GetAttachment( lookup )
+
+        if !eyeAttach then 
             attachData.Pos = ( attachData.Pos + vector_up * 30 )
             attachData.Ang = ( attachData.Ang + eyeOffAng )
         else
-            attachData = self:GetAttachment( lookup )
+            attachData = eyeAttach
             attachData.Index = lookup
         end
     end

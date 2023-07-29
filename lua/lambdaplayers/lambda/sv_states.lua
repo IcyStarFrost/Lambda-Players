@@ -152,7 +152,11 @@ function ENT:PushButton( button )
 end
 
 function ENT:Laughing( args )
+    if !args or !istable( args ) then return true end
+
     local target = args[ 1 ]
+    if isentity( target ) and !IsValid( target ) then return true end
+
     if target:IsPlayer() then
         local ragdoll = target:GetRagdollEntity()
         if IsValid( ragdoll ) then target = ragdoll end

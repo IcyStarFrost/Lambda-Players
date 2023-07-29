@@ -252,7 +252,7 @@ function ENT:Initialize()
         self:SetAvgPing( rndpingrange )  -- Our average ping we'll use for calculations
         self:SetPing( rndpingrange ) -- Our actual fake ping
         self:SetSteamID64( 90071996842377216 + random( 10000000 ) )
-        self:SetTextPerMinute( 400 ) -- The amount of characters we can type within a minute
+        self:SetTextPerMinute( random( 3, 6 ) * 100 ) -- The amount of characters we can type within a minute
         self:SetNW2String( "lambda_steamid", "STEAM_0:0:" .. random( 200000000 ) )
         self:SetNW2String( "lambda_ip", "192." .. random( 10, 200 ) .. "." .. random( 10 ).. "." .. random( 10, 200 ) .. ":27005" )
         self:SetNW2String( "lambda_state", "Idle" )

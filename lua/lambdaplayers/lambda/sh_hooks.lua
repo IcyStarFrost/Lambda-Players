@@ -167,8 +167,8 @@ if SERVER then
 
             self:EmitSound( info:IsDamageType( DMG_FALL ) and "Player.FallGib" or "Player.Death" )
             
-            if ( deathAlways:GetBool() or random( 100 ) <= self:GetVoiceChance() ) and !self:GetIsTyping() then
-                self:PlaySoundFile( "death" )
+            if ( !self.l_killbinded and deathAlways:GetBool() or random( 100 ) <= self:GetVoiceChance() ) and !self:GetIsTyping() then
+                self:PlaySoundFile( self.l_killbinded and "laugh" or "death" )
             end
 
             LambdaKillFeedAdd( self, attacker, inflictor )
