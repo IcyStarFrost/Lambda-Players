@@ -807,6 +807,9 @@ if SERVER then
             if disintegrate then
                 net.Start( "lambdaplayers_disintegrationeffect" )
                     net.WriteEntity( ragdoll )
+                net.Broadcast()
+                
+                net.Start( "lambdaplayers_disintegrationeffect" )
                     net.WriteEntity( dropEnt )
                 net.Broadcast()
             end
