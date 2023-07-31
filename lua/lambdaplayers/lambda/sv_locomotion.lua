@@ -13,7 +13,7 @@ local FrameTime = FrameTime
 local tracetable = { ignoreworld = true }
 local unstucktable = {}
 local airtable = {}
-local laddermovetable = { collisiongroup = COLLISION_GROUP_PLAYER, ignoreworld = true }
+local laddermovetable = { collisiongroup = COLLISION_GROUP_PLAYER, ignoreworld = true, mask = MASK_PLAYERSOLID }
 local ents_FindByName = ents.FindByName
 local GetGroundHeight = navmesh.GetGroundHeight
 local navmesh_IsLoaded = navmesh.IsLoaded
@@ -288,8 +288,6 @@ end
 
 -- Start climbing the provided ladder
 function ENT:ClimbLadder( ladder, isDown, movePos )
-    if !IsValid( ladder ) then return end
-
     local startPos, goalPos, finishPos
     if isDown then
         startPos = ladder:GetTop()
@@ -329,18 +327,17 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
     local climbNormal = ( climbEnd - climbStart ):GetNormalized()
     local climbDist = climbStart:Distance( climbEnd )
 
-    local stuckTime = CurTime() + random( 3, 8 )
-    local climbSpeed = random( 200, 400 )
+    local stuckTime = ( CurTime() + random( 2, 8 ) )
+    local climbSpeed = ( random( 2, 4 ) * 100 )
 
     while ( true ) do
-        if !LambdaIsValid( self ) or self:IsInNoClip() then return end
-        if CurTime() > stuckTime then
-            if self:IsInRange( finishPos, 32 ) then
+        if !self.l_issmoving or self:IsInNoClip() or !self:Alive() or CurTime() >= stuckTime then
+            if self:IsInRange( finishPos, 40 ) then
                 self:SetPos( finishPos )
             else
                 local dir = ladder:GetNormal()
                 self:SetPos( self:GetPos() + dir * 20 )
-                self.loco:SetVelocity( dir * 200 )
+                self.loco:SetVelocity( dir * 275 )
             end
 
             return 
@@ -350,41 +347,40 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
         self:SetPos( climbPos )
         self.loco:FaceTowards( self:GetPos() * climbNormal )
 
-        laddermovetable.start = climbPos
-        laddermovetable.endpos = ( climbPos + climbNormal * 20 )
-        laddermovetable.filter = self
+        if climbState != 2 or !self:IsDisabled() and CurTime() >= self.l_moveWaitTime then
+            laddermovetable.start = climbPos
+            laddermovetable.endpos = ( climbPos + climbNormal * 10 )
+            laddermovetable.filter = self
+            laddermovetable.mins, laddermovetable.maxs = self:GetCollisionBounds()
 
-        local mins, maxs = self:GetCollisionBounds()
-        laddermovetable.mins = mins
-        laddermovetable.maxs = maxs
+            if !IsValid( TraceHull( laddermovetable ).Entity ) then
+                climbFract = ( climbFract + ( climbSpeed * FrameTime() ) )
+                stuckTime = ( CurTime() + random( 2, 8 ) )
 
-        if !IsValid( TraceHull( laddermovetable ).Entity ) and ( !self:IsDisabled() and CurTime() > self.l_moveWaitTime or climbState != 2 ) then
-            climbFract = climbFract + ( climbSpeed * FrameTime() )
-            stuckTime = CurTime() + random( 3, 8 )
+                if climbFract >= climbDist then
+                    if climbState == 1 then
+                        climbEnd = goalPos + ( ladder:GetNormal() * 16 )
+                    elseif climbState == 2 then
+                        climbEnd = finishPos
+                    else
+                        return
+                    end
 
-            if climbFract >= climbDist then
-                if climbState == 1 then
-                    climbEnd = goalPos + ( ladder:GetNormal() * 16 )
-                elseif climbState == 2 then
-                    climbEnd = finishPos
-                else
-                    return
+                    climbStart = self:GetPos()
+                    climbNormal = ( climbEnd - climbStart ):GetNormalized()
+                    climbDist = climbStart:Distance( climbEnd ) - ( ( isDown and climbState == 2 ) and random( 0, 48 ) or 0 )
+
+                    climbFract = 0
+                    climbState = ( climbState + 1 )
                 end
 
-                climbStart = self:GetPos()
-                climbNormal = ( climbEnd - climbStart ):GetNormalized()
-                climbDist = climbStart:Distance( climbEnd ) - ( ( isDown and climbState == 2 ) and random( 0, 48 ) or 0 )
-
-                climbFract = 0
-                climbState = climbState + 1
-            end
-
-            if climbState == 2 and CurTime() > nextSndTime then
-                self:EmitSound( "player/footsteps/ladder" .. random( 4 ) .. ".wav" )
-                nextSndTime = CurTime() + 0.466
+                if climbState == 2 and CurTime() > nextSndTime then
+                    self:EmitSound( "player/footsteps/ladder" .. random( 4 ) .. ".wav" )
+                    nextSndTime = CurTime() + 0.466
+                end
             end
         end
-        
+            
         coroutine_yield()
     end
 end

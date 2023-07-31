@@ -42,7 +42,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         },
 
         OnAttack = function( self, wepent, target )
-            if random( 75 ) != 1 then return true end
+            if random( 75 ) != 1 then return end
 
             self.l_WeaponUseCooldown = ( CurTime() + Rand( 1.25, 1.5 ) )
             wepent:EmitSound( "Weapon_CombineGuard.Special1" )

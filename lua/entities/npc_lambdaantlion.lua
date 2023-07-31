@@ -331,7 +331,7 @@ else
 
             if isEnt then
                 local distSqr = self:GetRangeSquaredTo( goalPos )
-                if random( 50 ) == 1 and distSqr > 360000 and distSqr <= 2250000 and self.loco:IsOnGround() and self:VisibleVec( goal:WorldSpaceCenter() ) then
+                if distSqr > 360000 and distSqr <= 2250000 and self.loco:IsOnGround() and self:VisibleVec( goal:WorldSpaceCenter() ) and random( 50 ) == 1 then
                     SimpleTimer( 0.5, function()
                         if !IsValid( self ) or !IsValid( goal ) then return end
                         self:SetBodygroup( 1, 1 )
