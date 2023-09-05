@@ -179,7 +179,6 @@ function ENT:Initialize()
         self.l_UpdateAnimations = true -- If we can update our animations. Used for the purpose of playing sequences
         self.VJ_AddEntityToSNPCAttackList = true -- Makes creature-based VJ SNPCs able to damages us with melee and leap attacks
         self.l_isswimming = false -- If we are currenly swimming (only used to recompute paths when exitting swimming)
-        self.l_AvoidCheck_NextToDoor = false -- If we are currenly near a door and shouldn't use obstacle avoidance
 
         self.l_UnstuckBounds = 50 -- The distance the unstuck process will use to check. This value increments during the process and set back to 50 when done
         self.l_nextspeedupdate = 0 -- The next time we update our speed
@@ -205,7 +204,6 @@ function ENT:Initialize()
         self.l_NextWeaponThink = 0 -- The next time we will run the currenly held weapon's think callback
         self.l_CurrentPlayedGesture = -1 -- Gesture ID that is assigned when the ENT:PlayGestureAndWait( id ) function is ran
         self.l_retreatendtime = 0 -- The time until we stop retreating
-        self.l_AvoidCheck_NextDoorCheck = 0 -- The next time we will check if we are next to a door while using obstacle avoidance
         self.l_PreDeathDamage = 0 -- The damage we took before running our death function and setting it to zero
         self.l_NextSprayUseTime = 0 -- The next time we can use sprays to spray
         self.l_DStepsWhichFoot = 1 -- The foot that is used in DSteps for stepping. 0 for left, 1 for right
@@ -222,6 +220,10 @@ function ENT:Initialize()
         self.l_swimpos = self:GetPos() -- The position we are currently swimming to
         self.l_combatpos = self:GetPos() -- The position we are moving to in combat
         self.l_statearg = nil -- Our state's optional arguments we set in
+
+        self.l_AvoidCheck_IsStuck = false -- If we are currenly stuck due to obstacle avoidance and shouldn't use it
+        self.l_AvoidCheck_LastPos = self:GetPos()
+        self.l_AvoidCheck_NextStuckCheck = 0 -- The next time we will check if we are stuck in one place due to obstacle avoidance
 
         local nearArea = navmesh_GetNavArea( self:WorldSpaceCenter(), 400 ) -- The current nav area we are in
         if IsValid( nearArea ) then self.l_currentnavarea = nearArea; self:OnNavAreaChanged( nearArea, nearArea ) end

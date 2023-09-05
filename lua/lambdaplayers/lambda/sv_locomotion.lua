@@ -4,6 +4,7 @@ local LambdaIsValid = LambdaIsValid
 local dev = GetConVar( "lambdaplayers_debug_path" )
 local IsValid = IsValid
 local math_max = math.max
+local math_abs = math.abs
 local isvector = isvector
 local Trace = util.TraceLine
 local TraceHull = util.TraceHull
@@ -153,8 +154,10 @@ function ENT:MoveToPos( pos, options )
                 if IsValid( ladder ) and self:IsInRange( ( moveType == 4 and ladder:GetBottom() or ladder:GetTop() ), 70 ) then
                     self.l_ladderarea = ladder
                     self:ClimbLadder( ladder, ( moveType == 5 ), curGoal.pos )
+
                     self.l_ladderarea = NULL 
-                    
+                    loco:SetVelocity( vector_origin )
+
                     pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
                     if pos then path:Compute( self, pos, costFunctor ) end
                 end
@@ -326,23 +329,27 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
     local climbEnd = ( startPos + ( ladder:GetNormal() * 20 ) )
     local climbNormal = ( climbEnd - climbStart ):GetNormalized()
     local climbDist = climbStart:Distance( climbEnd )
-
     local stuckTime = ( CurTime() + random( 2, 8 ) )
-    local climbSpeed = ( random( 2, 4 ) * 100 )
 
     while ( true ) do
         if !self.l_issmoving or self:IsInNoClip() or !self:Alive() or CurTime() >= stuckTime then
-            if self:IsInRange( finishPos, 40 ) then
-                self:SetPos( finishPos )
+            local obstacle = TraceHull( laddermovetable ).Entity
+            if self:GetEnemy() != obstacle and IsValid( obstacle ) and self:CanTarget( obstacle ) then
+                stuckTime = ( stuckTime + 5 )
+                self:AttackTarget( obstacle )
             else
-                local dir = ladder:GetNormal()
-                self:SetPos( self:GetPos() + dir * 20 )
-                self.loco:SetVelocity( dir * 275 )
-            end
+                if self:IsInRange( finishPos, 40 ) then
+                    self:SetPos( finishPos )
+                else
+                    local dir = ( climbState != 1 and ladder:GetNormal() or ( climbStart - self:GetPos() ):GetNormalized() )
+                    self:SetPos( self:GetPos() + dir * 20 )
+                    self.loco:SetVelocity( dir * 275 )
+                end
 
-            return 
+                return 
+            end
         end
-        
+
         local climbPos = ( climbStart + climbNormal * climbFract )
         self:SetPos( climbPos )
         self.loco:FaceTowards( self:GetPos() * climbNormal )
@@ -354,7 +361,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
             laddermovetable.mins, laddermovetable.maxs = self:GetCollisionBounds()
 
             if !IsValid( TraceHull( laddermovetable ).Entity ) then
-                climbFract = ( climbFract + ( climbSpeed * FrameTime() ) )
+                climbFract = ( climbFract + ( 200 * FrameTime() ) )
                 stuckTime = ( CurTime() + random( 2, 8 ) )
 
                 if climbFract >= climbDist then
@@ -514,56 +521,53 @@ function ENT:ObstacleCheck( pathDir )
 end
 
 local avoidtracetable = {
-    mins = Vector( -18, -18, -10 ),
-    maxs = Vector( 18, 18, 10 )
+    mins = Vector( -10, -10, -0 ),
+    maxs = Vector( 10, 10, 36 )
 } -- Recycled table
-local leftcol = Color( 255, 0, 0, 10 )
-local rightcol = Color( 0, 255, 0, 10 )
+local hitcol = Color( 255, 0, 0, 10 )
+local safecol = Color( 0, 255, 0, 10 )
 
 -- Fires 2 hull traces that will make the player try to move out of the way of whatever is blocking the way
 function ENT:AvoidCheck()
-    local selfPos = self:WorldSpaceCenter()
+    if CurTime() >= self.l_AvoidCheck_NextStuckCheck then
+        local selfPos = self:GetPos()
+        local lastPos = self.l_AvoidCheck_LastPos
 
-    if CurTime() > self.l_AvoidCheck_NextDoorCheck then
-        self.l_AvoidCheck_NextToDoor = false
-        self.l_AvoidCheck_NextDoorCheck = ( CurTime() + 1.0 )
-
-        for _, door in ipairs( ents.FindInSphere( selfPos, 64 ) ) do
-            if IsValid( door ) and doorClasses[ door:GetClass() ] then 
-                self.l_AvoidCheck_NextToDoor = true
-                return 
-            end
+        if self:IsInRange( lastPos, ( 64 - math_abs( lastPos.z - selfPos.z ) ) ) then
+            self.l_AvoidCheck_IsStuck = true
+            self.l_AvoidCheck_NextStuckCheck = ( CurTime() + 2.0 )
+        else                
+            self.l_AvoidCheck_IsStuck = false
+            self.l_AvoidCheck_LastPos = selfPos
+            self.l_AvoidCheck_NextStuckCheck = ( CurTime() + 1.0 )
         end
     end
-    if self.l_AvoidCheck_NextToDoor then return end
+    if self.l_AvoidCheck_IsStuck then return end
 
+    local selfPos = self:WorldSpaceCenter()
     local selfRight = self:GetRight()
 
     avoidtracetable.start = ( selfPos + selfRight * 20 )
     avoidtracetable.endpos = avoidtracetable.start 
     avoidtracetable.filter = self
 
-    debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, rightcol )
     local rightresult = TraceHull( avoidtracetable )
+    debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, ( rightresult.Hit and hitcol or safecol ) )
 
     avoidtracetable.start = ( selfPos - selfRight * 20 )
     avoidtracetable.endpos = avoidtracetable.start 
 
-    debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, leftcol )
     local leftresult = TraceHull( avoidtracetable )
+    debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, ( leftresult.Hit and hitcol or safecol ) )
 
     selfPos = self:GetPos()
     local loco = self.loco
-    local notMoving = ( loco:IsAttemptingToMove() and loco:GetVelocity():IsZero() )
     if rightresult.Hit and !leftresult.Hit then  -- Move to the left
-        if notMoving then loco:SetVelocity( selfRight * -100 ) end
-        loco:Approach( selfPos + selfRight * -50, 1 )
+        loco:Approach( selfPos - selfRight * 50, 1 )
     elseif leftresult.Hit and !rightresult.Hit then -- Move to the right
-        if notMoving then loco:SetVelocity( selfRight * 100 ) end
         loco:Approach( selfPos + selfRight * 50, 1 )
     elseif leftresult.Hit and rightresult.Hit then -- Back up
-        if notMoving then loco:SetVelocity( self:GetForward() * -400 + selfRight * ( CurTime() % 6 > 3 and 400 or -400 ), 1 ) end
-        loco:Approach( selfPos + self:GetForward() * -50 + selfRight * random( -50, 50 ), 1 )
+        loco:Approach( selfPos + self:GetForward() * -50, 1 )
     end
 end
 

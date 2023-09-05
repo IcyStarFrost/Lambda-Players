@@ -57,7 +57,7 @@ if SERVER then
         net.Start( "lambdaplayers_becomeragdoll" )
             net.WriteEntity( self )
             net.WriteEntity( overrideEnt )
-            net.WriteVector( self:GetPos() )
+            net.WriteVector( ( IsValid( overrideEnt ) and overrideEnt or self ):GetPos() )
             net.WriteVector( self:GetPlyColor() )
             net.WriteVector( dmgforce )
             net.WriteVector( dmgpos )
