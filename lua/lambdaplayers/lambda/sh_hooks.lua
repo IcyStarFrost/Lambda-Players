@@ -371,7 +371,7 @@ if SERVER then
             end
         end
 
-        if attacker != self and IsValid( attacker ) and self:GetEnemy() != attacker and ( !self:ShouldTreatAsLPlayer( attacker ) or random( 3 ) == 1 ) and self:CanTarget( attacker ) and self:CanSee( attacker ) then
+        if attacker != self and IsValid( attacker ) and self:GetEnemy() != attacker and ( !self:ShouldTreatAsLPlayer( attacker ) or random( 2 ) == 1 ) and self:CanTarget( attacker ) then
             self:AttackTarget( attacker )
         end
     end

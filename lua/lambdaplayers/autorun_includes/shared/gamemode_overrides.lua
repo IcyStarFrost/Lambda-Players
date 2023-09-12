@@ -395,25 +395,22 @@ if CLIENT then
             g_VoicePanelList:SetSize( 250, ScrH() - 200 )
             g_VoicePanelList:SetPaintBackground( false )
         end
-        
         hook.Add( "InitPostEntity", "CreateVoiceVGUI", CreateVoiceVGUI )
+        
+        if overridekillfeed:GetBool() then
+            local olddeathnoticehookfunc = GAMEMODE.AddDeathNotice
+
+            function GAMEMODE:AddDeathNotice( attacker, attackerTeam, inflictor, victim, victimTeam, flags )
+                if attacker == "#npc_lambdaplayer" then return end
+                olddeathnoticehookfunc( self, attacker, attackerTeam, inflictor, victim, victimTeam, flags )
+            end
+        end
     end )
-
-
-
-
 end
 
-
-
-
-
-if CLIENT then return end
-
-
+if ( CLIENT ) then return end
 
 hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function() 
-
     -- This fixes the issues of Lambda's health reaching below 0 and actually dying in internally
     local olddamagehookfunc = GAMEMODE.EntityTakeDamage
     function GAMEMODE:EntityTakeDamage( targ, dmg )
@@ -423,15 +420,6 @@ hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function()
     end
 
     if canoverride:GetBool() then
-        if overridekillfeed:GetBool() then
-            local olddeathnoticehookfunc = GAMEMODE.AddDeathNotice
-
-            function GAMEMODE:AddDeathNotice( attacker, attackerTeam, inflictor, victim, victimTeam, flags )
-                if attacker == "Lambda Player" then return end
-                olddeathnoticehookfunc( self, attacker, attackerTeam, inflictor, victim, victimTeam, flags )
-            end
-        end
-
         function GAMEMODE:CreateEntityRagdoll( entity, ragdoll )
             if entity.IsLambdaPlayer then return end
 
