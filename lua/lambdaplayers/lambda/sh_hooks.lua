@@ -377,7 +377,7 @@ if SERVER then
     end
     
     function ENT:OnTraceAttack( dmginfo, dir, trace )
-        hook.Run( "ScalePlayerDamage", self, trace.HitGroup, dmginfo )
+        hook.Run( "ScaleNPCDamage", self, trace.HitGroup, dmginfo )
     end
 
     function ENT:OnOtherKilled( victim, info )

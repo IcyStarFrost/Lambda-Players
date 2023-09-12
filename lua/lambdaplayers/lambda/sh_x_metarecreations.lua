@@ -338,6 +338,10 @@ if SERVER then
         return SysTime() - self.debuginitstart
     end
 
+    -- For ReAgdoll compatibility
+    function ENT:SentenceStop()
+    end
+
 elseif CLIENT then
 
     function ENT:IsMuted() 

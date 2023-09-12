@@ -3,6 +3,7 @@ local IsValid = IsValid
 local ipairs = ipairs
 local table_remove = table.remove
 local RealTime = RealTime
+local isnumber = isnumber
 local LambdaScreenScale = LambdaScreenScale
 local Left = string.Left
 
@@ -18,7 +19,7 @@ if SERVER then
         return wepDmgScaleMisc:GetFloat()
     end
 
-    hook.Add( "ScalePlayerDamage", "LambdaScalePlayerDamage", function( ply, hit, dmginfo )
+    hook.Add( "ScaleNPCDamage", "LambdaScaleNPCDamage", function( ply, hit, dmginfo )
         if !ply.IsLambdaPlayer then return end
         ply.l_lasthitgroup = hit
         ply.l_lastdamage = dmginfo:GetDamage()
@@ -54,8 +55,23 @@ if SERVER then
             _LambdaPlayerBirthdays[ ply:SteamID() ] = { month = month, day = day } 
         end )
     end )
-
     
+    -- Fixes ReAgdoll throwing errors when a ragdoll is removed mid-response (like fire)
+    hook.Add( "OnEntityCreated", "LambdaOnEntityCreated", function( ent )
+        if ent:GetClass() != "puppetmaster" then return end
+
+        local oldInit = ent.Initialize
+        function ent:Initialize()
+            local ragdoll = self:GetRagdoll()
+            if IsValid( ragdoll ) and !isnumber( ragdoll:TranslatePhysBoneToBone( 0 ) ) then
+                self:Remove()
+                return 
+            end
+
+            oldInit( self )
+        end
+    end )
+
     local specialkeywords = { 
         "|birthday|", 
         "|christmas|",
