@@ -519,7 +519,7 @@ if SERVER then
     end
 
     -- Called when we collide with something
-    function ENT:PhysicsCollide( data, myCollider )
+    function ENT:HandleCollision( data )
         if self:GetIsDead() or self:GetNoClip() then return end
         local collider = data.HitEntity
         if !IsValid( collider ) then return end
