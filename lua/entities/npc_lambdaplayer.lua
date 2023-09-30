@@ -99,6 +99,8 @@ end
         maxs = standingcollisionmaxs
     }
     local sub = string.sub
+    local StartsWith = string.StartsWith
+    local string_find = string.find
     local lower = string.lower
     local RealTime = RealTime
     local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
@@ -496,21 +498,29 @@ function ENT:Think()
     -- Text Chat --
     -- Pretty simple stuff actually
     local queuedText = self.l_queuedtext
-    self:SetIsTyping( queuedText != nil )
-    
-    if queuedText and curTime > self.l_nexttext then
+
+    if queuedText and curTime >= self.l_nexttext then
         local typedText = self.l_typedtext
         local typedLen = #typedText
 
         if typedLen == #queuedText or self:GetState() != self.l_starttypestate then 
+            local sayMsg = ( string_find( queuedText, "https://" ) != nil and queuedText or typedText )
+            self:Say( sayMsg )
+            self:OnEndMessage( sayMsg )
+
+            queuedText = nil
             self.l_queuedtext = nil
-            self:Say( typedText )
-            self:OnEndMessage( typedText )
         else
+            local words = string.gmatch( typedText, "%S+" )
+            local curWord = words[ #words ]
+
+            local isImg = ( StartsWith( curWord, "https://" ) and 10 or 60 )
+            self.l_nexttext = ( curTime + 1 / ( self:GetTextPerMinute() / minConv ) )
             self.l_typedtext = typedText .. sub( queuedText, typedLen + 1, typedLen + 1 )
-            self.l_nexttext = ( curTime + 1 / ( self:GetTextPerMinute() / 60 ) )
         end
     end
+
+    self:SetIsTyping( queuedText != nil )
     -- -- -- -- --
 
     local isDead = self:GetIsDead()
