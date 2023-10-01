@@ -511,7 +511,10 @@ function ENT:Think()
             queuedText = nil
             self.l_queuedtext = nil
         else
-            local words = string.gmatch( typedText, "%S+" )
+            local words = {}
+            for word in string.gmatch( typedText, "%S+" ) do
+                words[ #words + 1 ] = word
+            end
             local curWord = words[ #words ]
 
             local isImg = ( StartsWith( curWord, "https://" ) and 10 or 60 )
