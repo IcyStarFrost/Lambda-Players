@@ -1,16 +1,16 @@
-
 local canoverride = GetConVar( "lambdaplayers_lambda_overridegamemodehooks" )
-local overridekillfeed = GetConVar( "lambdaplayers_lambda_overridedeathnoticehook" )
-_LambdaGamemodeHooksOverriden = _LambdaGamemodeHooksOverriden or false
+_LambdaGamemodeHooksOverriden = ( _LambdaGamemodeHooksOverriden or false )
 
-if CLIENT then
+if ( CLIENT ) then
     if !canoverride:GetBool() then return end
+
     local table_Add = table.Add
     local draw = draw
     local CurTime = CurTime
     local math = math
     local sub = string.sub
     local Material = Material
+    local overridekillfeed = GetConVar( "lambdaplayers_lambda_overridedeathnoticehook" )
 
     hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function() 
 
@@ -408,26 +408,150 @@ if CLIENT then
     end )
 end
 
-if ( CLIENT ) then return end
-
-hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function() 
-    -- This fixes the issues of Lambda's health reaching below 0 and actually dying in internally
-    local olddamagehookfunc = GAMEMODE.EntityTakeDamage
-    function GAMEMODE:EntityTakeDamage( targ, dmg )
-        local result = hook.Run( "LambdaTakeDamage", targ, dmg )
-        if result == true then return true end
-        olddamagehookfunc( self, targ, dmg )
-    end
-
-    if canoverride:GetBool() then
-        function GAMEMODE:CreateEntityRagdoll( entity, ragdoll )
-            if entity.IsLambdaPlayer then return end
-
-            -- Replace the entity with the ragdoll in cleanups etc
-            undo.ReplaceEntity( entity, ragdoll )
-            cleanup.ReplaceEntity( entity, ragdoll )
+if ( SERVER ) then
+    hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function() 
+        -- This fixes the issues of Lambda's health reaching below 0 and actually dying in internally
+        local olddamagehookfunc = GAMEMODE.EntityTakeDamage
+        function GAMEMODE:EntityTakeDamage( targ, dmg )
+            local result = hook.Run( "LambdaTakeDamage", targ, dmg )
+            if result == true then return true end
+            olddamagehookfunc( self, targ, dmg )
         end
 
-        _LambdaGamemodeHooksOverriden = true
-    end
-end )
+        if canoverride:GetBool() then
+            function GAMEMODE:CreateEntityRagdoll( entity, ragdoll )
+                if entity.IsLambdaPlayer then return end
+
+                -- Replace the entity with the ragdoll in cleanups etc
+                undo.ReplaceEntity( entity, ragdoll )
+                cleanup.ReplaceEntity( entity, ragdoll )
+            end
+
+            if RDragdollstats then
+                local last_dmg, last_dmgpos, last_dmgtype, last_dmginfo = {}, {}, {}, {}
+
+                hook.Add( "EntityTakeDamage", "RD_ENTDAMAGE", function( target, dmginfo )
+                    if !rdcvar_enabled:GetBool() then return end
+                    if !target:IsNPC() and !target:IsNextBot() and !target:IsPlayer() then return end
+                    if dmginfo:GetDamage() < target:Health() then return end
+
+                    if RD_IsVfireDmg( target, dmginfo ) or dmginfo:IsDamageType( DMG_BURN + DMG_CRUSH + DMG_SHOCK ) then
+                        last_dmgpos[ target ] = target:WorldSpaceCenter()
+                    end
+                    dmginfo:SetDamageForce( dmginfo:GetDamageForce() * ( dmginfo:IsDamageType( DMG_BLAST ) and rdcvar_pushmodifier_explosion:GetFloat() or rdcvar_pushmodifier_general:GetFloat() ) )
+
+                    last_dmg[ target ] = dmginfo:GetDamage()
+                    last_dmgpos[ target ] = dmginfo:GetDamagePosition()
+                    last_dmgtype[ target ] = dmginfo:GetDamageType()
+                end )
+
+                hook.Add( "PlayerDeath", "RD_Player_Death", function( victim, inflictor, attacker )
+                    if !rdcvar_enabled:GetBool() or !rdcvar_players:GetBool() then return end
+                    if victim == inflictor and victim == attacker then last_dmgtype[ victim ] = nil end
+
+                    local dmg = last_dmg[victim]
+                    local dmgpos = last_dmgpos[victim]
+                    local dmgtype = last_dmgtype[victim]
+                    
+                    if !dmgtype then
+                        dmgtype = DMG_GENERIC
+                        dmgpos = victim:WorldSpaceCenter()
+                    end
+
+                    local dummyragdoll = victim:GetRagdollEntity()
+                    if IsValid( dummyragdoll ) then 
+                        local dmginfo = last_dmginfo[victim]
+                        ragdoll = RD_buildragdoll( victim, dmgpos, dmginfo )
+                        RD_onDeath( victim, ragdoll, dmg, dmgpos, dmgtype, 0 )
+                        if rdcvar_death_focus:GetBool() and rdcvar_death:GetBool() then RDReagdollMaster.CreateTargetENT( victim, ragdoll ) end     
+                        dummyragdoll:Remove()
+                    end
+
+                    rg_debuginfo( victim, dmg, dmgpos, dmgtype, 0, "ply", ragdoll )   
+                    last_dmg[ victim ], last_dmgpos[ victim ], last_dmgtype[ victim ], last_dmginfo[ victim ] = nil, nil, nil, nil
+
+                    if rdcvar_players_spectate:GetBool() then 
+                        victim:Spectate( OBS_MODE_CHASE )
+                        victim:SpectateEntity( ragdoll )
+                    end
+                end )
+
+                hook.Add( "CreateEntityRagdoll", "RD_NPC_Death", function( owner, ragdoll )
+                    if !rdcvar_enabled:GetBool() or !rdcvar_npcs:GetBool() then return end
+
+                    if IsValid( ragdoll ) then
+                        if !RDragdollstats[ ragdoll ] then RD_ragdollphysics( ragdoll ) end
+                        if rdcvar_death_focus:GetBool() and rdcvar_death:GetBool() then RDReagdollMaster.CreateTargetENT( owner, ragdoll ) end
+                    else 
+                        rd_debug( "Ragdoll from entity", owner, "is not valid!" )
+                        return 
+                    end
+
+                    local dmg = last_dmg[ owner ]
+                    local dmgpos = last_dmgpos[ owner ]
+                    local dmgtype = last_dmgtype[ owner ]
+                    
+                    if !dmgtype then
+                        dmgtype = DMG_GENERIC
+                        dmgpos = owner:WorldSpaceCenter()
+                    end
+
+                    rg_debuginfo( owner, dmg, dmgpos, dmgtype, 0, "npc", ragdoll )    
+                    RD_onDeath( owner, ragdoll, dmg, dmgpos, dmgtype, 0 )
+                    last_dmg[ owner ], last_dmgpos[ owner ], last_dmgtype[ owner ], last_dmginfo[ owner ] = nil, nil, nil, nil
+                end )
+
+                function RD_ragdollphysics( ragdoll )
+                    if !rdcvar_enabled:GetBool() or !IsValid( ragdoll ) then return end
+                    if rdcvar_nocollide:GetBool() then ragdoll:SetCollisionGroup( 11) end
+
+                    local model = ragdoll:GetModel()
+                    if !table.HasValue( RD_ModelsToIgnore, string.lower( model ) ) then
+                        -- Here we are applying a preset of mass and inertia values to our bones
+                        -- This is so our ragdolls will act consistently don't matter the model given
+                        local realFloat = rdcvar_realfloat:GetBool()
+
+                        for index, bone in ipairs( RD_PhysTable ) do
+                            if !string.match( ragdoll:GetBoneName( index ), "ValveBiped" ) then continue end    
+
+                            local ragphys = ragdoll:GetPhysicsObjectNum( index )        
+                            if !IsValid( ragphys ) then continue end
+                    
+                            ragphys:SetMass( bone.mass )
+                            ragphys:SetInertia( bone.inertia )
+
+                            if realFloat then
+                                if index != 1 or index != 0 then
+                                    ragphys:SetBuoyancyRatio( 0.7 )
+                                elseif index == 1 or index == 0 then
+                                    ragphys:SetBuoyancyRatio( 2 ) 
+                                end
+                            end     
+                        end
+                    else
+                        rd_debug( model .." caught! ignoring..." ) 
+                    end
+
+                    RDragdollstats[ragdoll] = {
+                        NextAnim = nil,
+                        AnimEntity = nil,
+                        TargetEnt = nil,
+                        Health = nil,
+                        NextDieTime = nil,
+                        Master = nil,
+                        Burnt = false,
+                        IsDead = false,
+                        IsStiff = false,
+
+                        [ 4 ]   = { broken = false, parent = 3, offset = Vector( 10, 0, 0 ) },
+                        [ 6 ]   = { broken = false, parent = 2, offset = Vector( 10, 0, 0 ) },
+                        [ 9 ]   = { broken = false, parent = 8, offset = Vector( 16, 0, 0 ) },
+                        [ 12 ]  = { broken = false, parent = 11, offset = Vector( 16, 0, 0 ) }
+                    }
+                end
+            end
+
+            _LambdaGamemodeHooksOverriden = true
+        end
+    end )
+end
