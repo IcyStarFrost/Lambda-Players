@@ -55,22 +55,6 @@ if SERVER then
             _LambdaPlayerBirthdays[ ply:SteamID() ] = { month = month, day = day } 
         end )
     end )
-    
-    -- Fixes ReAgdoll throwing errors when a ragdoll is removed mid-response (like fire)
-    hook.Add( "OnEntityCreated", "LambdaOnEntityCreated", function( ent )
-        if ent:GetClass() != "puppetmaster" then return end
-
-        local oldInit = ent.Initialize
-        function ent:Initialize()
-            local ragdoll = self:GetRagdoll()
-            if IsValid( ragdoll ) and !isnumber( ragdoll:TranslatePhysBoneToBone( 0 ) ) then
-                self:Remove()
-                return 
-            end
-
-            oldInit( self )
-        end
-    end )
 
     local specialkeywords = { 
         "|birthday|", 
