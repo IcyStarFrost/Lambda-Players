@@ -218,6 +218,7 @@ CreateLambdaConvar( "lambdaplayers_text_usedefaultlines", 1, true, false, false,
 CreateLambdaConvar( "lambdaplayers_text_useaddonlines", 1, true, false, false, "If Lambda Players are able to use text chat lines added by addons. Make sure you Update Lambda Data after changing this!", 0, 1, { type = "Bool", name = "Use Addon Lines", category = "Text Chat Options" } )
 CreateLambdaConvar( "lambdaplayers_text_chatlimit", 1, true, false, false, "The amount of Lambda Players that can type a message at a time. Set to 0 for no limit", 0, 60, { type = "Slider", decimals = 0, name = "Chat Limit", category = "Text Chat Options" } )
 CreateLambdaConvar( "lambdaplayers_text_markovgenerate", 0, true, false, false, "If Lambda text chat lines should be used to generate random text lines using a Markov Chain Generator", 0, 1, { type = "Bool", name = "Use Markov Chain Generator", category = "Text Chat Options" } )
+CreateLambdaConvar( "lambdaplayers_text_saveoninterrupted", 1, true, false, false, "If enabled and Lambda Player is interrupted from texting, they will save it and later send it when problem is resolved", 0, 1, { type = "Bool", name = "Save Text On Interrupt", category = "Text Chat Options" } )
 --
 
 -- Force Related Convars

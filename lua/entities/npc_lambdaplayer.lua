@@ -122,6 +122,7 @@ end
     local jumpInCombat = GetConVar( "lambdaplayers_combat_usejumpsincombat" )
     local forcePlyMdl = GetConVar( "lambdaplayers_lambda_forceplayermodel" )
     local drownTime = GetConVar( "lambdaplayers_lambda_drowntime" )
+    local saveInterrupt = GetConVar( "lambdaplayers_text_saveoninterrupted" )
 --
 
 if CLIENT then
@@ -171,8 +172,12 @@ function ENT:Initialize()
         self.l_Weapon = "" -- The weapon we currently have
         self.l_queuedtext = nil -- The text that we want to send in chat
         self.l_typedtext = nil -- The current text we have typed out so far
+        self.l_lasttypedchar = "" -- The last character we used when typing
+        self.l_combolastchar = 0 -- How many times we used the same character when typing
         self.l_nexttext = 0 -- The next time we can type the next character
         self.l_starttypestate = "" -- The state we started typing in
+        self.l_interruptedtext = nil -- The text that we wanted to send but were suddenly interrupted
+        self.l_interruptchecktime = 0 -- The next time we'll check if have an interrupted message stored
         self.l_lastspokenvoicetype = "" -- The last type of voiceline we spoke with
 
         self.l_issmoving = false -- If we are moving
@@ -498,16 +503,39 @@ function ENT:Think()
 
     -- Text Chat --
     -- Pretty simple stuff actually
-    local queuedText = self.l_queuedtext
 
+    local interruptedText = self.l_interruptedtext
+    if interruptedText and curTime >= self.l_interruptchecktime then
+        self.l_interruptchecktime = ( curTime + 0.5 )
+
+        if !self:InCombat() and !self:IsPanicking() then
+            if !queuedText then
+                self:TypeMessage( interruptedText[ 1 ], false )
+                self.l_typedtext = interruptedText[ 2 ]
+            end
+
+            self.l_interruptedtext = nil
+        end
+    end
+
+    local queuedText = self.l_queuedtext
     if queuedText and curTime >= self.l_nexttext then
         local typedText = self.l_typedtext
         local typedLen = #typedText
 
-        if typedLen == #queuedText or self:GetState() != self.l_starttypestate then 
-            local sayMsg = ( string_find( queuedText, "https://" ) != nil and queuedText or typedText )
-            self:Say( sayMsg )
-            self:OnEndMessage( sayMsg )
+        local doneTyping = ( typedLen >= #queuedText )
+        if doneTyping or self:GetState() != self.l_starttypestate then 
+            if !doneTyping and saveInterrupt:GetBool() then
+                self.l_interruptedtext = {
+                    queuedText,
+                    typedText
+                }
+
+            else
+                local sayMsg = ( string_find( queuedText, "https://" ) != nil and queuedText or typedText )
+                self:Say( sayMsg )
+                self:OnEndMessage( sayMsg )
+            end
 
             queuedText = nil
             self.l_queuedtext = nil
@@ -516,10 +544,19 @@ function ENT:Think()
             for word in gmatch( typedText, "%S+" ) do 
                 lastWord = word 
             end
-            local isImg = ( StartsWith( lastWord, "https://" ) and 10 or 60 )
+            
+            local nextChar = sub( queuedText, typedLen + 1, typedLen + 1 )
+            if nextChar == self.l_lasttypedchar then
+                self.l_combolastchar = ( self.l_combolastchar + 3 )
+            else
+                self.l_combolastchar = 0
+            end
 
-            self.l_nexttext = ( curTime + 1 / ( self:GetTextPerMinute() / isImg ) )
-            self.l_typedtext = typedText .. sub( queuedText, typedLen + 1, typedLen + 1 )
+            local typeSpeed = ( StartsWith( lastWord, "https://" ) and 10 or max( 60 - self.l_combolastchar, 30 ) )
+            self.l_nexttext = ( curTime + 1 / ( self:GetTextPerMinute() / typeSpeed ) )
+
+            self.l_typedtext = typedText .. nextChar
+            self.l_lasttypedchar = nextChar
         end
     end
 
@@ -729,7 +766,7 @@ function ENT:Think()
         end
 
         -- Reload randomly when we aren't shooting
-        if self.l_Clip < self.l_MaxClip and random( 100 ) == 1 and curTime > self.l_WeaponUseCooldown + 1 then
+        if !self:GetIsTyping() and self.l_Clip < self.l_MaxClip and random( 100 ) == 1 and curTime >= self.l_WeaponUseCooldown + 1 then
             self:ReloadWeapon()
         end
 

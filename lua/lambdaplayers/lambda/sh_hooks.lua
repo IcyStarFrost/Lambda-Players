@@ -169,6 +169,8 @@ if SERVER then
             
             if ( !self.l_killbinded and deathAlways:GetBool() or random( 100 ) <= self:GetVoiceChance() ) and !self:GetIsTyping() then
                 self:PlaySoundFile( self.l_killbinded and "laugh" or "death" )
+            else
+                self:StopCurrentVoiceLine()
             end
 
             LambdaKillFeedAdd( self, attacker, inflictor )
@@ -292,9 +294,14 @@ if SERVER then
         self:SwitchWeapon( "none", true )
 
         local deathTime = CurTime()
+        local spawnCheckTime = deathTime
         local canRespawn = self:GetRespawn()
         self:Thread( function()
-            while ( ( CurTime() - deathTime ) < ( canRespawn and respawnTime:GetFloat() or 0.1 ) or self:GetIsTyping() or self:IsSpeaking( "death" ) and ( !canRespawn or respawnSpeech:GetBool() ) ) do
+            while ( ( CurTime() - deathTime ) < ( canRespawn and respawnTime:GetFloat() or 0.1 ) or self:GetIsTyping() or self:IsSpeaking( "death" ) and ( !canRespawn or respawnSpeech:GetBool() ) ) or CurTime() < spawnCheckTime do
+                if CurTime() >= spawnCheckTime then
+                    spawnCheckTime = ( CurTime() + rand( 0.0, 0.3 ) )
+                end
+
                 coroutine_yield() 
             end
 
@@ -823,36 +830,52 @@ function ENT:InitializeMiniHooks()
         end, true )
 
         self:Hook( "LambdaPlayerSay", "lambdatextchat", function( ply, text )
-            if self.l_preventdefaultspeak or ply == self or self:GetIsTyping() or random( 200 ) > self:GetTextChance() or self:IsSpeaking() or !self:CanType() or aidisabled:GetBool() then return end
-            self.l_keyentity = ply
-            local line = self:GetTextLine( "response" )
-            line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
-            self:TypeMessage( line )
+            if self.l_preventdefaultspeak or ply == self or random( 200 ) > self:GetTextChance() or !self:CanType() or aidisabled:GetBool() then return end
+
+            self:SimpleTimer( rand( 0.0, 1.0 ), function()
+                if !IsValid( ply ) or self:GetIsTyping() or self:IsSpeaking() then return end
+                self.l_keyentity = ply
+
+                local line = self:GetTextLine( "response" )
+                line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
+
+                self:TypeMessage( line )
+            end )
         end, true )
 
         self:Hook( "PlayerSay", "lambdarespondtoplayertextchat", function( ply, text )
-            if self.l_preventdefaultspeak or self:IsSpeaking() or aidisabled:GetBool() then return end
+            if self.l_preventdefaultspeak or self:GetIsTyping() or self:IsSpeaking() or aidisabled:GetBool() then return end
 
             if random( 100 ) <= self:GetVoiceChance() and self:IsInRange( ply, 300 ) then
                 self:PlaySoundFile( "idle" )
             elseif random( 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
-                self.l_keyentity = ply
-                local line = self:GetTextLine( "response" )
-                line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
-                self:TypeMessage( line )
+                self:SimpleTimer( rand( 0.0, 1.0 ), function()
+                    if !IsValid( ply ) or self:GetIsTyping() or self:IsSpeaking() then return end
+                    self.l_keyentity = ply
+
+                    local line = self:GetTextLine( "response" )
+                    line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
+
+                    self:TypeMessage( line )
+                end )
             end
         end, true )
 
         self:Hook( "LambdaOnRealPlayerEndVoice", "lambdarespondtoplayervoicechat", function( ply )
-            if self.l_preventdefaultspeak or self:IsSpeaking() or aidisabled:GetBool() or !self:IsInRange( ply, 300 ) then return end
+            if self.l_preventdefaultspeak or self:GetIsTyping() or self:IsSpeaking() or aidisabled:GetBool() or !self:IsInRange( ply, 300 ) then return end
 
             if random( 100 ) <= self:GetVoiceChance() then
                 self:PlaySoundFile( "idle" )
             elseif random( 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
-                self.l_keyentity = ply
-                local line = self:GetTextLine( "response" )
-                line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
-                self:TypeMessage( line )
+                self:SimpleTimer( rand( 0.0, 1.0 ), function()
+                    if !IsValid( ply ) or self:GetIsTyping() or self:IsSpeaking() then return end
+                    self.l_keyentity = ply
+
+                    local line = self:GetTextLine( "response" )
+                    line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
+
+                    self:TypeMessage( line )
+                end )
             end
         end, true )
     end

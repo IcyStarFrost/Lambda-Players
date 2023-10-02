@@ -332,6 +332,12 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
     local stuckTime = ( CurTime() + random( 2, 8 ) )
 
     while ( true ) do
+        local climbPos = ( climbStart + climbNormal * climbFract )
+        laddermovetable.start = climbPos
+        laddermovetable.endpos = ( climbPos + climbNormal * 10 )
+        laddermovetable.filter = self
+        laddermovetable.mins, laddermovetable.maxs = self:GetCollisionBounds()
+
         if !self.l_issmoving or self:IsInNoClip() or !self:Alive() or CurTime() >= stuckTime then
             local obstacle = TraceHull( laddermovetable ).Entity
             if self:GetEnemy() != obstacle and IsValid( obstacle ) and self:CanTarget( obstacle ) then
@@ -350,16 +356,10 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
             end
         end
 
-        local climbPos = ( climbStart + climbNormal * climbFract )
         self:SetPos( climbPos )
         self.loco:FaceTowards( self:GetPos() * climbNormal )
 
         if climbState != 2 or !self:IsDisabled() and CurTime() >= self.l_moveWaitTime then
-            laddermovetable.start = climbPos
-            laddermovetable.endpos = ( climbPos + climbNormal * 10 )
-            laddermovetable.filter = self
-            laddermovetable.mins, laddermovetable.maxs = self:GetCollisionBounds()
-
             if !IsValid( TraceHull( laddermovetable ).Entity ) then
                 climbFract = ( climbFract + ( 200 * FrameTime() ) )
                 stuckTime = ( CurTime() + random( 2, 8 ) )
