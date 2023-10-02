@@ -102,6 +102,7 @@ end
     local StartsWith = string.StartsWith
     local string_find = string.find
     local lower = string.lower
+    local gmatch = string.gmatch
     local RealTime = RealTime
     local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
     local maxHealth = GetConVar( "lambdaplayers_lambda_maxhealth" )
@@ -511,14 +512,13 @@ function ENT:Think()
             queuedText = nil
             self.l_queuedtext = nil
         else
-            local words = {}
-            for word in string.gmatch( typedText, "%S+" ) do
-                words[ #words + 1 ] = word
+            local lastWord = ""
+            for word in gmatch( typedText, "%S+" ) do 
+                lastWord = word 
             end
-            local curWord = words[ #words ]
+            local isImg = ( StartsWith( lastWord, "https://" ) and 10 or 60 )
 
-            local isImg = ( StartsWith( curWord, "https://" ) and 10 or 60 )
-            self.l_nexttext = ( curTime + 1 / ( self:GetTextPerMinute() / minConv ) )
+            self.l_nexttext = ( curTime + 1 / ( self:GetTextPerMinute() / isImg ) )
             self.l_typedtext = typedText .. sub( queuedText, typedLen + 1, typedLen + 1 )
         end
     end
