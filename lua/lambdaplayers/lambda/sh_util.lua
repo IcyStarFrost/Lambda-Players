@@ -37,6 +37,7 @@ local floor = math.floor
 local table_concat = table.concat
 local string_Replace = string.Replace
 local string_Explode = string.Explode
+local string_find = string.find
 local table_insert = table.insert
 local isfunction = isfunction
 local isentity = isentity
@@ -1069,11 +1070,17 @@ if SERVER then
 
     local function GetRandomMarkovLine( tbl )
         local copy = table_Copy( tbl )
-        for keyword, _ in pairs( LambdaConditionalKeyWords ) do  
-            for i = 1, #copy do 
+        for i = 1, #copy do
+            if string_find( copy[ i ], "(https?://%S+)" ) != nil then 
+                copy[ i ] = nil
+                continue 
+            end
+
+            for keyword, _ in pairs( LambdaConditionalKeyWords ) do  
                 copy[ i ] = string_Replace( copy[ i ], keyword, "" ) 
             end
         end
+        if #copy == 0 then return tbl[ random( #tbl ) ] end
 
         local markovtable = generate_markov_table( table_concat( copy, "\n" ), 4 )
         local generated = generate_markov_text( 1000, markovtable, 4 )

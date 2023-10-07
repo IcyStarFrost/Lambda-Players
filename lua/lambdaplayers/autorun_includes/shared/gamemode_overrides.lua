@@ -511,7 +511,7 @@ if ( SERVER ) then
                         -- This is so our ragdolls will act consistently don't matter the model given
                         local realFloat = rdcvar_realfloat:GetBool()
 
-                        for index, bone in ipairs( RD_PhysTable ) do
+                        for index, bone in pairs( RD_PhysTable ) do
                             if !string.match( ragdoll:GetBoneName( index ), "ValveBiped" ) then continue end    
 
                             local ragphys = ragdoll:GetPhysicsObjectNum( index )        

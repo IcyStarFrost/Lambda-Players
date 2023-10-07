@@ -99,10 +99,11 @@ end
         maxs = standingcollisionmaxs
     }
     local sub = string.sub
-    local StartsWith = string.StartsWith
+    local match = string.match
     local string_find = string.find
     local lower = string.lower
     local gmatch = string.gmatch
+    local string_Replace = string.Replace
     local RealTime = RealTime
     local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
     local maxHealth = GetConVar( "lambdaplayers_lambda_maxhealth" )
@@ -262,7 +263,8 @@ function ENT:Initialize()
         self:SetAvgPing( rndpingrange )  -- Our average ping we'll use for calculations
         self:SetPing( rndpingrange ) -- Our actual fake ping
         self:SetSteamID64( 90071996842377216 + random( 10000000 ) )
-        self:SetTextPerMinute( random( 3, 6 ) * 100 ) -- The amount of characters we can type within a minute
+        self:SetTextPerMinute( random( 4, 10 ) * 100 ) -- The amount of characters we can type within a minute
+        self:SetTeam( 1001 )
         self:SetNW2String( "lambda_steamid", "STEAM_0:0:" .. random( 200000000 ) )
         self:SetNW2String( "lambda_ip", "192." .. random( 10, 200 ) .. "." .. random( 10 ).. "." .. random( 10, 200 ) .. ":27005" )
         self:SetNW2String( "lambda_state", "Idle" )
@@ -500,6 +502,7 @@ end
 function ENT:Think()
 
     local curTime = CurTime()
+    local isDead = self:GetIsDead()
 
     -- Text Chat --
     -- Pretty simple stuff actually
@@ -530,7 +533,6 @@ function ENT:Think()
                     queuedText,
                     typedText
                 }
-
             else
                 local sayMsg = ( string_find( queuedText, "https://" ) != nil and queuedText or typedText )
                 self:Say( sayMsg )
@@ -552,18 +554,31 @@ function ENT:Think()
                 self.l_combolastchar = 0
             end
 
-            local typeSpeed = ( StartsWith( lastWord, "https://" ) and 10 or max( 60 - self.l_combolastchar, 30 ) )
-            self.l_nexttext = ( curTime + 1 / ( self:GetTextPerMinute() / typeSpeed ) )
+            local foundLink = match( lastWord, "(https?://%S+)" )
+            local ctrlplused = false
+            if foundLink then 
+                local linkStart, linkEnd = string_find( queuedText, lastWord .. "(%S+)" )
+                if linkStart and linkEnd then
+                    ctrlplused = true
+                    self.l_typedtext = string_Replace( typedText, foundLink, sub( queuedText, linkStart, linkEnd ) )
+                end
+            end
+            if !ctrlplused then
+                self.l_typedtext = typedText .. nextChar
+                self.l_lasttypedchar = nextChar
+            end
 
-            self.l_typedtext = typedText .. nextChar
-            self.l_lasttypedchar = nextChar
+            local typePerMinute = ( 60 - self.l_combolastchar )
+            if isDead then
+                typePerMinute = ( typePerMinute / 1.33 )
+            end
+            self.l_nexttext = ( curTime + 1 / ( self:GetTextPerMinute() / max( typePerMinute, 30 ) ) )
         end
     end
 
     self:SetIsTyping( queuedText != nil )
     -- -- -- -- --
 
-    local isDead = self:GetIsDead()
     local wepent = self:GetWeaponENT()
 
     -- Handle our ping rising or dropping

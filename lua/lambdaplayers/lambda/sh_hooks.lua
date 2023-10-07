@@ -830,7 +830,7 @@ function ENT:InitializeMiniHooks()
         end, true )
 
         self:Hook( "LambdaPlayerSay", "lambdatextchat", function( ply, text )
-            if self.l_preventdefaultspeak or ply == self or random( 200 ) > self:GetTextChance() or !self:CanType() or aidisabled:GetBool() then return end
+            if self.l_preventdefaultspeak or ply == self or random( 200 ) > self:GetTextChance() or !self:CanType() or aidisabled:GetBool() or self:InCombat() or self:IsPanicking() then return end
 
             self:SimpleTimer( rand( 0.0, 1.0 ), function()
                 if !IsValid( ply ) or self:GetIsTyping() or self:IsSpeaking() then return end
