@@ -746,7 +746,7 @@ function ENT:Think()
         if !loco:IsUsingLadder() then
             self.l_ladderfailtimer = curTime + 5
         elseif curTime > self.l_ladderfailtimer then
-            self:Recreate( true, selfPos, selfAngles )
+            self:Recreate( true, true )
             self.l_ladderfailtimer = curTime + 1
         end
         --

@@ -340,7 +340,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
 
         if !self.l_issmoving or self:IsInNoClip() or !self:Alive() or CurTime() >= stuckTime then
             local obstacle = TraceHull( laddermovetable ).Entity
-            if self:GetEnemy() != obstacle and IsValid( obstacle ) and self:CanTarget( obstacle ) then
+            if obstacle != self and self:GetEnemy() != obstacle and IsValid( obstacle ) and self:CanTarget( obstacle ) then
                 stuckTime = ( stuckTime + 5 )
                 self:AttackTarget( obstacle )
             else

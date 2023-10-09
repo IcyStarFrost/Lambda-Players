@@ -39,6 +39,7 @@ local table_concat = table.concat
 local string_Replace = string.Replace
 local string_Explode = string.Explode
 local string_find = string.find
+local string_match = string.match
 local table_insert = table.insert
 local isfunction = isfunction
 local isentity = isentity
@@ -61,6 +62,7 @@ local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
 local serversidecleanup = GetConVar( "lambdaplayers_lambda_serversideremovecorpseonrespawn" )
 local serversidecleanupeffect = GetConVar( "lambdaplayers_lambda_serversideragdollcleanupeffect" )
 local usemarkovgenerator = GetConVar( "lambdaplayers_text_markovgenerate" )
+local allowlinks = GetConVar( "lambdaplayers_text_allowimglinks" )
 local player_GetAll = player.GetAll
 local Rand = math.Rand
 local isnumber = isnumber
@@ -832,26 +834,22 @@ if SERVER then
 
     -- Delete ourself and spawn a recreation of ourself.
     -- If ignoreprehook is true, the LambdaPreRecreated hook won't run meaning addons won't be able to stop this 
-    function ENT:Recreate( ignoreprehook, spawnPos, spawnAng )
+    function ENT:Recreate( ignoreprehook, inPlace )
         local shouldblock = LambdaRunHook( "LambdaPreRecreated", self )
+        if inPlace then inPlace = self:Alive() end
 
         self:SimpleTimer( 0.1, function() self:Remove() end, true )
         if !ignoreprehook and shouldblock == true then return end
 
         local pos, ang = self.l_SpawnPos, self.l_SpawnAngles
-        if self:Alive() then
-            if spawnPos then
-                tracetable.start = spawnPos
-                tracetable.endpos = spawnPos
-                tracetable.filter = self
+        if inPlace then
+            tracetable.start = self:GetPos()
+            tracetable.endpos = tracetable.start
+            tracetable.filter = self
+            tracetable.mins, tracetable.maxs = self:GetCollisionBounds()
 
-                local mins, maxs = self:GetCollisionBounds()
-                tracetable.mins = mins
-                tracetable.maxs = maxs
-
-                pos = TraceHull( tracetable ).HitPos 
-            end
-            if spawnAng then ang = spawnAng end
+            pos = TraceHull( tracetable ).HitPos 
+            ang = self:GetAngles()
         end
 
         local exportinfo = self:ExportLambdaInfo()
@@ -867,6 +865,11 @@ if SERVER then
         newlambda:ApplyLambdaInfo( exportinfo )
         newlambda.l_SpawnPos = self.l_SpawnPos
         newlambda.l_SpawnAngles = self.l_SpawnAngles
+
+        if inPlace then
+            newlambda:SetHealth( self:Health() )
+            newlambda:SetArmor( self:Armor() )
+        end
 
         table_Merge( newlambda.l_SpawnedEntities, self.l_SpawnedEntities )
 
@@ -1011,6 +1014,10 @@ if SERVER then
          return mod
      end ]]
 
+    -- Textline Caching Stuff
+    local standartLines = {}
+    local textLinks = {}
+
     -- Markov Chain Generator --
     -- Source code from https://github.com/hay/markov
     -- I simply got it converted from PHP to GLua
@@ -1069,8 +1076,6 @@ if SERVER then
         return o
     end
 
-    local standartLines = {}
-
     local function GetRandomMarkovLine( lambda, tbl )
         local validLines = {}
 
@@ -1098,7 +1103,7 @@ if SERVER then
                 line = keyLine
             end
 
-            if string_find( line, "https://" ) != nil then
+            if string_match( line, "(https?://%S+)" ) != nil then
                 validLines[ #validLines + 1 ] = line
             else
                 feedLines[ #feedLines + 1 ] = line
@@ -1124,6 +1129,14 @@ if SERVER then
         end
 
         if tbl then
+            if !allowlinks:GetBool() then
+                for index, line in ipairs( tbl ) do
+                    if textLinks[ line ] or string_match( line, "(https?://%S+)" ) == nil then continue end
+                    table_remove( tbl, index )
+                    textLinks[ line ] = true
+                end
+            end
+
             if usemarkovgenerator:GetBool() then
                 return GetRandomMarkovLine( self, tbl )
             end

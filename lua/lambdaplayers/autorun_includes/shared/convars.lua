@@ -219,6 +219,7 @@ CreateLambdaConvar( "lambdaplayers_text_useaddonlines", 1, true, false, false, "
 CreateLambdaConvar( "lambdaplayers_text_chatlimit", 1, true, false, false, "The amount of Lambda Players that can type a message at a time. Set to 0 for no limit", 0, 60, { type = "Slider", decimals = 0, name = "Chat Limit", category = "Text Chat Options" } )
 CreateLambdaConvar( "lambdaplayers_text_markovgenerate", 0, true, false, false, "If Lambda text chat lines should be used to generate random text lines using a Markov Chain Generator", 0, 1, { type = "Bool", name = "Use Markov Chain Generator", category = "Text Chat Options" } )
 CreateLambdaConvar( "lambdaplayers_text_saveoninterrupted", 1, true, false, false, "If enabled and Lambda Player is interrupted from texting, they will save it and later send it when problem is resolved", 0, 1, { type = "Bool", name = "Save Text On Interrupt", category = "Text Chat Options" } )
+CreateLambdaConvar( "lambdaplayers_text_allowimglinks", 1, true, false, false, "If Lambda Players are allowed to send text lines that contain links to images and GIFs", 0, 1, { type = "Bool", name = "Allow Image Links", category = "Text Chat Options" } )
 --
 
 -- Force Related Convars
