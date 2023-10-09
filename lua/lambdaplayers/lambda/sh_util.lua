@@ -18,6 +18,7 @@ local table_IsEmpty = table.IsEmpty
 local table_remove = table.remove
 local table_RemoveByValue = table.RemoveByValue
 local table_Copy = table.Copy
+local table_Add = table.Add
 local ents_GetAll = ents.GetAll
 local VectorRand = VectorRand
 local SortTable = table.sort
@@ -1068,24 +1069,48 @@ if SERVER then
         return o
     end
 
-    local function GetRandomMarkovLine( tbl )
-        local copy = table_Copy( tbl )
-        for i = 1, #copy do
-            if string_find( copy[ i ], "(https?://%S+)" ) != nil then 
-                copy[ i ] = nil
-                continue 
+    local standartLines = {}
+
+    local function GetRandomMarkovLine( lambda, tbl )
+        local validLines = {}
+
+        local feedLines = {}
+        for index, line in ipairs( tbl ) do
+            if !standartLines[ line ] then
+                local cond, modLine = LambdaConditionalKeyWordCheck( lambda, line )
+                if !cond then continue end
+
+                local keyLine = LambdaKeyWordModify( lambda, modLine )
+                local incomplete = false
+                for keyWord, _ in pairs( LambdaValidTextChatKeyWords ) do
+                    if string_find( keyLine, keyWord ) == nil then continue end
+                    incomplete = true
+                    break
+                end
+                if incomplete then continue 
+                end
+
+                -- Cache the lines that don't contain any keywords to avoid unnecesary resources at checking for them
+                if line == modLine and line == keyLine then
+                    standartLines[ line ] = true
+                end
+
+                line = keyLine
             end
 
-            for keyword, _ in pairs( LambdaConditionalKeyWords ) do  
-                copy[ i ] = string_Replace( copy[ i ], keyword, "" ) 
+            if string_find( line, "https://" ) != nil then
+                validLines[ #validLines + 1 ] = line
+            else
+                feedLines[ #feedLines + 1 ] = line
             end
         end
-        if #copy == 0 then return tbl[ random( #tbl ) ] end
+        if #feedLines == 0 then return tbl[ random( #tbl ) ] end
 
-        local markovtable = generate_markov_table( table_concat( copy, "\n" ), 4 )
-        local generated = generate_markov_text( 1000, markovtable, 4 )
-        local lines = string_Explode( "\n", generated )
-        return lines[ random( #lines ) ]
+        local markovtable = generate_markov_table( table_concat( feedLines, "\n" ), 5 )
+        local generated = generate_markov_text( 1000, markovtable, 5 )
+
+        validLines = table_Add( validLines, string_Explode( "\n", generated ) )
+        return validLines[ random( #validLines ) ]
     end
 
     -- Literally the same thing as :GetVoiceLine() but for Text Lines
@@ -1099,12 +1124,14 @@ if SERVER then
         end
 
         if tbl then
-            local useMarkov = usemarkovgenerator:GetBool()
-            
+            if usemarkovgenerator:GetBool() then
+                return GetRandomMarkovLine( self, tbl )
+            end
+
             for _, textline in RandomPairs( tbl ) do
-                local line = ( useMarkov and GetRandomMarkovLine( tbl ) or textline )
-                local condition, modifiedline = LambdaConditionalKeyWordCheck( self, line )
-                if condition then return modifiedline end
+                local condition, modifiedline = LambdaConditionalKeyWordCheck( self, textline )
+                if !condition then continue end 
+                return LambdaKeyWordModify( self, modifiedline )
             end
         end
 
@@ -1173,9 +1200,9 @@ if SERVER then
     -- recipients is optional 
     function ENT:Say( text, teamOnly, recipients )
         local replacement = LambdaRunHook( "LambdaPlayerSay", self, text, ( teamOnly or false ) )
-        text = isstring( replacement ) and replacement or text
+        if isstring( replacement ) then text = replacement end
         if text == "" then return end
-        text = LambdaKeyWordModify( self, text )
+
         local condition, modifiedline = LambdaConditionalKeyWordCheck( self, text )
         if !condition then return end
         text = modifiedline
@@ -1198,10 +1225,11 @@ if SERVER then
     -- "Manually" type out a message and send it to text chat when we are finished
     function ENT:TypeMessage( text, sendCur )
         if text == "" then return end
-        if sendCur != false and self:GetIsTyping() then self:Say( self.l_typedtext ) end
-        
+
+        if sendCur != false and self:GetIsTyping() then 
+            self:Say( self.l_typedtext ) 
+        end
         self:SetIsTyping( true )
-        text = LambdaKeyWordModify( self, text )
 
         self.l_starttypestate = self:GetState()
         self.l_typedtext = ""

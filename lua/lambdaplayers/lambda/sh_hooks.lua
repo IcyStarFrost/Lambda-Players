@@ -362,7 +362,7 @@ if SERVER then
     function ENT:OnInjured( info )
         local attacker = info:GetAttacker()
         
-        if retreatLowHP:GetBool() and !self:IsPanicking() and ( attacker != self and IsValid( attacker ) or self:InCombat() ) then
+        if retreatLowHP:GetBool() and !self:IsPanicking() and ( attacker != self and IsValid( attacker ) or self:InCombat() and ( attacker != self:GetEnemy() or !attacker.IsLambdaPlayer or !attacker:IsPanicking() or random( 1, 3 ) == 1 ) ) then
             local chance = ( 100 - self:GetCombatChance() )
             if chance <= 20 then
                 chance = ( chance * rand( 1.0, 2.5 ) )

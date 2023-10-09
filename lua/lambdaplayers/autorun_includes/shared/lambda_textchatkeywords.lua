@@ -53,20 +53,19 @@ end
 function LambdaKeyWordModify( self, str ) 
     if !str then return "" end
 
-    for keyword, replacefunction in pairs( LambdaValidTextChatKeyWords ) do
-        local haskeyword = string_find( str, keyword )
+    for keyWord, replaceFunc in pairs( LambdaValidTextChatKeyWords ) do
+        if string_find( str, keyWord ) == nil then continue end
 
-        if haskeyword then
-            local modified = gsub( str, keyword, function( ... )  
-                local count = table_Count( { ... } )
-                local packed = {}
-                for i=1, count do packed[ #packed + 1 ] = ( replacefunction( self ) or keyword ) end
-            
-                return unpack( packed )
-            end )
-            return modified
-        end
+        str = gsub( str, keyWord, function( ... )  
+            local count = table_Count( { ... } )
+            local packed = {}
+            for i = 1, count do 
+                packed[ #packed + 1 ] = ( replaceFunc( self ) or keyWord ) 
+            end
+            return unpack( packed )
+        end )
     end
+
     return str
 end
 
