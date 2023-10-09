@@ -1106,8 +1106,8 @@ if SERVER then
         end
         if #feedLines == 0 then return tbl[ random( #tbl ) ] end
 
-        local markovtable = generate_markov_table( table_concat( feedLines, "\n" ), 5 )
-        local generated = generate_markov_text( 1000, markovtable, 5 )
+        local markovtable = generate_markov_table( table_concat( feedLines, "\n" ), 4 )
+        local generated = generate_markov_text( 1000, markovtable, 4 )
 
         validLines = table_Add( validLines, string_Explode( "\n", generated ) )
         return validLines[ random( #validLines ) ]
