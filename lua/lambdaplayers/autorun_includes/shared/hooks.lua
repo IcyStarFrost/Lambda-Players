@@ -1,4 +1,4 @@
-
+local CurTime = CurTime
 local IsValid = IsValid
 local ipairs = ipairs
 local table_remove = table.remove
@@ -6,6 +6,9 @@ local RealTime = RealTime
 local isnumber = isnumber
 local LambdaScreenScale = LambdaScreenScale
 local Left = string.Left
+local match = string.match
+local IsValidRagdoll = util.IsValidRagdoll
+local invisClr = Color( 0, 0, 0, 0 )
 
 if SERVER then
 
@@ -54,6 +57,66 @@ if SERVER then
         LambdaGetPlayerBirthday( ply, function( ply, month, day )
             _LambdaPlayerBirthdays[ ply:SteamID() ] = { month = month, day = day } 
         end )
+    end )
+    
+    -- Fixes ReAgdoll throwing errors when a ragdoll doesn't have bones it need to use (like head)
+    hook.Add( "OnEntityCreated", "LambdaOnEntityCreated", function( ent )
+        if !IsValid( ent ) or ent:GetClass() != "puppetmaster" then return end
+
+        local oldGetBoneTbl = ent.GetBoneTable
+        function ent:GetBoneTable( tbl )
+            self.BoneTable = tbl
+            oldGetBoneTbl( self, tbl )
+        end
+
+        local oldInit = ent.Initialize
+        function ent:Initialize()
+            local ragdoll = self:GetRagdoll()
+            if !IsValid( ragdoll ) or ragdoll:GetPhysicsObjectCount() <= 0 then
+                self:Remove()
+                return
+            end
+            local rootPhys = ragdoll:TranslatePhysBoneToBone( 0 )
+            if !rootPhys then 
+                self:Remove()
+                return
+            end
+
+            ragdoll:DeleteOnRemove(self)
+            ragdoll.RD_PhysStats = {}
+
+            local boneTbl = self.BoneTable
+            if !boneTbl then oldInit( self ) return end
+
+            local anim = self:GetAnim()
+            anim:DeleteOnRemove( self )
+            self:DeleteOnRemove( anim )
+
+            if self:GetBalancing() then
+                self:SetShouldFloat( true )
+            end
+
+            self:SetRootbone( rootPhys )
+            self:SetStartTime( CurTime() )
+            self:SetColor( invisClr )
+            self:SetRenderMode( RENDERMODE_TRANSCOLOR )      
+            self:StartMotionController()
+            if !match( ragdoll:GetBoneName( 0 ), "ValveBiped" ) then return end
+
+            for _, bone in ipairs( boneTbl ) do
+                local boneIndex = ragdoll:LookupBone( bone )
+                if !isnumber( boneIndex ) then continue end
+
+                boneIndex = ragdoll:TranslateBoneToPhysBone( boneIndex )
+                if boneIndex == -1 then continue end
+
+                local ragphys = ragdoll:GetPhysicsObjectNum( boneIndex )        
+                if !IsValid( ragphys ) then continue end
+
+                self:AddToMotionController( ragphys )
+                ragdoll.RD_PhysStats[ ragphys:GetSurfaceArea() ] = boneIndex
+            end
+        end
     end )
 
     local specialkeywords = { 

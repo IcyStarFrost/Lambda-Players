@@ -428,17 +428,25 @@ if ( SERVER ) then
             end
 
             if RDragdollstats then
-                local last_dmg, last_dmgpos, last_dmgtype, last_dmginfo = {}, {}, {}, {}
+                local IsValid = IsValid
+                local pairs = pairs
+                local HasValue = table.HasValue
+                local match = string.match
+                local lower = string.lower
+                local last_dmg, last_dmgpos, last_dmgtype, last_dmginfo, last_hitgroup = {}, {}, {}, {}, {}
+                local upperArmVec = Vector( 10, 0, 0 )
+                local thighVec = Vector( 16, 0, 0 )
 
                 hook.Add( "EntityTakeDamage", "RD_ENTDAMAGE", function( target, dmginfo )
                     if !rdcvar_enabled:GetBool() then return end
                     if !target:IsNPC() and !target:IsNextBot() and !target:IsPlayer() then return end
-                    if dmginfo:GetDamage() < target:Health() then return end
 
                     if RD_IsVfireDmg( target, dmginfo ) or dmginfo:IsDamageType( DMG_BURN + DMG_CRUSH + DMG_SHOCK ) then
                         last_dmgpos[ target ] = target:WorldSpaceCenter()
                     end
+
                     dmginfo:SetDamageForce( dmginfo:GetDamageForce() * ( dmginfo:IsDamageType( DMG_BLAST ) and rdcvar_pushmodifier_explosion:GetFloat() or rdcvar_pushmodifier_general:GetFloat() ) )
+                    if dmginfo:GetDamage() < target:Health() then return end
 
                     last_dmg[ target ] = dmginfo:GetDamage()
                     last_dmgpos[ target ] = dmginfo:GetDamagePosition()
@@ -446,13 +454,23 @@ if ( SERVER ) then
                 end )
 
                 hook.Add( "PlayerDeath", "RD_Player_Death", function( victim, inflictor, attacker )
-                    if !rdcvar_enabled:GetBool() or !rdcvar_players:GetBool() then return end
-                    if victim == inflictor and victim == attacker then last_dmgtype[ victim ] = nil end
+                    if !rdcvar_enabled:GetBool() then return end
+                    if !rdcvar_players:GetBool() then 
+                        if rdcvar_sfx_players:GetBool() then 
+                            RDSelector.SoundReaction( last_dmgtype[ victim ], last_hitgroup[ victim ], victim, victim:GetRagdollEntity() ) 
+                        end
 
-                    local dmg = last_dmg[victim]
-                    local dmgpos = last_dmgpos[victim]
-                    local dmgtype = last_dmgtype[victim]
-                    
+                        return 
+                    end
+                    if victim == inflictor and victim == attacker then 
+                        last_dmgtype[ victim ] = nil 
+                    end
+
+                    local dmg = last_dmg[ victim ]
+                    local dmgpos = last_dmgpos[ victim ]
+                    local dmgtype = last_dmgtype[ victim ]
+                    local rd_hitgrp = last_hitgroup[ victim ]
+
                     if !dmgtype then
                         dmgtype = DMG_GENERIC
                         dmgpos = victim:WorldSpaceCenter()
@@ -460,24 +478,32 @@ if ( SERVER ) then
 
                     local dummyragdoll = victim:GetRagdollEntity()
                     if IsValid( dummyragdoll ) then 
-                        local dmginfo = last_dmginfo[victim]
-                        ragdoll = RD_buildragdoll( victim, dmgpos, dmginfo )
-                        RD_onDeath( victim, ragdoll, dmg, dmgpos, dmgtype, 0 )
+                        ragdoll = RD_buildragdoll( victim, dmgpos, last_dmginfo[ victim ] )
+                        RD_onDeath( victim, ragdoll, dmg, dmgpos, dmgtype, rd_hitgrp )
                         if rdcvar_death_focus:GetBool() and rdcvar_death:GetBool() then RDReagdollMaster.CreateTargetENT( victim, ragdoll ) end     
                         dummyragdoll:Remove()
                     end
 
-                    rg_debuginfo( victim, dmg, dmgpos, dmgtype, 0, "ply", ragdoll )   
-                    last_dmg[ victim ], last_dmgpos[ victim ], last_dmgtype[ victim ], last_dmginfo[ victim ] = nil, nil, nil, nil
+                    rg_debuginfo( victim, dmg, dmgpos, dmgtype, rd_hitgrp, "ply", ragdoll )   
+                    last_dmg[ victim ], last_dmgpos[ victim ], last_dmgtype[ victim ], last_dmginfo[ victim ], last_hitgroup[ victim ] = nil, nil, nil, nil, nil
 
                     if rdcvar_players_spectate:GetBool() then 
                         victim:Spectate( OBS_MODE_CHASE )
                         victim:SpectateEntity( ragdoll )
                     end
+
+                    hook.Run( "ReAgdoll_CreatePlayerRagdoll", victim, ragdoll )
                 end )
 
                 hook.Add( "CreateEntityRagdoll", "RD_NPC_Death", function( owner, ragdoll )
-                    if !rdcvar_enabled:GetBool() or !rdcvar_npcs:GetBool() then return end
+                    if !rdcvar_enabled:GetBool() then return end
+                    if !rdcvar_npcs:GetBool() then 
+                        if rdcvar_sfx_npcs:GetBool() then 
+                            RDSelector.SoundReaction( last_dmgtype[ owner ], last_hitgroup[ owner ], owner, ragdoll )
+                        end
+
+                        return 
+                    end
 
                     if IsValid( ragdoll ) then
                         if !RDragdollstats[ ragdoll ] then RD_ragdollphysics( ragdoll ) end
@@ -490,15 +516,19 @@ if ( SERVER ) then
                     local dmg = last_dmg[ owner ]
                     local dmgpos = last_dmgpos[ owner ]
                     local dmgtype = last_dmgtype[ owner ]
-                    
+                    local rd_hitgrp = last_hitgroup[ owner ]
+
                     if !dmgtype then
                         dmgtype = DMG_GENERIC
                         dmgpos = owner:WorldSpaceCenter()
                     end
 
-                    rg_debuginfo( owner, dmg, dmgpos, dmgtype, 0, "npc", ragdoll )    
-                    RD_onDeath( owner, ragdoll, dmg, dmgpos, dmgtype, 0 )
-                    last_dmg[ owner ], last_dmgpos[ owner ], last_dmgtype[ owner ], last_dmginfo[ owner ] = nil, nil, nil, nil
+                    rg_debuginfo( owner, dmg, dmgpos, dmgtype, rd_hitgrp, "npc", ragdoll )    
+                    RD_onDeath( owner, ragdoll, dmg, dmgpos, dmgtype, rd_hitgrp )
+                    
+                    last_dmg[ owner ], last_dmgpos[ owner ], last_dmgtype[ owner ], last_dmginfo[ owner ], last_hitgroup[ owner ] = nil, nil, nil, nil, nil
+
+                    hook.Run( "ReAgdoll_CreateNPCRagdoll", owner, ragdoll )
                 end )
 
                 function RD_ragdollphysics( ragdoll )
@@ -506,47 +536,51 @@ if ( SERVER ) then
                     if rdcvar_nocollide:GetBool() then ragdoll:SetCollisionGroup( 11) end
 
                     local model = ragdoll:GetModel()
-                    if !table.HasValue( RD_ModelsToIgnore, string.lower( model ) ) then
-                        -- Here we are applying a preset of mass and inertia values to our bones
-                        -- This is so our ragdolls will act consistently don't matter the model given
-                        local realFloat = rdcvar_realfloat:GetBool()
+                    if !HasValue( RD_ModelsToIgnore, lower( model ) ) then
+                        if match( ragdoll:GetBoneName( 0 ), "ValveBiped" ) then
+                            local realFloat = rdcvar_realfloat:GetBool()
+                            for name, data in pairs( RD_PhysTable ) do
+                                local boneIndex = ragdoll:LookupBone( name )
+                                if !boneIndex then continue end
 
-                        for index, bone in pairs( RD_PhysTable ) do
-                            if !string.match( ragdoll:GetBoneName( index ), "ValveBiped" ) then continue end    
+                                boneIndex = ragdoll:TranslateBoneToPhysBone( boneIndex )
+                                if boneIndex == -1 then continue end
 
-                            local ragphys = ragdoll:GetPhysicsObjectNum( index )        
-                            if !IsValid( ragphys ) then continue end
-                    
-                            ragphys:SetMass( bone.mass )
-                            ragphys:SetInertia( bone.inertia )
+                                local ragphys = ragdoll:GetPhysicsObjectNum( boneIndex )        
+                                if !IsValid( ragphys ) then continue end
 
-                            if realFloat then
-                                if index != 1 or index != 0 then
-                                    ragphys:SetBuoyancyRatio( 0.7 )
-                                elseif index == 1 or index == 0 then
-                                    ragphys:SetBuoyancyRatio( 2 ) 
-                                end
-                            end     
+                                ragphys:SetMass( data.mass )
+                                ragphys:SetInertia( data.inertia )
+
+                                if realFloat then
+                                    if boneIndex != 1 or boneIndex != 0 then
+                                        ragphys:SetBuoyancyRatio( 0.7 )
+                                    elseif boneIndex == 1 or boneIndex == 0 then
+                                        ragphys:SetBuoyancyRatio( 2 ) 
+                                    end
+                                end     
+                            end
                         end
                     else
                         rd_debug( model .." caught! ignoring..." ) 
                     end
 
-                    RDragdollstats[ragdoll] = {
-                        NextAnim = nil,
-                        AnimEntity = nil,
-                        TargetEnt = nil,
-                        Health = nil,
+                    RDragdollstats[ ragdoll ] = {
+                        NextAnim    = nil,
+                        AnimEntity  = nil,
+                        TargetEnt   = nil,
+                        Health      = nil,
                         NextDieTime = nil,
-                        Master = nil,
-                        Burnt = false,
-                        IsDead = false,
-                        IsStiff = false,
+                        Master      = nil,
 
-                        [ 4 ]   = { broken = false, parent = 3, offset = Vector( 10, 0, 0 ) },
-                        [ 6 ]   = { broken = false, parent = 2, offset = Vector( 10, 0, 0 ) },
-                        [ 9 ]   = { broken = false, parent = 8, offset = Vector( 16, 0, 0 ) },
-                        [ 12 ]  = { broken = false, parent = 11, offset = Vector( 16, 0, 0 ) }
+                        Burnt       = false,
+                        IsDead      = false,
+                        IsStiff     = false,
+
+                        [ "ValveBiped.Bip01_R_Forearm" ]  = { broken = false, parent = "ValveBiped.Bip01_R_UpperArm", offset = upperArmVec },
+                        [ "ValveBiped.Bip01_L_Forearm" ]  = { broken = false, parent = "ValveBiped.Bip01_L_UpperArm", offset = upperArmVec },
+                        [ "ValveBiped.Bip01_L_Calf" ]     = { broken = false, parent = "ValveBiped.Bip01_L_Thigh",    offset = thighVec },
+                        [ "ValveBiped.Bip01_R_Calf" ]     = { broken = false, parent = "ValveBiped.Bip01_R_Thigh",    offset = thighVec },
                     }
                 end
             end

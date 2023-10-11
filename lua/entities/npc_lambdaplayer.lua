@@ -417,7 +417,7 @@ function ENT:Initialize()
             end
 
             wep.Think = function( entity )
-                entity:NextThink( 0 )
+                entity:NextThink( CurTime() )
                 return true
             end
         end )
@@ -1100,7 +1100,7 @@ function ENT:Think()
             local isAtLight = ( GetLightColor( selfCenter ):LengthSqr() > 0.0004 )
             local beingDrawn = !self:IsDormant()
 
-            if isDead or !beingDrawn or isAtLight then
+            if isDead or !beingDrawn or isAtLight or !drawflashlight:GetBool() then
                 self:SetFlashlightOn( false )
                 self.l_flashlighton = false
 
