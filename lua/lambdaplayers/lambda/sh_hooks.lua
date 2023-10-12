@@ -9,6 +9,7 @@ local CurTime = CurTime
 local coroutine_yield = coroutine.yield
 local coroutine_wait = coroutine.wait
 local max = math.max
+local string_match = string.match
 local SortTable = table.sort
 local IsSinglePlayer = game.SinglePlayer
 local SimpleTimer = timer.Simple
@@ -32,6 +33,7 @@ local aidisabled = GetConVar( "ai_disabled" )
 local faded = Color( 100, 100, 100, 100 )
 local serversideragdolls = GetConVar( "lambdaplayers_lambda_serversideragdolls" )
 local dropweaponents = GetConVar( "lambdaplayers_allowweaponentdrop" )
+local typeNameRespond = GetConVar( "lambdaplayers_text_typenameonrespond" )
 
 if SERVER then
 
@@ -384,7 +386,10 @@ if SERVER then
     end
     
     function ENT:OnTraceAttack( dmginfo, dir, trace )
-        hook.Run( "ScaleNPCDamage", self, trace.HitGroup, dmginfo )
+        local hitGroup = trace.HitGroup
+        self.l_lasthitgroup = hitGroup
+        self.l_lastdamage = dmginfo:GetDamage()
+        hook.Run( "ScaleNPCDamage", self, hitGroup, dmginfo )
     end
 
     function ENT:OnOtherKilled( victim, info )
@@ -830,15 +835,21 @@ function ENT:InitializeMiniHooks()
         end, true )
 
         self:Hook( "LambdaPlayerSay", "lambdatextchat", function( ply, text )
-            if self.l_preventdefaultspeak or ply == self or random( 200 ) > self:GetTextChance() or !self:CanType() or aidisabled:GetBool() or self:InCombat() or self:IsPanicking() then return end
+            if self.l_preventdefaultspeak or ply == self or !self:CanType() or aidisabled:GetBool() or self:InCombat() or self:IsPanicking() then return end
 
-            self:SimpleTimer( rand( 0.0, 1.0 ), function()
+            local replyChan = ( string_match( text, self:Nick() ) and 100 or 200 )
+            if random( replyChan ) > self:GetTextChance() then return end
+
+            self:SimpleTimer( rand( 0.2, 1.5 ), function()
                 if !IsValid( ply ) or self:GetIsTyping() or self:IsSpeaking() then return end
                 self.l_keyentity = ply
 
                 local line = self:GetTextLine( "response" )
                 line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
 
+                if typeNameRespond:GetBool() and !string_match( line, "/keyent/" ) then
+                    line = ply:Nick() .. ", " .. line
+                end
                 self:TypeMessage( line )
             end )
         end, true )
@@ -848,17 +859,25 @@ function ENT:InitializeMiniHooks()
 
             if random( 100 ) <= self:GetVoiceChance() and self:IsInRange( ply, 300 ) then
                 self:PlaySoundFile( "idle" )
-            elseif random( 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
-                self:SimpleTimer( rand( 0.0, 1.0 ), function()
-                    if !IsValid( ply ) or self:GetIsTyping() or self:IsSpeaking() then return end
-                    self.l_keyentity = ply
-
-                    local line = self:GetTextLine( "response" )
-                    line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
-
-                    self:TypeMessage( line )
-                end )
+                return
             end
+            if !self:CanType() or self:InCombat() or self:IsPanicking() then return end
+
+            local replyChan = ( string_match( text, self:Nick() ) and 100 or 200 )
+            if random( replyChan ) > self:GetTextChance() then return end
+            
+            self:SimpleTimer( rand( 0.2, 1.5 ), function()
+                if !IsValid( ply ) or self:GetIsTyping() or self:IsSpeaking() then return end
+                self.l_keyentity = ply
+
+                local line = self:GetTextLine( "response" )
+                line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
+
+                if typeNameRespond:GetBool() and!string_match( line, "/keyent/" ) then
+                    line = ply:Nick() .. ", " .. line
+                end
+                self:TypeMessage( line )
+            end )
         end, true )
 
         self:Hook( "LambdaOnRealPlayerEndVoice", "lambdarespondtoplayervoicechat", function( ply )
@@ -867,13 +886,16 @@ function ENT:InitializeMiniHooks()
             if random( 100 ) <= self:GetVoiceChance() then
                 self:PlaySoundFile( "idle" )
             elseif random( 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
-                self:SimpleTimer( rand( 0.0, 1.0 ), function()
+                self:SimpleTimer( rand( 0.2, 1.5 ), function()
                     if !IsValid( ply ) or self:GetIsTyping() or self:IsSpeaking() then return end
                     self.l_keyentity = ply
 
                     local line = self:GetTextLine( "response" )
                     line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
 
+                    if typeNameRespond:GetBool() and!string_match( line, "/keyent/" ) then
+                        line = ply:Nick() .. ", " .. line
+                    end
                     self:TypeMessage( line )
                 end )
             end

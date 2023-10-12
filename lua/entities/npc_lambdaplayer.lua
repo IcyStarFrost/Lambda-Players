@@ -229,6 +229,7 @@ function ENT:Initialize()
         self.l_swimpos = self:GetPos() -- The position we are currently swimming to
         self.l_combatpos = self:GetPos() -- The position we are moving to in combat
         self.l_statearg = nil -- Our state's optional arguments we set in
+        self.l_precombatmovepos = nil
 
         self.l_AvoidCheck_IsStuck = false -- If we are currenly stuck due to obstacle avoidance and shouldn't use it
         self.l_AvoidCheck_LastPos = self:GetPos()
@@ -534,7 +535,7 @@ function ENT:Think()
                     typedText
                 }
             else
-                local sayMsg = ( string_find( queuedText, "https://" ) != nil and queuedText or typedText )
+                local sayMsg = ( match( queuedText, "(https?://%S+)" ) and queuedText or typedText )
                 self:Say( sayMsg )
                 self:OnEndMessage( sayMsg )
             end
@@ -711,7 +712,12 @@ function ENT:Think()
                         end
                     end
 
-                    self.l_movepos = self.l_combatpos
+                    local preCombatMovePos = self.l_precombatmovepos
+                    if preCombatMovePos and self:GetIsReloading() then
+                        self.l_movepos = preCombatMovePos
+                    else
+                        self.l_precombatmovepos = nil
+                    end
                 end
 
                 if random( isPanicking and 30 or 40 ) == 1 and jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.8 ) then
@@ -738,6 +744,8 @@ function ENT:Think()
                         self.loco:SetVelocity( locoVel )
                     end
                 end
+            else
+                self.l_precombatmovepos = self.l_movepos
             end
         end
         self:SetIsFiring( isFiring )

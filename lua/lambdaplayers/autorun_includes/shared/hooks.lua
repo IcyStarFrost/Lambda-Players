@@ -22,12 +22,6 @@ if SERVER then
         return wepDmgScaleMisc:GetFloat()
     end
 
-    hook.Add( "ScaleNPCDamage", "LambdaScaleNPCDamage", function( ply, hit, dmginfo )
-        if !ply.IsLambdaPlayer then return end
-        ply.l_lasthitgroup = hit
-        ply.l_lastdamage = dmginfo:GetDamage()
-    end )
-
     -- God mode simple stuff
     hook.Add( "EntityTakeDamage", "LambdaMainDamageHook", function( ent, dmginfo )
         if ent.l_godmode then return true end

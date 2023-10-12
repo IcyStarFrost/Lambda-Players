@@ -38,7 +38,6 @@ local floor = math.floor
 local table_concat = table.concat
 local string_Replace = string.Replace
 local string_Explode = string.Explode
-local string_find = string.find
 local string_match = string.match
 local table_insert = table.insert
 local isfunction = isfunction
@@ -1014,25 +1013,24 @@ if SERVER then
          return mod
      end ]]
 
-    -- Textline Caching Stuff
+    -- Textline Stuff
     local standartLines = {}
     local textLinks = {}
+    local markovLookFwd = 5
 
     -- Markov Chain Generator --
     -- Source code from https://github.com/hay/markov
     -- I simply got it converted from PHP to GLua
-    local function generate_markov_table( text, look_forward )
-        look_forward = ( look_forward or 4 )
-
+    local function generate_markov_table( text )
         local charactertable = {}
         for i = 1, #text do
-            local char = string_sub( text, i, ( i + look_forward - 1 ) )
+            local char = string_sub( text, i, ( i + markovLookFwd - 1 ) )
             if !charactertable[ char ] then charactertable[ char ] = {} end
         end
     
-        for i = 1, #text - look_forward do
-            local char_index = string_sub( text, i, ( i + look_forward - 1 ) )
-            local char_count = string_sub( text, ( i + look_forward ), ( i + look_forward * 2 - 1 ) )
+        for i = 1, #text - markovLookFwd do
+            local char_index = string_sub( text, i, ( i + markovLookFwd - 1 ) )
+            local char_count = string_sub( text, ( i + markovLookFwd ), ( i + markovLookFwd * 2 - 1 ) )
             local char_total = charactertable[ char_index ][ char_count ]
             charactertable[ char_index ][ char_count ] = ( ( char_total or 0 ) + 1 )
         end
@@ -1057,13 +1055,11 @@ if SERVER then
         end
     end
 
-    local function generate_markov_text( length, markov_table, look_forward )
-        look_forward = ( look_forward or 4 )
-        
+    local function generate_markov_text( length, markov_table )        
         local char = next( markov_table )
         local o = char
     
-        for i = 1, floor( length / look_forward ) do
+        for i = 1, floor( length / markovLookFwd ) do
             local newchar = return_weighted_char( markov_table[ char ] )
             if newchar then
                 char = newchar
@@ -1088,7 +1084,7 @@ if SERVER then
                 local keyLine = LambdaKeyWordModify( lambda, modLine )
                 local incomplete = false
                 for keyWord, _ in pairs( LambdaValidTextChatKeyWords ) do
-                    if string_find( keyLine, keyWord ) == nil then continue end
+                    if !string_match( keyLine, keyWord ) then continue end
                     incomplete = true
                     break
                 end
@@ -1103,18 +1099,22 @@ if SERVER then
                 line = keyLine
             end
 
-            if string_match( line, "(https?://%S+)" ) != nil then
+            if textLinks[ line ] or string_match( line, "(https?://%S+)" ) != nil then
                 validLines[ #validLines + 1 ] = line
+                textLinks[ line ] = true
             else
                 feedLines[ #feedLines + 1 ] = line
             end
         end
-        if #feedLines == 0 then return tbl[ random( #tbl ) ] end
 
-        local markovtable = generate_markov_table( table_concat( feedLines, "\n" ), 4 )
-        local generated = generate_markov_text( 1000, markovtable, 4 )
+        if #feedLines != 0 then 
+            local markovtable = generate_markov_table( table_concat( feedLines, "\n" ) )
+            local generated = generate_markov_text( 1000, markovtable )
+            validLines = table_Add( validLines, string_Explode( "\n", generated ) )
+        elseif #validLines == 0 then
+            return tbl[ random( #tbl ) ]
+        end
 
-        validLines = table_Add( validLines, string_Explode( "\n", generated ) )
         return validLines[ random( #validLines ) ]
     end
 
@@ -1130,6 +1130,8 @@ if SERVER then
 
         if tbl then
             if !allowlinks:GetBool() then
+                tbl = table_Copy( tbl )
+
                 for index, line in ipairs( tbl ) do
                     if textLinks[ line ] or string_match( line, "(https?://%S+)" ) == nil then continue end
                     table_remove( tbl, index )
