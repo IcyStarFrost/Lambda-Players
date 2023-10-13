@@ -264,7 +264,7 @@ function ENT:Initialize()
         self:SetAvgPing( rndpingrange )  -- Our average ping we'll use for calculations
         self:SetPing( rndpingrange ) -- Our actual fake ping
         self:SetSteamID64( 90071996842377216 + random( 10000000 ) )
-        self:SetTextPerMinute( random( 4, 10 ) * 100 ) -- The amount of characters we can type within a minute
+        self:SetTextPerMinute( random( 4, 8 ) * 100 ) -- The amount of characters we can type within a minute
         self:SetTeam( 1001 )
         self:SetNW2String( "lambda_steamid", "STEAM_0:0:" .. random( 200000000 ) )
         self:SetNW2String( "lambda_ip", "192." .. random( 10, 200 ) .. "." .. random( 10 ).. "." .. random( 10, 200 ) .. ":27005" )
@@ -535,7 +535,7 @@ function ENT:Think()
                     typedText
                 }
             else
-                local sayMsg = ( match( queuedText, "(https?://%S+)" ) and queuedText or typedText )
+                local sayMsg = ( match( queuedText, "(https?://%S+)" ) != nil and queuedText or typedText )
                 self:Say( sayMsg )
                 self:OnEndMessage( sayMsg )
             end
@@ -550,14 +550,14 @@ function ENT:Think()
             
             local nextChar = sub( queuedText, typedLen + 1, typedLen + 1 )
             if nextChar == self.l_lasttypedchar then
-                self.l_combolastchar = ( self.l_combolastchar + 3 )
+                self.l_combolastchar = ( self.l_combolastchar + 2 )
             else
                 self.l_combolastchar = 0
             end
 
             local foundLink = match( lastWord, "(https?://%S+)" )
             local ctrlplused = false
-            if foundLink then 
+            if foundLink != nil then 
                 local linkStart, linkEnd = string_find( queuedText, lastWord .. "(%S+)" )
                 if linkStart and linkEnd then
                     ctrlplused = true
@@ -640,9 +640,7 @@ function ENT:Think()
                 if random( 100 ) <= self:GetVoiceChance() then
                     self:PlaySoundFile( self:IsPanicking() and "panic" or ( self:InCombat() and "taunt" or "idle" ) )
                 elseif random( 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
-                    local line = self:GetTextLine( "idle" )
-                    line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "idle" ) or line )
-                    self:TypeMessage( line )
+                    self:TypeMessage( self:GetTextLine( "idle" ) )
                 end
             end
 

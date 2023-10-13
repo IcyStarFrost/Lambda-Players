@@ -563,7 +563,7 @@ if SERVER then
         self:SetEnemy( ent )
         if !forceAttack and self:IsPanicking() then return end
 
-        if random( 100 ) <= self:GetVoiceChance() and !self:IsSpeaking( "taunt" ) then self:PlaySoundFile( "taunt" ) end
+        if random( 100 ) <= self:GetVoiceChance() and !self:GetIsTyping() and !self:IsSpeaking( "taunt" ) then self:PlaySoundFile( "taunt" ) end
         self:SetState( "Combat" )
         self:CancelMovement()
     end
@@ -1120,6 +1120,7 @@ if SERVER then
 
     -- Literally the same thing as :GetVoiceLine() but for Text Lines
     function ENT:GetTextLine( texttype )
+        local textLine = ""
         local tbl = LambdaTextTable[ texttype ]
 
         local textPfl = self.l_TextProfile
@@ -1140,17 +1141,21 @@ if SERVER then
             end
 
             if usemarkovgenerator:GetBool() then
-                return GetRandomMarkovLine( self, tbl )
+                textLine = GetRandomMarkovLine( self, tbl )
+            else
+                for _, textline in RandomPairs( tbl ) do
+                    local condition, modifiedline = LambdaConditionalKeyWordCheck( self, textline )
+                    if !condition then continue end 
+                    
+                    textLine = LambdaKeyWordModify( self, modifiedline )
+                    break
+                end
             end
 
-            for _, textline in RandomPairs( tbl ) do
-                local condition, modifiedline = LambdaConditionalKeyWordCheck( self, textline )
-                if !condition then continue end 
-                return LambdaKeyWordModify( self, modifiedline )
-            end
+            textLine = ( LambdaRunHook( "LambdaOnStartTyping", self, textLine, texttype ) or textLine )
         end
 
-        return ""
+        return textLine
     end
 
     -- Makes the Lambda say the specified file
@@ -1256,12 +1261,18 @@ if SERVER then
     -- Returns if we can type a message
     function ENT:CanType()
         if !chatAllowed:GetBool() then return false end
-        if chatlimit:GetInt() == 0 then return true end
+
+        local chatMax = chatlimit:GetInt()
+        if chatMax <= 0 then return true end
+
         local count = 0
-        for k, v in ipairs( GetLambdaPlayers() ) do
-            if IsValid( v ) and v:GetIsTyping() then count = count + 1 end 
+        for _, v in ipairs( GetLambdaPlayers() ) do
+            if !v:GetIsTyping() then continue end 
+            count = ( count + 1 ) 
+            if count >= chatMax then return false end
         end
-        return count < chatlimit:GetInt() 
+
+        return true
     end
 
     -- Makes the entity no longer draw on the client if bool is set to true.

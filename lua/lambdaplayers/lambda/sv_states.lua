@@ -113,7 +113,13 @@ local ft_options = { cbTime = 0.5, callback = function( lambda )
         return ( lambda:CanTarget( ent ) and lambda:CanSee( ent ) )
     end )
     if #findTargets != 0 then
-        lambda:AttackTarget( findTargets[ random( #findTargets ) ] )
+        local rndTarget = findTargets[ random( #findTargets ) ]
+        if ( rndTarget:IsPlayer() or rndTarget.IsLambdaPlayer ) and random( 200 ) <= lambda:GetTextChance() and lambda:CanType() then
+            lambda.l_keyentity = rndTarget
+            lambda:TypeMessage( lambda:GetTextLine( "announceattack" ) )
+        end
+
+        lambda:AttackTarget( rndTarget )
         return false
     end
 end }

@@ -337,9 +337,7 @@ if SERVER then
                 self.l_keyentity = attacker
 
                 local deathtype = ( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and "deathbyplayer" or "death" )
-                local line = self:GetTextLine( deathtype )
-                line = LambdaRunHook( "LambdaOnStartTyping", self, line, deathtype ) or line
-                self:TypeMessage( line )
+                self:TypeMessage( self:GetTextLine( deathtype ) )
             end
 
             local attackerWepEnt = attacker.WeaponEnt
@@ -421,9 +419,7 @@ if SERVER then
                         self:PlaySoundFile( "kill" )
                     elseif random( 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
                         self.l_keyentity = victim
-                        local line = self:GetTextLine( "kill" )
-                        line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "kill" ) or line )
-                        self:TypeMessage( line )
+                        self:TypeMessage( self:GetTextLine( "kill" ) )
                     end
                 end
 
@@ -461,9 +457,7 @@ if SERVER then
                         self:PlaySoundFile( "witness", rand( 0.1, 1.0 ) )
                     elseif random( 100 ) <= self:GetTextChance() and ( victim.IsLambdaPlayer or victim:IsPlayer() ) and !self:IsSpeaking() and self:CanType() then
                         self.l_keyentity = victim
-                        local line = self:GetTextLine( "witness" )
-                        line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "witness" ) or line )
-                        self:TypeMessage( line )
+                        self:TypeMessage( self:GetTextLine( "witness" ) )
                     end
                 elseif witnessChance == 10 and !self:InCombat() and retreatLowHP:GetBool() then
                     self:DebugPrint( "I saw someone die. Retreating..." )
@@ -840,13 +834,12 @@ function ENT:InitializeMiniHooks()
             local replyChan = ( string_match( text, self:Nick() ) and 100 or 200 )
             if random( replyChan ) > self:GetTextChance() then return end
 
-            self:SimpleTimer( rand( 0.2, 1.5 ), function()
+            local replyTime = ( random( 5, 20 ) / 10 )
+            self:SimpleTimer( replyTime, function()
                 if !IsValid( ply ) or self:GetIsTyping() or self:IsSpeaking() then return end
                 self.l_keyentity = ply
 
                 local line = self:GetTextLine( "response" )
-                line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
-
                 if typeNameRespond:GetBool() and !string_match( line, "/keyent/" ) then
                     line = ply:Nick() .. ", " .. line
                 end
@@ -866,13 +859,12 @@ function ENT:InitializeMiniHooks()
             local replyChan = ( string_match( text, self:Nick() ) and 100 or 200 )
             if random( replyChan ) > self:GetTextChance() then return end
             
-            self:SimpleTimer( rand( 0.2, 1.5 ), function()
+            local replyTime = ( random( 5, 20 ) / 10 )
+            self:SimpleTimer( replyTime, function()
                 if !IsValid( ply ) or self:GetIsTyping() or self:IsSpeaking() then return end
                 self.l_keyentity = ply
 
                 local line = self:GetTextLine( "response" )
-                line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
-
                 if typeNameRespond:GetBool() and!string_match( line, "/keyent/" ) then
                     line = ply:Nick() .. ", " .. line
                 end
@@ -891,8 +883,6 @@ function ENT:InitializeMiniHooks()
                     self.l_keyentity = ply
 
                     local line = self:GetTextLine( "response" )
-                    line = ( LambdaRunHook( "LambdaOnStartTyping", self, line, "response" ) or line )
-
                     if typeNameRespond:GetBool() and!string_match( line, "/keyent/" ) then
                         line = ply:Nick() .. ", " .. line
                     end
