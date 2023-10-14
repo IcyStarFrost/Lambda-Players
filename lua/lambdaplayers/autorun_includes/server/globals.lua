@@ -421,14 +421,15 @@ function LambdaKillFeedAdd( victim, attacker, inflictor )
     if !attacker:IsWorld() and !IsValid( attacker ) then return end 
         
     local victimname = ( ( victim.IsLambdaPlayer or victim:IsPlayer() ) and victim:Nick() or ( victim.IsZetaPlayer and victim.zetaname or "#" .. victim:GetClass() ) )
-    local attackername = ( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and attacker:Nick() or ( attacker.IsZetaPlayer and attacker.zetaname or "#" .. attacker:GetClass() ) )
+    
+    local attackerclass = attacker:GetClass()
+    local attackername = ( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and attacker:Nick() or ( attacker.IsZetaPlayer and attacker.zetaname or "#" .. attackerclass ) )
 
     local victimteam = ( ( victim.IsLambdaPlayer or victim:IsPlayer() ) and victim:Team() or -1 )
     local attackerteam = ( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and attacker:Team() or -1 )
 
     local attackerWep = attacker.GetActiveWeapon
-    local isSuicide = ( !IsValid( inflictor ) or inflictor == victim or victim.IsLambdaPlayer and victimname == attackername )
-    local inflictorname = ( isSuicide and "suicide" or ( inflictor.l_killiconname or ( ( inflictor == attacker and attackerWep and IsValid( attackerWep( attacker ) ) ) and attackerWep( attacker ):GetClass() or inflictor:GetClass() ) ) )    
+    local inflictorname = ( victim == attacker and "suicide" or ( IsValid( inflictor ) and ( inflictor.l_killiconname or ( ( inflictor == attacker and attackerWep and IsValid( attackerWep( attacker ) ) ) and attackerWep( attacker ):GetClass() or inflictor:GetClass() ) ) or attackerclass ) )
 
     net.Start( "lambdaplayers_addtokillfeed" )
         net.WriteString( attackername )

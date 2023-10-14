@@ -1131,13 +1131,15 @@ if SERVER then
 
         if tbl then
             if !allowlinks:GetBool() then
-                tbl = table_Copy( tbl )
-
+                local copyTbl = {}
                 for index, line in ipairs( tbl ) do
-                    if textLinks[ line ] or string_match( line, "(https?://%S+)" ) == nil then continue end
-                    table_remove( tbl, index )
-                    textLinks[ line ] = true
+                    if textLinks[ line ] or string_match( line, "(https?://%S+)" ) then 
+                        textLinks[ line ] = true
+                        continue 
+                    end 
+                    copyTbl[ #copyTbl + 1 ] = line
                 end
+                tbl = copyTbl
             end
 
             if usemarkovgenerator:GetBool() then
