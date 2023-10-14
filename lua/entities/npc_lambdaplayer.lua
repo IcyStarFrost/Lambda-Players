@@ -715,10 +715,11 @@ function ENT:Think()
                         self.l_movepos = preCombatMovePos
                     else
                         self.l_precombatmovepos = nil
+                        self.l_movepos = self.l_combatpos
                     end
                 end
 
-                if random( isPanicking and 30 or 40 ) == 1 and jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.8 ) then
+                if jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.8 ) and random( isPanicking and 30 or 40 ) == 1 then
                     combatjumptbl.start = self:GetPos()
                     combatjumptbl.endpos = ( combatjumptbl.start + locoVel )
                     combatjumptbl.filter = self

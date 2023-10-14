@@ -788,7 +788,9 @@ if SERVER then
         self.l_UpdateAnimations = true
         self.l_Clip = self.l_MaxClip
 
-        self:SwitchToSpawnWeapon()
+        self:SimpleTimer( 0.1, function()
+            self:SwitchToSpawnWeapon()
+        end )
         self:UpdateHealthDisplay()
 
         net.Start( "lambdaplayers_updatecsstatus" )

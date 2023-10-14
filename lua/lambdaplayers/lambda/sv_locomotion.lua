@@ -58,8 +58,7 @@ function ENT:MoveToPos( pos, options )
     path:SetGoalTolerance( options.tol or 20 )
     path:SetMinLookAheadDistance( self.l_LookAheadDistance )
 
-    local update = options.update
-    local costFunctor = self:PathGenerator( update )
+    local costFunctor = self:PathGenerator()
 
     path:Compute( self, pos, costFunctor )
     if !IsValid( path ) then return "failed" end
@@ -68,6 +67,7 @@ function ENT:MoveToPos( pos, options )
     self.l_movepos = pos
     self.l_CurrentPath = path
 
+    local update = options.update
     local timeout = options.timeout
     local callback = options.callback
     local cbTime = options.cbTime
@@ -121,7 +121,7 @@ function ENT:MoveToPos( pos, options )
             elseif updateTime > 1.0 then
                 updateTime = 1.0
             end
-            if path:GetAge() > updateTime then path:Compute( self, pos, costFunctor ) end
+            if path:GetAge() >= updateTime then path:Compute( self, pos, costFunctor ) end
         end
 
         if self.l_recomputepath then
