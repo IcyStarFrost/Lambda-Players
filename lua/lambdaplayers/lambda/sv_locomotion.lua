@@ -66,15 +66,7 @@ function ENT:MoveToPos( pos, options )
     self.l_issmoving = true
     self.l_movepos = pos
     self.l_CurrentPath = path
-
-    local update = options.update
-    local timeout = options.timeout
-    local callback = options.callback
-    local cbTime = options.cbTime
-
-    local run = options.run or false
-    local autorun = options.autorun
-    self:SetRun( !autorun and ( path:GetLength() > 1500 ) or run )
+    self:SetRun( !options.autorun and ( path:GetLength() > 1500 ) or options.run )
 
     local loco = self.loco
     local runSpeed = self:GetRunSpeed()
@@ -83,7 +75,7 @@ function ENT:MoveToPos( pos, options )
     local curGoal, prevGoal
     local nextJumpT = CurTime() + 0.5
     local returnMsg = "ok"
-    local callbackRunT = ( CurTime() + ( cbTime or 0 ) )
+    local callbackRunT = ( CurTime() + ( options.cbTime or 0 ) )
 
     LambdaRunHook( "LambdaOnBeginMove", self, pos, true )
 
@@ -93,10 +85,20 @@ function ENT:MoveToPos( pos, options )
             self.AbortMovement = false 
             returnMsg = "aborted"; break 
         end
-        if timeout and path:GetAge() > timeout then returnMsg = "timeout" break end
+
+        options = self.l_moveoptions or {}
+
+        local timeout = options.timeout
+        if timeout and path:GetAge() > timeout then 
+            returnMsg = "timeout" 
+            break 
+        end
 
         pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
-        if !pos then returnMsg = "invalid" break end
+        if !pos then 
+            returnMsg = "invalid" 
+            break 
+        end
 
         if loco:IsStuck() then
             -- This prevents the stuck handling from running if we are right next to the entity we are going to            
@@ -114,6 +116,7 @@ function ENT:MoveToPos( pos, options )
             curGoal = goal
         end
 
+        local update = options.update
         if update then
             local updateTime = math_max( update, update * ( path:GetLength() / runSpeed ) )
             if update > updateTime then 
@@ -129,10 +132,13 @@ function ENT:MoveToPos( pos, options )
             self.l_recomputepath = nil
         end
         
-        if !self:IsDisabled() and CurTime() >= self.l_moveWaitTime then
+        if ( !self:IsDisabled() or self:GetIsTyping() ) and CurTime() >= self.l_moveWaitTime then
+            local callback = options.callback
             if callback and CurTime() >= callbackRunT then 
                 local returnVal = callback( self, pos, path, curGoal )
                 if returnVal == false then returnMsg = "callback" break end
+
+                local cbTime = options.cbTime
                 if cbTime then callbackRunT = ( CurTime() + cbTime ) end
             end
             path:Update( self )
