@@ -396,7 +396,9 @@ if ( CLIENT ) then
             g_VoicePanelList:SetPaintBackground( false )
         end
         hook.Add( "InitPostEntity", "CreateVoiceVGUI", CreateVoiceVGUI )
-        
+    end )
+
+    hook.Add( "Initialize", "lambdaplayers_overridekillfeedhook", function()
         if overridekillfeed:GetBool() then
             local olddeathnoticehookfunc = GAMEMODE.AddDeathNotice
 
