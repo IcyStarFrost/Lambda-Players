@@ -229,7 +229,7 @@ hook.Add( "Tick", "lambdavc_updatesounds", function()
         end
 
         local srcEnt
-        if ent:GetIsDead() then
+        if ent:GetNoDraw() then
             srcEnt = ent.ragdoll
             if !IsValid( srcEnt ) then srcEnt = ent:GetNW2Entity( "lambda_serversideragdoll" ) end
         end

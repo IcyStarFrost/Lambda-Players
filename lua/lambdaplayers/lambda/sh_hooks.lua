@@ -66,7 +66,7 @@ if SERVER then
         net.Broadcast()
     end
 
-    function ENT:CreateServersideRagdoll( info, overrideEnt )
+    function ENT:CreateServersideRagdoll( info, overrideEnt, dontRemove )
         overrideEnt = overrideEnt or self.l_BecomeRagdollEntity
 
         local ragdoll = ents.Create( "prop_ragdoll" )
@@ -128,32 +128,106 @@ if SERVER then
             end )
         end
 
-        local startTime = CurTime()
-        LambdaCreateThread( function()
-            while ( serversidecleanup:GetInt() == 0 or CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( self ) and self:IsSpeaking() ) do 
+        if !dontRemove then
+            local startTime = CurTime()
+            LambdaCreateThread( function()
+                while ( serversidecleanup:GetInt() == 0 or CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( self ) and self:IsSpeaking() ) do 
+                    if !IsValid( ragdoll ) then return end
+                    coroutine_yield() 
+                end
+                
                 if !IsValid( ragdoll ) then return end
-                coroutine_yield() 
+                if serversidecleanupeffect:GetBool() then
+                    net.Start( "lambdaplayers_disintegrationeffect" )
+                        net.WriteEntity( ragdoll )
+                    net.Broadcast()
+
+                    coroutine_wait( 5 )
+                end
+
+                if !IsValid( ragdoll ) then return end
+                ragdoll:Remove()
+            end ) 
+
+            -- Required for other addons to detect and get Lambda's ragdoll
+            if _LambdaGamemodeHooksOverriden then
+                hook.Run( "CreateEntityRagdoll", self, ragdoll )
             end
-            
-            if !IsValid( ragdoll ) then return end
-            if serversidecleanupeffect:GetBool() then
-                net.Start( "lambdaplayers_disintegrationeffect" )
-                    net.WriteEntity( ragdoll )
-                net.Broadcast()
-
-                coroutine_wait( 5 )
-            end
-
-            if !IsValid( ragdoll ) then return end
-            ragdoll:Remove()
-        end ) 
-
-        -- Required for other addons to detect and get Lambda's ragdoll
-        if _LambdaGamemodeHooksOverriden then
-            hook.Run( "CreateEntityRagdoll", self, ragdoll )
         end
 
         return ragdoll
+    end
+
+    function ENT:DropWeapon( dmginfo )
+        if self:IsWeaponMarkedNodraw() then return end
+        local wepent = self.WeaponEnt
+
+        local dropEnt = self.l_WeaponDropEntity
+        if !dropEnt or !dropweaponents:GetBool() then
+            net.Start( "lambdaplayers_createclientsidedroppedweapon" )
+                net.WriteEntity( wepent )
+                net.WriteString( wepent:GetModel() )
+                net.WriteVector( wepent:GetPos() )
+                net.WriteUInt( wepent:GetSkin(), 5 )
+                net.WriteString( wepent:GetSubMaterial( 1 ) )
+                net.WriteFloat( wepent:GetModelScale() )
+                net.WriteVector( self:GetPhysColor() )
+                net.WriteEntity( self )
+                net.WriteString( self:GetWeaponName() )
+                net.WriteVector( dmginfo and dmginfo:GetDamageForce() or vector_origin )
+                net.WriteVector( dmginfo and dmginfo:GetDamagePosition() or wepent:GetPos() )
+            net.Broadcast()
+        else
+            dropEnt = ents_Create( dropEnt )
+            
+            if IsValid( dropEnt ) then
+                dropEnt:SetPos( wepent:GetPos() )
+                dropEnt:SetAngles( wepent:GetAngles() )
+                dropEnt:SetOwner( self )
+                dropEnt:Spawn()
+
+                dropEnt:SetSubMaterial( 1, wepent:GetSubMaterial( 1 ) )
+                dropEnt:SetNW2Vector( "lambda_weaponcolor", self:GetPhysColor() )
+
+                dropEnt.LambdaOwner = self
+                dropEnt.IsLambdaSpawned = true
+
+                if dmginfo then
+                    local phys = dropEnt:GetPhysicsObject()
+                    if IsValid( phys ) then
+                        local force = ( dmginfo:GetDamageForce() / 7 )
+                        phys:ApplyForceOffset( force, dmginfo:GetDamagePosition() )
+                    end
+                end
+
+                self.weapondrop = dropEnt
+                local wpnData = _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ]
+                if wpnData then
+                    local dropFunc = wpnData.OnDrop
+                    if isfunction( dropFunc ) then dropFunc( lambda, wepent, dropEnt ) end
+                end
+
+                local startTime = CurTime()
+                LambdaCreateThread( function()
+                    while ( serversidecleanup:GetInt() == 0 or CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( self ) and self:IsSpeaking() ) do 
+                        if !IsValid( dropEnt ) or dropEnt:GetOwner() != self then return end
+                        coroutine_yield() 
+                    end
+                    if !IsValid( dropEnt ) then return end
+
+                    if serversidecleanupeffect:GetBool() then
+                        net.Start( "lambdaplayers_disintegrationeffect" )
+                            net.WriteEntity( dropEnt )
+                        net.Broadcast()
+
+                        coroutine_wait( 5 )
+                    end
+
+                    if !IsValid( dropEnt ) then return end
+                    dropEnt:Remove()
+                end ) 
+            end
+        end
     end
 
     function ENT:LambdaOnKilled( info, silent )
@@ -187,71 +261,8 @@ if SERVER then
                 self:CreateServersideRagdoll( info )
             end
 
-            if self.l_DropWeaponOnDeath and !self:IsWeaponMarkedNodraw() then
-                local dropEnt = self.l_WeaponDropEntity
-                if !dropEnt or !dropweaponents:GetBool() then
-                    net.Start( "lambdaplayers_createclientsidedroppedweapon" )
-                        net.WriteEntity( wepent )
-                        net.WriteString( wepent:GetModel() )
-                        net.WriteVector( wepent:GetPos() )
-                        net.WriteUInt( wepent:GetSkin(), 5 )
-                        net.WriteString( wepent:GetSubMaterial( 1 ) )
-                        net.WriteFloat( wepent:GetModelScale() )
-                        net.WriteVector( self:GetPhysColor() )
-                        net.WriteEntity( self )
-                        net.WriteString( self:GetWeaponName() )
-                        net.WriteVector( info:GetDamageForce() )
-                        net.WriteVector( info:GetDamagePosition() )
-                    net.Broadcast()
-                else
-                    dropEnt = ents_Create( dropEnt )
-                    
-                    if IsValid( dropEnt ) then
-                        dropEnt:SetPos( wepent:GetPos() )
-                        dropEnt:SetAngles( wepent:GetAngles() )
-                        dropEnt:SetOwner( self )
-                        dropEnt:Spawn()
-
-                        dropEnt:SetSubMaterial( 1, wepent:GetSubMaterial( 1 ) )
-                        dropEnt:SetNW2Vector( "lambda_weaponcolor", self:GetPhysColor() )
-
-                        dropEnt.LambdaOwner = self
-                        dropEnt.IsLambdaSpawned = true
-
-                        local phys = dropEnt:GetPhysicsObject()
-                        if IsValid( phys ) then
-                            local force = ( info:GetDamageForce() / 7 )
-                            phys:ApplyForceOffset( force, info:GetDamagePosition() )
-                        end
-
-                        self.weapondrop = dropEnt
-                        local wpnData = _LAMBDAPLAYERSWEAPONS[ self:GetWeaponName() ]
-                        if wpnData then
-                            local dropFunc = wpnData.OnDrop
-                            if isfunction( dropFunc ) then dropFunc( lambda, wepent, dropEnt ) end
-                        end
-
-                        local startTime = CurTime()
-                        LambdaCreateThread( function()
-                            while ( serversidecleanup:GetInt() == 0 or CurTime() < ( startTime + serversidecleanup:GetInt() ) or IsValid( self ) and self:IsSpeaking() ) do 
-                                if !IsValid( dropEnt ) or dropEnt:GetOwner() != self then return end
-                                coroutine_yield() 
-                            end
-                            if !IsValid( dropEnt ) then return end
-
-                            if serversidecleanupeffect:GetBool() then
-                                net.Start( "lambdaplayers_disintegrationeffect" )
-                                    net.WriteEntity( dropEnt )
-                                net.Broadcast()
-
-                                coroutine_wait( 5 )
-                            end
-
-                            if !IsValid( dropEnt ) then return end
-                            dropEnt:Remove()
-                        end ) 
-                    end
-                end
+            if self.l_DropWeaponOnDeath then
+                self:DropWeapon()
             end
         end
 
@@ -259,6 +270,7 @@ if SERVER then
         self:SetIsDead( true )
         self:SetNoClip( false )
         self:SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE )
+        self:AddFlags( FL_NOTARGET )
 
         self:ClientSideNoDraw( self, true )
         self:ClientSideNoDraw( wepent, true )
@@ -275,7 +287,6 @@ if SERVER then
 
         -- Stop playing all gesture animations
         self:RemoveAllGestures()
-        self.l_CurrentPlayedGesture = -1
         self.l_UpdateAnimations = true
 
         for k, v in ipairs( self.l_Hooks ) do if !v[ 3 ] then self:RemoveHook( v[ 1 ], v[ 2 ] ) end end -- Remove all non preserved hooks
@@ -480,8 +491,8 @@ if SERVER then
         [ NAV_MESH_RUN ] = function( self ) 
             self:SetRun( true ) 
         end,
-        [ NAV_MESH_PRECISE ] = function( self ) 
-            self:SetRun( false ) 
+        [ NAV_MESH_PRECISE ] = function( self, hasEntered ) 
+            self:SetRun( self.l_moveoptions and self.l_moveoptions.run and !hasEntered ) 
         end,
         [ NAV_MESH_WALK ] = function( self, hasEntered ) 
             self:SetSlowWalk( hasEntered ) 

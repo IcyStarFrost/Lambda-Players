@@ -399,8 +399,9 @@ end
 -- Obviously returns the current state
 -- If the 'checkState' argument is set, returns if current state is the set one instead
 function ENT:GetState( checkState )
-    if checkState then return ( checkState == self:GetNW2String( "lambda_state", "Idle" ) ) end
-    return self:GetNW2String( "lambda_state", "Idle" )
+    local curState = self:GetNW2String( "lambda_state", "Idle" )
+    if checkState then return ( checkState == curState ) end
+    return curState
 end
 
 -- Returns the last state we were in
@@ -544,6 +545,7 @@ if SERVER then
             if ignoreFriendNPCs:GetBool() and self:Relations( ent ) == D_LI then return false end
             if ent.IsDrGNextbot and ent:IsDown() then return false end
             if ent:GetClass() == "rd_target" then return false end
+            if ent:IsFlagSet( FL_NOTARGET ) then return false end
         else
             return false
         end
@@ -780,6 +782,7 @@ if SERVER then
         self:SetRunSpeed( runningSpeed:GetInt() )
         self:SetWalkSpeed( walkingSpeed:GetInt() )
         self:SetIsReloading( false )
+        self:RemoveFlags( FL_NOTARGET )
 
         self:PreventDefaultComs( false )
         self:PreventWeaponSwitch( false )
@@ -967,6 +970,7 @@ if SERVER then
     -- Restarts the Lambda's AI thread. Useful for forcing state changes
     function ENT:ResetAI()
         self.BehaveThread = coroutine.create( function() self:RunBehaviour() end )
+        self.l_CurrentPlayedGesture = -1
     end
 
 
@@ -1170,12 +1174,14 @@ if SERVER then
             delay = ( ( delay == nil and slightDelay:GetBool() ) and Rand( 0.1, 0.75 ) or 0 ) 
         end
 
+        local voiceType = filepath
         local isVoiceType = self:GetVoiceLine( filepath )
         if isVoiceType then 
             self.l_lastspokenvoicetype = filepath 
             filepath = isVoiceType
         end
 
+        if LambdaRunHook( "LambdaOnPlaySound", self, filepath, voiceType ) == true then return end
         self:SetLastSpeakingTime( RealTime() + 4 )
 
         net.Start( "lambdaplayers_playsoundfile" )
@@ -1203,6 +1209,7 @@ if SERVER then
 
     function ENT:StopCurrentVoiceLine()
         if !self:IsSpeaking() then return end
+        self:SetLastSpeakingTime( 0 )
 
         net.Start( "lambdaplayers_stopcurrentsound" )
             net.WriteEntity( self )

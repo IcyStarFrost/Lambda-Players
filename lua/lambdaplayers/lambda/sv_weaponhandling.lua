@@ -18,7 +18,7 @@ end
 -- Switch to a weapon with the provided name.
 -- See the lambda/weapons folder for weapons. Check out the holster.lua file to see the current valid weapon settings
 function ENT:SwitchWeapon( weaponname, forceswitch )
-    if !self:CanEquipWeapon( weaponname ) and !forceswitch or self.l_NoWeaponSwitch then return end
+    if !forceswitch and ( self.l_NoWeaponSwitch or !self:CanEquipWeapon( weaponname ) ) then return end
     if !self:WeaponDataExists( weaponname ) then return end
     local wepent = self:GetWeaponENT()
     
@@ -96,11 +96,11 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
         if istable( deploySnd ) then
             for _, tbl in ipairs( snds ) do
                 self:SimpleWeaponTimer( tbl[ 1 ], function()
-                    wep:EmitSound( tbl[ 2 ], 65, 100, 1, CHAN_WEAPON )
+                    wepent:EmitSound( tbl[ 2 ], 65, 100, 1, CHAN_WEAPON )
                 end )
             end
         else
-            wep:EmitSound( deploySnd, 65, 100, 1, CHAN_WEAPON )
+            wepent:EmitSound( deploySnd, 65, 100, 1, CHAN_WEAPON )
         end
     end
 

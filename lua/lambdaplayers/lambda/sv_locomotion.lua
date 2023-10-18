@@ -132,7 +132,7 @@ function ENT:MoveToPos( pos, options )
             self.l_recomputepath = nil
         end
         
-        if ( !self:IsDisabled() or self:GetIsTyping() ) and CurTime() >= self.l_moveWaitTime then
+        if !self:IsDisabled() and CurTime() >= self.l_moveWaitTime then
             local callback = options.callback
             if callback and CurTime() >= callbackRunT then 
                 local returnVal = callback( self, pos, path, curGoal )
@@ -365,7 +365,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
         self:SetPos( climbPos )
         self.loco:FaceTowards( self:GetPos() * climbNormal )
 
-        if climbState != 2 or !self:IsDisabled() and CurTime() >= self.l_moveWaitTime then
+        if climbState != 2 or ( !self:IsDisabled() or self:GetIsTyping() ) and CurTime() >= self.l_moveWaitTime then
             if !IsValid( TraceHull( laddermovetable ).Entity ) then
                 climbFract = ( climbFract + ( 200 * FrameTime() ) )
                 stuckTime = ( CurTime() + random( 2, 8 ) )
