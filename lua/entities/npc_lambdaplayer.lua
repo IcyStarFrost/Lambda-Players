@@ -332,7 +332,7 @@ function ENT:Initialize()
         end
 
         self:SetLagCompensated( true )
-        self:AddFlags( FL_OBJECT + FL_NPC )
+        self:AddFlags( FL_OBJECT + FL_NPC + FL_CLIENT )
         self:SetSolidMask( MASK_PLAYERSOLID )
         self:AddCallback( "PhysicsCollide", function( self, data )
             self:HandleCollision( data )
@@ -776,40 +776,11 @@ function ENT:Think()
 
         -- Handle entities that are near our pickup range
         if curTime >= self.l_NextPickupCheck then
-            local hitTrigger = false
-
             for _, ent in ipairs( self:FindInSphere( selfPos, 58 ) ) do
-                if !hitTrigger and ent:GetClass() == "trigger_hurt" then
-                    local triggerMins, triggerMaxs = ent:WorldSpaceAABB()
-
-                    if selfPos:WithinAABox( triggerMins, triggerMaxs ) then
-                        local dmginfo = DamageInfo()
-                        dmginfo:SetAttacker( self )
-                        dmginfo:SetInflictor( self )
-                        dmginfo:SetDamageType( ent:GetInternalVariable( "damagetype" ) )
-
-                        local dmg = ent:GetInternalVariable( "damage" )
-                        dmginfo:SetDamage( dmg )
-
-                        local triggerPos = ent:WorldSpaceCenter()
-                        local dmgPos = self:NearestPoint( triggerPos )
-                        dmginfo:SetDamagePosition( dmgPos )
-
-                        local dmgForce = vector_origin
-                        if !ent:GetInternalVariable( "nodmgforce" ) then
-                            dmgForce = ( ( dmgPos - triggerPos ):GetNormalized() * ( dmg * 300 ) )
-                        end
-                        dmginfo:SetDamageForce( dmgForce )
-
-                        hitTrigger = true 
-                        self:TakeDamageInfo( dmginfo )
-                    end
-                else
-                    local pickFunc = _LAMBDAPLAYERSItemPickupFunctions[ ent:GetClass() ]
-                    if isfunction( pickFunc ) and ent:Visible( self ) then 
-                        LambdaRunHook( "LambdaOnPickupEnt", self, ent ) 
-                        pickFunc( self, ent )
-                    end
+                local pickFunc = _LAMBDAPLAYERSItemPickupFunctions[ ent:GetClass() ]
+                if isfunction( pickFunc ) and ent:Visible( self ) then 
+                    LambdaRunHook( "LambdaOnPickupEnt", self, ent ) 
+                    pickFunc( self, ent )
                 end
             end
 

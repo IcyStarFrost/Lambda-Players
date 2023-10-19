@@ -271,6 +271,7 @@ if SERVER then
         self:SetNoClip( false )
         self:SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE )
         self:AddFlags( FL_NOTARGET )
+        self:RemoveFlags( FL_CLIENT )
 
         self:ClientSideNoDraw( self, true )
         self:ClientSideNoDraw( wepent, true )
@@ -325,17 +326,26 @@ if SERVER then
             end
         end, "DeathThread", true )
 
-        for _, nb in ipairs( ents_GetAll() ) do
-            if nb == self or !IsValid( nb ) or !nb:IsNextBot() then continue end
-            nb:OnOtherKilled( self, info )
+        for _, npc in ipairs( ents_GetAll() ) do
+            if npc == self or !IsValid( npc ) then continue end
             
-            if nb.IsLambdaPlayer then 
-                LambdaRunHook( "LambdaOnOtherInjured", nb, self, info, true ) 
-            end
+            if npc:IsNPC() then 
+                if npc:GetEnemy() == self then
+                    npc:SetEnemy( NULL )
+                end
+                
+                npc:ClearEnemyMemory( self )
+            elseif npc:IsNextBot() then
+                npc:OnOtherKilled( self, info )
+                
+                if npc.IsLambdaPlayer then 
+                    LambdaRunHook( "LambdaOnOtherInjured", npc, self, info, true ) 
+                end
 
-            -- Keep them comin'!
-            if nb.IsUltrakillNextbot and nb.RestartVoiceLine then
-                nb.PreviouslyKilled[ self:EntIndex() ] = true
+                -- Keep them comin'!
+                if npc.IsUltrakillNextbot and npc.RestartVoiceLine then
+                    npc.PreviouslyKilled[ self:EntIndex() ] = true
+                end
             end
         end
 
@@ -343,7 +353,7 @@ if SERVER then
             if attacker:IsPlayer() then 
                 attacker:AddFrags( 1 ) 
             end
-            
+
             if !self.l_preventdefaultspeak and random( 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
                 self.l_keyentity = attacker
 
@@ -738,6 +748,8 @@ function ENT:OnRemove()
         self:CleanSpawnedEntities()
         
         if self:Alive() then
+            self:RemoveFlags( FL_CLIENT )
+
             local wepData = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
             if wepData then 
                 local onHolsterFunc = ( wepData.OnHolster or wepData.OnUnequip )

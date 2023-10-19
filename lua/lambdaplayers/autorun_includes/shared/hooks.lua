@@ -4,9 +4,12 @@ local ipairs = ipairs
 local table_remove = table.remove
 local RealTime = RealTime
 local isnumber = isnumber
+local isfunction = isfunction
 local LambdaScreenScale = LambdaScreenScale
 local Left = string.Left
 local match = string.match
+local gmatch = string.gmatch
+local RunString = RunString
 local IsValidRagdoll = util.IsValidRagdoll
 local invisClr = Color( 0, 0, 0, 0 )
 
@@ -55,60 +58,89 @@ if SERVER then
     
     -- Fixes ReAgdoll throwing errors when a ragdoll doesn't have bones it need to use (like head)
     hook.Add( "OnEntityCreated", "LambdaOnEntityCreated", function( ent )
-        if !IsValid( ent ) or ent:GetClass() != "puppetmaster" then return end
+        if !IsValid( ent ) then return end
 
-        local oldGetBoneTbl = ent.GetBoneTable
-        function ent:GetBoneTable( tbl )
-            self.BoneTable = tbl
-            oldGetBoneTbl( self, tbl )
-        end
+        local class = ent:GetClass() 
+        if class == "lua_run" then
+            function ent:RunCode( activator, caller, code )
+                self:SetupGlobals( activator, caller )
+                    if activator.IsLambdaPlayer then
+                        for funcName in gmatch( code, "[%TRIGGER_PLAYER%ACTIVATOR]:([%w_]+)" ) do
+                            if !isfunction( activator[ funcName ] ) then self:KillGlobals() return end
+                        end
+                    end
+                    if caller.IsLambdaPlayer then
+                        for funcName in gmatch( code, "CALLER:([%w_]+)" ) do
+                            if !isfunction( caller[ funcName ] ) then self:KillGlobals() return end
+                        end
+                    end
 
-        local oldInit = ent.Initialize
-        function ent:Initialize()
-            local ragdoll = self:GetRagdoll()
-            if !IsValid( ragdoll ) or ragdoll:GetPhysicsObjectCount() <= 0 then
-                self:Remove()
-                return
-            end
-            local rootPhys = ragdoll:TranslatePhysBoneToBone( 0 )
-            if !rootPhys then 
-                self:Remove()
-                return
-            end
-
-            ragdoll:DeleteOnRemove(self)
-            ragdoll.RD_PhysStats = {}
-
-            local boneTbl = self.BoneTable
-            if !boneTbl then oldInit( self ) return end
-
-            local anim = self:GetAnim()
-            anim:DeleteOnRemove( self )
-            self:DeleteOnRemove( anim )
-
-            if self:GetBalancing() then
-                self:SetShouldFloat( true )
+                    RunString( code, "lua_run#" .. self:EntIndex() )
+                self:KillGlobals()
             end
 
-            self:SetRootbone( rootPhys )
-            self:SetStartTime( CurTime() )
-            self:SetColor( invisClr )
-            self:SetRenderMode( RENDERMODE_TRANSCOLOR )      
-            self:StartMotionController()
-            if !match( ragdoll:GetBoneName( 0 ), "ValveBiped" ) then return end
+            function ent:SetupGlobals( activator, caller )
+                ACTIVATOR = activator
+                CALLER = caller
 
-            for _, bone in ipairs( boneTbl ) do
-                local boneIndex = ragdoll:LookupBone( bone )
-                if !isnumber( boneIndex ) then continue end
+                if IsValid( activator ) && ( activator.IsLambdaPlayer or activator:IsPlayer() ) then
+                    TRIGGER_PLAYER = activator
+                end
+            end
+        elseif class == "puppetmaster" then
+            local oldGetBoneTbl = ent.GetBoneTable
+            function ent:GetBoneTable( tbl )
+                self.BoneTable = tbl
+                oldGetBoneTbl( self, tbl )
+            end
 
-                boneIndex = ragdoll:TranslateBoneToPhysBone( boneIndex )
-                if boneIndex == -1 then continue end
+            local oldInit = ent.Initialize
+            function ent:Initialize()
+                local ragdoll = self:GetRagdoll()
+                if !IsValid( ragdoll ) or ragdoll:GetPhysicsObjectCount() <= 0 then
+                    self:Remove()
+                    return
+                end
+                local rootPhys = ragdoll:TranslatePhysBoneToBone( 0 )
+                if !rootPhys then 
+                    self:Remove()
+                    return
+                end
 
-                local ragphys = ragdoll:GetPhysicsObjectNum( boneIndex )        
-                if !IsValid( ragphys ) then continue end
+                ragdoll:DeleteOnRemove(self)
+                ragdoll.RD_PhysStats = {}
 
-                self:AddToMotionController( ragphys )
-                ragdoll.RD_PhysStats[ ragphys:GetSurfaceArea() ] = boneIndex
+                local boneTbl = self.BoneTable
+                if !boneTbl then oldInit( self ) return end
+
+                local anim = self:GetAnim()
+                anim:DeleteOnRemove( self )
+                self:DeleteOnRemove( anim )
+
+                if self:GetBalancing() then
+                    self:SetShouldFloat( true )
+                end
+
+                self:SetRootbone( rootPhys )
+                self:SetStartTime( CurTime() )
+                self:SetColor( invisClr )
+                self:SetRenderMode( RENDERMODE_TRANSCOLOR )      
+                self:StartMotionController()
+                if !match( ragdoll:GetBoneName( 0 ), "ValveBiped" ) then return end
+
+                for _, bone in ipairs( boneTbl ) do
+                    local boneIndex = ragdoll:LookupBone( bone )
+                    if !isnumber( boneIndex ) then continue end
+
+                    boneIndex = ragdoll:TranslateBoneToPhysBone( boneIndex )
+                    if boneIndex == -1 then continue end
+
+                    local ragphys = ragdoll:GetPhysicsObjectNum( boneIndex )        
+                    if !IsValid( ragphys ) then continue end
+
+                    self:AddToMotionController( ragphys )
+                    ragdoll.RD_PhysStats[ ragphys:GetSurfaceArea() ] = boneIndex
+                end
             end
         end
     end )

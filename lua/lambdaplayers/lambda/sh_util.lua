@@ -792,6 +792,7 @@ if SERVER then
         self.l_Clip = self.l_MaxClip
 
         self:SimpleTimer( 0.1, function()
+            self:AddFlags( FL_CLIENT )
             self:SwitchToSpawnWeapon()
         end )
         self:UpdateHealthDisplay()
