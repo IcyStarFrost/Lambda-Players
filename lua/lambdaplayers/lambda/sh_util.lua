@@ -11,6 +11,7 @@ local IsValid = IsValid
 local file_Find = file.Find
 local random = math.random
 local abs = math.abs
+local max = math.max
 local FindInSphere = ents.FindInSphere
 local file_Find = file.Find
 local table_Empty = table.Empty
@@ -1195,17 +1196,16 @@ if SERVER then
     end
 
     function ENT:GetFallDamage( speed, realDmg )
+        realDmg = ( realDmg == nil and realisticfalldamage:GetBool() )
         local gravity = self.loco:GetGravity()
         local maxSafeFallSpeed = sqrt( 2 * gravity * 20 * 12 )
 
         speed = ( speed or self.l_FallVelocity )
-        if !realDmg and speed > maxSafeFallSpeed and !realisticfalldamage:GetBool() then
-            return 10
-        end
+        if !realDmg and speed > maxSafeFallSpeed then return 10 end
 
         local fatalFallSpeed = sqrt( 2 * gravity * 60 * 12 )
         local damageForFall = ( 100 / ( fatalFallSpeed - maxSafeFallSpeed ) )
-        return ( ( speed - maxSafeFallSpeed ) * damageForFall )
+        return max( ( speed - maxSafeFallSpeed ) * damageForFall, 0 )
     end
 
     function ENT:StopCurrentVoiceLine()

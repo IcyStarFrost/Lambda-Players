@@ -66,7 +66,13 @@ function ENT:MoveToPos( pos, options )
     self.l_issmoving = true
     self.l_movepos = pos
     self.l_CurrentPath = path
-    self:SetRun( !options.autorun and ( path:GetLength() > 1500 ) or options.run )
+
+    self:SetSlowWalk( options.walk != nil )
+    if options.run then
+        self:SetRun( true )
+    else
+        self:SetRun( options.autorun and path:GetLength() > 1500 )
+    end
 
     local loco = self.loco
     local runSpeed = self:GetRunSpeed()

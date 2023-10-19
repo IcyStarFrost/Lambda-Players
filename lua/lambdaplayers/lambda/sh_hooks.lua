@@ -159,7 +159,7 @@ if SERVER then
     end
 
     function ENT:DropWeapon( dmginfo )
-        if self:IsWeaponMarkedNodraw() then return end
+        if !self.l_DropWeaponOnDeath or self:IsWeaponMarkedNodraw() then return end
         local wepent = self.WeaponEnt
 
         local dropEnt = self.l_WeaponDropEntity
@@ -261,9 +261,7 @@ if SERVER then
                 self:CreateServersideRagdoll( info )
             end
 
-            if self.l_DropWeaponOnDeath then
-                self:DropWeapon()
-            end
+            self:DropWeapon()
         end
 
         self:SetHealth( -1 ) -- SNPCs will think that we are still alive without doing this.
