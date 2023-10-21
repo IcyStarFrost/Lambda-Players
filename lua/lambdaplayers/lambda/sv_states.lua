@@ -44,11 +44,16 @@ end
 
 -- Heal ourselves when hurt
 function ENT:HealUp()
-    local spawnRate = Rand( 0.2, 0.4 )
-    local spawnCount = ceil( ( self:GetMaxHealth() - self:Health() ) / 25 )
-    local rndVec = Vector( 0, 0, random( -32, 32 ) )
+    local rndVec = ( self:GetForward() * random( -16, 16 ) + self:GetRight() * random( -16, 16 ) + self:GetUp() * random( -16, -4 ) )
+    if !self:Trace( ( self:GetPos() + rndVec ), self:GetAttachmentPoint( "eyes" ).Pos ).Hit then
+        self:MoveToPos( self:GetRandomPosition( nil, 100 ) )
+        if !self:GetState( "HealUp" ) then return true end
+    end
 
+    local spawnRate = Rand( 0.2, 0.4 )
     coroutine_wait( spawnRate )
+    
+    local spawnCount = ceil( ( self:GetMaxHealth() - self:Health() ) / 25 )
     for i = 1, random( ( spawnCount / 2 ), spawnCount ) do
         if !self:GetState( "HealUp" ) or !self:IsUnderLimit( "Entity" ) then break end
         if self:Health() >= self:GetMaxHealth() then break end
@@ -71,11 +76,17 @@ end
 
 -- Armor ourselves for better chance at surviving in combat
 function ENT:ArmorUp()
-    local spawnRate = Rand( 0.2, 0.4 )
-    local spawnCount = ceil( ( self:GetMaxArmor() - self:Armor() ) / 15 )
-    local rndVec = Vector( 0, 0, random( -32, 32 ) )
+    local rndVec = ( self:GetForward() * random( -16, 16 ) + self:GetRight() * random( -16, 16 ) + self:GetUp() * random( -16, -4 ) )
+    if !self:Trace( ( self:GetPos() + rndVec ), self:GetAttachmentPoint( "eyes" ).Pos ).Hit then
+        self.l_noclipheight = 0
+        self:MoveToPos( self:GetRandomPosition( nil, 100 ) )
+        if !self:GetState( "ArmorUp" ) then return true end
+    end
 
+    local spawnRate = Rand( 0.2, 0.4 )
     coroutine_wait( spawnRate )
+    
+    local spawnCount = ceil( ( self:GetMaxArmor() - self:Armor() ) / 15 )
     for i = 1, random( ( spawnCount / 3 ), spawnCount ) do
         if !self:GetState( "ArmorUp" ) or !self:IsUnderLimit( "Entity" ) then break end
         if self:Armor() >= self:GetMaxArmor() then break end
@@ -98,7 +109,7 @@ end
 
 -- Wander around until we find someone to jump
 local ft_options = { cbTime = 0.5, callback = function( lambda )
-    if lambda:InCombat() or lambda:GetState() != "FindTarget" then return false end
+    if lambda:InCombat() or !lambda:GetState( "FindTarget" ) then return false end
     
     local ene = lambda:GetEnemy()
     if LambdaIsValid( ene ) and lambda:CanTarget( ene ) then

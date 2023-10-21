@@ -114,6 +114,7 @@ end
     local collisionPly = GetConVar( "lambdaplayers_lambda_noplycollisions" )
     local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
     local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
+    local noclipSpeed = GetConVar( "lambdaplayers_lambda_noclipspeed" )
     local jumpHeight = GetConVar( "lambdaplayers_lambda_jumpheight" )
     local ignorePlys = GetConVar( "ai_ignoreplayers" )
     local sv_gravity = GetConVar( "sv_gravity" )
@@ -309,11 +310,10 @@ function ENT:Initialize()
         ----
 
         SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
-
         self.loco:SetJumpHeight( jumpHeight:GetInt() )
         self.loco:SetAcceleration( 2000 )
         self.loco:SetDeceleration( 1000000 )
-        self.loco:SetStepHeight( 30 )
+        self.loco:SetStepHeight( 18 )
         self.l_LookAheadDistance = 0
         self.loco:SetGravity( sv_gravity:GetFloat() ) -- Makes us fall at the same speed as the real players do
 
@@ -537,11 +537,11 @@ function ENT:Think()
             else
                 local sayMsg = ( match( queuedText, "(https?://%S+)" ) != nil and queuedText or typedText )
                 self:Say( sayMsg )
-                self:OnEndMessage( sayMsg )
             end
 
+            self:OnEndMessage( typedText )
             queuedText = nil
-            self.l_queuedtext = nil
+            self.l_queuedtext = queuedText
         else
             local lastWord = ""
             for word in gmatch( typedText, "%S+" ) do 
@@ -612,7 +612,7 @@ function ENT:Think()
         local isDisabled = self:IsDisabled()
         local isCrouched = self:GetCrouch()
 
-        if curTime > self.l_debugupdate then 
+        if curTime >= self.l_debugupdate then 
             local thread = self.BehaveThread
             if thread and debugmode:GetBool() then 
                 self:SetNW2String( "lambda_threadstatus", coroutine_status( thread ) )
@@ -629,13 +629,13 @@ function ENT:Think()
         end
 
         -- Footstep sounds
-        if curTime > self.l_nextfootsteptime and onGround and !locoVel:IsZero() then
+        if curTime >= self.l_nextfootsteptime and onGround and !locoVel:IsZero() and !self:IsInNoClip() then
             self:PlayStepSound()
             self.l_nextfootsteptime = curTime + self:GetStepSoundTime()
         end
 
         -- Play random Idle lines depending on current state or speak in text chat
-        if curTime > self.l_nextidlesound then
+        if curTime >= self.l_nextidlesound then
             if !isDisabled and !self.l_preventdefaultspeak and !self:GetIsTyping() and !self:IsSpeaking() then
                 if random( 100 ) <= self:GetVoiceChance() then
                     self:PlaySoundFile( self:IsPanicking() and "panic" or ( self:InCombat() and "taunt" or "idle" ) )
@@ -648,13 +648,13 @@ function ENT:Think()
         end
 
         -- Update our speed after some time
-        if curTime > self.l_nextspeedupdate then
+        if curTime >= self.l_nextspeedupdate then
             loco:SetDesiredSpeed( ( isCrouched and self:GetCrouchSpeed() or ( self:GetSlowWalk() and self:GetSlowWalkSpeed() or ( self:GetRun() and self:GetRunSpeed() or self:GetWalkSpeed() ) ) ) * self.l_WeaponSpeedMultiplier )
             self.l_nextspeedupdate = curTime + 0.5
         end
 
         -- Attack nearby NPCs
-        if curTime > self.l_nextnpccheck then 
+        if curTime >= self.l_nextnpccheck then 
             if !self:InCombat() then
                 local npcs = self:FindInSphere( nil, 2000, function( ent ) return LambdaIsValid( ent ) and ( ent:IsNPC() or ent:IsNextBot() and !self:ShouldTreatAsLPlayer( ent ) ) and ent:Health() > 0 and self:ShouldAttackNPC( ent ) and self:CanSee( ent ) end )
                 if #npcs != 0 then self:AttackTarget( npcs[ random( #npcs ) ] ) end
@@ -752,14 +752,14 @@ function ENT:Think()
         -- Ladder Physics Failure (LPF to sound cool) fallback
         if !loco:IsUsingLadder() then
             self.l_ladderfailtimer = curTime + 5
-        elseif curTime > self.l_ladderfailtimer then
+        elseif curTime >= self.l_ladderfailtimer then
             self:Recreate( true, true )
             self.l_ladderfailtimer = curTime + 1
         end
         --
 
         -- Update our physics object
-        if curTime > self.l_nextphysicsupdate then
+        if curTime >= self.l_nextphysicsupdate then
             local phys = self:GetPhysicsObject()
             if waterLvl == 0 then
                 phys:SetPos( selfPos )
@@ -795,7 +795,7 @@ function ENT:Think()
         -- Out of Bounds Fail Safe --
         if self:IsInWorld() and ( waterLvl == 0 or !lethalWaters:GetBool() ) then
             self.l_outboundsreset = curTime + 5
-        elseif curTime > self.l_outboundsreset then
+        elseif curTime >= self.l_outboundsreset then
             self:Kill()
             self.l_outboundsreset = curTime + 5
         end
@@ -848,14 +848,18 @@ function ENT:Think()
                 end
 
                 -- Randomly change height
-                if curTime > self.l_nextnoclipheightchange then
+                if curTime >= self.l_nextnoclipheightchange then
                     self.l_noclipheight = random( 0, 500 )
-                    self.l_nextnoclipheightchange = curTime + random( 20 )
+                    self.l_nextnoclipheightchange = curTime + random( 10 )
                 end
 
-                local pathPos = ( isvector( self.l_CurrentPath ) and self.l_CurrentPath or ( IsValid( self.l_CurrentPath ) and self.l_CurrentPath:GetEnd() or nil ) )
-                if pathPos then
-                    local trace = self:Trace( pathPos + Vector( 0, 0, self.l_noclipheight ), pathPos + Vector( 0, 0, 3 ) ) -- Trace the height
+                local movePos = self:GetDestination()
+                local curPath = self.l_CurrentPath
+                if !isvector( curPath ) and IsValid( curPath ) then
+                    movePos = curPath:GetEnd()
+                end
+                if movePos then
+                    local trace = self:Trace( movePos + vector_up * self.l_noclipheight, movePos + vector_up * 3 ) -- Trace the height
                     local endPos = ( trace.HitPos + trace.HitNormal * 70 ) -- Subtract the normal so we are hovering below a ceiling by 70 Source Units
                     local copy = Vector( endPos[ 1 ], endPos[ 2 ], selfPos[ 3 ] ) -- Vector used if we are close to our goal
 
@@ -866,8 +870,7 @@ function ENT:Think()
                         self:CancelMovement() 
                     else 
                         loco:FaceTowards( endPos )
-                        local noclipSpeed = ( ( self:GetRun() and 1500 or 500 ) * frameTime )
-                        self.l_noclippos = ( self.l_noclippos + ( endPos - self.l_noclippos ):GetNormalized() * noclipSpeed ) 
+                        self.l_noclippos = ( self.l_noclippos + ( endPos - self.l_noclippos ):GetNormalized() * ( noclipSpeed:GetFloat() * frameTime ) ) 
                     end
                 end
 
@@ -920,7 +923,7 @@ function ENT:Think()
 
         -- Handle swimming
         if waterLvl == 3 and !self:IsInNoClip() then -- Don't swim if we are noclipping
-            if curTime > self.l_nextswimposupdate then -- Update our swimming position over time
+            if curTime >= self.l_nextswimposupdate then -- Update our swimming position over time
                 self.l_nextswimposupdate = curTime + 0.1
 
                 local ene = self:GetEnemy()
@@ -965,7 +968,7 @@ function ENT:Think()
 
                         if swimPos.z > selfPos.z then
                             swimtable.start = selfPos
-                            swimtable.endpos = ( selfPos + swimDir * ( swimSpeed * FrameTime() * 10 ) )
+                            swimtable.endpos = ( selfPos + swimDir * ( swimSpeed * frameTime * 10 ) )
                             swimtable.filter = self
                             
                             local mins, maxs = self:GetCollisionBounds()
@@ -1030,7 +1033,7 @@ function ENT:Think()
         if !self:IsPlayingTaunt() then
             local faceTarg = self.Face
             if faceTarg then
-                if self.l_Faceend and curTime > self.l_Faceend or isentity( faceTarg ) and !IsValid( faceTarg ) then 
+                if self.l_Faceend and curTime >= self.l_Faceend or isentity( faceTarg ) and !IsValid( faceTarg ) then 
                     self.Face = nil 
                     self.l_Faceend = nil 
                     self.l_PoseOnly = nil 
@@ -1055,7 +1058,7 @@ function ENT:Think()
         --
 
         -- UNSTUCK --
-        if self.l_stucktimes > 0 and curTime > self.l_stucktimereset then
+        if self.l_stucktimes > 0 and curTime >= self.l_stucktimereset then
             self.l_stucktimes = 0
         end
 

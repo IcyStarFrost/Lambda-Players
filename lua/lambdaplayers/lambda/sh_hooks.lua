@@ -314,7 +314,7 @@ if SERVER then
         self:Thread( function()
             while ( ( CurTime() - deathTime ) < ( canRespawn and respawnTime:GetFloat() or 0.1 ) or self:GetIsTyping() or self:IsSpeaking( "death" ) and ( !canRespawn or respawnSpeech:GetBool() ) ) or CurTime() < spawnCheckTime do
                 if CurTime() >= spawnCheckTime then
-                    spawnCheckTime = ( CurTime() + rand( 0.0, 0.3 ) )
+                    spawnCheckTime = ( CurTime() + ( random( 0, 10 ) * 0.1 ) )
                 end
 
                 coroutine_yield() 
@@ -683,36 +683,41 @@ if SERVER then
     function ENT:OnLandOnGround( ent )
         if self:IsUsingLadder() or self:IsInNoClip() then return end
         
-        -- Play land animation
-        self:AddGesture( ACT_LAND )
-
         --hook.Run( "OnPlayerHitGround", self, self:GetPos():IsUnderwater(), false, self.l_FallVelocity )
-        LambdaRunHook( "LambdaOnLandOnGround", self, ent )
-
-        local fallSpeed = self.l_FallVelocity
-        if !self:GetPos():IsUnderwater() then
-            local damage = self:GetFallDamage( fallSpeed )
-            if damage > 0 then
-                local info = DamageInfo()
-                info:SetDamage( damage )
-                info:SetAttacker( Entity( 0 ) )
-                info:SetDamageType( DMG_FALL )
-                self:TakeDamageInfo( info )
-
-                self:EmitSound( "Player.FallDamage" )
-                --hook.Run( "GetFallDamage", self, self.l_FallVelocity )
+        if LambdaRunHook( "LambdaOnLandOnGround", self, ent ) != true then
+            -- Play land animation
+            local landSeq = self:LookupSequence( "jump_land" )
+            if landSeq > 0 then
+                self:AddGestureSequence( landSeq )
+            else
+                self:AddGesture( ACT_LAND )
             end
-        end
 
-        if DSteps and fallSpeed > 150 then
-            self.DStep_HitGround = speed
-            DSteps( self, self:GetPos(), 0, "" )
-        else
-            self.DStep_HitGround = nil
+            local fallSpeed = self.l_FallVelocity
+            if !self:GetPos():IsUnderwater() then
+                local damage = self:GetFallDamage( fallSpeed )
+                if damage > 0 then
+                    local info = DamageInfo()
+                    info:SetDamage( damage )
+                    info:SetAttacker( Entity( 0 ) )
+                    info:SetDamageType( DMG_FALL )
+                    self:TakeDamageInfo( info )
 
-            if fallSpeed > 300 then
-                self:PlayStepSound( 0.85 )
-                self.l_nextfootsteptime = CurTime() + self:GetStepSoundTime()
+                    self:EmitSound( "Player.FallDamage" )
+                    --hook.Run( "GetFallDamage", self, self.l_FallVelocity )
+                end
+            end
+
+            if DSteps and fallSpeed > 150 then
+                self.DStep_HitGround = speed
+                DSteps( self, self:GetPos(), 0, "" )
+            else
+                self.DStep_HitGround = nil
+
+                if fallSpeed > 300 then
+                    self:PlayStepSound( 0.85 )
+                    self.l_nextfootsteptime = CurTime() + self:GetStepSoundTime()
+                end
             end
         end
 

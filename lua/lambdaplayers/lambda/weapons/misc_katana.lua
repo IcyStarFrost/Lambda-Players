@@ -4,9 +4,6 @@ local Rand = math.Rand
 local CurTime = CurTime
 local DamageInfo = DamageInfo
 local min = math.min
-local timer_Create = timer.Create
-local timer_Exists = timer.Exists
-local timer_Remove = timer.Remove
 
 local hTypeDocile = {
     idle = ACT_HL2MP_IDLE_SUITCASE,
@@ -28,6 +25,20 @@ local hTypeCombat = {
     swimIdle = ACT_HL2MP_SWIM_IDLE_KNIFE,
     swimMove = ACT_HL2MP_SWIM_KNIFE
 }
+local motivationSnds = {
+    "lambdaplayers/weapons/katana/katana_motivation1.mp3",
+    "lambdaplayers/weapons/katana/katana_motivation2.mp3",
+    "lambdaplayers/weapons/katana/katana_motivation3.mp3",
+    "lambdaplayers/weapons/katana/katana_motivation4.mp3",
+    "lambdaplayers/weapons/katana/katana_motivation5.mp3",
+    "lambdaplayers/weapons/katana/katana_motivation6.mp3",
+    "lambdaplayers/weapons/katana/katana_motivation7.mp3",
+    "lambdaplayers/weapons/katana/katana_motivation8.mp3",
+    "lambdaplayers/weapons/katana/katana_motivation9.mp3",
+    "lambdaplayers/weapons/katana/katana_motivation10.mp3"
+}
+
+local getMotivated = CreateLambdaConvar( "lambdaplayers_weapons_katana_getmotivated", 1, true, false, false, "If a Lambda Player that equips the katana should get a little motivated (Plays a random part of Bury The Light upon equip).", 0, 1, { type = "Bool", name = "Katana - Get Motivation", category = "Weapon Utilities" } )
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
     katana = {
@@ -49,6 +60,10 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent.NextEnergyRestoreTime = CurTime() + 1
             wepent:SetBodygroup( 0, 1 )
             wepent:EmitSound( "lambdaplayers/weapons/katana/katana_deploy1.mp3", 70 )
+
+            if getMotivated:GetBool() then
+                wepent:EmitSound( motivationSnds[ random(#motivationSnds ) ], 75, 100, 0.9, CHAN_STATIC )
+            end
         end,
 
         OnHolster = function( self, wepent )
@@ -58,44 +73,46 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent.NextEnergyRestoreTime = nil
             wepent:SetBodygroup( 0, 0 )
             wepent:EmitSound( "lambdaplayers/weapons/katana/katana_holster1.mp3", 70 )
+
+            for i = 1, #motivationSnds do
+                wepent:StopSound( motivationSnds[ i ] )
+            end
         end,
 
         OnThink = function( self, wepent )
             if !dead then
-                if CurTime() > wepent.NextUnreadyTime then
+                if CurTime() >= wepent.NextUnreadyTime then
                     if wepent.IsGripReady then
                         wepent.IsGripReady = false
                         wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 2 ) .. ".mp3", 65 )
                         wepent:SetBodygroup( 0, 1 )
                     end
 
-                    local moveSpeed = 1.0
-                    local holdType = hTypeDocile
-                    if self:GetState() == "Combat" and LambdaIsValid( self:GetEnemy() ) then
-                        moveSpeed = 1.25
-                        holdType = hTypeCombat
+                    local moveSpeed, holdType = 1.0, hTypeDocile
+                    if self:InCombat() then
+                        moveSpeed, holdType = 1.25, hTypeCombat
                     end
+
                     self.l_HoldType = holdType
                     self.l_WeaponSpeedMultiplier = moveSpeed
-                else
-                    if !wepent.IsGripReady then
-                        wepent.IsGripReady = true
-                        wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 2 ) .. ".mp3", 65 )
-                        wepent:SetBodygroup( 0, 0 )
-                        self.l_HoldType = "melee2"
-                    end
+                elseif !wepent.IsGripReady then
+                    wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 2 ) .. ".mp3", 65 )
+                    wepent:SetBodygroup( 0, 0 )
+                    
+                    wepent.IsGripReady = true
+                    self.l_HoldType = "melee2"
                 end
 
-                if CurTime() > wepent.NextEnergyRestoreTime then
-                    local HP, maxHP = self:Health(), self:GetMaxHealth()
-                    if HP < maxHP then 
-                        self:SetHealth( min( HP + 1, maxHP ) ) 
+                if CurTime() >= wepent.NextEnergyRestoreTime then
+                    local energy, maxEnergy = self:Health(), self:GetMaxHealth()
+                    if energy < maxEnergy then 
+                        self:SetHealth( min( energy + 1, maxEnergy ) ) 
                     else
-                        local armor, maxArmor = self:Armor(), ( self:GetMaxArmor() / 2 )
-                        if armor < maxArmor then self:SetArmor( min( armor + 1, maxArmor ) ) end
+                        local energy, maxEnergy = self:Armor(), ( self:GetMaxArmor() * 0.5 )
+                        if energy < maxEnergy then self:SetArmor( min( energy + 1, maxEnergy ) ) end
                     end
 
-                    wepent.NextEnergyRestoreTime = CurTime() + 1
+                    wepent.NextEnergyRestoreTime = ( CurTime() + 1 )
                 end
             end
 
@@ -103,33 +120,50 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         OnTakeDamage = function( self, wepent, dmginfo )
-            if CurTime() > wepent.NextUnreadyTime then wepent.NextUnreadyTime = CurTime() + random( 4 ) end
+            if CurTime() >= wepent.NextUnreadyTime then 
+                wepent.NextUnreadyTime = CurTime() + random( 4 ) 
+            end
+            wepent.NextEnergyRestoreTime = CurTime() + random( 2, 4 )
 
             if dmginfo:IsBulletDamage()then
                 if CurTime() <= wepent.DodgeTime then return true end
-                if random( 2 ) == 1 and self:IsOnGround() and self.l_issmoving and !self:IsDisabled() then
+
+                local onGround = self:IsOnGround()
+                if ( !onGround or self.l_issmoving ) and random( 2 ) == 1 then
                     local selfCenter, selfPos = self:WorldSpaceCenter(), self:GetPos()
-                    local stepHeight = self:GetUp() * -self.loco:GetStepHeight()
+                    local stepHeight = ( vector_up * -self.loco:GetStepHeight() )
 
                     local inflictor = dmginfo:GetInflictor()
-                    local dmgSrc = ( IsValid( inflictor ) and inflictor:WorldSpaceCenter() or dmginfo:GetAttacker():WorldSpaceCenter() )
+                    local dmgSrc = ( IsValid( inflictor ) and inflictor or dmginfo:GetAttacker() ):WorldSpaceCenter()
 
                     local dmgAng = ( dmgSrc - selfCenter ):Angle(); dmgAng.z = 0
-                    local dodgeDir = ( dmgAng:Right() * ( random( 2 ) == 1 and -1500 or 1500 ) )
+                    local dodgeDir = ( random( 2 ) == 1 and -dmgAng:Right() or dmgAng:Right() )
+                    local dodgeVel = 128
 
-                    local realVel = ( dodgeDir / 5 )
-                    if self:Trace( selfCenter + realVel, selfCenter ).Hit or !self:Trace( selfPos + realVel + stepHeight, selfPos + realVel ).Hit then dodgeDir = -dodgeDir end
+                    for i = 1, 2 do
+                        local trace = self:Trace( selfCenter + dodgeDir * dodgeVel, selfCenter )
+                        if trace.Hit then
+                            local dist = trace.HitPos:Distance( selfCenter )
+                            if dist <= 40 then
+                                if i == 2 then break end
+                                dodgeDir = -dodgeDir
+                                continue
+                            end
+                            dodgeVel = dist
+                        end
 
-                    if !self:Trace( selfCenter + realVel, selfCenter ).Hit and self:Trace( selfPos + realVel + stepHeight, selfPos + realVel ).Hit then 
-                        self.loco:SetVelocity( dodgeDir )
-                        wepent:EmitSound( "lambdaplayers/weapons/katana/katana_dodge" .. random( 2 ) .. ".mp3", 70 )
-                        wepent.DodgeTime = CurTime() + 0.2
-                        return true
+                        if i == 2 then
+                            dodgeVel = ( dodgeVel * ( onGround and 10 or 2 ) )
+                            self.loco:SetVelocity( ( onGround and self.loco:GetVelocity() or vector_origin ) + dodgeDir * dodgeVel )
+
+                            self:EmitSound( "lambdaplayers/weapons/katana/katana_dodge" .. random( 2 ) .. ".mp3", 70, random( 95, 105 ), 1, CHAN_BODY )
+                            wepent.DodgeTime = CurTime() + 0.2
+                            return true
+                        end
                     end
                 end
             end
 
-            wepent.NextEnergyRestoreTime = CurTime() + random( 2, 4 )
             dmginfo:ScaleDamage( Rand( 0.66, 0.75 ) )
         end,
 
@@ -142,7 +176,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             local attackGest = self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             local swingSpeed = Rand( 0.9, 1.4 ); self:SetLayerPlaybackRate( attackGest, swingSpeed )
-
 
             self:SimpleWeaponTimer( ( 0.3 / swingSpeed ), function()
                 if !LambdaIsValid( target ) or !self:IsInRange( target, 70 ) then return end
@@ -159,26 +192,21 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                 local postHP = target:Health()
                 target:TakeDamageInfo( dmginfo )
-                target:EmitSound( "lambdaplayers/weapons/katana/katana_swing_hit" .. random(3) .. ".mp3", 70 )
+                target:EmitSound( "lambdaplayers/weapons/katana/katana_swing_hit" .. random( 3 ) .. ".mp3", 70 )
 
                 if target:Health() < postHP then
-                    local bleedTimer = "Lambda_Katana_BleedingEffect" .. target:EntIndex()
-                    if timer_Exists( bleedTimer ) then timer_Remove( bleedTimer ) end
+                    local bleedTimer = "Lambda_Katana_BleedingEffect" .. target:GetCreationID()
+                    self:RemoveNamedTimer( bleedTimer )
 
-                    timer_Create( bleedTimer, Rand( 0.5, 1.5 ), random( 5, 15 ), function()
-                        if !LambdaIsValid( target ) or target:Health() <= 0 or target:IsPlayer() and !target:Alive() then
-                            timer_Remove( bleedTimer )
-                            return
-                        end
-
+                    self:NamedTimer( bleedTimer, Rand( 0.75, 1.25 ), random( 3, 10 ), function()
+                        if !LambdaIsValid( target ) or target:Health() <= 0 or target:IsPlayer() and !target:Alive() then return true end
                         local bleedInfo = DamageInfo()
                         bleedInfo:SetDamage( random( 3 ) )
                         bleedInfo:SetDamageType( DMG_SLASH )
                         bleedInfo:SetInflictor( IsValid( wepent ) and wepent or IsValid( self ) and self or target )
                         bleedInfo:SetAttacker( IsValid( self ) and self or target )
-
                         target:TakeDamageInfo( bleedInfo )
-                    end )
+                    end, true )
                 end
             end)
 

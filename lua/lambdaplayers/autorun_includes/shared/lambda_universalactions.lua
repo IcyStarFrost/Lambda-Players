@@ -17,10 +17,10 @@ end
 -- Random weapon switching
 AddUActionToLambdaUA( function( self )
     if random( 3 ) != 1 then return end
-    if self:GetState( "Idle" ) then
-        self:SwitchToRandomWeapon()
-    elseif self:InCombat() or self:IsPanicking() then
+    if self:InCombat() or self:IsPanicking() then
         self:SwitchToLethalWeapon()
+    else
+        self:SwitchToRandomWeapon()
     end
 end, "SwitchToRandomWeapon" )
 
@@ -57,32 +57,29 @@ end, "FindButton" )
 
 -- Crouch
 AddUActionToLambdaUA( function( self )
-    if random( 2 ) != 1 then return end
+    if random( 2 ) != 1 or self:IsPanicking() then return end
     self:SetCrouch( true )
 
     local lastState = self:GetState()
-    local crouchTime = ( CurTime() + random( 1, 15 ) )
+    local crouchTime = ( CurTime() + random( 15 ) )
     self:NamedTimer( "UnCrouch", 1, 0, function() 
-        if self:GetState() != lastState or CurTime() >= crouchTime then
-            self:SetCrouch( false )
-            return true
-        end
+        if self:GetState() == lastState and CurTime() < crouchTime then return end
+        self:SetCrouch( false )
+        return true
     end )
 end, "Crouch" )
-
 
 local noclip = GetConVar( "lambdaplayers_lambda_allownoclip" )
 -- NoClip
 AddUActionToLambdaUA( function( self )
-    if random( 2 ) != 1 or !noclip:GetBool() then return end
+    if random( 3 ) != 1 or !noclip:GetBool() then return end
     self:NoClipState( true )
 
     local noclipTime = ( CurTime() + rand( 1, 120 ) )
     self:NamedTimer( "UnNoclip", 1, 0, function() 
-        if CurTime() >= noclipTime or !noclip:GetBool() then
-            self:NoClipState( false )
-            return true
-        end
+        if CurTime() < noclipTime and noclip:GetBool() then return end
+        self:NoClipState( false )
+        return true
     end )
 end, "Noclip" )
 
@@ -103,7 +100,7 @@ end, "Noclip" )
 local killbind = GetConVar( "lambdaplayers_lambda_allowkillbind" )
 -- Use Killbind
 AddUActionToLambdaUA( function( self )
-    if !killbind:GetBool() or random( self:IsPlayingTaunt() and 50 or 150 ) != 1 then return end
+    if !killbind:GetBool() or random( self:IsPlayingTaunt() and 40 or 150 ) != 1 then return end
     self.l_killbinded = true
     self:Kill()
     self.l_killbinded = false

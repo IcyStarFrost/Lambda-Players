@@ -628,17 +628,17 @@ local GetDistTo                                      = VectorMeta.Distance
 local GetDistToSqr                                   = VectorMeta.DistToSqr
 --
 
+local crouchWalkPenalty = 5
+local jumpPenalty = 15
+local ladderPenalty = 20
+local avoidPenalty = 75
+
 -- Returns a pathfinding function for the :Compute() function
 function ENT:PathGenerator()
     local loco = self.loco
     local stepHeight = CLuaLocomotion_GetStepHeight( loco )
     local jumpHeight = CLuaLocomotion_GetJumpHeight( loco ) + 12
     local deathHeight = -CLuaLocomotion_GetDeathDropHeight( loco )
-
-    local crouchWalkPenalty = 5
-    local jumpPenalty = 15
-    local ladderPenalty = 20
-    local avoidPenalty = 75
 
     local obeyNavmesh = obeynav:GetBool()
     local isInNoClip = self:IsInNoClip()
@@ -683,6 +683,8 @@ function ENT:PathGenerator()
                         cost = ( cost + dist * jumpPenalty )
                     end
                 end
+            elseif self:InCombat() and self:GetIsFiring() then
+                return -1
             end
 
             if obeyNavmesh then
@@ -699,6 +701,9 @@ function ENT:PathGenerator()
                 end
             end
         end
+
+        local hookCost = LambdaRunHook( "LambdaOnPathGenerate", self, area, fromArea, cost, dist, ladder, length )
+        if hookCost then cost = hookCost end
 
         return cost
     end

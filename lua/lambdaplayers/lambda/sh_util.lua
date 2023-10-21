@@ -69,9 +69,6 @@ local isnumber = isnumber
 local ismatrix = ismatrix
 local IsValidModel = util.IsValidModel
 local IsNavmeshLoaded = ( SERVER and navmesh.IsLoaded )
-local spawnArmor = GetConVar( "lambdaplayers_lambda_spawnarmor" )
-local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
-local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
 local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 local spawnBehavior = GetConVar( "lambdaplayers_combat_spawnbehavior" )
 local spawnBehavInitSpawn = GetConVar( "lambdaplayers_combat_spawnbehavior_initialspawnonly" )
@@ -178,7 +175,7 @@ function ENT:NamedTimer( name, delay, repeattimes, func, ignoredead )
     self:DebugPrint( "Created a Timer: " .. name )
     timer_create( intname, delay, repeattimes, function() 
         if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) then return end
-        local result = func()
+        local result = func( self )
         if result == true then timer_Remove( intname ) self:DebugPrint( "Removed a Timer: " .. name ) end
     end )
 
@@ -331,6 +328,9 @@ function ENT:ExportLambdaInfo()
         profilepicture = self:GetProfilePicture(),
         health = self:GetNWMaxHealth(),
 
+        walkspeed = self:GetWalkSpeed(),
+        runspeed = self:GetRunSpeed(),
+
         mdlSkin = self:GetSkin(),
         bodygroups = self:GetBodyGroupData(),
 
@@ -449,6 +449,9 @@ if SERVER then
             self:SetHealth( info.health or self:GetMaxHealth() )
             self:SetNWMaxHealth( info.health or self:GetMaxHealth() )
             self:SetArmor( info.armor or self:GetArmor() )
+            
+            self:SetWalkSpeed( info.walkspeed or self:GetWalkSpeed() )
+            self:SetRunSpeed( info.runspeed or self:GetRunSpeed() )
 
             local model = ( info.model or self:GetModel() )
             if !IsValidModel( model ) then model = "models/player/kleiner.mdl" end
@@ -785,8 +788,6 @@ if SERVER then
         self:SetState()
         self:SetCrouch( false )
         self:SetEnemy( NULL )
-        self:SetRunSpeed( runningSpeed:GetInt() )
-        self:SetWalkSpeed( walkingSpeed:GetInt() )
         self:SetIsReloading( false )
         self:RemoveFlags( FL_NOTARGET )
 
