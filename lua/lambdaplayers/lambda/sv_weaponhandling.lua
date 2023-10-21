@@ -340,6 +340,7 @@ function ENT:CanEquipWeapon( weaponname )
     return false
 end
 
+-- Switches our weapon to a random one
 function ENT:SwitchToRandomWeapon( returnOnly )
     local wepList = {}
     local curWep = self.l_Weapon
@@ -360,6 +361,7 @@ function ENT:SwitchToRandomWeapon( returnOnly )
     return rndWeapon
 end
 
+-- Switches our weapon to a random lethal one
 function ENT:SwitchToLethalWeapon()
     local wepList = {}
     local curWep = self.l_Weapon
@@ -378,6 +380,7 @@ function ENT:SwitchToLethalWeapon()
     self:SwitchWeapon( ( hasFavWep and random( #wepList * 2 ) >= #wepList ) and favWep or wepList[ random( #wepList ) ] )
 end
 
+-- Switches our weapon to the one we first spawned with
 function ENT:SwitchToSpawnWeapon()
     local weapon = self.l_SpawnWeapon
     if weapon == "random" then 

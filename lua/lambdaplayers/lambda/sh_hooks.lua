@@ -47,6 +47,7 @@ if SERVER then
         self.l_internalkilled = true
     end
 
+    -- Creates a clientside ragdoll with our look
     function ENT:CreateClientsideRagdoll( info, overrideEnt )
         overrideEnt = overrideEnt or self.l_BecomeRagdollEntity
 
@@ -66,6 +67,7 @@ if SERVER then
         net.Broadcast()
     end
 
+    -- Creates a serverside ragdoll with our look
     function ENT:CreateServersideRagdoll( info, overrideEnt, dontRemove )
         overrideEnt = overrideEnt or self.l_BecomeRagdollEntity
 
@@ -158,6 +160,7 @@ if SERVER then
         return ragdoll
     end
 
+    -- Creates a prop with our weapon's model and drops it
     function ENT:DropWeapon( dmginfo )
         if !self.l_DropWeaponOnDeath or self:IsWeaponMarkedNodraw() then return end
         local wepent = self.WeaponEnt
@@ -409,6 +412,7 @@ if SERVER then
         hook.Run( "ScaleNPCDamage", self, hitGroup, dmginfo )
     end
 
+    -- Called when someone gets killed
     function ENT:OnOtherKilled( victim, info )
         local attacker = info:GetAttacker()
         local inflictor = info:GetInflictor()
@@ -518,7 +522,7 @@ if SERVER then
         end
     }
 
-    -- Sets our current nav area
+    -- Called when our current nav area is changed
     function ENT:OnNavAreaChanged( old, new ) 
         self.l_currentnavarea = new
         
@@ -543,7 +547,7 @@ if SERVER then
         end
     end
 
-    -- Called when we collide with something
+    -- Called when our physics object collides with something
     function ENT:HandleCollision( data )
         if self:GetIsDead() or self:GetNoClip() then return end
         local collider = data.HitEntity
@@ -646,6 +650,7 @@ if SERVER then
         end
     } 
 
+    -- When we are spawned by a player
     function ENT:OnSpawnedByPlayer( ply )
         local respawn = tobool( ply:GetInfoNum( "lambdaplayers_lambda_shouldrespawn", 0 ) )
         local weapon = ply:GetInfo( "lambdaplayers_lambda_spawnweapon" )

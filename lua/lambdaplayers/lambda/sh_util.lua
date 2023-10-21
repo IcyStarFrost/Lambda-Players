@@ -204,6 +204,7 @@ function ENT:NamedWeaponTimer( name, delay, repeattimes, func, ignoredead, ignor
     table_insert( self.l_Timers, intname )
 end
 
+-- Removes the named timer
 function ENT:RemoveNamedTimer( name )
     local id = self:EntIndex()
     local intname = "lambdaplayers_" .. name .. id
@@ -256,16 +257,19 @@ function ENT:GetClosestEntity( pos, radius, filter )
     return closestent
 end
 
--- Returns bone position and angles
-function ENT:GetBoneTransformation( bone )
-    local pos, ang = self:GetBonePosition( bone )
-    if !pos or pos:IsZero() or pos == self:GetPos() then
-        local matrix = self:GetBoneMatrix( bone )
+-- Returns the position and angle of a specified bone
+function ENT:GetBoneTransformation( bone, target )
+    target = ( target or self )
+
+    local pos, ang = target:GetBonePosition( bone )
+    if !pos or pos:IsZero() or pos == target:GetPos() then
+        local matrix = target:GetBoneMatrix( bone )
         if matrix and ismatrix( matrix ) then
             pos = matrix:GetTranslation()
             ang = matrix:GetAngles()
         end
     end
+    
     return { Pos = pos, Ang = ang, Bone = bone }
 end
 
@@ -309,6 +313,7 @@ function ENT:GetNormalTo( pos )
 end
 
 -- AI/Nextbot creators can assign .LambdaPlayerSTALP = true to their entities if they want the Lambda Players to treat them like players
+-- When the function is underused: >:(
 function ENT:ShouldTreatAsLPlayer( ent )
     if ent.LambdaPlayerSTALP then return true end
     if ent.IsLambdaPlayer then return true end
@@ -1208,6 +1213,7 @@ if SERVER then
         return max( ( speed - maxSafeFallSpeed ) * damageForFall, 0 )
     end
 
+    -- Stops the current voiceline we're speaking
     function ENT:StopCurrentVoiceLine()
         if !self:IsSpeaking() then return end
         self:SetLastSpeakingTime( 0 )
@@ -1217,10 +1223,12 @@ if SERVER then
         net.Broadcast()
     end
 
+    -- Returns the last voicetype we have spoken a voiceline with
     function ENT:GetLastSpokenVoiceType()
         return self.l_lastspokenvoicetype
     end
 
+    -- Returns if we are currently climbing a ladder
     function ENT:IsUsingLadder()
         return IsValid( self.l_ladderarea )
     end
@@ -1289,9 +1297,7 @@ if SERVER then
 
     -- Makes the entity no longer draw on the client if bool is set to true.
     -- Making a entity nodraw server side seemed to have issues in multiplayer.
-
     -- As of 11/2/2022, it seems we need the server nodraw, client nodraw, and usage of Draw functions to make the Lambda Players to not draw. Kinda cringe but alright
-
     function ENT:ClientSideNoDraw( ent, bool )
         net.Start( "lambdaplayers_setnodraw" )
             net.WriteEntity( ent )
@@ -1312,6 +1318,7 @@ if SERVER then
         return ( _LAMBDAPLAYERSEntityRelations[ ent:GetClass() ] or D_NU )
     end
 
+    -- Handles the NPC relationship with entity
     function ENT:HandleNPCRelations( ent )
         self:DebugPrint( "handling relationship with ", ent )
 
@@ -1330,6 +1337,7 @@ if SERVER then
         end
     end
 
+    -- Calls ENT:HandleAllValidNPCRelations for all NPCs and Nextbots
     function ENT:HandleAllValidNPCRelations()
         for _, v in ipairs( ents_GetAll() ) do 
             if !IsValid( v ) or v.IsLambdaPlayer or !v:IsNPC() and !v:IsNextBot() then continue end 
@@ -1337,6 +1345,7 @@ if SERVER then
         end
     end
 
+    -- Returns if the specified NPC is currently angry at us
     function ENT:ShouldAttackNPC( ent )
         if !self:CanTarget( ent ) then return false end
         local getfunc = ent.GetEnemy
@@ -1474,6 +1483,8 @@ if ( CLIENT ) then
         return profilepicturematerial
     end
 
+    -- If we are currently drawn and exist in clientside realm
+    -- Deprecated(?) because of existance of ENT:IsDormant()
     function ENT:IsBeingDrawn()
         return ( RealTime() < self.l_lastdraw )
     end
