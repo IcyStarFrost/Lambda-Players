@@ -340,6 +340,12 @@ function ENT:CanEquipWeapon( weaponname )
     return false
 end
 
+local freeRestrictWeps = {
+    "none",
+    "physgun",
+    "toolgun"
+}
+
 -- Switches our weapon to a random one
 function ENT:SwitchToRandomWeapon( returnOnly )
     local wepList = {}
@@ -348,8 +354,10 @@ function ENT:SwitchToRandomWeapon( returnOnly )
     local favWep = self.l_FavoriteWeapon
     local hasFavWep = false
 
+    local wepRestricts = self.l_WeaponRestrictions
     for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
         if name == curWep or data.cantbeselected or !self:CanEquipWeapon( name ) then continue end
+        if wepRestricts and !wepRestricts[ name ] and !freeRestrictWeps[ name ] then continue end
         if LambdaRunHook( "LambdaCanSwitchWeapon", self, name, data ) then continue end
 
         if !hasFavWep then hasFavWep = ( name == favWep ) end
@@ -369,8 +377,10 @@ function ENT:SwitchToLethalWeapon()
     local favWep = self.l_FavoriteWeapon
     local hasFavWep = false
 
+    local wepRestricts = self.l_WeaponRestrictions
     for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
         if name == curWep or !data.islethal or data.cantbeselected or !self:CanEquipWeapon( name ) then continue end
+        if wepRestricts and !wepRestricts[ name ] and !freeRestrictWeps[ name ] then continue end
         if LambdaRunHook( "LambdaCanSwitchWeapon", self, name, data ) then continue end
 
         if !hasFavWep then hasFavWep = ( name == favWep ) end

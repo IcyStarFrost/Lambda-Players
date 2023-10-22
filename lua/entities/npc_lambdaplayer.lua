@@ -372,6 +372,8 @@ function ENT:Initialize()
 
         self.l_SpawnWeapon = "physgun" -- The weapon we spawned with
         self:SetExternalVar( "l_FavoriteWeapon", false ) -- Our favorite weapon
+        self:SetExternalVar( "l_WeaponRestrictions", false ) -- Our weapon restrictions
+
         self.WeaponEnt = wepent
         self:SetWeaponENT( wepent )
         self:SetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon )
@@ -848,7 +850,9 @@ function ENT:Think()
                 end
 
                 -- Randomly change height
-                if curTime >= self.l_nextnoclipheightchange then
+                if !self:GetState( "Idle" ) then
+                    self.l_noclipheight = 0
+                elseif curTime >= self.l_nextnoclipheightchange then
                     self.l_noclipheight = random( 0, 500 )
                     self.l_nextnoclipheightchange = curTime + random( 10 )
                 end

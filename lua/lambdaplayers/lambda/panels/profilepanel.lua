@@ -1,9 +1,11 @@
 local table_insert = table.insert
 local ipairs = ipairs
 local pairs = pairs
+local file_Exists = file.Exists
 local round = math.Round
 local table_Merge = table.Merge
 local table_Empty = table.Empty
+local table_IsEmpty = table.IsEmpty
 local string_upper = string.upper
 local isfunction = isfunction
 local table_Copy = table.Copy
@@ -11,6 +13,7 @@ local string_Explode = string.Explode
 local string_len = string.len
 local string_Left = string.Left
 local string_Right = string.Right
+local string_Replace = string.Replace
 
 local function MakeNiceName( str )
     local newname = {}
@@ -388,16 +391,83 @@ local function OpenProfilePanel( ply )
     LAMBDAPANELS:CreateLabel( "Voice Pitch", mainscroll, TOP )
     local voicepitch = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 100, "Voice Pitch", 30, 255, 0 )
 
-    local wpnCopy = table_Copy( _LAMBDAWEAPONCLASSANDPRINTS )
-    wpnCopy[ "No Weapon" ] = "/NIL"
+    --
 
     LAMBDAPANELS:CreateLabel( "Spawn Weapon", mainscroll, TOP )
     LAMBDAPANELS:CreateLabel( "The weapon to spawn with", mainscroll, TOP )
-    local spawnweapon = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, wpnCopy )
+    
+
+    local spawnweapon = "none"
+    LAMBDAPANELS:CreateButton( mainscroll, TOP, "Select Spawn Weapon", function()
+        LambdaWeaponSelectPanel( spawnweapon, function( selectedWep )
+            spawnweapon = selectedWep
+        end )
+    end )
 
     LAMBDAPANELS:CreateLabel( "Favorite Weapon", mainscroll, TOP )
-    LAMBDAPANELS:CreateLabel( "The weapon this Lambda will prefer to use when switching", mainscroll, TOP )
-    local favoriteweapon = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, wpnCopy )
+    LAMBDAPANELS:CreateLabel( "This Lambda's favorite weapon", mainscroll, TOP )
+
+    local favoriteweapon = "none"
+    LAMBDAPANELS:CreateButton( mainscroll, TOP, "Select Favorite Weapon", function()
+        LambdaWeaponSelectPanel( favoriteweapon, function( selectedWep )
+            favoriteweapon = favoriteweapon
+        end )
+    end )
+
+    ---- Weapon Restrictions ----
+    LAMBDAPANELS:CreateLabel( "Weapon Restrictions", mainscroll, TOP )
+    LAMBDAPANELS:CreateLabel( "Weapons this Lambda is only allowed to use", mainscroll, TOP )
+
+    local weaponrestrictions = {}
+    LAMBDAPANELS:CreateButton( mainscroll, TOP, "Edit Weapon Restrictions", function()
+        local weppermframe = LAMBDAPANELS:CreateFrame( "Weapon Restrictions", 800, 400 )
+        local weppermscroll = LAMBDAPANELS:CreateScrollPanel( weppermframe, true, FILL )
+
+        LAMBDAPANELS:CreateLabel( "Leaving all weapons un-checked will disable the system.", weppermframe, TOP )
+
+        local weaponcheckboxes = {}
+        for weporigin, _ in pairs( _LAMBDAPLAYERSWEAPONORIGINS ) do
+            local weppermscroll2 = LAMBDAPANELS:CreateScrollPanel( weppermscroll, false, LEFT )
+            weppermscroll2:SetSize( 250, 350 )
+            weppermscroll:AddPanel( weppermscroll2 )
+
+            LAMBDAPANELS:CreateLabel( "------ " .. weporigin .. " ------ ", weppermscroll2, TOP )
+
+            local togglestate = false
+            weaponcheckboxes[ weporigin ] = {}
+
+            LAMBDAPANELS:CreateButton( weppermscroll2, TOP, "Toggle " .. weporigin .. " Weapons", function()
+                togglestate = !togglestate
+                for _, check in ipairs( weaponcheckboxes[ weporigin ] ) do
+                    check[1]:SetChecked( togglestate )
+                end
+            end )
+
+            for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
+                if data.origin == weporigin and name != "none" and name != "physgun" and name != "toolgun" then
+                    local weprettyname = string_Replace( data.prettyname, "[" .. weporigin .. "] ", "" )
+                    local weppermcheckbox = LAMBDAPANELS:CreateCheckBox( weppermscroll2, TOP, ( weaponrestrictions[ name ] or false ), weprettyname )
+                    table_insert( weaponcheckboxes[ weporigin ], { weppermcheckbox, name } )
+                end
+            end
+        end
+
+        LAMBDAPANELS:CreateButton( weppermscroll, BOTTOM, "Done", function()
+            table_Empty( weaponrestrictions )
+            for _, v in pairs( weaponcheckboxes ) do
+                for _, j in ipairs( v ) do
+                    if !j[ 1 ]:GetChecked() then continue end
+                    weaponrestrictions[ j[ 2 ] ] = true
+                end
+            end
+
+            surface.PlaySound( "buttons/button15.wav" )
+            weppermframe:Close()
+        end )
+    end )
+
+    ---- ---- ---- ---- ---- ----
+
 
     LAMBDAPANELS:CreateLabel( "Ping", mainscroll, TOP )
     LAMBDAPANELS:CreateLabel( "The average ping of this Lambda", mainscroll, TOP )
@@ -454,8 +524,10 @@ local function OpenProfilePanel( ply )
     playermodelpreview:Dock( TOP )
     playermodelpreview:SetModel( "models/error.mdl" )
 
+    local mdlPreviewAng = Angle()
     function playermodelpreview:LayoutEntity( Entity )
-        Entity:SetAngles( Angle( 0, RealTime() * 20 % 360, 0 ) )
+        mdlPreviewAng[ 2 ] = ( RealTime() * 20 % 360 )
+        Entity:SetAngles( mdlPreviewAng )
     end
 
     function playermodelpreview:UpdateColors( vector )
@@ -464,7 +536,10 @@ local function OpenProfilePanel( ply )
     end
 
     function model:OnChange() 
-        playermodelpreview:SetModel( model:GetText() != "" and model:GetText() or "models/error.mdl" )
+        local mdlPath = model:GetText()
+        if !file_Exists( mdlPath, "GAME" ) then return end
+
+        playermodelpreview:SetModel( mdlPath )
         if isfunction( UpdateSBSliders ) then UpdateSBSliders() end
     end
     ---- ---- ---- ---- ---- ----
@@ -604,8 +679,6 @@ local function OpenProfilePanel( ply )
         if name:GetText() == "" then chat.AddText( "No name is set!" ) return end
         local _, vp = voiceprofile:GetSelected()
         local _, tp = textprofile:GetSelected()
-        local _, weapon = spawnweapon:GetSelected()
-        local _, favweapon = favoriteweapon:GetSelected()
 
         local infotable = {
             name = name:GetText(),
@@ -628,8 +701,9 @@ local function OpenProfilePanel( ply )
 
             externalvars = profileinfo and profileinfo.externalvars or nil,
 
-            spawnwep = weapon != "/NIL" and weapon or nil,
-            favwep = favweapon != "/NIL" and favweapon or nil
+            spawnwep = ( spawnweapon != "none" and spawnweapon or nil ),
+            favwep = ( favoriteweapon != "none" and favoriteweapon or nil ),
+            weaponrestrictions = ( !table_IsEmpty( weaponrestrictions ) and weaponrestrictions or nil )
         }
 
         infotable.bodygroups = {}
@@ -701,8 +775,9 @@ local function OpenProfilePanel( ply )
         
         averageping:SetValue( infotable.averageping or infotable.pingrange )
 
-        if infotable.spawnwep then spawnweapon:SelectOptionByKey( infotable.spawnwep ) else spawnweapon:SelectOptionByKey( "/NIL" ) end
-        if infotable.favwep then favoriteweapon:SelectOptionByKey( infotable.favwep ) else favoriteweapon:SelectOptionByKey( "/NIL" ) end
+        spawnweapon = infotable.spawnwep or "none"
+        favoriteweapon = infotable.favwep or "none"
+        weaponrestrictions = infotable.weaponrestrictions or {}
 
         if externalpanels then
             for k, v in pairs( externalpanels ) do

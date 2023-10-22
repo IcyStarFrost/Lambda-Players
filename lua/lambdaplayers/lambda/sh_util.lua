@@ -490,8 +490,9 @@ if SERVER then
             local spawnwep = self:WeaponDataExists( info.spawnwep ) and info.spawnwep or self.l_SpawnWeapon
             self:SwitchToSpawnWeapon()
             self:SetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon )
-            
+
             self.l_FavoriteWeapon = ( info.favwep or self.l_FavoriteWeapon )
+            self.l_WeaponRestrictions = ( info.weaponrestrictions or self.l_WeaponRestrictions )
 
             self:SetFrags( info.frags or self:GetFrags() )
             self:SetDeaths( info.deaths or self:GetDeaths() )

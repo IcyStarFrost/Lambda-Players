@@ -68,18 +68,20 @@ local ipairs = ipairs
 local SortedPairs = SortedPairs
 local max = math.max
 
-local function OpenSpawnWeaponPanel() 
+function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc )
     local mainframe = LAMBDAPANELS:CreateFrame( "Spawn Weapon Selection", 700, 500 )
     local mainscroll = LAMBDAPANELS:CreateScrollPanel( mainframe, true, FILL )
 
     local weplinelist = {}
     local weplistlist = {}
 
-    local currentWep = spawnWep:GetString()
+    local isCvar = ( type( wepSelectVar ) == "ConVar" )
+
+    local currentWep = ( isCvar and wepSelectVar:GetString() or wepSelectVar )
     if currentWep == "random" then 
         currentWep = "Random Weapon"
     else
-        currentWep = _LAMBDAPLAYERSWEAPONS[ currentWep ] and _LAMBDAPLAYERSWEAPONS[ currentWep ].prettyname or "!!NON EXISTENT WEAPON"
+        currentWep = ( _LAMBDAPLAYERSWEAPONS[ currentWep ] and _LAMBDAPLAYERSWEAPONS[ currentWep ].prettyname or "!!NON EXISTENT WEAPON!!" )
     end
     LAMBDAPANELS:CreateLabel( "Currenly selected spawn weapon: " .. currentWep, mainframe, TOP )
 
@@ -91,7 +93,11 @@ local function OpenSpawnWeaponPanel()
         originlist:SetMultiSelect( false )
 
         function originlist:DoDoubleClick( id, line )
-            spawnWep:SetString( line:GetSortValue( 1 ) )
+            local selectedWep = line:GetSortValue( 1 )
+            if onSelectFunc and onSelectFunc( selectedWep ) != true and isCvar then 
+                wepSelectVar:SetString( selectedWep )
+            end
+
             AddNotification( "Selected " .. line:GetColumnText( 1 ) .. " from " .. weporigin .. " as a spawn weapon!", NOTIFY_GENERIC, 3 )
             PlaySound( "buttons/button15.wav" )
             mainframe:Close()
@@ -142,14 +148,22 @@ local function OpenSpawnWeaponPanel()
     end
 
     LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select None", function()
-        spawnWep:SetString( "none" )
+        local selectedWep = "none"
+        if onSelectFunc and onSelectFunc( selectedWep ) != true and isCvar then 
+            wepSelectVar:SetString( selectedWep )
+        end
+
         AddNotification( "Selected none as a spawn weapon!", NOTIFY_GENERIC, 3 )
         PlaySound( "buttons/button15.wav" )
         mainframe:Close()
     end )
 
     LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select Random", function()
-        spawnWep:SetString( "random" )
+        local selectedWep = "random"
+        if onSelectFunc and onSelectFunc( selectedWep ) != true and isCvar then 
+            wepSelectVar:SetString( selectedWep )
+        end
+
         AddNotification( "Selected random as a spawn weapon!", NOTIFY_GENERIC, 3 )
         PlaySound( "buttons/button15.wav" )
         mainframe:Close()
@@ -234,7 +248,9 @@ local function OpenWeaponPermissionPanel( ply )
     mainframe:OnSizeChanged( mainframe:GetWide() )
 end
 
-CreateLambdaConsoleCommand( "lambdaplayers_lambda_openspawnweaponpanel", OpenSpawnWeaponPanel, true, "Opens a panel that allows you to select the weapon the next spawned Lambda Player by you will start with", { name = "Select Spawn Weapon", category = "Lambda Weapons" } )
+CreateLambdaConsoleCommand( "lambdaplayers_lambda_openspawnweaponpanel", function()
+    LambdaWeaponSelectPanel( spawnWep )
+end, true, "Opens a panel that allows you to select the weapon the next spawned Lambda Player by you will start with", { name = "Select Spawn Weapon", category = "Lambda Weapons" } )
 CreateLambdaConsoleCommand( "lambdaplayers_lambda_openweaponpermissionpanel", OpenWeaponPermissionPanel, true, "Opens a panel that allows you to allow and disallow certain weapons to be used by Lambda Players", { name = "Select Weapon Permissions", category = "Lambda Weapons" } )
 
 -- One part of the duplicator support

@@ -245,7 +245,7 @@ function ENT:Retreat()
 end
 
 function ENT:HealSomeone( target )
-    if !LambdaIsValid( target ) or target:Health() >= target:GetMaxHealth() or target.IsLambdaPlayer and target:GetEnemy() == self then
+    if !LambdaIsValid( target ) or target:Health() >= target:GetMaxHealth() or target.GetEnemy and target:GetEnemy() == self then
         return true
     end
 
@@ -258,15 +258,15 @@ function ENT:HealSomeone( target )
         self:LookTo( target, 1 )
         self:UseWeapon( target )
 
-        if target.IsLambdaPlayer and target:Health() >= target:GetMaxHealth() then
+        if target.IsLambdaPlayer and !target.l_preventdefaultspeak and target:Health() >= target:GetMaxHealth() then
             target:LookTo( self, 1 )
-            if !target.l_preventdefaultspeak then target:PlaySoundFile( "assist" ) end
+            target:PlaySoundFile( "assist" )
         end
     else
         local cancelled = false
         self:PreventWeaponSwitch( true )
 
-        self:MoveToPos( target, { run = true, update = 0.33, tol = 48, callback = function()
+        self:MoveToPos( target, { run = true, update = 0.2, tol = 48, callback = function()
             if !self:GetState( "HealSomeone" ) or self:Health() < self:GetMaxHealth() then cancelled = true return false end
             if !LambdaIsValid( target ) then cancelled = true return false end
             if target:Health() >= target:GetMaxHealth() then cancelled = true return false end
