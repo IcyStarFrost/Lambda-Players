@@ -94,7 +94,7 @@ function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc )
 
         function originlist:DoDoubleClick( id, line )
             local selectedWep = line:GetSortValue( 1 )
-            if onSelectFunc and onSelectFunc( selectedWep ) != true and isCvar then 
+            if ( !onSelectFunc or onSelectFunc( selectedWep ) != true ) and isCvar then 
                 wepSelectVar:SetString( selectedWep )
             end
 
@@ -149,7 +149,7 @@ function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc )
 
     LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select None", function()
         local selectedWep = "none"
-        if onSelectFunc and onSelectFunc( selectedWep ) != true and isCvar then 
+        if ( !onSelectFunc or onSelectFunc( selectedWep ) != true ) and isCvar then 
             wepSelectVar:SetString( selectedWep )
         end
 
@@ -160,7 +160,7 @@ function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc )
 
     LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select Random", function()
         local selectedWep = "random"
-        if onSelectFunc and onSelectFunc( selectedWep ) != true and isCvar then 
+        if ( !onSelectFunc or onSelectFunc( selectedWep ) != true ) and isCvar then 
             wepSelectVar:SetString( selectedWep )
         end
 
