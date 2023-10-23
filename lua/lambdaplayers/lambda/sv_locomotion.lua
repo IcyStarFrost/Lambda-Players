@@ -366,7 +366,8 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
     local climbEnd = ( startPos + ( ladder:GetNormal() * 20 ) )
     local climbNormal = ( climbEnd - climbStart ):GetNormalized()
     local climbDist = climbStart:Distance( climbEnd )
-    local stuckTime = ( CurTime() + random( 2, 8 ) )
+    local stuckTime = ( CurTime() + random( 2, 5 ) )
+    local lastTime = CurTime()
 
     while ( true ) do
         local climbPos = ( climbStart + climbNormal * climbFract )
@@ -375,7 +376,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
         laddermovetable.filter = self
         laddermovetable.mins, laddermovetable.maxs = self:GetCollisionBounds()
 
-        if !self.l_issmoving or self:IsInNoClip() or !self:Alive() or CurTime() >= stuckTime then
+        if !self.l_issmoving or CurTime() >= stuckTime or !self:Alive() or self:IsInNoClip() then
             local obstacle = TraceHull( laddermovetable ).Entity
             if obstacle != self and self:GetEnemy() != obstacle and IsValid( obstacle ) and self:CanTarget( obstacle ) then
                 stuckTime = ( stuckTime + 5 )
@@ -398,7 +399,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
 
         if climbState != 2 or ( !self:IsDisabled() or self:GetIsTyping() ) and CurTime() >= self.l_moveWaitTime then
             if !IsValid( TraceHull( laddermovetable ).Entity ) then
-                climbFract = ( climbFract + ( 200 * FrameTime() ) )
+                climbFract = ( climbFract + ( 200 * ( CurTime() - lastTime ) ) )
                 stuckTime = ( CurTime() + random( 2, 8 ) )
 
                 if climbFract >= climbDist then
@@ -424,7 +425,8 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
                 end
             end
         end
-            
+        
+        lastTime = CurTime()
         coroutine_yield()
     end
 end
