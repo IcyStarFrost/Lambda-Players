@@ -86,7 +86,10 @@ function ENT:MoveToPos( pos, options )
     LambdaRunHook( "LambdaOnBeginMove", self, pos, true )
 
     while ( IsValid( path ) ) do
-        if self:GetIsDead() then returnMsg = "invalid" break end
+        if self:GetIsDead() then 
+            returnMsg = "dead" 
+            break
+        end
         if self.AbortMovement then 
             self.AbortMovement = false 
             returnMsg = "aborted"; break 
@@ -149,65 +152,67 @@ function ENT:MoveToPos( pos, options )
             end
             path:Update( self )
 
-            local selfPos = self:GetPos()
-            local lastGoal = path:LastSegment()
-            local goalNormal = ( ( ( lastGoal and curGoal.area == lastGoal.area ) and pos or curGoal.pos ) - selfPos ):GetNormalized()
-            self:ObstacleCheck( goalNormal )
+            if !self:IsInNoClip() then
+                local selfPos = self:GetPos()
+                local lastGoal = path:LastSegment()
 
-            if shouldavoid:GetBool() then
-                self:AvoidCheck()
-            end
-            goalNormal.z = 0
+                local goalAng = ( ( ( lastGoal and curGoal.area == lastGoal.area ) and pos or curGoal.pos ) - selfPos )
+                goalAng.z = 0; goalAng = goalAng:Angle()
 
-            local shouldJump = false
-            local moveType = curGoal.type
-            if moveType == 4 or moveType == 5 then -- Ladder climbing ( 4 - Up, 5 - Down )
-                local ladder = curGoal.ladder
-                if IsValid( ladder ) and self:IsInRange( ( moveType == 4 and ladder:GetBottom() or ladder:GetTop() ), 70 ) then
-                    self.l_ladderarea = ladder
-                    self:ClimbLadder( ladder, ( moveType == 5 ), curGoal.pos )
+                local goalNormal = goalAng:Forward()
+                self:AvoidCheck( goalAng )
+                self:ObstacleCheck( goalNormal )
 
-                    self.l_ladderarea = NULL 
-                    loco:SetVelocity( vector_origin )
+                local shouldJump = false
+                local moveType = curGoal.type
+                if moveType == 4 or moveType == 5 then -- Ladder climbing ( 4 - Up, 5 - Down )
+                    local ladder = curGoal.ladder
+                    if IsValid( ladder ) and self:IsInRange( ( moveType == 4 and ladder:GetBottom() or ladder:GetTop() ), 70 ) then
+                        self.l_ladderarea = ladder
+                        self:ClimbLadder( ladder, ( moveType == 5 ), curGoal.pos )
 
-                    pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
-                    if pos then path:Compute( self, pos, costFunctor ) end
+                        self.l_ladderarea = NULL 
+                        loco:SetVelocity( vector_origin )
+
+                        pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
+                        if pos then path:Compute( self, pos, costFunctor ) end
+                    end
+                elseif moveType == 3 and curGoal.pos:DistToSqr( selfPos ) <= 2000 then
+                    shouldJump = true
+                elseif moveType == 2 and ( prevGoal.pos.z - selfPos.z ) <= 0 then
+                    shouldJump = true
+                else
+                    -- Jumping over ledges and close up jumping
+                    local stepAhead = ( selfPos + vector_up * stepH )
+                    curArea = self.l_currentnavarea
+                    local grHeight, grNormal = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 60 )
+                    if grHeight and grNormal.z > 0.9 and ( grHeight - selfPos.z ) > stepH then shouldJump = true end
+
+                    if !shouldJump then
+                        grHeight = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 30 )
+                        if grHeight and ( grHeight - selfPos.z ) < -jumpH then shouldJump = true end
+                    end
                 end
-            elseif moveType == 3 and curGoal.pos:DistToSqr( selfPos ) <= 2000 then
-                shouldJump = true
-            elseif moveType == 2 and ( prevGoal.pos.z - selfPos.z ) <= 0 then
-                shouldJump = true
-            else
-                -- Jumping over ledges and close up jumping
-                local stepAhead = ( selfPos + vector_up * stepH )
-                curArea = self.l_currentnavarea
-                local grHeight, grNormal = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 60 )
-                if grHeight and grNormal.z > 0.9 and ( grHeight - selfPos.z ) > stepH then shouldJump = true end
 
-                if !shouldJump then
-                    grHeight = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 30 )
-                    if grHeight and ( grHeight - selfPos.z ) < -jumpH then shouldJump = true end
+                if shouldJump and CurTime() >= nextJumpT then
+                    self:LambdaJump() 
+                    nextJumpT = CurTime() + 0.5
                 end
-            end
 
-            if shouldJump and CurTime() > nextJumpT then
-                self:LambdaJump() 
-                nextJumpT = CurTime() + 0.5
-            end
+                -- Air movement
+                if !self:IsOnGround() and !self.l_isswimming then
+                    local mins, maxs = self:GetCollisionBounds()
+                    local airVel = ( goalNormal * loco:GetDesiredSpeed() * FrameTime() )
 
-            -- Air movement
-            if !self:IsOnGround() and !self.l_isswimming then
-                local mins, maxs = self:GetCollisionBounds()
-                local airVel = ( goalNormal * loco:GetDesiredSpeed() * FrameTime() )
+                    airtable.start = selfPos
+                    airtable.endpos = ( selfPos + airVel )
+                    airtable.filter = self
+                    airtable.mins = mins
+                    airtable.maxs = maxs
 
-                airtable.start = selfPos
-                airtable.endpos = ( selfPos + airVel )
-                airtable.filter = self
-                airtable.mins = mins
-                airtable.maxs = maxs
-
-                if !TraceHull( airtable ).Hit then 
-                    loco:SetVelocity( loco:GetVelocity() + airVel ) 
+                    if !TraceHull( airtable ).Hit then 
+                        loco:SetVelocity( loco:GetVelocity() + airVel ) 
+                    end
                 end
             end
         end
@@ -229,33 +234,47 @@ function ENT:MoveToPosOFFNAV( pos, options )
     pos = ( isvector( pos ) and pos or ( IsValid( pos ) and pos:GetPos() or nil ) )
     if !pos then return "failed" end
 
+    options = options or {}
+    self.l_moveoptions = options
+    
     self.l_issmoving = true
     self.l_movepos = pos
     self.l_CurrentPath = pos
 
-    options = options or {}
-    self.l_moveoptions = options
-
-    local callback = options.callback
-    local tolerance = options.tol or 30
-    
     local timeout = options.timeout
-    if timeout then timeout = CurTime() + timeout end
+    if timeout then 
+        options.timeout = ( CurTime() + timeout ) 
+    end
 
-    local autorun = options.autorun
-    self:SetRun( !autorun and ( options.run or false ) or ( !self:IsInRange( pos, 1500 ) ) )
+    self:SetSlowWalk( options.walk != nil )
+    if options.run then
+        self:SetRun( true )
+    else
+        self:SetRun( options.autorun and !self:IsInRange( pos, 1500 ) )
+    end
 
     local returnMsg = "ok"
     local loco = self.loco
+    local callbackRunT = ( CurTime() + ( options.cbTime or 0 ) )
 
     LambdaRunHook( "LambdaOnBeginMove", self, pos, false )
 
-    while IsValid( self ) do 
-        if timeout and CurTime() > timeout then returnMsg = "timeout" break end
-        if self:GetIsDead() then returnMsg = "dead" break end
+    while ( IsValid( self ) ) do 
+        if self:GetIsDead() then 
+            returnMsg = "dead" 
+            break
+        end
         if self.AbortMovement then 
             self.AbortMovement = false 
             returnMsg = "aborted"; break
+        end
+
+        options = self.l_moveoptions or {}
+
+        local timeout = options.timeout
+        if timeout and CurTime() >= timeout then 
+            returnMsg = "timeout" 
+            break 
         end
 
         pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
@@ -274,20 +293,26 @@ function ENT:MoveToPosOFFNAV( pos, options )
         local selfPos = self:GetPos()
         local posSelfZ = pos; posSelfZ.z = selfPos.z
 
-        if self:IsInRange( posSelfZ, tolerance ) then
+        if self:IsInRange( posSelfZ, options.tol or 30 ) then
             break
-        elseif !self:IsDisabled() and CurTime() > self.l_moveWaitTime then
-            if callback and callback( self, pos ) == false then returnMsg = "callback" break end 
+        elseif !self:IsDisabled() and CurTime() >= self.l_moveWaitTime then
+            local callback = options.callback
+            if callback and CurTime() >= callbackRunT then 
+                local returnVal = callback( self, pos )
+                if returnVal == false then returnMsg = "callback" break end
+
+                local cbTime = options.cbTime
+                if cbTime then callbackRunT = ( CurTime() + cbTime ) end
+            end
 
             loco:FaceTowards( pos )
             loco:Approach( pos, 1 )
-            
-            if shouldavoid:GetBool() then
-                self:AvoidCheck()
-            end
-            self:ObstacleCheck( ( pos - selfPos ):GetNormalized() )
+
+            local goalAng = ( pos - selfPos )
+            goalAng.z = 0; goalAng = goalAng:Angle()
+            self:AvoidCheck( goalAng )
+            self:ObstacleCheck( goalAng:Forward() )
         end
-        self.l_CurrentPath = pos
 
         if dev:GetBool() then debugoverlay.Line( selfPos, pos, 0.1, color_white, true ) end
         coroutine_yield()
@@ -393,7 +418,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
                     climbState = ( climbState + 1 )
                 end
 
-                if climbState == 2 and CurTime() > nextSndTime then
+                if climbState == 2 and CurTime() >= nextSndTime then
                     self:EmitSound( "player/footsteps/ladder" .. random( 4 ) .. ".wav" )
                     nextSndTime = CurTime() + 0.466
                 end
@@ -475,7 +500,7 @@ end
 function ENT:Approach( pos, time )
     time = time and CurTime() + time or CurTime() + 1
     self:Hook( "Tick", "approachposition", function()
-        if CurTime() > time then return "end" end
+        if CurTime() >= time then return "end" end
         self.loco:Approach( pos, 99 )
     end )
 end
@@ -521,7 +546,7 @@ function ENT:ObstacleCheck( pathDir )
                 local fireTime = ( CurTime() + Rand( 0.5, 1.0 ) )
                 
                 self:Hook( "Tick", "ShootAtObstacle", function()
-                    if CurTime() > fireTime or !IsValid( ent ) or ent:Health() <= 0 then return "end" end
+                    if CurTime() >= fireTime or !IsValid( ent ) or ent:Health() <= 0 then return "end" end
                     self:LookTo( ent, 1.0 )
                     self:UseWeapon( ent )
                 end )
@@ -533,19 +558,21 @@ function ENT:ObstacleCheck( pathDir )
 end
 
 local avoidtracetable = {
-    mins = Vector( -10, -10, -0 ),
-    maxs = Vector( 10, 10, 36 )
+    mins = Vector( -10, -10, -15 ),
+    maxs = Vector( 10, 10, 30 )
 } -- Recycled table
 local hitcol = Color( 255, 0, 0, 10 )
 local safecol = Color( 0, 255, 0, 10 )
 
 -- Fires 2 hull traces that will make the player try to move out of the way of whatever is blocking the way
-function ENT:AvoidCheck()
+function ENT:AvoidCheck( goalAng )
+    if !shouldavoid:GetBool() then return end
+
     if CurTime() >= self.l_AvoidCheck_NextStuckCheck then
         local selfPos = self:GetPos()
         local lastPos = self.l_AvoidCheck_LastPos
 
-        if self:IsInRange( lastPos, ( 64 - math_abs( lastPos.z - selfPos.z ) ) ) then
+        if self:IsInRange( lastPos, ( 50 - math_abs( lastPos.z - selfPos.z ) ) ) then
             self.l_AvoidCheck_IsStuck = true
             self.l_AvoidCheck_NextStuckCheck = ( CurTime() + 2.0 )
         else                
@@ -557,29 +584,37 @@ function ENT:AvoidCheck()
     if self.l_AvoidCheck_IsStuck then return end
 
     local selfPos = self:WorldSpaceCenter()
-    local selfRight = self:GetRight()
+    local selfRight = goalAng:Right()
+    local selfForward = goalAng:Forward()
 
-    avoidtracetable.start = ( selfPos + selfRight * 20 )
+    avoidtracetable.start = ( selfPos + selfForward * 30 + selfRight * 20 )
     avoidtracetable.endpos = avoidtracetable.start 
     avoidtracetable.filter = self
 
     local rightresult = TraceHull( avoidtracetable )
-    debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, ( rightresult.Hit and hitcol or safecol ) )
+    if dev:GetBool() then
+        debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, ( rightresult.Hit and hitcol or safecol ), false )
+    end
 
-    avoidtracetable.start = ( selfPos - selfRight * 20 )
+    avoidtracetable.start = ( avoidtracetable.start - selfRight * 40 )
     avoidtracetable.endpos = avoidtracetable.start 
 
     local leftresult = TraceHull( avoidtracetable )
-    debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, ( leftresult.Hit and hitcol or safecol ) )
+    if dev:GetBool() then
+        debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, ( leftresult.Hit and hitcol or safecol ), false )
+    end
 
     selfPos = self:GetPos()
     local loco = self.loco
-    if rightresult.Hit and !leftresult.Hit then  -- Move to the left
+    if leftresult.Hit and rightresult.Hit then -- Back up
+        local lent, rent = leftresult.Entity, rightresult.Entity
+        if IsValid( lent ) and doorClasses[ lent:GetClass() ] or IsValid( rent ) and doorClasses[ rent:GetClass() ] then return end
+
+        loco:Approach( selfPos + selfForward * -50, 1 )
+    elseif rightresult.Hit and !leftresult.Hit then  -- Move to the left
         loco:Approach( selfPos - selfRight * 50, 1 )
     elseif leftresult.Hit and !rightresult.Hit then -- Move to the right
         loco:Approach( selfPos + selfRight * 50, 1 )
-    elseif leftresult.Hit and rightresult.Hit then -- Back up
-        loco:Approach( selfPos + self:GetForward() * -50, 1 )
     end
 end
 

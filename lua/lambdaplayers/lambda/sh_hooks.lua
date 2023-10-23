@@ -338,7 +338,6 @@ if SERVER then
                 npc:ClearEnemyMemory( self )
             elseif npc:IsNextBot() then
                 npc:OnOtherKilled( self, info )
-                
                 if npc.IsLambdaPlayer then 
                     LambdaRunHook( "LambdaOnOtherInjured", npc, self, info, true ) 
                 end
@@ -414,9 +413,10 @@ if SERVER then
 
     -- Called when someone gets killed
     function ENT:OnOtherKilled( victim, info )
+        local preventDefActs = LambdaRunHook( "LambdaOnOtherKilled", self, victim, info )
+
         local attacker = info:GetAttacker()
         local inflictor = info:GetInflictor()
-
         if attacker == self then
             self:DebugPrint( "I killed", victim )
             self:SetFrags( self:GetFrags() + 1 )
@@ -430,9 +430,8 @@ if SERVER then
             self:CancelMovement()
         end
 
-        local preventDefaultActions = LambdaRunHook( "LambdaOnOtherKilled", self, victim, info )
-        if preventDefaultActions == true then return end
-
+        if preventDefActs == true then return end
+        
         if attacker == self then
             local killerActionChance = random( 10 )
 
@@ -455,7 +454,7 @@ if SERVER then
 
             if killerActionChance == 10 and retreatLowHP:GetBool() then
                 self:DebugPrint( "I killed someone. Retreating..." )
-                self:RetreatFrom( victim )
+                self:RetreatFrom()
                 self:CancelMovement()
                 return
             end
@@ -484,7 +483,7 @@ if SERVER then
                     end
                 elseif witnessChance == 10 and !self:InCombat() and retreatLowHP:GetBool() then
                     self:DebugPrint( "I saw someone die. Retreating..." )
-                    self:RetreatFrom( victim )
+                    self:RetreatFrom( ( self:CanTarget( attacker ) and self:CanSee( attacker ) and random( 3 ) == 1 and attacker or nil ) )
                     self:CancelMovement()
                 end
             end

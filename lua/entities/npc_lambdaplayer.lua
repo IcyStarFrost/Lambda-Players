@@ -850,10 +850,10 @@ function ENT:Think()
                 end
 
                 -- Randomly change height
-                if !self:GetState( "Idle" ) then
+                if !self:GetState( "Idle" ) and ( !self:InCombat() or self.l_HasMelee ) then
                     self.l_noclipheight = 0
                 elseif curTime >= self.l_nextnoclipheightchange then
-                    self.l_noclipheight = random( 0, 500 )
+                    self.l_noclipheight = random( 0, 400 )
                     self.l_nextnoclipheightchange = curTime + random( 10 )
                 end
 
@@ -867,8 +867,13 @@ function ENT:Think()
                     local endPos = ( trace.HitPos + trace.HitNormal * 70 ) -- Subtract the normal so we are hovering below a ceiling by 70 Source Units
                     local copy = Vector( endPos[ 1 ], endPos[ 2 ], selfPos[ 3 ] ) -- Vector used if we are close to our goal
 
-                    local ene = self:GetEnemy()
-                    if self:GetState() == "Combat" and LambdaIsValid( ene ) then endPos[ 3 ] = ( ene:GetPos()[ 3 ] + ( self.l_HasMelee and 0 or 50 ) ) end
+                    if self.l_HasMelee then
+                        local ene = self:GetEnemy()
+                        local attackRange = self.l_CombatAttackRange
+                        if attackRange and self:GetState( "Combat" ) and LambdaIsValid( ene ) then
+                            endPos = ( endPos + VectorRand( -attackRange, attackRange ) )
+                        end
+                    end
 
                     if self:IsInRange( copy, 20 ) then 
                         self:CancelMovement() 
