@@ -400,7 +400,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
         if climbState != 2 or ( !self:IsDisabled() or self:GetIsTyping() ) and CurTime() >= self.l_moveWaitTime then
             if !IsValid( TraceHull( laddermovetable ).Entity ) then
                 climbFract = ( climbFract + ( 200 * ( CurTime() - lastTime ) ) )
-                stuckTime = ( CurTime() + random( 2, 8 ) )
+                stuckTime = ( CurTime() + random( 2, 5 ) )
 
                 if climbFract >= climbDist then
                     if climbState == 1 then
