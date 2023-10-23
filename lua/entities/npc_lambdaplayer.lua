@@ -753,7 +753,7 @@ function ENT:Think()
 
         -- Ladder Physics Failure (LPF to sound cool) fallback
         if !loco:IsUsingLadder() then
-            self.l_ladderfailtimer = curTime + 5
+            self.l_ladderfailtimer = curTime + 3
         elseif curTime >= self.l_ladderfailtimer then
             self:Recreate( true, true )
             self.l_ladderfailtimer = curTime + 1
