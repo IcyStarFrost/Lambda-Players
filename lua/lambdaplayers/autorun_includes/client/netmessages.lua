@@ -95,14 +95,14 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
     if !IsValid( ragdoll ) then return end
 
     local entPos = net.ReadVector()
-    local dmgPos, dmgForce, isBlast = net.ReadVector(), net.ReadVector(), net.ReadBool()
+    local dmgPos, dmgForce, forceDiv = net.ReadVector(), net.ReadVector(), net.ReadUInt( 7 )
     local isDorm = lambda:IsDormant()
 
     for i = 0, ( ragdoll:GetPhysicsObjectCount() - 1 ) do
         local phys = ragdoll:GetPhysicsObjectNum( i )
         if !IsValid( phys ) then continue end
 
-        local distDiff = ( phys:GetPos():Distance( dmgPos ) / ( isBlast and 75 or 4 ) )
+        local distDiff = ( phys:GetPos():Distance( dmgPos ) / forceDiv )
         phys:ApplyForceOffset( dmgForce / distDiff, dmgPos )
 
         if isDorm then phys:SetPos( entPos, true ) end

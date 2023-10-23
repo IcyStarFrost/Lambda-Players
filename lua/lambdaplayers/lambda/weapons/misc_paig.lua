@@ -109,6 +109,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 selfDmg:SetDamageType( DMG_BLAST )
                 selfDmg:SetAttacker( self )
                 selfDmg:SetInflictor( wepent )
+                selfDmg:SetDamageForce( ( self:WorldSpaceCenter() - blowPos ):GetNormalized() * 1000 )
                 self:TakeDamageInfo( selfDmg )
 
                 if !busterMode then return end

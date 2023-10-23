@@ -51,10 +51,17 @@ if SERVER then
     function ENT:CreateClientsideRagdoll( info, overrideEnt )
         overrideEnt = overrideEnt or self.l_BecomeRagdollEntity
 
-        local dmgforce, dmgpos = vector_origin, vector_origin
+        local dmgforce, dmgpos, forceDiv = vector_origin, vector_origin, 3
         if info then
             dmgforce = info:GetDamageForce()
             dmgpos = info:GetDamagePosition()
+
+            local attacker = info:GetAttacker()
+            if IsValid( attacker ) and attacker:GetClass() == "trigger_hurt" then
+                forceDiv = 8
+            elseif info:IsExplosionDamage() then
+                forceDiv = 75
+            end
         end
 
         net.Start( "lambdaplayers_becomeragdoll" )
@@ -63,7 +70,7 @@ if SERVER then
             net.WriteVector( ( IsValid( overrideEnt ) and overrideEnt or self ):GetPos() )
             net.WriteVector( dmgpos )
             net.WriteVector( dmgforce )
-            net.WriteBool( info and info:IsExplosionDamage() )
+            net.WriteUInt( forceDiv, 7 )
             net.WriteVector( self:GetPlyColor() )
         net.Broadcast()
     end
@@ -99,11 +106,19 @@ if SERVER then
         ragdoll:RemoveEffects( EF_BONEMERGE )
         
         local vel = visualEnt:GetVelocity()
-        local dmgPos, dmgForce, isBlast
+        local dmgPos, dmgForce, forceDiv
         if info then 
             dmgPos = info:GetDamagePosition()
             dmgForce = info:GetDamageForce()
-            isBlast = info:IsExplosionDamage()
+            
+            local attacker = info:GetAttacker()
+            if IsValid( attacker ) and attacker:GetClass() == "trigger_hurt" then
+                forceDiv = 0.25
+            elseif info:IsExplosionDamage() then
+                forceDiv = 9
+            else
+                forceDiv = 3
+            end
         end
         for i = 0, ( ragdoll:GetPhysicsObjectCount() - 1 ) do
             local phys = ragdoll:GetPhysicsObjectNum( i )
@@ -111,7 +126,7 @@ if SERVER then
 
             phys:AddVelocity( vel )
             if info then
-                local distDiff = ( phys:GetPos():Distance( dmgPos ) / ( isBlast and 10 or 4 ) )
+                local distDiff = ( phys:GetPos():Distance( dmgPos ) / forceDiv )
                 phys:ApplyForceOffset( dmgForce / distDiff, dmgPos )
             end
         end
