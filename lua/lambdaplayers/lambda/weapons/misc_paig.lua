@@ -109,14 +109,17 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 selfDmg:SetDamageType( DMG_BLAST )
                 selfDmg:SetAttacker( self )
                 selfDmg:SetInflictor( wepent )
-                selfDmg:SetDamageForce( ( self:WorldSpaceCenter() - blowPos ):GetNormalized() * 1000 )
-                self:TakeDamageInfo( selfDmg )
+				
+				local blowAng = ( self:WorldSpaceCenter() - blowPos ):Angle()
+                selfDmg:SetDamageForce( blowAng:Forward() * 1000 )
+                
+				self:TakeDamageInfo( selfDmg )
 
                 if !busterMode then return end
                 ScreenShake( blowPos, 25, 5, 3, 1000 )
 
-                ParticleEffect( "fluidSmokeExpl_ring_mvm", blowPos, wepent:GetAngles() )
-                ParticleEffect( "explosionTrail_seeds_mvm", blowPos, wepent:GetAngles() )
+                ParticleEffect( "fluidSmokeExpl_ring_mvm", blowPos, blowAng )
+                ParticleEffect( "explosionTrail_seeds_mvm", blowPos, blowAng )
 
                 for _, ply in ipairs( FindInSphere( blowPos, 1000 ) ) do
                     if !IsValid( ply ) or !ply:IsPlayer() then continue end
