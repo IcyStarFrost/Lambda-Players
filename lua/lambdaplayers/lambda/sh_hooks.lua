@@ -780,10 +780,40 @@ function ENT:InitializeMiniHooks()
             if target == self or ( !target:IsNPC() and !target:IsNextBot() and !target:IsPlayer() ) then return end
             LambdaRunHook( "LambdaOnOtherInjured", self, target, info, tookdamage )
 
+            -- VJ Base's 'Become enemy to a friendly player' feature
+            local attacker = info:GetAttacker()
+            if attacker == self and target.IsVJBaseSNPC and !target.VJ_IsBeingControlled and target:CheckRelationship( self ) != D_LI then
+                local curAnger = ( target.AngerLevelTowardsPlayer + 1 )
+                target.AngerLevelTowardsPlayer = curAnger
+
+                if curAnger > target.BecomeEnemyToPlayerLevel then
+                    if target:Disposition( self ) != D_HT then
+						target:CustomOnBecomeEnemyToPlayer( info, target:GetLastDamageHitGroup() )
+                        if target.IsFollowing && target.FollowData.Ent == self then 
+                            target:FollowReset() 
+                        end
+
+                        target.VJ_AddCertainEntityAsEnemy[ #target.VJ_AddCertainEntityAsEnemy + 1 ] = self
+						target:AddEntityRelationship( self, D_HT, 2 )
+						target.TakingCoverT = ( CurTime() + 2 )
+						target:PlaySoundSystem( "BecomeEnemyToPlayer" )
+
+                        if !IsValid( target:GetEnemy() ) then
+							target:StopMoving()
+							target:SetTarget( self )
+							target:VJ_TASK_FACE_X( "TASK_FACE_TARGET" )
+						end
+                    end
+
+                    target.Alerted = true
+					target:SetNPCState( NPC_STATE_ALERT )
+                end
+            end
+
             local wepent = self:GetWeaponENT()
             local inflictor = info:GetInflictor()
             local dealDmgFunc = self.l_OnDealDamagefunction
-            if info:GetAttacker() == self and inflictor == wepent and isfunction( dealDmgFunc ) then
+            if attacker == self and inflictor == wepent and isfunction( dealDmgFunc ) then
                 local killed = ( tookdamage and ( ( target.IsLambdaPlayer or target:IsPlayer() ) and !target:Alive() or target:Health() <= 0 ) )
                 dealDmgFunc( self, wepent, target, info, tookdamage, killed )
             end
