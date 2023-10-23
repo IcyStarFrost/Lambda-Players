@@ -95,11 +95,17 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
     if !IsValid( ragdoll ) then return end
 
     local entPos = net.ReadVector()
-    if lambda:IsDormant() then
-        for i = 0, ragdoll:GetPhysicsObjectCount() - 1 do
-            local phys = ragdoll:GetPhysicsObjectNum( i )
-            if IsValid( phys ) then phys:SetPos( entPos, true ) end
-        end
+    local dmgPos, dmgForce, isBlast = net.ReadVector(), net.ReadVector(), net.ReadBool()
+    local isDorm = lambda:IsDormant()
+
+    for i = 0, ( ragdoll:GetPhysicsObjectCount() - 1 ) do
+        local phys = ragdoll:GetPhysicsObjectNum( i )
+        if !IsValid( phys ) then continue end
+
+        local distDiff = ( phys:GetPos():Distance( dmgPos ) / ( isBlast and 75 or 4 ) )
+        phys:ApplyForceOffset( dmgForce / distDiff, dmgPos )
+
+        if isDorm then phys:SetPos( entPos, true ) end
     end
 
     ragdoll:SetNoDraw( false )
@@ -112,12 +118,6 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
 
     lambda.ragdoll = ragdoll
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, ragdoll )
-
-    local force, offset = net.ReadVector(), net.ReadVector()
-    for i = 1, 3 do
-        local phys = ragdoll:GetPhysicsObjectNum( i )
-        if IsValid( phys ) then phys:ApplyForceOffset( force, offset ) end
-    end
 
     local startTime = CurTime()
     LambdaCreateThread( function()

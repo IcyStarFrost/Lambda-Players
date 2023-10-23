@@ -855,6 +855,7 @@ if SERVER then
         if !ignoreprehook and shouldblock == true then return end
 
         local pos, ang = self.l_SpawnPos, self.l_SpawnAngles
+        local state, stateArgs, enemy
         if inPlace then
             tracetable.start = self:GetPos()
             tracetable.endpos = tracetable.start
@@ -863,6 +864,10 @@ if SERVER then
 
             pos = TraceHull( tracetable ).HitPos 
             ang = self:GetAngles()
+
+            state = self:GetState()
+            enemy = self:GetEnemy()
+            stateArgs = self.l_statearg 
         end
 
         local exportinfo = self:ExportLambdaInfo()
@@ -882,6 +887,10 @@ if SERVER then
         if inPlace then
             newlambda:SetHealth( self:Health() )
             newlambda:SetArmor( self:Armor() )
+            
+            newlambda:SetState( state )
+            newlambda:SetEnemy( enemy )
+            newlambda.l_statearg = stateArgs
         end
 
         table_Merge( newlambda.l_SpawnedEntities, self.l_SpawnedEntities )

@@ -61,9 +61,10 @@ if SERVER then
             net.WriteEntity( self )
             net.WriteEntity( overrideEnt )
             net.WriteVector( ( IsValid( overrideEnt ) and overrideEnt or self ):GetPos() )
-            net.WriteVector( self:GetPlyColor() )
-            net.WriteVector( dmgforce )
             net.WriteVector( dmgpos )
+            net.WriteVector( dmgforce )
+            net.WriteBool( info and info:IsExplosionDamage() )
+            net.WriteVector( self:GetPlyColor() )
         net.Broadcast()
     end
 
@@ -98,19 +99,28 @@ if SERVER then
         ragdoll:RemoveEffects( EF_BONEMERGE )
         
         local vel = visualEnt:GetVelocity()
+        local dmgPos, dmgForce, isBlast
+        if info then 
+            dmgPos = info:GetDamagePosition()
+            dmgForce = info:GetDamageForce()
+            isBlast = info:IsExplosionDamage()
+        end
         for i = 0, ( ragdoll:GetPhysicsObjectCount() - 1 ) do
             local phys = ragdoll:GetPhysicsObjectNum( i )
-            if IsValid( phys ) then phys:AddVelocity( vel ) end
+            if !IsValid( phys ) then continue end
+
+            phys:AddVelocity( vel )
+            if info then
+                local distDiff = ( phys:GetPos():Distance( dmgPos ) / ( isBlast and 10 or 4 ) )
+                phys:ApplyForceOffset( dmgForce / distDiff, dmgPos )
+            end
         end
     
-        if info then 
-            ragdoll:TakePhysicsDamage( info )
-            if info:IsDamageType( DMG_DISSOLVE ) then
-                local dissolver = ents_Create( "env_entity_dissolver" )
-                dissolver:SetKeyValue( "target", "!activator" )
-                dissolver:Input( "dissolve", ragdoll )
-                dissolver:Remove()
-            end
+        if info and info:IsDamageType( DMG_DISSOLVE ) then
+            local dissolver = ents_Create( "env_entity_dissolver" )
+            dissolver:SetKeyValue( "target", "!activator" )
+            dissolver:Input( "dissolve", ragdoll )
+            dissolver:Remove()
         end
 
         -- Fixes playercolor not being assigned in multiplayer
@@ -406,6 +416,10 @@ if SERVER then
     
     function ENT:OnTraceAttack( dmginfo, dir, trace )
         local hitGroup = trace.HitGroup
+        if hitGroup == HITGROUP_HEAD then
+            dmginfo:ScaleDamage( 2 )
+        end
+
         self.l_lasthitgroup = hitGroup
         self.l_lastdamage = dmginfo:GetDamage()
         hook.Run( "ScaleNPCDamage", self, hitGroup, dmginfo )
