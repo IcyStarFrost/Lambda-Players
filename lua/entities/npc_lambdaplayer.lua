@@ -1017,7 +1017,7 @@ function ENT:Think()
                     if onGround then
                         local locoVel = locoVel
                         if !locoVel:IsZero() then
-                            anim = ( isCrouched and anims.crouchWalk or ( ( !self:GetSlowWalk() and locoVel:LengthSqr() > ( 150 ^ 2 ) ) and anims.run or anims.walk ) )
+                            anim = ( isCrouched and anims.crouchWalk or ( ( !self:GetSlowWalk() and locoVel:LengthSqr() > 22500 ) and anims.run or anims.walk ) )
                         elseif isCrouched then
                             anim = anims.crouchIdle
                         end
@@ -1085,11 +1085,9 @@ function ENT:Think()
             end
 
             if randompoint then
-                local mins, maxs = self:GetCollisionBounds()
                 unstucktable.start = randompoint
                 unstucktable.endpos = randompoint
-                unstucktable.mins = mins
-                unstucktable.maxs = maxs
+                unstucktable.mins, unstucktable.maxs = self:GetCollisionBounds()
 
                 if TraceHull( unstucktable ).Hit then
                     self.l_UnstuckBounds = unstuckbounds + 5
@@ -1115,7 +1113,7 @@ function ENT:Think()
         -- Update our flashlight
         if curTime >= self.l_lightupdate then
             self.l_lightupdate = ( curTime + 1 )
-        
+
             local isAtLight = ( GetLightColor( selfCenter ):LengthSqr() > 0.0004 )
             local beingDrawn = !self:IsDormant()
 

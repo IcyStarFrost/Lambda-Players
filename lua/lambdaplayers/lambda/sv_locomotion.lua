@@ -367,7 +367,6 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
     local climbNormal = ( climbEnd - climbStart ):GetNormalized()
     local climbDist = climbStart:Distance( climbEnd )
     local stuckTime = ( CurTime() + random( 2, 5 ) )
-    local lastTime = CurTime()
 
     while ( true ) do
         local climbPos = ( climbStart + climbNormal * climbFract )
@@ -394,12 +393,9 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
             end
         end
 
-        self:SetPos( climbPos )
-        self.loco:FaceTowards( self:GetPos() * climbNormal )
-
         if climbState != 2 or ( !self:IsDisabled() or self:GetIsTyping() ) and CurTime() >= self.l_moveWaitTime then
             if !IsValid( TraceHull( laddermovetable ).Entity ) then
-                climbFract = ( climbFract + ( 200 * ( CurTime() - lastTime ) ) )
+                climbFract = ( climbFract + ( 275 * FrameTime() ) )
                 stuckTime = ( CurTime() + random( 2, 5 ) )
 
                 if climbFract >= climbDist then
@@ -413,7 +409,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
 
                     climbStart = self:GetPos()
                     climbNormal = ( climbEnd - climbStart ):GetNormalized()
-                    climbDist = climbStart:Distance( climbEnd ) - ( ( isDown and climbState == 2 ) and random( 0, 48 ) or 0 )
+                    climbDist = climbStart:Distance( climbEnd )
 
                     climbFract = 0
                     climbState = ( climbState + 1 )
@@ -425,8 +421,11 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
                 end
             end
         end
-        
-        lastTime = CurTime()
+
+        climbPos = ( climbStart + climbNormal * climbFract )
+        self:SetPos( climbPos )
+        self.loco:FaceTowards( self:GetPos() + climbNormal )
+
         coroutine_yield()
     end
 end
@@ -675,7 +674,7 @@ function ENT:PathGenerator()
     local loco = self.loco
     local stepHeight = CLuaLocomotion_GetStepHeight( loco )
     local jumpHeight = CLuaLocomotion_GetJumpHeight( loco ) + 12
-    local deathHeight = -CLuaLocomotion_GetDeathDropHeight( loco )
+    local thirdHealth = ( self:Health() * 0.75 )
 
     local obeyNavmesh = obeynav:GetBool()
     local isInNoClip = self:IsInNoClip()
@@ -711,7 +710,17 @@ function ENT:PathGenerator()
         if !isInNoClip then 
             if !IsValid( ladder ) then
                 local deltaZ = CNavArea_ComputeAdjacentConnectionHeightChange( fromArea, area )
-                if deltaZ < deathHeight and !areaPos:IsUnderwater() then return -1 end
+                if !areaPos:IsUnderwater() then
+                    local height = -deltaZ
+                    local fallDamage = self:GetFallDamageFromHeight( height )
+                    if fallDamage > 0 then
+                        if fallDamage >= thirdHealth then
+                            return -1
+                        end
+                        cost = ( cost + dist * ( fallDamage * 2 ) )
+                    end
+                    cost = ( cost + dist * random( height * 0.5, height ) )
+                end
 
                 if !fromPos:IsUnderwater() then
                     if deltaZ > jumpHeight then

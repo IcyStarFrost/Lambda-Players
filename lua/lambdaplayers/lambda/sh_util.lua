@@ -432,7 +432,6 @@ end
 
 if SERVER then
 
-    local sqrt = math.sqrt
     local GetAllNavAreas = navmesh.GetAllNavAreas
     local ignoreplayer = GetConVar( "ai_ignoreplayers" )
     local realisticfalldamage = GetConVar( "lambdaplayers_lambda_realisticfalldamage" )
@@ -1205,17 +1204,27 @@ if SERVER then
         net.Broadcast()
     end
 
+    local maxSafeFallSpeed = math.sqrt( 2 * 600 * 20 * 12 )
+    local fatalFallSpeed = math.sqrt( 2 * 600 * 60 * 12 )
     function ENT:GetFallDamage( speed, realDmg )
         realDmg = ( realDmg == nil and realisticfalldamage:GetBool() )
-        local gravity = self.loco:GetGravity()
-        local maxSafeFallSpeed = sqrt( 2 * gravity * 20 * 12 )
-
         speed = ( speed or self.l_FallVelocity )
         if !realDmg and speed > maxSafeFallSpeed then return 10 end
 
-        local fatalFallSpeed = sqrt( 2 * gravity * 60 * 12 )
         local damageForFall = ( 100 / ( fatalFallSpeed - maxSafeFallSpeed ) )
         return max( ( speed - maxSafeFallSpeed ) * damageForFall, 0 )
+    end
+
+    function ENT:GetFallDamageFromHeight( height, realDmg )
+        realDmg = ( realDmg == nil and realisticfalldamage:GetBool() )
+        local gravityMult = ( 600 / self.loco:GetGravity() )
+
+        local maxSafeFallHeight = ( 240 * gravityMult )
+        if !realDmg and height > maxSafeFallHeight then return 10 end
+
+        local fatalFallHeight = ( 720 * gravityMult )
+        local damageForFall = ( 100 / ( fatalFallHeight - maxSafeFallHeight ) )
+        return max( ( height - maxSafeFallHeight ) * damageForFall, 0 )
     end
 
     -- Stops the current voiceline we're speaking
