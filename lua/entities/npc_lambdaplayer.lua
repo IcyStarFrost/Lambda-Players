@@ -114,8 +114,11 @@ end
     local collisionPly = GetConVar( "lambdaplayers_lambda_noplycollisions" )
     local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
     local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
+    local slowWalkSpeed = GetConVar( "lambdaplayers_lambda_slowwalkspeed" )
+    local crouchSpeed = GetConVar( "lambdaplayers_lambda_crouchspeed" )
     local noclipSpeed = GetConVar( "lambdaplayers_lambda_noclipspeed" )
     local jumpHeight = GetConVar( "lambdaplayers_lambda_jumpheight" )
+    local silentStepsSpeed = GetConVar( "lambdaplayers_lambda_nostepsndspeed" )
     local ignorePlys = GetConVar( "ai_ignoreplayers" )
     local sv_gravity = GetConVar( "sv_gravity" )
     local physUpdateTime = GetConVar( "lambdaplayers_lambda_physupdatetime" )
@@ -125,6 +128,7 @@ end
     local forcePlyMdl = GetConVar( "lambdaplayers_lambda_forceplayermodel" )
     local drownTime = GetConVar( "lambdaplayers_lambda_drowntime" )
     local saveInterrupt = GetConVar( "lambdaplayers_text_saveoninterrupted" )
+    local nadeUsage = GetConVar( "lambdaplayers_combat_allownadeusage" )
 --
 
 if CLIENT then
@@ -195,7 +199,7 @@ function ENT:Initialize()
         self.l_NexthealthUpdate = 0 -- The next time we update our networked health
         self.l_stucktimes = 0 -- How many times did we get stuck in the past 10 seconds
         self.l_stucktimereset = 0 -- The time until l_stucktimes gets reset to 0
-        self.l_nextfootsteptime = 0 -- The next time we play a footstep sound
+        self.l_lastfootsteptime = 0 -- The last time we played a footstep sound
         self.l_nextobstaclecheck = 0 -- The next time we will check for obstacles on our path
         self.l_nextphysicsupdate = 0 -- The next time we will update our Physics Shadow
         self.l_WeaponUseCooldown = 0 -- The time before we can use our weapon again
@@ -221,6 +225,7 @@ function ENT:Initialize()
         self.l_DrownLostHealth = 0 -- The amount of health we lost while drowning
         self.l_DrownActionTime = 0 -- The next time we start losing or recovering lost health when drowning
         self.l_CombatPosUpdateTime = 0 -- The next time we'll update the combat position
+        self.l_ThrowQuickNadeTime = CurTime() + 3 -- The next time we'll able to throw a quick nade at enemy
 
         self.l_ladderarea = NULL -- The ladder nav area we are currenly using to climb
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
@@ -318,9 +323,9 @@ function ENT:Initialize()
         self.loco:SetGravity( sv_gravity:GetFloat() ) -- Makes us fall at the same speed as the real players do
 
         self:SetRunSpeed( runningSpeed:GetInt() )
-        self:SetCrouchSpeed( 60 )
+        self:SetCrouchSpeed( crouchSpeed:GetInt() )
         self:SetWalkSpeed( walkingSpeed:GetInt() )
-        self:SetSlowWalkSpeed( 100 )
+        self:SetSlowWalkSpeed( slowWalkSpeed:GetInt() )
 
         self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
         self:PhysicsInitShadow()
@@ -630,10 +635,16 @@ function ENT:Think()
             loco:SetVelocity( locoVel ) 
         end
 
+        -- Update our movement speed
+        if curTime >= self.l_nextspeedupdate then
+            loco:SetDesiredSpeed( ( isCrouched and self:GetCrouchSpeed() or ( self:GetSlowWalk() and self:GetSlowWalkSpeed() or ( self:GetRun() and self:GetRunSpeed() or self:GetWalkSpeed() ) ) ) * self.l_WeaponSpeedMultiplier )
+            self.l_nextspeedupdate = curTime + 0.1
+        end
+
         -- Footstep sounds
-        if curTime >= self.l_nextfootsteptime and onGround and !locoVel:IsZero() and !self:IsInNoClip() then
+        if onGround and !locoVel:IsZero() and loco:GetDesiredSpeed() > silentStepsSpeed:GetInt() and !self:IsInNoClip() and ( curTime - self.l_lastfootsteptime ) >= self:GetStepSoundTime() then
             self:PlayStepSound()
-            self.l_nextfootsteptime = curTime + self:GetStepSoundTime()
+            self.l_lastfootsteptime = curTime
         end
 
         -- Play random Idle lines depending on current state or speak in text chat
@@ -647,12 +658,6 @@ function ENT:Think()
             end
 
             self.l_nextidlesound = ( curTime + 5 )
-        end
-
-        -- Update our speed after some time
-        if curTime >= self.l_nextspeedupdate then
-            loco:SetDesiredSpeed( ( isCrouched and self:GetCrouchSpeed() or ( self:GetSlowWalk() and self:GetSlowWalkSpeed() or ( self:GetRun() and self:GetRunSpeed() or self:GetWalkSpeed() ) ) ) * self.l_WeaponSpeedMultiplier )
-            self.l_nextspeedupdate = curTime + 0.5
         end
 
         -- Attack nearby NPCs
@@ -705,7 +710,8 @@ function ENT:Think()
 
                         if canSee and keepDist and self:IsInRange( posCopy, keepDist ) then
                             local moveAng = ( myOrigin - posCopy ):Angle()
-                            local potentialPos = ( myOrigin + moveAng:Forward() * random( -self:GetRunSpeed(), keepDist ) + moveAng:Right() * random( -keepDist, keepDist ) )
+                            local runSpeed = self:GetRunSpeed()
+                            local potentialPos = ( myOrigin + moveAng:Forward() * random( -( runSpeed * 0.5 ), keepDist ) + moveAng:Right() * random( -runSpeed, runSpeed ) )
                             self.l_combatpos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )
                         else
                             self.l_combatpos = target
@@ -719,6 +725,8 @@ function ENT:Think()
                         self.l_precombatmovepos = nil
                         self.l_movepos = self.l_combatpos
                     end
+
+                    debugoverlay.Line( self:GetPos(), self:GetDestination(), 0.1, self:GetPlyColor():ToColor(), true )
                 end
 
                 if jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.8 ) and random( isPanicking and 30 or 40 ) == 1 then
@@ -742,7 +750,45 @@ function ENT:Think()
 
                     if canJump and self:LambdaJump() and invertVel then
                         locoVel = invertVel
-                        self.loco:SetVelocity( locoVel )
+                        loco:SetVelocity( locoVel )
+                    end
+                end
+
+                if canSee and curTime >= self.l_ThrowQuickNadeTime and !self:GetIsReloading() and nadeUsage:GetBool() and random( 200 ) == 1 then
+                    local nades = LAMBDAFS:GetQuickNadeWeapons()
+                    if #nades > 0 then
+                        local rndNade
+                        for _, nade in RandomPairs( nades ) do
+                            if !self:CanEquipWeapon( nade ) then continue end
+                            local data = _LAMBDAPLAYERSWEAPONS[ nade ]
+                            if !data or data.attackrange and !self:IsInRange( target, data.attackrange ) then continue end
+
+                            rndNade = data
+                            break
+                        end
+
+                        if rndNade then
+                            self.l_ThrowQuickNadeTime = curTime + random( 1, 10 )
+
+                            self:ClientSideNoDraw( wepent, true )
+                            wepent:SetNoDraw( true )
+                            wepent:DrawShadow( false )  
+        
+                            local coolDown = self.l_WeaponUseCooldown
+                            local callback = ( rndNade.OnAttack or rndNade.callback )
+                            callback( self, wepent, target )
+
+                            if coolDown != self.l_WeaponUseCooldown then
+                                self.l_WeaponUseCooldown = ( ( curTime >= coolDown and curTime or coolDown ) + 0.75 )
+                            end
+        
+                            self:SimpleWeaponTimer( 0.75, function()
+                                local isMarked = self:IsWeaponMarkedNodraw()
+                                self:ClientSideNoDraw( wepent, isMarked )
+                                wepent:SetNoDraw( isMarked )
+                                wepent:DrawShadow( isMarked )  
+                            end )
+                        end
                     end
                 end
             else
@@ -1037,20 +1083,21 @@ function ENT:Think()
         --
 
         -- Handles facing positions or entities --
+        self:SetNW2Vector( "lambda_facepos", vector_origin )
         local lookAng = angle_zero
 
-        if !self:IsPlayingTaunt() then
-            local faceTarg = self.Face
-            if faceTarg then
-                if self.l_Faceend and curTime >= self.l_Faceend or isentity( faceTarg ) and !IsValid( faceTarg ) then 
-                    self.Face = nil 
-                    self.l_Faceend = nil 
-                    self.l_PoseOnly = nil 
-                else
-                    local pos = ( isentity( faceTarg ) and ( faceTarg.IsLambdaPlayer and faceTarg:EyePos2() or ( isfunction( faceTarg.EyePos ) and faceTarg:EyePos() or faceTarg:WorldSpaceCenter() ) ) or faceTarg )
-                    if !self.l_PoseOnly then loco:FaceTowards( pos ); loco:FaceTowards( pos ) end
-                    lookAng = self:WorldToLocalAngles( ( pos - eyeAttach.Pos ):Angle() )
-                end
+        local faceTarg = self.Face
+        if faceTarg then
+            if self.l_Faceend and curTime >= self.l_Faceend or isentity( faceTarg ) and !IsValid( faceTarg ) or self:IsPlayingTaunt() then 
+                self.Face = nil 
+                self.l_Faceend = nil 
+                self.l_PoseOnly = nil
+            else
+                local pos = ( isentity( faceTarg ) and ( faceTarg.IsLambdaPlayer and faceTarg:EyePos2() or ( isfunction( faceTarg.EyePos ) and faceTarg:EyePos() or faceTarg:WorldSpaceCenter() ) ) or faceTarg )
+                if !self.l_PoseOnly then loco:FaceTowards( pos ); loco:FaceTowards( pos ) end
+
+                lookAng = self:WorldToLocalAngles( ( pos - eyeAttach.Pos ):Angle() )
+                self:SetNW2Vector( "lambda_facepos", pos )
             end
         end
 

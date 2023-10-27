@@ -136,7 +136,7 @@ local ft_options = { cbTime = 0.5, callback = function( lambda )
 end }
 function ENT:FindTarget()
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
-    if random( 5 ) == 1 then self:SetSlowWalk( true ) end
+    ft_options.walk = ( random( 5 ) == 1 )
     self:MoveToPos( self:GetRandomPosition(), ft_options )
     return ( random( 100 ) > self:GetCombatChance() )
 end

@@ -12,6 +12,7 @@ local file_Find = file.Find
 local random = math.random
 local abs = math.abs
 local max = math.max
+local Clamp = math.Clamp
 local FindInSphere = ents.FindInSphere
 local file_Find = file.Find
 local table_Empty = table.Empty
@@ -118,16 +119,16 @@ end
 
 -- Creates a coroutine thread
 function ENT:Thread( func, name, preserve )
-	local thread = coroutine.create( func )
+    local thread = coroutine.create( func )
     self:DebugPrint( "Created a Thread | " .. name  )
-	self:Hook( "Tick", "CoroutineThread_" .. name, function()
-		if coroutine.status( thread ) != "dead" then
-			local ok, msg = coroutine.resume( thread )
+    self:Hook( "Tick", "CoroutineThread_" .. name, function()
+        if coroutine.status( thread ) != "dead" then
+            local ok, msg = coroutine.resume( thread )
             if !ok then ErrorNoHaltWithStack( self, " ", msg ) end
-		else
-			self:RemoveHook( "Tick", "CoroutineThread_" .. name )
-		end
-	end, preserve, 0 )
+        else
+            self:RemoveHook( "Tick", "CoroutineThread_" .. name )
+        end
+    end, preserve, 0 )
 end
 
 -- Kills the specified thread, making it stop running
@@ -272,23 +273,24 @@ end
 
 -- Returns a table that contains a position and angle with the specified type. hand or eyes
 local eyeOffAng = Angle( 20, 0, 0 )
-function ENT:GetAttachmentPoint( pointtype )
-    local attachData = { Pos = self:WorldSpaceCenter(), Ang = self:GetForward():Angle(), Index = 0 }
+function ENT:GetAttachmentPoint( pointType, target )
+    target = ( target or self )
+    local attachData = { Pos = target:WorldSpaceCenter(), Ang = target:GetForward():Angle(), Index = 0 }
 
-    if pointtype == "hand" then
-        local lookup = self:LookupAttachment( "anim_attachment_RH" )
-        local handAttach = self:GetAttachment( lookup )
+    if pointType == "hand" then
+        local lookup = target:LookupAttachment( "anim_attachment_RH" )
+        local handAttach = target:GetAttachment( lookup )
 
         if !handAttach then
-            local bone = self:LookupBone( "ValveBiped.Bip01_R_Hand" )
-            if isnumber( bone ) then attachData = self:GetBoneTransformation( bone ) end
+            local bone = target:LookupBone( "ValveBiped.Bip01_R_Hand" )
+            if isnumber( bone ) then attachData = target:GetBoneTransformation( bone ) end
         else
             attachData = handAttach
             attachData.Index = lookup
         end
-    elseif pointtype == "eyes" then
-        local lookup = self:LookupAttachment( "eyes" )
-        local eyeAttach = self:GetAttachment( lookup )
+    elseif pointType == "eyes" then
+        local lookup = target:LookupAttachment( "eyes" )
+        local eyeAttach = target:GetAttachment( lookup )
 
         if !eyeAttach then 
             attachData.Pos = ( attachData.Pos + vector_up * 30 )
@@ -328,6 +330,8 @@ function ENT:ExportLambdaInfo()
         profilepicture = self:GetProfilePicture(),
         health = self:GetNWMaxHealth(),
 
+        crouchspeed = self:GetCrouchSpeed(),
+        slowwalkspeed = self:GetSlowWalkSpeed(),
         walkspeed = self:GetWalkSpeed(),
         runspeed = self:GetRunSpeed(),
 
@@ -448,7 +452,9 @@ if SERVER then
             self:SetHealth( info.health or self:GetMaxHealth() )
             self:SetNWMaxHealth( info.health or self:GetMaxHealth() )
             self:SetArmor( info.armor or self:GetArmor() )
-            
+
+            self:SetCrouchSpeed( info.crouchspeed or self:GetCrouchSpeed() )
+            self:SetSlowWalkSpeed( info.slowwalkspeed or self:GetSlowWalkSpeed() )
             self:SetWalkSpeed( info.walkspeed or self:GetWalkSpeed() )
             self:SetRunSpeed( info.runspeed or self:GetRunSpeed() )
 
@@ -1375,14 +1381,13 @@ if SERVER then
     -- Returns the time we will play our next footsteps ound
     function ENT:GetStepSoundTime()
         local stepTime = 0.35
-
+        
         if self:GetWaterLevel() != 2 then
-            local maxSpeed = self.loco:GetDesiredSpeed()
-            stepTime = ( maxSpeed <= 100 and 0.4 or maxSpeed <= 300 and 0.35 or 0.25 )
+            local maxSpeed = self.loco:GetVelocity():Length2D()
+            stepTime = Clamp( stepTime * ( 200 / maxSpeed ), 0.25, 0.45 )
         else
             stepTime = 0.6
         end
-        
         if self:GetCrouch() then
             stepTime = stepTime + 0.05
         end

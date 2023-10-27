@@ -2,6 +2,12 @@ local pairs = pairs
 local string_find = string.find
 local tostring = tostring
 local iconColor = Color(255, 80, 0, 255)
+local net = net
+local PlaySound = ( CLIENT and surface.PlaySound )
+local AddNotification = ( CLIENT and notification.AddLegacy )
+local ipairs = ipairs
+local SortedPairs = SortedPairs
+local max = math.max
 
 _LAMBDAPLAYERSWEAPONS = {}
 
@@ -61,15 +67,11 @@ concommand.Add( "lambdaplayers_dev_mergeweapons", LambdaMergeWeapons )
 
 local spawnWep = CreateLambdaConvar( "lambdaplayers_lambda_spawnweapon", "physgun", true, true, true, "The weapon Lambda Players will spawn with only if the specified weapon is allowed", 0, 1 )
 
-local net = net
-local PlaySound = ( CLIENT and surface.PlaySound )
-local AddNotification = ( CLIENT and notification.AddLegacy )
-local ipairs = ipairs
-local SortedPairs = SortedPairs
-local max = math.max
+function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc, showAll, includeRnd, showNotif )
+    showNotif = ( showNotif == nil and true or showNotif )
+    includeRnd = ( includeRnd == nil and true or includeRnd )
 
-function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc )
-    local mainframe = LAMBDAPANELS:CreateFrame( "Spawn Weapon Selection", 700, 500 )
+    local mainframe = LAMBDAPANELS:CreateFrame( "Weapon Selection Menu", 700, 500 )
     local mainscroll = LAMBDAPANELS:CreateScrollPanel( mainframe, true, FILL )
 
     local weplinelist = {}
@@ -83,7 +85,7 @@ function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc )
     else
         currentWep = ( _LAMBDAPLAYERSWEAPONS[ currentWep ] and _LAMBDAPLAYERSWEAPONS[ currentWep ].prettyname or "!!NON EXISTENT WEAPON!!" )
     end
-    LAMBDAPANELS:CreateLabel( "Currenly selected spawn weapon: " .. currentWep, mainframe, TOP )
+    LAMBDAPANELS:CreateLabel( "Currenly selected weapon: " .. currentWep, mainframe, TOP )
 
     for weporigin, _ in pairs( _LAMBDAPLAYERSWEAPONORIGINS ) do
         local originlist = vgui.Create( "DListView", mainscroll )
@@ -98,7 +100,10 @@ function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc )
                 wepSelectVar:SetString( selectedWep )
             end
 
-            AddNotification( "Selected " .. line:GetColumnText( 1 ) .. " from " .. weporigin .. " as a spawn weapon!", NOTIFY_GENERIC, 3 )
+            if showNotif then
+                AddNotification( "Selected " .. line:GetColumnText( 1 ) .. " from " .. weporigin .. " as a weapon!", NOTIFY_GENERIC, 3 )
+            end
+
             PlaySound( "buttons/button15.wav" )
             mainframe:Close()
         end
@@ -110,8 +115,10 @@ function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc )
             if data.origin != weporigin then continue end
             if data.cantbeselected then continue end
 
-            local allowCvar = _LAMBDAWEAPONALLOWCONVARS[ name ]
-            if allowCvar and !allowCvar:GetBool() then continue end
+            if !showAll then
+                local allowCvar = _LAMBDAWEAPONALLOWCONVARS[ name ]
+                if allowCvar and !allowCvar:GetBool() then continue end
+            end
 
             local line = originlist:AddLine( data.notagprettyname )
             line:SetSortValue( 1, name )
@@ -153,21 +160,29 @@ function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc )
             wepSelectVar:SetString( selectedWep )
         end
 
-        AddNotification( "Selected none as a spawn weapon!", NOTIFY_GENERIC, 3 )
-        PlaySound( "buttons/button15.wav" )
-        mainframe:Close()
-    end )
-
-    LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select Random", function()
-        local selectedWep = "random"
-        if ( !onSelectFunc or onSelectFunc( selectedWep ) != true ) and isCvar then 
-            wepSelectVar:SetString( selectedWep )
+        if showNotif then
+            AddNotification( "Selected none as a weapon!", NOTIFY_GENERIC, 3 )
         end
-
-        AddNotification( "Selected random as a spawn weapon!", NOTIFY_GENERIC, 3 )
+        
         PlaySound( "buttons/button15.wav" )
         mainframe:Close()
     end )
+
+    if includeRnd then
+        LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select Random", function()
+            local selectedWep = "random"
+            if ( !onSelectFunc or onSelectFunc( selectedWep ) != true ) and isCvar then 
+                wepSelectVar:SetString( selectedWep )
+            end
+
+            if showNotif then
+                AddNotification( "Selected random as a weapon!", NOTIFY_GENERIC, 3 )
+            end
+
+            PlaySound( "buttons/button15.wav" )
+            mainframe:Close()
+        end )
+    end
 end
 
 local function OpenWeaponPermissionPanel( ply ) 
@@ -326,19 +341,19 @@ function EntMeta:RemoveLambdaHookTick( name )
     hook.Remove( "Tick", "lambdaplayers_hooktick" .. name .. id )
 end
 
-if ( SERVER ) then
-    function EntMeta:GetBodyGroupData()
-        local data = {}
-        for _, group in ipairs( self:GetBodyGroups() ) do
-            local subMdls = #group.submodels
-            if subMdls == 0 then continue end 
-            
-            local index = group.id
-            data[ index ] = self:GetBodygroup( index )
-        end
-        return data
+function EntMeta:GetBodyGroupData()
+    local data = {}
+    for _, group in ipairs( self:GetBodyGroups() ) do
+        local subMdls = #group.submodels
+        if subMdls == 0 then continue end 
+        
+        local index = group.id
+        data[ index ] = self:GetBodygroup( index )
     end
+    return data
+end
 
+if ( SERVER ) then
     _LambdaOldEntitySetHealth = _LambdaOldEntitySetHealth or EntMeta.SetHealth
     function EntMeta:SetHealth( newHealth )
         if self.IsLambdaPlayer then self:UpdateHealthDisplay( newHealth ) end

@@ -401,7 +401,7 @@ local function OpenProfilePanel( ply )
     LAMBDAPANELS:CreateButton( mainscroll, TOP, "Select Spawn Weapon", function()
         LambdaWeaponSelectPanel( spawnweapon, function( selectedWep )
             spawnweapon = selectedWep
-        end )
+        end, true )
     end )
 
     LAMBDAPANELS:CreateLabel( "Favorite Weapon", mainscroll, TOP )
@@ -411,7 +411,7 @@ local function OpenProfilePanel( ply )
     LAMBDAPANELS:CreateButton( mainscroll, TOP, "Select Favorite Weapon", function()
         LambdaWeaponSelectPanel( favoriteweapon, function( selectedWep )
             favoriteweapon = favoriteweapon
-        end )
+        end, true )
     end )
 
     ---- Weapon Restrictions ----

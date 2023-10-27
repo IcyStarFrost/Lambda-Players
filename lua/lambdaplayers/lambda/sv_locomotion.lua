@@ -5,6 +5,7 @@ local dev = GetConVar( "lambdaplayers_debug_path" )
 local IsValid = IsValid
 local math_max = math.max
 local math_abs = math.abs
+local table_Copy = table.Copy
 local isvector = isvector
 local Trace = util.TraceLine
 local TraceHull = util.TraceHull
@@ -52,7 +53,7 @@ function ENT:MoveToPos( pos, options )
     end 
 
     options = options or {}
-    self.l_moveoptions = options
+    self.l_moveoptions = table_Copy( options )
 
     local path = Path( "Follow" )
     path:SetGoalTolerance( options.tol or 20 )
@@ -67,7 +68,7 @@ function ENT:MoveToPos( pos, options )
     self.l_movepos = pos
     self.l_CurrentPath = path
 
-    self:SetSlowWalk( options.walk != nil )
+    self:SetSlowWalk( options.walk or false )
     if options.run then
         self:SetRun( true )
     else
@@ -235,7 +236,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
     if !pos then return "failed" end
 
     options = options or {}
-    self.l_moveoptions = options
+    self.l_moveoptions = table_Copy( options )
     
     self.l_issmoving = true
     self.l_movepos = pos
@@ -446,7 +447,10 @@ end
 -- Makes lambda wait and stop while moving for a given amount of time
 function ENT:WaitWhileMoving( time )
     if !self.l_issmoving then return end
-    self.l_moveWaitTime = CurTime() + time
+    if CurTime() >= self.l_moveWaitTime then
+        self.loco:SetVelocity( vector_origin )
+    end
+    self.l_moveWaitTime = ( CurTime() + time )
 end
 
 -- This function will either return true or false
@@ -655,7 +659,6 @@ local CNavLadder_GetBottomArea                       = CNavLadderMeta.GetBottomA
 local CLuaLocomotionMeta                             = FindMetaTable( "CLuaLocomotion" )
 local CLuaLocomotion_GetStepHeight                   = CLuaLocomotionMeta.GetStepHeight
 local CLuaLocomotion_GetJumpHeight                   = CLuaLocomotionMeta.GetJumpHeight
-local CLuaLocomotion_GetDeathDropHeight              = CLuaLocomotionMeta.GetDeathDropHeight
 --
 
 -- Vector --

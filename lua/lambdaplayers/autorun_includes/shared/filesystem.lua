@@ -361,6 +361,10 @@ function LAMBDAFS:GetModelVoiceProfiles()
     return LAMBDAFS:ReadFile( "lambdaplayers/modelvoiceprofiles.json", "json" )
 end
 
+function LAMBDAFS:GetQuickNadeWeapons()
+    return LAMBDAFS:ReadFile( "lambdaplayers/quicknades.json", "json" )
+end
+
 if ( SERVER ) then
 
     if !file_Exists( "lambdaplayers/npclist.json", "DATA" ) then 
@@ -377,6 +381,14 @@ if ( SERVER ) then
 
     if !file_Exists( "lambdaplayers/modelvoiceprofiles.json", "DATA" ) then 
         LAMBDAFS:WriteFile( "lambdaplayers/modelvoiceprofiles.json", {}, "json", false ) 
+    end
+
+    local defaultNades = {
+        "grenade",
+        "slam"
+    }
+    if !file_Exists( "lambdaplayers/quicknades.json", "DATA" ) then 
+        LAMBDAFS:WriteFile( "lambdaplayers/quicknades.json", defaultNades, "json", false ) 
     end
 
 end

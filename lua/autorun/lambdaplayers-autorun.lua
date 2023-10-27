@@ -124,6 +124,7 @@ LambdaPlayerSprays = LambdaPlayerSprays or LAMBDAFS:GetSprays()
 LambdaTextTable = LambdaTextTable or LAMBDAFS:GetTextTable()
 LambdaTextProfiles = LambdaTextProfiles or LAMBDAFS:GetTextProfiles()
 LambdaModelVoiceProfiles = LambdaModelVoiceProfiles or LAMBDAFS:GetModelVoiceProfiles()
+LambdaQuickNades = LambdaQuickNades or LAMBDAFS:GetQuickNadeWeapons()
 --
 
 -- Voice Profiles --

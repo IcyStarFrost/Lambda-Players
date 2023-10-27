@@ -210,6 +210,11 @@ function ENT:AccountID()
     return SharedRandom( "accountid", 1, 1000000, self:EntIndex() )
 end
 
+function ENT:GetRagdollEntity()
+    local ragdoll = self.ragdoll
+    return ( IsValid( ragdoll ) and ragdoll or self:GetNW2Entity( "lambda_serversideragdoll", nil ) )
+end
+
 if SERVER then
     local TraceHull = util.TraceHull
     local tracehull = {}

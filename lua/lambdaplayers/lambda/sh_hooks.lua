@@ -51,16 +51,16 @@ if SERVER then
     function ENT:CreateClientsideRagdoll( info, overrideEnt )
         overrideEnt = overrideEnt or self.l_BecomeRagdollEntity
 
-        local dmgforce, dmgpos, forceDiv = vector_origin, vector_origin, 3
+        local dmgforce, dmgpos, forceScale = vector_origin, vector_origin, 3
         if info then
             dmgforce = info:GetDamageForce()
             dmgpos = info:GetDamagePosition()
 
             local attacker = info:GetAttacker()
             if IsValid( attacker ) and attacker:GetClass() == "trigger_hurt" then
-                forceDiv = 8
+                forceScale = 8
             elseif info:IsExplosionDamage() then
-                forceDiv = 75
+                forceScale = 75
             end
         end
 
@@ -70,7 +70,7 @@ if SERVER then
             net.WriteVector( ( IsValid( overrideEnt ) and overrideEnt or self ):GetPos() )
             net.WriteVector( dmgpos )
             net.WriteVector( dmgforce )
-            net.WriteUInt( forceDiv, 7 )
+            net.WriteUInt( forceScale, 7 )
             net.WriteVector( self:GetPlyColor() )
         net.Broadcast()
     end
@@ -106,18 +106,18 @@ if SERVER then
         ragdoll:RemoveEffects( EF_BONEMERGE )
         
         local vel = visualEnt:GetVelocity()
-        local dmgPos, dmgForce, forceDiv
+        local dmgPos, dmgForce, forceScale
         if info then 
             dmgPos = info:GetDamagePosition()
             dmgForce = info:GetDamageForce()
             
             local attacker = info:GetAttacker()
             if IsValid( attacker ) and attacker:GetClass() == "trigger_hurt" then
-                forceDiv = 0.25
+                forceScale = 0.25
             elseif info:IsExplosionDamage() then
-                forceDiv = 9
+                forceScale = 9
             else
-                forceDiv = 3
+                forceScale = 3
             end
         end
         for i = 0, ( ragdoll:GetPhysicsObjectCount() - 1 ) do
@@ -126,7 +126,7 @@ if SERVER then
 
             phys:AddVelocity( vel )
             if info then
-                local distDiff = ( phys:GetPos():Distance( dmgPos ) / forceDiv )
+                local distDiff = ( phys:GetPos():Distance( dmgPos ) / forceScale )
                 phys:ApplyForceOffset( dmgForce / distDiff, dmgPos )
             end
         end
@@ -535,7 +535,7 @@ if SERVER then
             self:SetRun( self.l_moveoptions and self.l_moveoptions.run and !hasEntered ) 
         end,
         [ NAV_MESH_WALK ] = function( self, hasEntered ) 
-            self:SetSlowWalk( hasEntered ) 
+            self:SetSlowWalk( hasEntered == true or self.l_moveoptions and self.l_moveoptions.walk ) 
         end,
         [ NAV_MESH_JUMP ] = function( self, hasEntered ) 
             if !hasEntered then return end
