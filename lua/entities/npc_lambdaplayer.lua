@@ -725,8 +725,6 @@ function ENT:Think()
                         self.l_precombatmovepos = nil
                         self.l_movepos = self.l_combatpos
                     end
-
-                    debugoverlay.Line( self:GetPos(), self:GetDestination(), 0.1, self:GetPlyColor():ToColor(), true )
                 end
 
                 if jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.8 ) and random( isPanicking and 30 or 40 ) == 1 then
