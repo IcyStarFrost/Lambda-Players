@@ -631,15 +631,26 @@ net.Receive( "lambdaplayers_takeviewshot", function()
     local headBone = lambda:LookupBone( "ValveBiped.Bip01_Head1" )
     if headBone then DrawEntityBones( lambda, headBone, false ) end
 
+    local lambdaCorpse
     _LambdaIsTakingViewShot = true
 
-    lambda:Hook( "CalcView", "ViewShotCalcView", function() 
-        viewshotTbl.origin = lambda:EyePos()
-        viewshotTbl.angles = lambda:EyeAngles()
+    lambda:Hook( "CalcView", "ViewShotCalcView", function()
+        local ragdoll = lambda:GetRagdollEntity()
+        if lambda:GetIsDead() and IsValid( ragdoll ) then
+            local eyes = lambda:GetAttachmentPoint( "eyes", ragdoll )            
+            viewshotTbl.origin = eyes.Pos
+            viewshotTbl.angles = eyes.Ang
+
+            lambdaCorpse = ragdoll
+            if headBone then DrawEntityBones( ragdoll, headBone, false ) end
+        else
+            viewshotTbl.origin = lambda:EyePos()
+            viewshotTbl.angles = lambda:EyeAngles()
+        end
+
         viewshotTbl.fov = viewFOV:GetInt()
-        
         return viewshotTbl
-    end )
+    end, true )
 
     local function EndViewShotting()
         _LambdaIsTakingViewShot = false
@@ -662,7 +673,10 @@ net.Receive( "lambdaplayers_takeviewshot", function()
         local fileName = game_GetMap() .. "_" .. lambda:GetLambdaName() .. "_" .. os_date( "%Y-%m-%d_%H-%M-%S" ) .. "-" .. rndMiliSec .. "." .. format
         LAMBDAFS:WriteFile( "lambdaplayers/viewshots/" .. fileName, render_Capture( captureTbl ), "binary" )
 
-        if headBone then DrawEntityBones( lambda, headBone, true ) end
+        if headBone then 
+            DrawEntityBones( lambda, headBone, true ) 
+            if lambdaCorpse then DrawEntityBones( lambdaCorpse, headBone, true ) end
+        end
         return EndViewShotting()
-    end )
+    end, true )
 end )
