@@ -117,7 +117,7 @@ CreateLambdaConvar( "lambdaplayers_allowweaponentdrop", 0, true, false, false, "
 CreateLambdaConvar( "lambdaplayers_voice_warnvoicestereo", 0, true, true, false, "If console should warn you about voice lines that have stereo channels", 0, 1, { type = "Bool", name = "Warn Stereo Voices", category = "Utilities" } )
 
 -- View Shots
-CreateLambdaConvar( "lambdaplayers_viewshots_enabled", 0, true, false, false, "If Lambda Players are allowed to occasionally take a screenshot of their current view and save it as a photo to players", 0, 1, { type = "Bool", name = "Enable View Shots", category = "Utilities" } )
+CreateLambdaConvar( "lambdaplayers_viewshots_enabled", 0, true, false, false, "If Lambda Players are allowed to occasionally take a screenshot of their current eye view and save it as a picture to players. The pictures are saved in 'garrysmod/data/lambdaplayers/viewshots/' folder path", 0, 1, { type = "Bool", name = "Enable View Shots", category = "Utilities" } )
 CreateLambdaConvar( "lambdaplayers_viewshots_chance", 50, true, false, false, "The chance of the Lambda Player to request a view shot of their view. Higher the value, bigger the chance of it happening", 1, 100, { type = "Slider", decimals = 0, name = "View Shot Chance", category = "Utilities" } )
 CreateLambdaConvar( "lambdaplayers_viewshots_allowforyou", 1, true, true, false, "Disable this if you don't want view shots to happen on your end", 0, 1, { type = "Bool", name = "Allow View Shots For You", category = "Utilities" } )
 CreateLambdaConvar( "lambdaplayers_viewshots_viewfov", 90, true, true, false, "The field of view of the view shot", 54, 130, { type = "Slider", decimals = 0, name = "View Shot FOV", category = "Utilities" } )
