@@ -656,7 +656,10 @@ net.Receive( "lambdaplayers_takeviewshot", function()
         local format = ( saveAsPng:GetBool() and "png" or "jpg" )
         captureTbl.format = format
 
-        local fileName = game_GetMap() .. "_" .. lambda:GetLambdaName() .. "_" .. os_date( "%Y-%m-%d_%H-%M-%S" ) .. "." .. format
+        local rndMiliSec = random( 1, 99 )
+        if rndMiliSec < 10 then rndMiliSec = "0" .. rndMiliSec end
+
+        local fileName = game_GetMap() .. "_" .. lambda:GetLambdaName() .. "_" .. os_date( "%Y-%m-%d_%H-%M-%S" ) .. "-" .. rndMiliSec .. "." .. format
         LAMBDAFS:WriteFile( "lambdaplayers/viewshots/" .. fileName, render_Capture( captureTbl ), "binary" )
 
         if headBone then DrawEntityBones( lambda, headBone, true ) end
