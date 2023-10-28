@@ -1,13 +1,14 @@
 local table_insert = table.insert
 local random = math.random
 local rand = math.Rand
+local CurTime = CurTime
 
 -- Adds a function to Lambda's Universal Actions
 
 -- Universal actions are functions that are randomly called during run time.
 -- This means Lambda players could randomly change weapons or randomly look at something and ect
 
-LambdaUniversalActions = {}
+LambdaUniversalActions = LambdaUniversalActions or {}
 
 -- The first arg in the functions is the Lambda Player who called the function
 function AddUActionToLambdaUA( func, name )
@@ -16,7 +17,7 @@ end
 
 -- Random weapon switching
 AddUActionToLambdaUA( function( self )
-    if random( 3 ) != 1 then return end
+    if random( 2 ) != 1 then return end
     if self:InCombat() or self:IsPanicking() then
         self:SwitchToLethalWeapon()
     else
@@ -34,7 +35,7 @@ end, "Do 'act *'" )
 -- Undo entities
 AddUActionToLambdaUA( function( self )
     if !self:GetState( "Idle" ) then return end
-    self:NamedTimer( "Undoentities", rand( 0.3, 0.6 ), random( 6 ), function() self:UndoLastSpawnedEnt() end )
+    self:NamedTimer( "UndoEntities", rand( 0.3, 0.6 ), random( 6 ), function() self:UndoLastSpawnedEnt() end )
 end, "UndoEntities" )
 
 local isbutton = {
@@ -96,7 +97,6 @@ end, "Noclip" )
 --     end
 -- end )
 
-
 local killbind = GetConVar( "lambdaplayers_lambda_allowkillbind" )
 -- Use Killbind
 AddUActionToLambdaUA( function( self )
@@ -111,3 +111,20 @@ AddUActionToLambdaUA( function( self )
     if self:Health() >= self:GetMaxHealth() or self:InCombat() or !self:CanEquipWeapon( "gmod_medkit" ) then return end
     self:SwitchWeapon( "gmod_medkit" )
 end, "HealWithMedkit" )
+
+local allowShots = GetConVar( "lambdaplayers_viewshots_enabled" )
+local shotChance = GetConVar( "lambdaplayers_viewshots_chance" )
+-- Request a view shot
+AddUActionToLambdaUA( function( self )
+    if !allowShots:GetBool() or random( 100 ) > shotChance:GetInt() then return end
+
+    local pvsEnd = ( CurTime() + 0.1 )
+    self:Hook( "SetupPlayerVisibility", "ViewShotPVS", function()
+        AddOriginToPVS( self:GetPos() )
+        if CurTime() >= pvsEnd then return "end" end
+    end )
+
+    net.Start( "lambdaplayers_takeviewshot" )
+        net.WriteEntity( self )
+    net.Broadcast()
+end, "RequestViewShot" )

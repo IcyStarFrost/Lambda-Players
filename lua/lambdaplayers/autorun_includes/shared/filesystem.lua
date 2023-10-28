@@ -27,7 +27,7 @@ LAMBDAFS = {}
 
 -- Writes to a file. If content is a table, input json or compressed for the type arg
 function LAMBDAFS:WriteFile( filename, content, type ) 
-	local f = file_Open( filename, ( type == "compressed" and "wb" or "w" ), "DATA" )
+	local f = file_Open( filename, ( ( type == "binary" or type == "compressed" ) and "wb" or "w" ), "DATA" )
 	if !f then return end
 
     if type == "json" then 

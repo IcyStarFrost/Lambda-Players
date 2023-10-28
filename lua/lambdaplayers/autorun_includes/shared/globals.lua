@@ -353,6 +353,28 @@ function EntMeta:GetBodyGroupData()
     return data
 end
 
+_LambdaOldEyePos = _LambdaOldEyePos or EntMeta.EyePos
+function EntMeta:EyePos()
+    if self.IsLambdaPlayer then return self:GetAttachmentPoint( "eyes" ).Pos end
+    return _LambdaOldEyePos( self )
+end
+
+_LambdaOldEyeAngles = _LambdaOldEyeAngles or EntMeta.EyeAngles
+function EntMeta:EyeAngles()
+    if self.IsLambdaPlayer then 
+        local eyes = self:GetAttachmentPoint( "eyes" )
+        local eyeAng = eyes.Ang
+        
+        local facePos = self:GetNW2Vector( "lambda_facepos", vector_origin )
+        if !facePos:IsZero() then eyeAng = ( facePos - eyes.Pos ):Angle() end
+
+        eyeAng.z = 0
+        return eyeAng
+    end
+
+    return _LambdaOldEyeAngles( self )
+end
+
 if ( SERVER ) then
     _LambdaOldEntitySetHealth = _LambdaOldEntitySetHealth or EntMeta.SetHealth
     function EntMeta:SetHealth( newHealth )

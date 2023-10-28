@@ -193,6 +193,7 @@ function ENT:Initialize()
         self.l_UpdateAnimations = true -- If we can update our animations. Used for the purpose of playing sequences
         self.VJ_AddEntityToSNPCAttackList = true -- Makes creature-based VJ SNPCs able to damages us with melee and leap attacks
         self.l_isswimming = false -- If we are currenly swimming (only used to recompute paths when exitting swimming)
+        self.l_cansprint = true -- If we are able to sprint
 
         self.l_UnstuckBounds = 50 -- The distance the unstuck process will use to check. This value increments during the process and set back to 50 when done
         self.l_nextspeedupdate = 0 -- The next time we update our speed
@@ -210,7 +211,7 @@ function ENT:Initialize()
         self.l_outboundsreset = CurTime() + 5 -- The time until we get teleported back to spawn because we are out of bounds
         self.l_nextnpccheck = CurTime() + 1 -- The next time we will check for surrounding NPCs
         self.l_nextnoclipheightchange = 0 -- The next time we will change our height while in noclip
-        self.l_nextUA = CurTime() + rand( 1, 15 ) -- The next time we will run a UAction. See lambda/sv_x_universalactions.lua
+        self.l_nextUA = CurTime() + random( 1, 15 ) -- The next time we will run a UAction. See lambda/sv_x_universalactions.lua
         self.l_NextPickupCheck = 0 -- The next time we will check for nearby items to pickup
         self.l_moveWaitTime = 0 -- The time we will wait until continuing moving through our path
         self.l_nextswimposupdate = 0 -- the next time we will update our swimming position
@@ -276,6 +277,7 @@ function ENT:Initialize()
         self:SetNW2String( "lambda_ip", "192." .. random( 10, 200 ) .. "." .. random( 10 ).. "." .. random( 10, 200 ) .. ":27005" )
         self:SetNW2String( "lambda_state", "Idle" )
         self:SetNW2String( "lambda_laststate", "Idle" )
+        self:SetNW2Int( "lambda_curanimgesture", -1 )
         
         if rndBodyGroups:GetBool() then
             -- Randomize my model's bodygroups
@@ -469,6 +471,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", 8, "IsFiring" )
     self:NetworkVar( "Bool", 9, "IsTyping" )
     self:NetworkVar( "Bool", 10, "SlowWalk" )
+    self:NetworkVar( "Bool", 11, "AllowFlashlight" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )
@@ -637,7 +640,7 @@ function ENT:Think()
 
         -- Update our movement speed
         if curTime >= self.l_nextspeedupdate then
-            loco:SetDesiredSpeed( ( isCrouched and self:GetCrouchSpeed() or ( self:GetSlowWalk() and self:GetSlowWalkSpeed() or ( self:GetRun() and self:GetRunSpeed() or self:GetWalkSpeed() ) ) ) * self.l_WeaponSpeedMultiplier )
+            loco:SetDesiredSpeed( ( isCrouched and self:GetCrouchSpeed() or ( self:GetSlowWalk() and self:GetSlowWalkSpeed() or ( ( self:GetRun() and self.l_cansprint == true ) and self:GetRunSpeed() or self:GetWalkSpeed() ) ) ) * self.l_WeaponSpeedMultiplier )
             self.l_nextspeedupdate = curTime + 0.1
         end
 
@@ -708,7 +711,7 @@ function ENT:Think()
                         local keepDist, myOrigin = self.l_CombatKeepDistance, self:GetPos()
                         local posCopy = target:GetPos(); posCopy.z = myOrigin.z
 
-                        if canSee and keepDist and self:IsInRange( posCopy, keepDist ) then
+                        if canSee and keepDist and self:IsInRange( posCopy, ( keepDist * rand( 0.8, 1.2 ) ) ) then
                             local moveAng = ( myOrigin - posCopy ):Angle()
                             local runSpeed = self:GetRunSpeed()
                             local potentialPos = ( myOrigin + moveAng:Forward() * random( -( runSpeed * 0.5 ), keepDist ) + moveAng:Right() * random( -runSpeed, runSpeed ) )
@@ -727,7 +730,7 @@ function ENT:Think()
                     end
                 end
 
-                if jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.8 ) and random( isPanicking and 30 or 40 ) == 1 then
+                if jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.8 ) and random( isPanicking and 25 or 35 ) == 1 then
                     combatjumptbl.start = self:GetPos()
                     combatjumptbl.endpos = ( combatjumptbl.start + locoVel )
                     combatjumptbl.filter = self
@@ -752,40 +755,44 @@ function ENT:Think()
                     end
                 end
 
-                if canSee and curTime >= self.l_ThrowQuickNadeTime and !self:GetIsReloading() and nadeUsage:GetBool() and random( 200 ) == 1 then
-                    local nades = LAMBDAFS:GetQuickNadeWeapons()
-                    if #nades > 0 then
-                        local rndNade
-                        for _, nade in RandomPairs( nades ) do
-                            if !self:CanEquipWeapon( nade ) then continue end
-                            local data = _LAMBDAPLAYERSWEAPONS[ nade ]
-                            if !data or data.attackrange and !self:IsInRange( target, data.attackrange ) then continue end
+                if curTime >= self.l_ThrowQuickNadeTime then
+                    self.l_ThrowQuickNadeTime = curTime + 1
 
-                            rndNade = data
-                            break
-                        end
+                    if canSee and !self:GetIsReloading() and nadeUsage:GetBool() and random( 20 ) == 1 then
+                        local nades = LAMBDAFS:GetQuickNadeWeapons()
+                        if #nades > 0 then
+                            local rndNade
+                            for _, nade in RandomPairs( nades ) do
+                                if !self:CanEquipWeapon( nade ) then continue end
+                                local data = _LAMBDAPLAYERSWEAPONS[ nade ]
+                                if !data or data.attackrange and !self:IsInRange( target, data.attackrange ) then continue end
 
-                        if rndNade then
-                            self.l_ThrowQuickNadeTime = curTime + random( 1, 10 )
-
-                            self:ClientSideNoDraw( wepent, true )
-                            wepent:SetNoDraw( true )
-                            wepent:DrawShadow( false )  
-        
-                            local coolDown = self.l_WeaponUseCooldown
-                            local callback = ( rndNade.OnAttack or rndNade.callback )
-                            callback( self, wepent, target )
-
-                            if coolDown != self.l_WeaponUseCooldown then
-                                self.l_WeaponUseCooldown = ( ( curTime >= coolDown and curTime or coolDown ) + 0.75 )
+                                rndNade = data
+                                break
                             end
-        
-                            self:SimpleWeaponTimer( 0.75, function()
-                                local isMarked = self:IsWeaponMarkedNodraw()
-                                self:ClientSideNoDraw( wepent, isMarked )
-                                wepent:SetNoDraw( isMarked )
-                                wepent:DrawShadow( isMarked )  
-                            end )
+
+                            if rndNade then
+                                self.l_ThrowQuickNadeTime = curTime + random( 1, 10 )
+
+                                self:ClientSideNoDraw( wepent, true )
+                                wepent:SetNoDraw( true )
+                                wepent:DrawShadow( false )  
+            
+                                local coolDown = self.l_WeaponUseCooldown
+                                local callback = ( rndNade.OnAttack or rndNade.callback )
+                                callback( self, wepent, target )
+
+                                if coolDown != self.l_WeaponUseCooldown then
+                                    self.l_WeaponUseCooldown = ( ( curTime >= coolDown and curTime or coolDown ) + 0.75 )
+                                end
+            
+                                self:SimpleWeaponTimer( 0.75, function()
+                                    local isMarked = self:IsWeaponMarkedNodraw()
+                                    self:ClientSideNoDraw( wepent, isMarked )
+                                    wepent:SetNoDraw( isMarked )
+                                    wepent:DrawShadow( isMarked )  
+                                end )
+                            end
                         end
                     end
                 end
@@ -834,7 +841,7 @@ function ENT:Think()
         end
 
         -- Reload randomly when we aren't shooting
-        if !self:GetIsTyping() and self.l_Clip < self.l_MaxClip and random( 100 ) == 1 and curTime >= self.l_WeaponUseCooldown + 1 then
+        if !isDisabled and self.l_Clip < self.l_MaxClip and random( 100 ) == 1 and curTime >= self.l_WeaponUseCooldown + 1 then
             self:ReloadWeapon()
         end
 
@@ -849,16 +856,9 @@ function ENT:Think()
         -- UA, Universal Actions
         -- See sv_x_universalactions.lua
         if !isDisabled and curTime >= self.l_nextUA then
-            local UAfunc = table_Random( LambdaUniversalActions )
+            local UAfunc, UAname = table_Random( LambdaUniversalActions )
             UAfunc( self )
-            self.l_nextUA = ( curTime + rand( 1, 15 ) )
-        end
-
-        local eyeAttach = self:GetAttachmentPoint( "eyes" )
-
-        -- Eye tracing
-        if eyetracing:GetBool() then
-            debugoverlay.Line( eyeAttach.Pos, self:GetEyeTrace().HitPos, 0.1, color_white, false )
+            self.l_nextUA = ( curTime + random( 1, 15 ) )
         end
 
         -- How fast we are falling
@@ -1080,6 +1080,14 @@ function ENT:Think()
         end
         --
 
+        local eyeAttach
+
+        -- Eye tracing
+        if eyetracing:GetBool() then
+            eyeAttach = self:GetAttachmentPoint( "eyes" )
+            debugoverlay.Line( eyeAttach.Pos, self:GetEyeTrace().HitPos, 0.1, color_white, false )
+        end
+
         -- Handles facing positions or entities --
         self:SetNW2Vector( "lambda_facepos", vector_origin )
         local lookAng = angle_zero
@@ -1091,9 +1099,10 @@ function ENT:Think()
                 self.l_Faceend = nil 
                 self.l_PoseOnly = nil
             else
-                local pos = ( isentity( faceTarg ) and ( faceTarg.IsLambdaPlayer and faceTarg:EyePos2() or ( isfunction( faceTarg.EyePos ) and faceTarg:EyePos() or faceTarg:WorldSpaceCenter() ) ) or faceTarg )
+                local pos = ( isentity( faceTarg ) and ( isfunction( faceTarg.EyePos ) and faceTarg:EyePos() or faceTarg:WorldSpaceCenter() ) or faceTarg )
                 if !self.l_PoseOnly then loco:FaceTowards( pos ); loco:FaceTowards( pos ) end
 
+                if !eyeAttach then eyeAttach = self:GetAttachmentPoint( "eyes" ) end
                 lookAng = self:WorldToLocalAngles( ( pos - eyeAttach.Pos ):Angle() )
                 self:SetNW2Vector( "lambda_facepos", pos )
             end
@@ -1154,15 +1163,16 @@ function ENT:Think()
         local selfCenter = self:WorldSpaceCenter()
         local selfAngles = self:GetAngles()
         local flashlight = self.l_flashlight
+        local allowFlashlight = self:CanUseFlashlight()
 
         -- Update our flashlight
-        if curTime >= self.l_lightupdate then
+        if curTime >= self.l_lightupdate or !allowFlashlight and self.l_flashlighton then
             self.l_lightupdate = ( curTime + 1 )
 
             local isAtLight = ( GetLightColor( selfCenter ):LengthSqr() > 0.0004 )
             local beingDrawn = !self:IsDormant()
 
-            if isDead or !beingDrawn or isAtLight or !drawflashlight:GetBool() then
+            if isDead or !beingDrawn or isAtLight or !allowFlashlight or !drawflashlight:GetBool() then
                 self:SetFlashlightOn( false )
                 self.l_flashlighton = false
 
@@ -1182,7 +1192,7 @@ function ENT:Think()
                     flashlight:SetPos( selfCenter )
                     flashlight:SetAngles( selfAngles )
                     flashlight:Update()
-                    
+
                     self.l_flashlight = flashlight
                     if beingDrawn then self:EmitSound( "HL2Player.FlashLightOn" ) end
                 end

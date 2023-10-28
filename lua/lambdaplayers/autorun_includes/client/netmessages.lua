@@ -94,7 +94,7 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
     local ragdoll = ( IsValid( overrideEnt ) and overrideEnt or lambda ):BecomeRagdollOnClient()
     if !IsValid( ragdoll ) then return end
 
-    local entPos = net.ReadVector()
+    local boneTbl = net.ReadTable()
     local dmgPos, dmgForce, forceDiv = net.ReadVector(), net.ReadVector(), net.ReadUInt( 7 )
     local isDorm = lambda:IsDormant()
 
@@ -102,10 +102,13 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
         local phys = ragdoll:GetPhysicsObjectNum( i )
         if !IsValid( phys ) then continue end
 
+        if isDorm then 
+            local bonePos = boneTbl[ ragdoll:TranslatePhysBoneToBone( i ) ]
+            if bonePos then phys:SetPos( bonePos, true ) end
+        end
+
         local distDiff = ( phys:GetPos():Distance( dmgPos ) / forceDiv )
         phys:ApplyForceOffset( dmgForce / distDiff, dmgPos )
-
-        if isDorm then phys:SetPos( entPos, true ) end
     end
 
     ragdoll:SetNoDraw( false )
@@ -595,4 +598,68 @@ net.Receive( "lambdaplayers_mergeweapons", function()
     LambdaMergeWeapons()
     chat.AddText( color_client, "Merged all Lambda Weapon Lua Files for your Client" )
     RunConsoleCommand( "spawnmenu_reload" )
+end )
+
+local render_Capture = render.Capture
+local game_GetMap = game.GetMap
+local os_date = os.date
+local viewshotTbl = { drawviewer = true }
+local captureTbl = { x = 0, y = 0, alpha = false }
+local vector_fullscale = Vector( 1, 1, 1 )
+
+local allowShots = GetConVar( "lambdaplayers_viewshots_allowforyou" )
+local viewFOV = GetConVar( "lambdaplayers_viewshots_viewfov" )
+local saveAsPng = GetConVar( "lambdaplayers_viewshots_saveaspng" )
+
+_LambdaIsTakingViewShot = _LambdaIsTakingViewShot or false
+file.CreateDir( "lambdaplayers/viewshots" )
+
+local function DrawEntityBones( ent, parent, draw )
+    ent:ManipulateBoneScale( parent, draw and vector_fullscale or vector_origin )
+
+    for _, child in ipairs( ent:GetChildBones( parent ) ) do
+        DrawEntityBones( ent, child, draw )
+    end
+end
+
+net.Receive( "lambdaplayers_takeviewshot", function()
+    if !allowShots:GetBool() then return end
+
+    local lambda = net.ReadEntity()
+    if !IsValid( lambda ) then return end
+
+    local headBone = lambda:LookupBone( "ValveBiped.Bip01_Head1" )
+    if headBone then DrawEntityBones( lambda, headBone, false ) end
+
+    _LambdaIsTakingViewShot = true
+
+    lambda:Hook( "CalcView", "ViewShotCalcView", function() 
+        viewshotTbl.origin = lambda:EyePos()
+        viewshotTbl.angles = lambda:EyeAngles()
+        viewshotTbl.fov = viewFOV:GetInt()
+        
+        return viewshotTbl
+    end )
+
+    local function EndViewShotting()
+        _LambdaIsTakingViewShot = false
+        lambda:RemoveHook( "CalcView", "ViewShotCalcView" )
+        lambda:RemoveHook( "OnEntityRemoved", "ViewShotRemoveFailSafe" )
+        return "end"
+    end
+    lambda:Hook( "OnEntityRemoved", "ViewShotRemoveFailSafe", EndViewShotting )
+
+    lambda:Hook( "PreDrawHUD", "ViewShotRenderCapture", function()
+        captureTbl.w = ScrW()
+        captureTbl.h = ScrH()
+
+        local format = ( saveAsPng:GetBool() and "png" or "jpg" )
+        captureTbl.format = format
+
+        local fileName = game_GetMap() .. "_" .. lambda:GetLambdaName() .. "_" .. os_date( "%Y-%m-%d_%H-%M-%S" ) .. "." .. format
+        LAMBDAFS:WriteFile( "lambdaplayers/viewshots/" .. fileName, render_Capture( captureTbl ), "binary" )
+
+        if headBone then DrawEntityBones( lambda, headBone, true ) end
+        return EndViewShotting()
+    end )
 end )

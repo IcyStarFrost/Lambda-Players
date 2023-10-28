@@ -64,10 +64,15 @@ if SERVER then
             end
         end
 
+        local boneTbl = {}
+        for i = 0, ( self:GetBoneCount() - 1 ) do
+            boneTbl[ i ] = self:GetBonePosition( i )
+        end
+
         net.Start( "lambdaplayers_becomeragdoll" )
             net.WriteEntity( self )
             net.WriteEntity( overrideEnt )
-            net.WriteVector( ( IsValid( overrideEnt ) and overrideEnt or self ):GetPos() )
+            net.WriteTable( boneTbl )
             net.WriteVector( dmgpos )
             net.WriteVector( dmgforce )
             net.WriteUInt( forceScale, 7 )
@@ -296,7 +301,8 @@ if SERVER then
         self:SetIsDead( true )
         self:SetNoClip( false )
         self:SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE )
-        self:AddFlags( FL_NOTARGET )
+        
+        self:SetNoTarget( true )
         self:RemoveFlags( FL_CLIENT )
 
         self:ClientSideNoDraw( self, true )

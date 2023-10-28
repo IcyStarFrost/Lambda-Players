@@ -621,6 +621,7 @@ if SERVER then
 
         self.l_UpdateAnimations = false
         self.l_CurrentPlayedGesture = id
+        self:SetNW2Int( "lambda_curanimgesture", id )
 
         local len = self:GetLayerDuration( layer )
         speed = speed or 1
@@ -641,7 +642,7 @@ if SERVER then
         end
 
         self.l_UpdateAnimations = true
-        self.l_CurrentPlayedGesture = -1
+        self:SetNW2Int( "lambda_curanimgesture", -1 )
     
     end
 
@@ -795,7 +796,7 @@ if SERVER then
         self:SetCrouch( false )
         self:SetEnemy( NULL )
         self:SetIsReloading( false )
-        self:RemoveFlags( FL_NOTARGET )
+        self:SetNoTarget( false )
 
         self:PreventDefaultComs( false )
         self:PreventWeaponSwitch( false )
@@ -854,12 +855,12 @@ if SERVER then
     -- If ignoreprehook is true, the LambdaPreRecreated hook won't run meaning addons won't be able to stop this 
     function ENT:Recreate( ignoreprehook, inPlace )
         local shouldblock = LambdaRunHook( "LambdaPreRecreated", self )
-        if inPlace then inPlace = self:Alive() end
-
         self:SimpleTimer( 0.1, function() self:Remove() end, true )
         if !ignoreprehook and shouldblock == true then return end
 
+        if inPlace then inPlace = self:Alive() end
         local pos, ang = self.l_SpawnPos, self.l_SpawnAngles
+
         if inPlace then
             tracetable.start = self:GetPos()
             tracetable.endpos = tracetable.start
@@ -890,8 +891,12 @@ if SERVER then
             newlambda:SetState( self:GetState() )
             newlambda:SetEnemy( self:GetEnemy() )
             newlambda.l_statearg = self.l_statearg
+            
+            local curWep = self:GetWeaponName()
+            newlambda:SimpleTimer( 0.1, function() newlambda:SwitchWeapon( curWep ) end )
         end
 
+        self.l_recreatedlambda = newlambda
         table_Merge( newlambda.l_SpawnedEntities, self.l_SpawnedEntities )
 
         if IsValid( creator ) then
@@ -987,7 +992,7 @@ if SERVER then
     -- Restarts the Lambda's AI thread. Useful for forcing state changes
     function ENT:ResetAI()
         self.BehaveThread = coroutine.create( function() self:RunBehaviour() end )
-        self.l_CurrentPlayedGesture = -1
+        self:SetNW2Int( "lambda_curanimgesture", -1 )
     end
 
 
