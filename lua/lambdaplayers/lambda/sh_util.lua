@@ -550,8 +550,10 @@ if SERVER then
     function ENT:CanTarget( ent )
         if ent.IsLambdaPlayer then 
             if !ent:Alive() then return false end
+            if ent:IsFlagSet( FL_NOTARGET ) then return false end
         elseif ent:IsPlayer() then
             if !ent:Alive() then return false end 
+            if ent:IsFlagSet( FL_NOTARGET ) then return false end
             if ignoreplayer:GetBool() then return false end 
             if ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 0 then return false end
         elseif ent:IsNPC() or ent:IsNextBot() then

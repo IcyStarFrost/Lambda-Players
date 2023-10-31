@@ -50,6 +50,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_PISTOL,
         crouchWalk = ACT_HL2MP_WALK_CROUCH_PISTOL,
         reload = ACT_HL2MP_GESTURE_RELOAD_PISTOL,
+        attack = ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL,
         swimIdle = ACT_HL2MP_SWIM_IDLE_PISTOL,
         swimMove = ACT_HL2MP_SWIM_PISTOL
     },
@@ -61,6 +62,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_SMG1,
         crouchWalk = ACT_HL2MP_WALK_CROUCH_SMG1,
         reload = ACT_HL2MP_GESTURE_RELOAD_SMG1,
+        attack = ACT_HL2MP_GESTURE_RANGE_ATTACK_SMG1,
         swimIdle = ACT_HL2MP_SWIM_IDLE_SMG1,
         swimMove = ACT_HL2MP_SWIM_SMG1
     },
@@ -72,6 +74,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_AR2,
         crouchWalk = ACT_HL2MP_WALK_CROUCH_AR2,
         reload = ACT_HL2MP_GESTURE_RELOAD_AR2,
+        attack = ACT_HL2MP_GESTURE_RANGE_ATTACK_AR2,
         swimIdle = ACT_HL2MP_SWIM_IDLE_AR2,
         swimMove = ACT_HL2MP_SWIM_AR2
     },
@@ -83,6 +86,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_SHOTGUN,
         crouchWalk = ACT_HL2MP_WALK_CROUCH_SHOTGUN,
         reload = ACT_HL2MP_GESTURE_RELOAD_SHOTGUN,
+        attack = ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN,
         swimIdle = ACT_HL2MP_SWIM_IDLE_SHOTGUN,
         swimMove = ACT_HL2MP_SWIM_SHOTGUN
     },
@@ -94,6 +98,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_REVOLVER,
         crouchWalk = ACT_HL2MP_WALK_CROUCH_REVOLVER,
         reload = ACT_HL2MP_GESTURE_RELOAD_REVOLVER,
+        attack = ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER,
         swimIdle = ACT_HL2MP_SWIM_IDLE_REVOLVER,
         swimMove = ACT_HL2MP_SWIM_REVOLVER
     },
@@ -185,6 +190,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_DUEL,
         crouchWalk = ACT_HL2MP_WALK_CROUCH_DUEL,
         reload = ACT_HL2MP_GESTURE_RELOAD_DUEL,
+        attack = ACT_HL2MP_GESTURE_RANGE_ATTACK_DUEL,
         swimIdle = ACT_HL2MP_SWIM_IDLE_DUEL,
         swimMove = ACT_HL2MP_SWIM_DUEL
     },
@@ -236,6 +242,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_CROSSBOW,
         crouchWalk = ACT_HL2MP_WALK_CROUCH_CROSSBOW,
         reload = ACT_HL2MP_GESTURE_RELOAD_CROSSBOW,
+        attack = ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW,
         swimIdle = ACT_HL2MP_SWIM_IDLE_CROSSBOW,
         swimMove = ACT_HL2MP_SWIM_CROSSBOW
     },
@@ -248,6 +255,16 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchWalk = ACT_HL2MP_WALK_CROUCH,
         swimIdle = ACT_HL2MP_SWIM_IDLE,
         swimMove = ACT_HL2MP_SWIM
+    },
+    ["sniperrifle"] = {
+        idle = ACT_HL2MP_IDLE_RPG,
+        run = ACT_HL2MP_RUN_RPG,
+        walk = ACT_HL2MP_WALK_RPG,
+        jump = ACT_HL2MP_JUMP_AR2,
+        crouchIdle = ACT_HL2MP_IDLE_CROUCH_AR2,
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_AR2,
+        swimIdle = ACT_HL2MP_SWIM_IDLE_RPG,
+        swimMove = ACT_HL2MP_SWIM_RPG
     }
 }
 

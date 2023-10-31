@@ -18,16 +18,9 @@ local function OpenQuickNadePanel( ply )
         local conmenu = DermaMenu( false, mainframe )
         local nade = line:GetSortValue( 1 )
 
-        local prettyName = _LAMBDAPLAYERSWEAPONS[ nade ]
-        prettyName = ( prettyName and prettyName.notagprettyname or nade )
-
-        conmenu:AddOption( "Delete " .. prettyName .. "?", function()
-            chat.AddText( "Deleted " .. prettyName .. " from the quick nade list.")
-            surface.PlaySound( "buttons/button15.wav" )
-            nadeList:RemoveLine( id )
-            LAMBDAPANELS:RemoveVarFromSQFile( "lambdaplayers/quicknades.json", nade, "json" ) 
-        end )
-        conmenu:AddOption( "Cancel", function() end )
+        surface.PlaySound( "buttons/button15.wav" )
+        nadeList:RemoveLine( id )
+        LAMBDAPANELS:RemoveVarFromSQFile( "lambdaplayers/quicknades.json", nade, "json" ) 
     end
 
     local nades = {}
@@ -62,4 +55,4 @@ local function OpenQuickNadePanel( ply )
     end )
 end
 
-RegisterLambdaPanel( "Quick Nade Weapons", "Opens a panel that allows you to select the weapons Lambda Players will as throw as a quick nade. You must be a Super Admin to use this Panel.", OpenQuickNadePanel, "Lambda Weapons" )
+RegisterLambdaPanel( "Quick Nade Weapons", "Opens a panel that allows you to select the weapons Lambda Players will as throw as a quick nade. You must be a Super Admin to use this Panel. YOU MUST UPDATE LAMBDA DATA AFTER ANY CHANGES!", OpenQuickNadePanel, "Lambda Weapons" )

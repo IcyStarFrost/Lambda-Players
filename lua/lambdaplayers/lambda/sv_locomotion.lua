@@ -19,6 +19,7 @@ local laddermovetable = { collisiongroup = COLLISION_GROUP_PLAYER, ignoreworld =
 local ents_FindByName = ents.FindByName
 local GetGroundHeight = navmesh.GetGroundHeight
 local navmesh_IsLoaded = navmesh.IsLoaded
+local GetNearestNavArea = navmesh.GetNearestNavArea
 local random = math.random
 local Rand = math.Rand
 local ipairs = ipairs
@@ -544,7 +545,7 @@ function ENT:ObstacleCheck( pathDir )
             else
                 ent:Fire( "Open" )
             end
-        elseif ent.Health and ent:Health() > 0 and !ent:IsPlayer() and !ent:IsNPC() and !ent:IsNextBot() then
+        elseif !ent.l_ignoredobstacle and ent.Health and ent:Health() > 0 and !ent:IsPlayer() and !ent:IsNPC() and !ent:IsNextBot() then
             if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
             
             if !self:HookExists( "Tick", "ShootAtObstacle" ) then
@@ -671,6 +672,7 @@ local crouchWalkPenalty = 5
 local jumpPenalty = 15
 local ladderPenalty = 20
 local avoidPenalty = 75
+local retreatDangerPenalty = 50
 
 -- Returns a pathfinding function for the :Compute() function
 function ENT:PathGenerator()
@@ -681,6 +683,12 @@ function ENT:PathGenerator()
 
     local obeyNavmesh = obeynav:GetBool()
     local isInNoClip = self:IsInNoClip()
+
+    local retreatTargArea, retreatTargPos
+    if self:IsPanicking() and IsValid( self:GetEnemy() ) then
+        retreatTargPos = self:GetEnemy():GetPos()
+        retreatTargArea = GetNearestNavArea( retreatTargPos, true, 512, false, true, 0 )
+    end
 
     local randomizeCost = randomizepathfinding:GetBool()
     local minRandCost = mincostscale:GetFloat()
@@ -751,8 +759,13 @@ function ENT:PathGenerator()
             end
         end
 
-        local hookCost = LambdaRunHook( "LambdaOnPathGenerate", self, area, fromArea, cost, dist, ladder, length )
-        if hookCost then cost = hookCost end
+        if retreatTargArea and area == retreatTargArea or retreatTargPos and GetDistToSqr( areaPos, retreatTargPos ) <= 262144 then
+            cost = ( cost + dist * retreatDangerPenalty )
+        end
+
+        -- Too costy for performance...
+        -- local hookCost = LambdaRunHook( "LambdaOnPathGenerate", self, area, fromArea, cost, dist, ladder, length )
+        -- if hookCost then cost = hookCost end
 
         return cost
     end

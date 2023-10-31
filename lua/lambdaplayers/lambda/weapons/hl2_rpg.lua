@@ -33,8 +33,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if !laserEnabled:GetBool() then return end
 
             local attachData = wepent:GetAttachment( 1 )
-            trTbl.start = attachData.Pos
-            trTbl.endpos = ( attachData.Pos + attachData.Ang:Forward() * 32756 )
+            trTbl.start = ( attachData and attachData.Pos or wepent:GetPos() )
+            trTbl.endpos = ( trTbl.start + ( attachData and attachData.Ang:Forward() or wepent:GetForward() ) * 32756 )
             trTbl.filter[ 1 ] = self
             trTbl.filter[ 2 ] = wepent
             trTbl.filter[ 3 ] = wepent:GetNW2Entity( "lambdahl2_rpgrocket", NULL )
@@ -72,7 +72,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if curTime < wepent.RocketTargetTime or curTime < wepent.RocketIgniteTime or !laserEnabled:GetBool() then return end
 
             local attachData = wepent:GetAttachment( 1 )
-            local muzzlePos = attachData.Pos
+            local muzzlePos = ( attachData and attachData.Pos or wepent:GetPos() )
 
             trTbl.start = muzzlePos
             trTbl.filter[ 1 ] = self
@@ -89,7 +89,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                 trTbl.endpos = ( muzzlePos + ( aimPos - muzzlePos ):GetNormalized() * 32756 )
             else
-                trTbl.endpos = ( muzzlePos + attachData.Ang:Forward() * 32756 )
+                local muzzleFwd = ( attachData and attachData.Ang:Forward() or wepent:GetForward() )
+                trTbl.endpos = ( muzzlePos + muzzleFwd * 32756 )
             end
 
             vecTarget = ( TraceLine( trTbl ).HitPos - trTbl.start ):GetNormalized()
@@ -102,13 +103,15 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent.RocketTargetTime = ( curTime + 0.1 )
         end,
 
-        OnAttack = function( self, wepent, target )  
-            trTbl.start = wepent:GetAttachment( 2 ).Pos
+        OnAttack = function( self, wepent, target )
+            local attachData = wepent:GetAttachment( 2 )
+            trTbl.start = ( attachData and attachData.Pos or wepent:GetPos() + wepent:GetForward() * 20 )
             trTbl.endpos = target:GetPos()
-            trTbl.filter = target          
             if self:GetForward():Dot( ( trTbl.endpos - trTbl.start ):GetNormalized() ) < 0.66 then return true end
 
+            trTbl.filter = target          
             local tr = TraceLine( trTbl )
+            
             if tr.Entity == self then self.l_WeaponUseCooldown = CurTime() + 0.25 return true end
 
             if tr.Fraction != 1.0 then 

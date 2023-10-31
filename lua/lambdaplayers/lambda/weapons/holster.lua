@@ -72,6 +72,7 @@
     keepdistance    | Number |          The distance the Lambda will keep from the target
     attackrange     | Number |          The range the Lambda can attack from
     damage          | Number |          The amount of damage the weapon can deal
+    force           | Number |          The amount of force the weapon's bullet apply
     rateoffire      | Number |          How fast the weapon is fired/used in seconds
     rateoffiremin   | Number |          The minimum amount of time this weapon can be fired/used. These two are used to make random fire delays  Won't work if the normal rateoffire variable is set    | OPTIONAL
     rateoffiremax   | Number |          The maximum amount of time this weapon can be fired/used. These two are used to make random fire delays. Won't work if the normal rateoffire variable is set     | OPTIONAL

@@ -9,7 +9,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         prettyname = "Medkit",
         holdtype = "slam",
         bonemerge = true,
-        clip = 1,
         dropentity = "weapon_medkit",
 
         OnDeploy = function( self, wepent ) 

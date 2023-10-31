@@ -74,12 +74,10 @@ end
 
 -- Similar to Real Player's :GetEyeTrace()
 function ENT:GetEyeTrace()
-    local attach = self:GetAttachmentPoint( "eyes" )
-    eyetracetable.start = attach.Pos
-    eyetracetable.endpos = attach.Ang:Forward() * 32768
+    eyetracetable.start = self:EyePos()
+    eyetracetable.endpos = ( self:GetAimVector() * 32768 )
     eyetracetable.filter = self
-    local result = util.TraceLine( eyetracetable )
-    return result
+    return util.TraceLine( eyetracetable )
 end
 
 -- Return random fake steam ids

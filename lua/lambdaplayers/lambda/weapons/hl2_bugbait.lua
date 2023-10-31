@@ -20,7 +20,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         islethal = true,
         keepdistance = 600,
         attackrange = 1500,
-        clip = 1,
 
         OnDeploy = function( self, wepent )
             self.l_AntlionCount = 0

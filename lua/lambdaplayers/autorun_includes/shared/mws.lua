@@ -10,6 +10,7 @@ local table_insert = table.insert
 local rand = math.Rand
 local random = math.random
 local net = net
+local tonumber = tonumber
 local PlaySound = ( CLIENT and surface.PlaySound )
 local AddNotification = ( CLIENT and notification.AddLegacy )
 local ipairs = ipairs
@@ -85,7 +86,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_openmwscustompersonalitypresetpan
     tbl[ "lambdaplayers_mwspersonality_voicechance" ] = 30
     tbl[ "lambdaplayers_mwspersonality_textchance" ] = 30
     for _, v in ipairs( MWSConvars ) do
-        tbl[ v[ 2 ]:GetName() ] = v[ 2 ]:GetDefault()
+        tbl[ v[ 2 ]:GetName() ] = ( tonumber( v[ 2 ]:GetDefault() ) or 30  )
     end
     LAMBDAPANELS:CreateCVarPresetPanel( "Custom Personality Preset Editor", tbl, "custommwspersonalities", false )
 end, true, "Opens a panel to allow you to create custom preset personalities and load them", { name = "Custom Personality Presets", category = "MWS" } )

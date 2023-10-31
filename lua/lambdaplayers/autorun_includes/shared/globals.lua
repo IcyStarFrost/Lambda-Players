@@ -17,7 +17,7 @@ function LambdaMergeWeapons()
     for _, luafile in ipairs( weaponluafiles ) do
         AddCSLuaFile( "lambdaplayers/lambda/weapons/" .. luafile )
         include( "lambdaplayers/lambda/weapons/" .. luafile )
-        print( "Lambda Players: Merged Weapon from [ " .. luafile .. " ]" )
+        print( "Lambda Players: Merged Weapon(s) from [ " .. luafile .. " ]" )
     end
 
     if ( CLIENT ) then
@@ -366,7 +366,11 @@ function EntMeta:EyeAngles()
         local eyeAng = eyes.Ang
         
         local facePos = self:GetNW2Vector( "lambda_facepos", vector_origin )
-        if !facePos:IsZero() then eyeAng = ( facePos - eyes.Pos ):Angle() end
+        if !facePos:IsZero() then 
+            eyeAng = ( facePos - eyes.Pos ):Angle()
+        elseif !self:IsPlayingTaunt() then
+            eyeAng.y = self:GetAngles().y
+        end
 
         eyeAng.z = 0
         return eyeAng

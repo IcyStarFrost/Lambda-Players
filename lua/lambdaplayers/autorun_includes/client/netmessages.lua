@@ -386,7 +386,7 @@ net.Receive( "lambdaplayers_updatedata", function()
     LambdaTextProfiles = LAMBDAFS:GetTextProfiles()
     LambdaPersonalProfiles = file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
     LambdaModelVoiceProfiles = LAMBDAFS:GetModelVoiceProfiles()
-    LambdaQuickNades = LambdaQuickNades or LAMBDAFS:GetQuickNadeWeapons()
+    LambdaQuickNades = LAMBDAFS:GetQuickNadeWeapons()
     
     chat.AddText( "Lambda Data was updated by the Server" )
 end )

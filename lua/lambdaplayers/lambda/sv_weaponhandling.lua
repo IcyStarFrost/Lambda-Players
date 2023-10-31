@@ -46,8 +46,8 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self.l_OnDealDamagefunction = weapondata.OnDealDamage
     self.l_WeaponNoDraw = weapondata.nodraw or false
     self.l_WeaponSpeedMultiplier = weapondata.speedmultiplier or 1
-    self.l_Clip = weapondata.clip or 0
-    self.l_MaxClip = weapondata.clip or 0
+    self.l_Clip = weapondata.clip or -1
+    self.l_MaxClip = weapondata.clip or -1
     self.l_WeaponUseCooldown = CurTime() + ( weapondata.deploydelay or 0.1 )
     self.l_DropWeaponOnDeath = ( weapondata.dropondeath == nil and true or weapondata.dropondeath )
     self.l_WeaponThinkFunction = CurTime()
@@ -89,7 +89,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self.l_WeaponThinkFunction = weapondata.OnThink
 
     local onDeployFunc = ( weapondata.OnDeploy or weapondata.OnEquip )
-    if onDeployFunc then onDeployFunc( self, wepent ) end
+    if onDeployFunc then onDeployFunc( self, wepent, oldweaponname ) end
 
     local deploySnd = weapondata.deploysound
     if deploySnd then
@@ -132,11 +132,16 @@ local bullettbl = {
 
 -- I like this way more than before 
 local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabletbl )
-    if self.l_Clip <= 0 then self:ReloadWeapon() return end
+    if self.l_Clip == 0 then self:ReloadWeapon() return end
     
     disabletbl = disabletbl or {}
-    
-    local fireRate = ( disabletbl.cooldown or weapondata.rateoffire or Rand( weapondata.rateoffiremin, weapondata.rateoffiremax ) )
+
+    local fireRate = ( disabletbl.cooldown or weapondata.rateoffire ) 
+    if !fireRate then
+        local randMin = weapondata.rateoffiremin
+        local randMax = weapondata.rateoffiremax
+        if randMin and randMax then fireRate = Rand( randMin, randMax ) end    
+    end
     if fireRate and fireRate != true then 
         local cooldown = weapondata.rateoffire or Rand( weapondata.rateoffiremin, weapondata.rateoffiremax )
         self.l_WeaponUseCooldown = CurTime() + cooldown
@@ -172,13 +177,13 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
         bullettbl.IgnoreEntity = self
 
         bullettbl.Damage = ( bulletData.Damage or weapondata.damage )
-        bullettbl.Force = ( bulletData.Force or weapondata.damage )
+        bullettbl.Force = ( bulletData.Force or weapondata.force or weapondata.damage )
         bullettbl.Num = ( bulletData.Num or weapondata.bulletcount or 1 )
         bullettbl.TracerName = ( bulletData.TracerName or weapondata.tracername or "Tracer" )
         bullettbl.Dir = ( bulletData.Dir or ( target:WorldSpaceCenter() - wepent:GetPos() ):GetNormalized() )
         bullettbl.Src = ( bulletData.Src or wepent:GetPos() )
 
-        local spread = ( bulletData.Spread or weapondata.spread )
+        local spread = ( bulletData.Spread or weapondata.spread or 0.1 )
         bullettbl.Spread.x = spread
         bullettbl.Spread.y = spread
 

@@ -1,6 +1,7 @@
 local table_insert = table.insert
 local random = math.random
 local RandomPairs = RandomPairs
+local tonumber = tonumber
 
 LambdaPersonalities = {}
 LambdaPersonalityConVars = {}
@@ -106,7 +107,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_opencustompersonalitypresetpanel"
     tbl[ "lambdaplayers_personality_voicechance" ] = 30
     tbl[ "lambdaplayers_personality_textchance" ] = 30
     for k, v in ipairs( LambdaPersonalityConVars ) do
-        tbl[ v[ 2 ]:GetName() ] = v[ 2 ]:GetDefault()
+        tbl[ v[ 2 ]:GetName() ] = ( tonumber( v[ 2 ]:GetDefault() ) or 30  )
     end
     LAMBDAPANELS:CreateCVarPresetPanel( "Custom Personality Preset Editor", tbl, "custompersonalities", true )
 end, true, "Opens a panel to allow you to create custom preset personalities and load them", { name = "Custom Personality Presets", category = "Lambda Player Settings" } )

@@ -560,7 +560,7 @@ function ENT:Think()
             
             local nextChar = sub( queuedText, typedLen + 1, typedLen + 1 )
             if nextChar == self.l_lasttypedchar then
-                self.l_combolastchar = ( self.l_combolastchar + 2 )
+                self.l_combolastchar = ( self.l_combolastchar + 3 )
             else
                 self.l_combolastchar = 0
             end
@@ -583,7 +583,7 @@ function ENT:Think()
             if isDead then
                 typePerMinute = ( typePerMinute / 1.33 )
             end
-            self.l_nexttext = ( curTime + 1 / ( self:GetTextPerMinute() / max( typePerMinute, 30 ) ) )
+            self.l_nexttext = ( curTime + 1 / ( self:GetTextPerMinute() / max( typePerMinute, 10 ) ) )
         end
     end
 
@@ -759,39 +759,37 @@ function ENT:Think()
                     self.l_ThrowQuickNadeTime = curTime + 1
 
                     if canSee and !self:GetIsReloading() and nadeUsage:GetBool() and random( 20 ) == 1 then
-                        local nades = LAMBDAFS:GetQuickNadeWeapons()
+                        local nades = LambdaQuickNades
                         if #nades > 0 then
-                            local rndNade
-                            for _, nade in RandomPairs( nades ) do
-                                if !self:CanEquipWeapon( nade ) then continue end
-                                local data = _LAMBDAPLAYERSWEAPONS[ nade ]
-                                if !data or data.attackrange and !self:IsInRange( target, data.attackrange ) then continue end
+                            local hasNade = false
 
-                                rndNade = data
-                                break
-                            end
+                            local curWep = self:GetWeaponName()
+                            for _, nade in ipairs( nades ) do if nade == curWep then hasNade = true; break end end
 
-                            if rndNade then
-                                self.l_ThrowQuickNadeTime = curTime + random( 1, 10 )
+                            if !hasNade then
+                                local rndNade = _LAMBDAPLAYERSWEAPONS[ nades[ random( #nades ) ] ]
+                                if rndNade and !rndNade.attackrange or self:IsInRange( target, rndNade.attackrange ) then
+                                    self.l_ThrowQuickNadeTime = curTime + random( 1, 10 )
 
-                                self:ClientSideNoDraw( wepent, true )
-                                wepent:SetNoDraw( true )
-                                wepent:DrawShadow( false )  
-            
-                                local coolDown = self.l_WeaponUseCooldown
-                                local callback = ( rndNade.OnAttack or rndNade.callback )
-                                callback( self, wepent, target )
+                                    self:ClientSideNoDraw( wepent, true )
+                                    wepent:SetNoDraw( true )
+                                    wepent:DrawShadow( false )  
+                
+                                    local coolDown = self.l_WeaponUseCooldown
+                                    local callback = ( rndNade.OnAttack or rndNade.callback )
+                                    callback( self, wepent, target )
 
-                                if coolDown != self.l_WeaponUseCooldown then
-                                    self.l_WeaponUseCooldown = ( ( curTime >= coolDown and curTime or coolDown ) + 0.75 )
+                                    if coolDown != self.l_WeaponUseCooldown then
+                                        self.l_WeaponUseCooldown = ( ( curTime >= coolDown and curTime or coolDown ) + 0.75 )
+                                    end
+                
+                                    self:SimpleWeaponTimer( 0.75, function()
+                                        local isMarked = self:IsWeaponMarkedNodraw()
+                                        self:ClientSideNoDraw( wepent, isMarked )
+                                        wepent:SetNoDraw( isMarked )
+                                        wepent:DrawShadow( isMarked )  
+                                    end )
                                 end
-            
-                                self:SimpleWeaponTimer( 0.75, function()
-                                    local isMarked = self:IsWeaponMarkedNodraw()
-                                    self:ClientSideNoDraw( wepent, isMarked )
-                                    wepent:SetNoDraw( isMarked )
-                                    wepent:DrawShadow( isMarked )  
-                                end )
                             end
                         end
                     end
@@ -1099,7 +1097,11 @@ function ENT:Think()
                 self.l_Faceend = nil 
                 self.l_PoseOnly = nil
             else
-                local pos = ( isentity( faceTarg ) and ( isfunction( faceTarg.EyePos ) and faceTarg:EyePos() or faceTarg:WorldSpaceCenter() ) or faceTarg )
+                local pos = faceTarg
+                if isentity( faceTarg ) then
+                    pos = ( isfunction( faceTarg.EyePos ) and faceTarg:EyePos() )
+                    if !pos or !self:IsInRange( pos, 750 ) then pos = faceTarg:WorldSpaceCenter() end
+                end
                 if !self.l_PoseOnly then loco:FaceTowards( pos ); loco:FaceTowards( pos ) end
 
                 if !eyeAttach then eyeAttach = self:GetAttachmentPoint( "eyes" ) end
