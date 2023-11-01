@@ -242,12 +242,16 @@ function ENT:Initialize()
         self.l_AvoidCheck_LastPos = self:GetPos()
         self.l_AvoidCheck_NextStuckCheck = 0 -- The next time we will check if we are stuck in one place due to obstacle avoidance
 
-        local nearArea = navmesh_GetNavArea( self:WorldSpaceCenter(), 400 ) -- The current nav area we are in
-        if IsValid( nearArea ) then self.l_currentnavarea = nearArea; self:OnNavAreaChanged( nearArea, nearArea ) end
-
         -- Used for Respawning
         self.l_SpawnPos = self:GetPos()
         self.l_SpawnAngles = self:GetAngles()
+
+        local nearArea = navmesh_GetNavArea( self.l_SpawnPos, 400 ) -- The current nav area we are in
+        if IsValid( nearArea ) then 
+            self.l_SpawnPos = nearArea:GetClosestPointOnArea( self.l_SpawnPos )
+            self.l_currentnavarea = nearArea
+            self:OnNavAreaChanged( nearArea, nearArea ) 
+        end
 
         -- Personal Stats --
         self:SetLambdaName( self:GetOpenName() )

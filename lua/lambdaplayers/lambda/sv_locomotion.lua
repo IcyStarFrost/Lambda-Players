@@ -43,13 +43,13 @@ end
 -- Start off simple
 -- Pos arg can be a vector or a entity.
 function ENT:MoveToPos( pos, options )
-    pos = ( isvector( pos ) and pos or ( IsValid( pos ) and pos:GetPos() or nil ) )
-    if !pos then return "failed" end
+    local movePos = ( isvector( pos ) and pos or ( IsValid( pos ) and pos:GetPos() or nil ) )
+    if !movePos then return "failed" end
 
     -- If there is no nav mesh, try to go to the postion anyway
     local curArea = self.l_currentnavarea
     if !IsValid( curArea ) or !navmesh_IsLoaded() then 
-        self:MoveToPosOFFNAV( pos, options ) 
+        self:MoveToPosOFFNAV( movePos, options ) 
         return "failed"
     end 
 
@@ -62,11 +62,11 @@ function ENT:MoveToPos( pos, options )
 
     local costFunctor = self:PathGenerator()
 
-    path:Compute( self, pos, costFunctor )
+    path:Compute( self, movePos, costFunctor )
     if !IsValid( path ) then return "failed" end
 
     self.l_issmoving = true
-    self.l_movepos = pos
+    self.l_movepos = movePos
     self.l_CurrentPath = path
 
     self:SetSlowWalk( options.walk or false )
@@ -85,7 +85,7 @@ function ENT:MoveToPos( pos, options )
     local returnMsg = "ok"
     local callbackRunT = ( CurTime() + ( options.cbTime or 0 ) )
 
-    LambdaRunHook( "LambdaOnBeginMove", self, pos, true )
+    LambdaRunHook( "LambdaOnBeginMove", self, movePos, true )
 
     while ( IsValid( path ) ) do
         if self:GetIsDead() then 
@@ -105,15 +105,15 @@ function ENT:MoveToPos( pos, options )
             break 
         end
 
-        pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
-        if !pos then 
+        movePos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
+        if !movePos then 
             returnMsg = "invalid" 
             break 
         end
 
         if loco:IsStuck() then
             -- This prevents the stuck handling from running if we are right next to the entity we are going to            
-            if isvector( pos ) or !self:IsInRange( pos, 100 ) then 
+            if isvector( movePos ) or !self:IsInRange( movePos, 100 ) then 
                 local result = self:HandleStuck()
                 if !result then returnMsg = "stuck" break end
             else
@@ -135,18 +135,18 @@ function ENT:MoveToPos( pos, options )
             elseif updateTime > 1.0 then
                 updateTime = 1.0
             end
-            if path:GetAge() >= updateTime then path:Compute( self, pos, costFunctor ) end
+            if path:GetAge() >= updateTime then path:Compute( self, movePos, costFunctor ) end
         end
 
         if self.l_recomputepath then
-            path:Compute( self, pos, costFunctor )
+            path:Compute( self, movePos, costFunctor )
             self.l_recomputepath = nil
         end
         
         if !self:IsDisabled() and CurTime() >= self.l_moveWaitTime then
             local callback = options.callback
             if callback and CurTime() >= callbackRunT then 
-                local returnVal = callback( self, pos, path, curGoal )
+                local returnVal = callback( self, movePos, path, curGoal )
                 if returnVal == false then returnMsg = "callback" break end
 
                 local cbTime = options.cbTime
@@ -157,8 +157,9 @@ function ENT:MoveToPos( pos, options )
             if !self:IsInNoClip() then
                 local selfPos = self:GetPos()
                 local lastGoal = path:LastSegment()
+                local destPos = ( ( lastGoal and curGoal.area == lastGoal.area ) and movePos or curGoal.pos )
 
-                local goalAng = ( ( ( lastGoal and curGoal.area == lastGoal.area ) and pos or curGoal.pos ) - selfPos )
+                local goalAng = ( destPos - selfPos )
                 goalAng.z = 0; goalAng = goalAng:Angle()
 
                 local goalNormal = goalAng:Forward()
@@ -171,19 +172,19 @@ function ENT:MoveToPos( pos, options )
                     local ladder = curGoal.ladder
                     if IsValid( ladder ) and self:IsInRange( ( moveType == 4 and ladder:GetBottom() or ladder:GetTop() ), 70 ) then
                         self.l_ladderarea = ladder
-                        self:ClimbLadder( ladder, ( moveType == 5 ), curGoal.pos )
+                        self:ClimbLadder( ladder, ( moveType == 5 ), destPos )
 
                         self.l_ladderarea = NULL 
                         loco:SetVelocity( vector_origin )
 
-                        pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
-                        if pos then path:Compute( self, pos, costFunctor ) end
+                        movePos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
+                        if movePos then path:Compute( self, movePos, costFunctor ) end
                     end
-                elseif moveType == 3 and curGoal.pos:DistToSqr( selfPos ) <= 2000 then
-                    shouldJump = true
                 elseif moveType == 2 and ( prevGoal.pos.z - selfPos.z ) <= 0 then
                     shouldJump = true
-                else
+                elseif moveType == 3 and destPos:DistToSqr( selfPos ) <= 2048 then
+                    shouldJump = true
+                elseif destPos:DistToSqr( selfPos ) > 4096 then
                     -- Jumping over ledges and close up jumping
                     local stepAhead = ( selfPos + vector_up * stepH )
                     curArea = self.l_currentnavarea
@@ -196,9 +197,8 @@ function ENT:MoveToPos( pos, options )
                     end
                 end
 
-                if shouldJump and CurTime() >= nextJumpT then
-                    self:LambdaJump() 
-                    nextJumpT = CurTime() + 0.5
+                if shouldJump and CurTime() >= nextJumpT and self:LambdaJump() then
+                    nextJumpT = CurTime() + 1.0
                 end
 
                 -- Air movement
@@ -233,15 +233,15 @@ end
 
 -- If the map we are on does not have a navmesh, the Lambda Players will default their movement to this so they can actually move
 function ENT:MoveToPosOFFNAV( pos, options )
-    pos = ( isvector( pos ) and pos or ( IsValid( pos ) and pos:GetPos() or nil ) )
-    if !pos then return "failed" end
+    local movePos = ( isvector( pos ) and pos or ( IsValid( pos ) and pos:GetPos() or nil ) )
+    if !movePos then return "failed" end
 
     options = options or {}
     self.l_moveoptions = table_Copy( options )
     
     self.l_issmoving = true
-    self.l_movepos = pos
-    self.l_CurrentPath = pos
+    self.l_movepos = movePos
+    self.l_CurrentPath = movePos
 
     local timeout = options.timeout
     if timeout then 
@@ -252,14 +252,14 @@ function ENT:MoveToPosOFFNAV( pos, options )
     if options.run then
         self:SetRun( true )
     else
-        self:SetRun( options.autorun and !self:IsInRange( pos, 1500 ) )
+        self:SetRun( options.autorun and !self:IsInRange( movePos, 1500 ) )
     end
 
     local returnMsg = "ok"
     local loco = self.loco
     local callbackRunT = ( CurTime() + ( options.cbTime or 0 ) )
 
-    LambdaRunHook( "LambdaOnBeginMove", self, pos, false )
+    LambdaRunHook( "LambdaOnBeginMove", self, movePos, false )
 
     while ( IsValid( self ) ) do 
         if self:GetIsDead() then 
@@ -279,12 +279,12 @@ function ENT:MoveToPosOFFNAV( pos, options )
             break 
         end
 
-        pos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
-        if !pos then returnMsg = "invalid" break end
+        movePos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
+        if !movePos then returnMsg = "invalid" break end
 
         if loco:IsStuck() then
             -- This prevents the stuck handling from running if we are right next to the entity we are going to            
-            if isvector( pos ) or !self:IsInRange( pos, 100 ) then 
+            if isvector( movePos ) or !self:IsInRange( movePos, 100 ) then 
                 local result = self:HandleStuck()
                 if !result then returnMsg = "stuck" break end
             else
@@ -293,30 +293,30 @@ function ENT:MoveToPosOFFNAV( pos, options )
         end
 
         local selfPos = self:GetPos()
-        local posSelfZ = pos; posSelfZ.z = selfPos.z
+        local posSelfZ = movePos; posSelfZ.z = selfPos.z
 
         if self:IsInRange( posSelfZ, options.tol or 30 ) then
             break
         elseif !self:IsDisabled() and CurTime() >= self.l_moveWaitTime then
             local callback = options.callback
             if callback and CurTime() >= callbackRunT then 
-                local returnVal = callback( self, pos )
+                local returnVal = callback( self, movePos )
                 if returnVal == false then returnMsg = "callback" break end
 
                 local cbTime = options.cbTime
                 if cbTime then callbackRunT = ( CurTime() + cbTime ) end
             end
 
-            loco:FaceTowards( pos )
-            loco:Approach( pos, 1 )
+            loco:FaceTowards( movePos )
+            loco:Approach( movePos, 1 )
 
-            local goalAng = ( pos - selfPos )
+            local goalAng = ( movePos - selfPos )
             goalAng.z = 0; goalAng = goalAng:Angle()
             self:AvoidCheck( goalAng )
             self:ObstacleCheck( goalAng:Forward() )
         end
 
-        if dev:GetBool() then debugoverlay.Line( selfPos, pos, 0.1, color_white, true ) end
+        if dev:GetBool() then debugoverlay.Line( selfPos, movePos, 0.1, color_white, true ) end
         coroutine_yield()
     end
 
@@ -574,20 +574,22 @@ local safecol = Color( 0, 255, 0, 10 )
 function ENT:AvoidCheck( goalAng )
     if !shouldavoid:GetBool() then return end
 
+    local isStuck = self.l_AvoidCheck_IsStuck
     if CurTime() >= self.l_AvoidCheck_NextStuckCheck then
+        self.l_AvoidCheck_NextStuckCheck = ( CurTime() + ( isStuck and 3 or 1 ) )
+
         local selfPos = self:GetPos()
         local lastPos = self.l_AvoidCheck_LastPos
-
-        if self:IsInRange( lastPos, ( 50 - math_abs( lastPos.z - selfPos.z ) ) ) then
-            self.l_AvoidCheck_IsStuck = true
-            self.l_AvoidCheck_NextStuckCheck = ( CurTime() + 2.0 )
+        if !isStuck and self:IsInRange( lastPos, ( 50 - math_abs( lastPos.z - selfPos.z ) ) ) then
+            isStuck = true
         else                
-            self.l_AvoidCheck_IsStuck = false
+            isStuck = false
             self.l_AvoidCheck_LastPos = selfPos
-            self.l_AvoidCheck_NextStuckCheck = ( CurTime() + 1.0 )
         end
     end
-    if self.l_AvoidCheck_IsStuck then return end
+
+    self.l_AvoidCheck_IsStuck = isStuck
+    if isStuck then return end
 
     local selfPos = self:WorldSpaceCenter()
     local selfRight = goalAng:Right()
@@ -609,6 +611,8 @@ function ENT:AvoidCheck( goalAng )
     if dev:GetBool() then
         debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, ( leftresult.Hit and hitcol or safecol ), false )
     end
+
+    print( self:Nick(), leftresult.Entity, rightresult.Entity )
 
     selfPos = self:GetPos()
     local loco = self.loco
