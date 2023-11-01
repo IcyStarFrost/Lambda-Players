@@ -545,7 +545,7 @@ function ENT:ObstacleCheck( pathDir )
             else
                 ent:Fire( "Open" )
             end
-        elseif !ent.l_ignoredobstacle and ent.Health and ent:Health() > 0 and !ent:IsPlayer() and !ent:IsNPC() and !ent:IsNextBot() then
+        elseif !ent.l_ignoredobstacle and ent.Health and ent:Health() > 0 and !ent:IsPlayer() and !ent:IsNPC() and !ent:IsNextBot() and LambdaRunHook( "LambdaCanTarget", self, ent ) == false then
             if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
             
             if !self:HookExists( "Tick", "ShootAtObstacle" ) then
