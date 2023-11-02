@@ -64,15 +64,10 @@ if SERVER then
             end
         end
 
-        local boneTbl = {}
-        for i = 0, ( self:GetBoneCount() - 1 ) do
-            boneTbl[ i ] = self:GetBonePosition( i )
-        end
-
         net.Start( "lambdaplayers_becomeragdoll" )
             net.WriteEntity( self )
             net.WriteEntity( overrideEnt )
-            net.WriteTable( boneTbl )
+            net.WriteVector( self:WorldSpaceCenter() )
             net.WriteVector( dmgpos )
             net.WriteVector( dmgforce )
             net.WriteUInt( forceScale, 7 )
@@ -315,7 +310,8 @@ if SERVER then
 
         self:GetPhysicsObject():EnableCollisions( false )
 
-        -- Restart our coroutine thread
+        -- Reset our state to Idle and restart the coroutine thread
+        self:SetState( "Idle" )
         self:ResetAI()
 
         -- Stop playing all gesture animations

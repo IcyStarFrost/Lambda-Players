@@ -79,11 +79,11 @@ local function Chance_Combat( self )
     spawnEntities = spawnEntities or GetConVar( "lambdaplayers_building_allowentity" )
     local allowEntities = spawnEntities:GetBool()
     
-    local rndCombat = random( 4 )
-    if rndCombat == 1 and allowEntities and spawnBatteries:GetBool() and self:Armor() < self:GetMaxArmor() then
-        self:SetState( "ArmorUp" )
-    elseif rndCombat == 2 and allowEntities and spawnMedkits:GetBool() and self:Health() < self:GetMaxHealth() then
-        self:SetState( "HealUp" )
+    local rndCombat = random( 3 )
+    if rndCombat == 1 then
+        self:SetState( "HealUp", "FindTarget" )
+    elseif rndCombat == 2 then
+        self:SetState( "ArmorUp", "FindTarget" )
     else
         self:SetState( "FindTarget" )
     end

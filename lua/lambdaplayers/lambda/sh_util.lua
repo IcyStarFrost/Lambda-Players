@@ -437,6 +437,7 @@ end
 if SERVER then
 
     local GetAllNavAreas = navmesh.GetAllNavAreas
+    local navmesh_Find = navmesh.Find
     local ignoreplayer = GetConVar( "ai_ignoreplayers" )
     local realisticfalldamage = GetConVar( "lambdaplayers_lambda_realisticfalldamage" )
 
@@ -554,15 +555,18 @@ if SERVER then
         elseif ent:IsPlayer() then
             if !ent:Alive() then return false end 
             if ent:IsFlagSet( FL_NOTARGET ) then return false end
-            if ignoreplayer:GetBool() then return false end 
             if ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 0 then return false end
+            if ignoreplayer:GetBool() then return false end 
         elseif ent:IsNPC() or ent:IsNextBot() then
             if ent.IsLambdaAntlion and ( self:GetWeaponName() == "hl2_bugbait" or ent:GetOwner() == self ) then return false end
+            if ent.IsDrGNextbot and ent:IsDown() then return false end
+            if ent:IsFlagSet( FL_NOTARGET ) then return false end
             if ent:GetInternalVariable( "m_lifeState" ) != 0 then return false end
             if ignoreFriendNPCs:GetBool() and self:Relations( ent ) == D_LI then return false end
-            if ent.IsDrGNextbot and ent:IsDown() then return false end
-            if ent:GetClass() == "rd_target" then return false end
-            if ent:IsFlagSet( FL_NOTARGET ) then return false end
+
+            local class = ent:GetClass()
+            if class == "rd_target" then return false end
+            if string_match( class, "bullseye" ) then return false end
         else
             return false
         end
@@ -803,7 +807,7 @@ if SERVER then
         self:PreventDefaultComs( false )
         self:PreventWeaponSwitch( false )
 
-        self.l_ladderarea = NULL
+        self.l_ladderarea = nil
         self.l_UpdateAnimations = true
         self.l_Clip = self.l_MaxClip
 
@@ -915,35 +919,38 @@ if SERVER then
 
     -- Returns a sequential table full of nav areas near the position
     function ENT:GetNavAreas( pos, dist )
-        pos = ( pos or self:GetPos() )
-        dist = ( ( dist or 1500 ) ^ 2 )
-
         local neartbl = {}
-        local limitDist = !unlimiteddistance:GetBool()
-        for _, area in ipairs( GetAllNavAreas() ) do
-            if !IsValid( area ) or area:GetSizeX() < 75 or area:GetSizeY() < 75 or area:GetCenter():IsUnderwater() or limitDist and pos:DistToSqr( area:GetClosestPointOnArea( pos ) ) > dist then continue end
-            neartbl[ #neartbl + 1 ] = area
+        if !unlimiteddistance:GetBool() then
+            pos = ( pos or self:GetPos() )
+            for _, area in ipairs( navmesh_Find( pos, 1500, 1500, 1500 ) ) do
+                if !area:IsValid() or area:GetSizeX() < 75 or area:GetSizeY() < 75 or area:GetCenter():IsUnderwater() then continue end
+                neartbl[ #neartbl + 1 ] = area
+            end
+        else
+            for _, area in ipairs( GetAllNavAreas() ) do
+                if !area:IsValid() or area:GetSizeX() < 75 or area:GetSizeY() < 75 or area:GetCenter():IsUnderwater() then continue end
+                neartbl[ #neartbl + 1 ] = area
+            end
         end
-
         return neartbl
     end
     
     -- Returns a random position near the position 
     function ENT:GetRandomPosition( pos, dist, filter )
         pos = ( pos or self:GetPos() )
+        dist = ( dist or 1500 )
 
         -- If the navmesh is loaded then find a nav area to go to
         if IsNavmeshLoaded() then
             for _, area in RandomPairs( self:GetNavAreas( pos, dist ) ) do
-                if !IsValid( area ) or !self:IsAreaTraversable( area ) then continue end
                 local rndPoint = area:GetRandomPoint()
                 if filter and filter( pos, area, rndPoint ) == true then continue end
+                if !self:IsAreaTraversable( area ) then continue end
                 return rndPoint
             end
         end
 
         -- If not, try to go to a entirely random spot
-        dist = ( dist or 1500 )
         return ( pos + VectorRand( -dist, dist ) )
     end
 
@@ -1452,8 +1459,8 @@ if SERVER then
             if spawnBehav == 1 and !ent:IsPlayer() or spawnBehav == 2 and ( ent.IsLambdaPlayer or !ent:IsNPC() and !ent:IsNextBot() ) then continue end
 
             if !findClosest then
-                self:AttackTarget( ent )
-                return
+                closeTarget = ent
+                break
             end
 
             local entDist = self:GetRangeSquaredTo( ent )
@@ -1464,9 +1471,9 @@ if SERVER then
             searchDist = entDist
         end
 
-        if closeTarget then
-            self:AttackTarget( closeTarget ) 
-        end
+        if !closeTarget then return end        
+        self:SetState( "CombatSpawnBehavior", closeTarget )
+        self:CancelMovement()
     end
 end
 

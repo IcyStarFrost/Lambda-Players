@@ -226,9 +226,9 @@ function ENT:Initialize()
         self.l_DrownLostHealth = 0 -- The amount of health we lost while drowning
         self.l_DrownActionTime = 0 -- The next time we start losing or recovering lost health when drowning
         self.l_CombatPosUpdateTime = 0 -- The next time we'll update the combat position
-        self.l_ThrowQuickNadeTime = CurTime() + 3 -- The next time we'll able to throw a quick nade at enemy
+        self.l_ThrowQuickNadeTime = CurTime() + random( 15 ) -- The next time we'll able to throw a quick nade at enemy
 
-        self.l_ladderarea = NULL -- The ladder nav area we are currenly using to climb
+        self.l_ladderarea = nil -- The ladder nav area we are currenly using to climb
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
         self.l_movepos = nil -- The position or entity we are going to
         self.l_moveoptions = nil -- The move position's options, such as updating, goal tolerance, etc.
@@ -237,6 +237,7 @@ function ENT:Initialize()
         self.l_combatpos = self:GetPos() -- The position we are moving to in combat
         self.l_statearg = nil -- Our state's optional arguments we set in
         self.l_precombatmovepos = nil
+        self.l_cachedunreachableares = {}
 
         self.l_AvoidCheck_IsStuck = false -- If we are currenly stuck due to obstacle avoidance and shouldn't use it
         self.l_AvoidCheck_LastPos = self:GetPos()
@@ -620,7 +621,7 @@ function ENT:Think()
         local selfPos = self:GetPos()
         local selfAngles = self:GetAngles()
         local locoVel = loco:GetVelocity()
-        local onGround = self:IsOnGround()
+        local onGround = loco:IsOnGround()
         local waterLvl = self:GetWaterLevel()
         local frameTime = FrameTime()
         local isDisabled = self:IsDisabled()
@@ -710,12 +711,15 @@ function ENT:Think()
                 end
 
                 if !isPanicking then
+                    local lowOnAmmo = ( self:GetIsReloading() or self.l_MaxClip > 0 and self.l_Clip <= ( self.l_MaxClip * 0.33 ) )
+
                     if curTime >= self.l_CombatPosUpdateTime then
-                        self.l_CombatPosUpdateTime = ( curTime + 0.2 )
+                        self.l_CombatPosUpdateTime = ( curTime + 0.1 )
+
                         local keepDist, myOrigin = self.l_CombatKeepDistance, self:GetPos()
                         local posCopy = target:GetPos(); posCopy.z = myOrigin.z
 
-                        if canSee and keepDist and self:IsInRange( posCopy, ( keepDist * rand( 0.8, 1.2 ) ) ) then
+                        if keepDist and ( lowOnAmmo or canSee and self:IsInRange( posCopy, ( keepDist * rand( 0.8, 1.2 ) ) ) ) then
                             local moveAng = ( myOrigin - posCopy ):Angle()
                             local runSpeed = self:GetRunSpeed()
                             local potentialPos = ( myOrigin + moveAng:Forward() * random( -( runSpeed * 0.5 ), keepDist ) + moveAng:Right() * random( -runSpeed, runSpeed ) )
@@ -726,7 +730,7 @@ function ENT:Think()
                     end
 
                     local preCombatMovePos = self.l_precombatmovepos
-                    if preCombatMovePos and self:GetIsReloading() then
+                    if preCombatMovePos and lowOnAmmo then
                         self.l_movepos = preCombatMovePos
                     else
                         self.l_precombatmovepos = nil
@@ -760,9 +764,9 @@ function ENT:Think()
                 end
 
                 if curTime >= self.l_ThrowQuickNadeTime then
-                    self.l_ThrowQuickNadeTime = curTime + 1
+                    self.l_ThrowQuickNadeTime = curTime + random( 15 )
 
-                    if canSee and !self:GetIsReloading() and nadeUsage:GetBool() and random( 20 ) == 1 then
+                    if canSee and !self:GetIsReloading() and nadeUsage:GetBool() and random( 4 ) == 1 then
                         local nades = LambdaQuickNades
                         if #nades > 0 then
                             local hasNade = false
@@ -773,8 +777,6 @@ function ENT:Think()
                             if !hasNade then
                                 local rndNade = _LAMBDAPLAYERSWEAPONS[ nades[ random( #nades ) ] ]
                                 if rndNade and !rndNade.attackrange or self:IsInRange( target, rndNade.attackrange ) then
-                                    self.l_ThrowQuickNadeTime = curTime + random( 1, 10 )
-
                                     self:ClientSideNoDraw( wepent, true )
                                     wepent:SetNoDraw( true )
                                     wepent:DrawShadow( false )  
@@ -1060,18 +1062,18 @@ function ENT:Think()
                 local anim = anims.idle
                 
                 if !self:IsInNoClip() then
-                    if onGround then
+                    if self.l_isswimming then
+                        local moveVel = locoVel; moveVel.z = 0
+                        anim = ( !moveVel:IsZero() and anims.swimMove or anims.swimIdle )
+                    elseif !onGround or self:IsUsingLadder() then
+                        anim = anims.jump
+                    else
                         local locoVel = locoVel
                         if !locoVel:IsZero() then
                             anim = ( isCrouched and anims.crouchWalk or ( ( !self:GetSlowWalk() and locoVel:LengthSqr() > 22500 ) and anims.run or anims.walk ) )
                         elseif isCrouched then
                             anim = anims.crouchIdle
                         end
-                    elseif self.l_isswimming then
-                        local moveVel = locoVel; moveVel.z = 0
-                        anim = ( !moveVel:IsZero() and anims.swimMove or anims.swimIdle )
-                    else
-                        anim = anims.jump
                     end
                 end
 

@@ -41,37 +41,6 @@ local usegmodpopups = GetConVar( "lambdaplayers_voice_usegmodvoicepopups" )
 local removeCorpse = GetConVar( "lambdaplayers_removecorpseonrespawn" )
 local dropWeapon = GetConVar( "lambdaplayers_dropweaponondeath" )
 
--- Applies all values to clientside ragdoll
-local function InitializeRagdoll( ragdoll, color, lambda, force, offset )
-    if !IsValid( ragdoll ) then return end
-
-    ragdoll:SetNoDraw( false )
-    ragdoll:DrawShadow( true )
-    ragdoll.GetPlayerColor = function() return color end
-
-    ragdoll.isclientside = true
-    ragdoll.LambdaOwner = lambda
-    lambda.ragdoll = ragdoll
-    table_insert( _LAMBDAPLAYERS_ClientSideEnts, ragdoll )
-
-    for i = 1, 3 do
-        local phys = ragdoll:GetPhysicsObjectNum( i )
-        if IsValid( phys ) then phys:ApplyForceOffset( force, offset ) end
-    end
-
-    local startTime = CurTime()
-    LambdaCreateThread( function()
-        while ( cleanuptime:GetInt() == 0 or CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and ( !lambda.GetIsDead or lambda:GetIsDead() and lambda:IsSpeaking() ) ) do 
-            if !IsValid( ragdoll ) then return end
-            coroutine_yield() 
-        end
-        if !IsValid( ragdoll ) then return end
-
-        if cleaneffect:GetBool() then ragdoll:LambdaDisintegrate() return end 
-        ragdoll:Remove()
-    end ) 
-end
-
 net.Receive( "lambdaplayers_serversideragdollplycolor", function()
     local ragdoll = net.ReadEntity()
     if !IsValid( ragdoll ) then return end
@@ -94,18 +63,14 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
     local ragdoll = ( IsValid( overrideEnt ) and overrideEnt or lambda ):BecomeRagdollOnClient()
     if !IsValid( ragdoll ) then return end
 
-    local boneTbl = net.ReadTable()
+    local dormPos = net.ReadVector()
     local dmgPos, dmgForce, forceDiv = net.ReadVector(), net.ReadVector(), net.ReadUInt( 7 )
     local isDorm = lambda:IsDormant()
 
     for i = 0, ( ragdoll:GetPhysicsObjectCount() - 1 ) do
         local phys = ragdoll:GetPhysicsObjectNum( i )
         if !IsValid( phys ) then continue end
-
-        if isDorm then 
-            local bonePos = boneTbl[ ragdoll:TranslatePhysBoneToBone( i ) ]
-            if bonePos then phys:SetPos( bonePos, true ) end
-        end
+        if isDorm then phys:SetPos( dormPos, true ) end
 
         local distDiff = ( phys:GetPos():Distance( dmgPos ) / forceDiv )
         phys:ApplyForceOffset( dmgForce / distDiff, dmgPos )

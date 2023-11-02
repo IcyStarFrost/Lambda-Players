@@ -19,6 +19,7 @@ local laddermovetable = { collisiongroup = COLLISION_GROUP_PLAYER, ignoreworld =
 local ents_FindByName = ents.FindByName
 local GetGroundHeight = navmesh.GetGroundHeight
 local navmesh_IsLoaded = navmesh.IsLoaded
+local navmesh_Find = navmesh.Find
 local GetNearestNavArea = navmesh.GetNearestNavArea
 local random = math.random
 local Rand = math.Rand
@@ -60,7 +61,7 @@ function ENT:MoveToPos( pos, options )
     path:SetGoalTolerance( options.tol or 20 )
     path:SetMinLookAheadDistance( self.l_LookAheadDistance )
 
-    local costFunctor = self:PathGenerator()
+    local costFunctor = self:PathGenerator( options.update )
 
     path:Compute( self, movePos, costFunctor )
     if !IsValid( path ) then return "failed" end
@@ -84,6 +85,7 @@ function ENT:MoveToPos( pos, options )
     local nextJumpT = CurTime() + 0.5
     local returnMsg = "ok"
     local callbackRunT = ( CurTime() + ( options.cbTime or 0 ) )
+    local nearLadderCheckT = 0
 
     LambdaRunHook( "LambdaOnBeginMove", self, movePos, true )
 
@@ -122,7 +124,7 @@ function ENT:MoveToPos( pos, options )
         end
 
         local goal = path:GetCurrentGoal()
-        if !curGoal or curGoal != goal then
+        if !curGoal or curGoal.area != goal.area then
             prevGoal = curGoal
             curGoal = goal
         end
@@ -166,43 +168,60 @@ function ENT:MoveToPos( pos, options )
                 self:AvoidCheck( goalAng )
                 self:ObstacleCheck( goalNormal )
 
-                local shouldJump = false
                 local moveType = curGoal.type
-                if moveType == 4 or moveType == 5 then -- Ladder climbing ( 4 - Up, 5 - Down )
+                -- Ladder climbing ( 4 - Up, 5 - Down )
+                if ( moveType == 4 or moveType == 5 ) then 
                     local ladder = curGoal.ladder
-                    if IsValid( ladder ) and self:IsInRange( ( moveType == 4 and ladder:GetBottom() or ladder:GetTop() ), 70 ) then
-                        self.l_ladderarea = ladder
-                        self:ClimbLadder( ladder, ( moveType == 5 ), destPos )
+                    if IsValid( ladder ) then
+                        local preClimbPos = destPos
+                        destPos = ( moveType == 5 and ladder:GetTop() or ladder:GetBottom() )
 
-                        self.l_ladderarea = NULL 
-                        loco:SetVelocity( vector_origin )
+                        if self:IsInRange( destPos, 70 ) then
+                            self:ClimbLadder( ladder, ( moveType == 5 ), preClimbPos )
 
-                        movePos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
-                        if movePos then path:Compute( self, movePos, costFunctor ) end
+                            movePos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
+                            if movePos then path:Compute( self, movePos, costFunctor ) end
+                            destPos = preClimbPos
+                        end
                     end
-                elseif moveType == 2 and ( prevGoal.pos.z - selfPos.z ) <= 0 then
-                    shouldJump = true
-                elseif moveType == 3 and destPos:DistToSqr( selfPos ) <= 2048 then
-                    shouldJump = true
-                elseif destPos:DistToSqr( selfPos ) > 4096 then
-                    -- Jumping over ledges and close up jumping
-                    local stepAhead = ( selfPos + vector_up * stepH )
-                    curArea = self.l_currentnavarea
-                    local grHeight, grNormal = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 60 )
-                    if grHeight and grNormal.z > 0.9 and ( grHeight - selfPos.z ) > stepH then shouldJump = true end
+                else
+                    local shouldJump = false
+                    if moveType == 2 and ( prevGoal.pos.z - selfPos.z ) <= 0 then
+                        shouldJump = true
+                    elseif moveType == 3 and destPos:DistToSqr( selfPos ) <= 2048 then
+                        shouldJump = true
+                    elseif movePos:DistToSqr( selfPos ) > 4096 then
+                        -- Jumping over ledges and close up jumping
+                        local stepAhead = ( selfPos + vector_up * stepH )
+                        curArea = self.l_currentnavarea
+                        local grHeight, grNormal = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 60 )
+                        if grHeight and grNormal.z > 0.9 and ( grHeight - selfPos.z ) > stepH then shouldJump = true end
 
-                    if !shouldJump then
-                        grHeight = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 30 )
-                        if grHeight and ( grHeight - selfPos.z ) < -jumpH then shouldJump = true end
+                        if !shouldJump then
+                            grHeight = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 30 )
+                            if grHeight and ( grHeight - selfPos.z ) < -jumpH then shouldJump = true end
+                        end
+                    end
+
+                    if shouldJump and CurTime() >= nextJumpT and self:LambdaJump() then
+                        nextJumpT = CurTime() + 1.0
                     end
                 end
 
-                if shouldJump and CurTime() >= nextJumpT and self:LambdaJump() then
-                    nextJumpT = CurTime() + 1.0
+                local shouldSlow = ( ( moveType == 1 or moveType == 2 or moveType == 3 or moveType == 4 or moveType == 5 ) and !self:IsPanicking() and !self:GetCrouch() and destPos:DistToSqr( selfPos ) <= 22500 )
+                local walkTime = 0.1
+                if !shouldSlow and CurTime() >= nearLadderCheckT then
+                    nearLadderCheckT = ( CurTime() + 0.5 )
+
+                    for _, area in ipairs( navmesh_Find( selfPos, 150, 150, 150 ) ) do
+                        shouldSlow = ( IsValid( area ) and #area:GetLadders() != 0 and area:IsPartiallyVisible( self:WorldSpaceCenter(), self ) )
+                        if shouldSlow then walkTime = 0.5; break end
+                    end
                 end
+                if shouldSlow then self:ForceMoveSpeed( self:GetSlowWalkSpeed(), walkTime ) end
 
                 -- Air movement
-                if !self:IsOnGround() and !self.l_isswimming then
+                if !self.l_isswimming and !self:IsOnGround() then
                     local mins, maxs = self:GetCollisionBounds()
                     local airVel = ( goalNormal * loco:GetDesiredSpeed() * FrameTime() )
 
@@ -330,6 +349,8 @@ end
 
 -- Start climbing the provided ladder
 function ENT:ClimbLadder( ladder, isDown, movePos )
+    self.l_ladderarea = ladder 
+
     local startPos, goalPos, finishPos
     if isDown then
         startPos = ladder:GetTop()
@@ -391,13 +412,13 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
                     self.loco:SetVelocity( dir * 275 )
                 end
 
-                return 
+                break
             end
         end
 
         if climbState != 2 or ( !self:IsDisabled() or self:GetIsTyping() ) and CurTime() >= self.l_moveWaitTime then
             if !IsValid( TraceHull( laddermovetable ).Entity ) then
-                climbFract = ( climbFract + ( 275 * FrameTime() ) )
+                climbFract = ( climbFract + ( 250 * FrameTime() * 2 ) )
                 stuckTime = ( CurTime() + random( 2, 5 ) )
 
                 if climbFract >= climbDist then
@@ -406,7 +427,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
                     elseif climbState == 2 then
                         climbEnd = finishPos
                     else
-                        return
+                        break
                     end
 
                     climbStart = self:GetPos()
@@ -430,6 +451,8 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
 
         coroutine_yield()
     end
+
+    self.l_ladderarea = nil
 end
 
 -- If we are moving while this function is called, recompute our current path or change the goal position and recompute
@@ -452,6 +475,13 @@ function ENT:WaitWhileMoving( time )
         self.loco:SetVelocity( vector_origin )
     end
     self.l_moveWaitTime = ( CurTime() + time )
+end
+
+-- Force the Lambda Player to move in a set speed for given amount of time
+function ENT:ForceMoveSpeed( speed, time, noWepMult )
+    if noWepMult != true then speed = ( speed * self.l_WeaponSpeedMultiplier ) end
+    self.loco:SetDesiredSpeed( speed )
+    self.l_nextspeedupdate = ( CurTime() + ( time or 0.1 ) )
 end
 
 -- This function will either return true or false
@@ -502,12 +532,13 @@ function ENT:HandleStuck()
     return true
 end
 
--- Approaches a position 
-function ENT:Approach( pos, time )
-    time = time and CurTime() + time or CurTime() + 1
+-- Approaches a direction
+function ENT:ApproachDir( dir, time )
+    time = ( CurTime() + ( time or 1 ) )
+
     self:Hook( "Tick", "approachposition", function()
         if CurTime() >= time then return "end" end
-        self.loco:Approach( pos, 99 )
+        self.loco:Approach( self:GetPos() + dir * self.loco:GetDesiredSpeed(), 99 )
     end )
 end
 
@@ -516,56 +547,54 @@ local doorClasses = {
     ["func_door"] = true,
     ["func_door_rotating"] = true
 }
-
 -- Fires a trace in front of the player that will open doors if it hits a door and shoot at breakable obstacles
 function ENT:ObstacleCheck( pathDir )
     if CurTime() < self.l_nextobstaclecheck then return end
+    self.l_nextobstaclecheck = ( CurTime() + 0.1 )
 
     local selfPos = ( self:GetPos() + vector_up * self.loco:GetStepHeight() )
-
     tracetable.start = selfPos
-    tracetable.endpos = ( selfPos + pathDir * 50 )
+    tracetable.endpos = ( selfPos + pathDir * 60 )
     tracetable.filter = self
-    
-    local ent = Trace( tracetable ).Entity
-    if IsValid( ent ) then
-        local class = ent:GetClass()
-        if doorClasses[ class ] and ent.Fire then
-            -- Back up when opening a door
-            if ent:GetInternalVariable( "m_eDoorState" ) != 2 and ent:GetInternalVariable( "m_toggle_state" ) != 0 then
-                self:Approach( self:GetPos() - pathDir * 50, 0.8 )
-                --self:WaitWhileMoving( 1.5 )
-            end
 
-            if class == "prop_door_rotating" then
-                ent:Fire( "OpenAwayFrom", "!activator", 0, self )
-                local keys = ent:GetKeyValues()
-                local slaveDoor = ents_FindByName( keys.slavename )
-                if IsValid( slaveDoor ) then slaveDoor:Fire( "OpenAwayFrom", "!activator", 0, self ) end
-            else
-                ent:Fire( "Open" )
-            end
-        elseif !ent.l_ignoredobstacle and ent.Health and ent:Health() > 0 and !ent:IsPlayer() and !ent:IsNPC() and !ent:IsNextBot() and LambdaRunHook( "LambdaCanTarget", self, ent ) == false then
-            if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
-            
-            if !self:HookExists( "Tick", "ShootAtObstacle" ) then
-                local fireTime = ( CurTime() + Rand( 0.5, 1.0 ) )
-                
-                self:Hook( "Tick", "ShootAtObstacle", function()
-                    if CurTime() >= fireTime or !IsValid( ent ) or ent:Health() <= 0 then return "end" end
-                    self:LookTo( ent, 1.0 )
-                    self:UseWeapon( ent )
-                end )
-            end
+    local ent = Trace( tracetable ).Entity
+    if !IsValid( ent ) then return end
+
+    local class = ent:GetClass()
+    if doorClasses[ class ] and ent.Fire then
+        -- Back up while opening the door(s)
+        if ent:GetInternalVariable( "m_eDoorState" ) != 2 and ent:GetInternalVariable( "m_toggle_state" ) != 0 then
+            self:ApproachDir( -pathDir, 0.5 )
         end
+
+        if class == "prop_door_rotating" then
+            ent:Fire( "OpenAwayFrom", "!activator", 0, self )
+            local slaveDoor = ents_FindByName( ent:GetKeyValues().slavename )
+            if IsValid( slaveDoor ) then slaveDoor:Fire( "OpenAwayFrom", "!activator", 0, self ) end
+        else
+            ent:Fire( "Open" )
+        end
+
+        return
     end
 
-    self.l_nextobstaclecheck = CurTime() + 0.1
+    if ent:Health() <= 0 or ent:IsPlayer() or ent:IsNPC() or ent:IsNextBot() then return end
+    if LambdaRunHook( "LambdaCanTarget", self, ent ) == true then return end
+    if self:HookExists( "Tick", "ShootAtObstacle" ) then return end
+
+    if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
+    local fireTime = ( CurTime() + Rand( 0.5, 1.0 ) )
+
+    self:Hook( "Tick", "ShootAtObstacle", function()
+        if CurTime() >= fireTime or !IsValid( ent ) or ent:Health() <= 0 then return "end" end
+        self:LookTo( ent, 1.0 )
+        self:UseWeapon( ent )
+    end )
 end
 
 local avoidtracetable = {
-    mins = Vector( -10, -10, -15 ),
-    maxs = Vector( 10, 10, 30 )
+    mins = Vector( -10, -10, -10 ),
+    maxs = Vector( 10, 10, 10 )
 } -- Recycled table
 local hitcol = Color( 255, 0, 0, 10 )
 local safecol = Color( 0, 255, 0, 10 )
@@ -576,13 +605,13 @@ function ENT:AvoidCheck( goalAng )
 
     local isStuck = self.l_AvoidCheck_IsStuck
     if CurTime() >= self.l_AvoidCheck_NextStuckCheck then
-        self.l_AvoidCheck_NextStuckCheck = ( CurTime() + ( isStuck and 3 or 1 ) )
+        self.l_AvoidCheck_NextStuckCheck = ( CurTime() + ( isStuck and 2 or 1 ) )
 
         local selfPos = self:GetPos()
         local lastPos = self.l_AvoidCheck_LastPos
         if !isStuck and self:IsInRange( lastPos, ( 50 - math_abs( lastPos.z - selfPos.z ) ) ) then
             isStuck = true
-        else                
+        else
             isStuck = false
             self.l_AvoidCheck_LastPos = selfPos
         end
@@ -595,7 +624,7 @@ function ENT:AvoidCheck( goalAng )
     local selfRight = goalAng:Right()
     local selfForward = goalAng:Forward()
 
-    avoidtracetable.start = ( selfPos + selfForward * 30 + selfRight * 20 )
+    avoidtracetable.start = ( selfPos + vector_up * 20 + selfForward * 30 + selfRight * 12.5 )
     avoidtracetable.endpos = avoidtracetable.start 
     avoidtracetable.filter = self
 
@@ -604,7 +633,7 @@ function ENT:AvoidCheck( goalAng )
         debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, ( rightresult.Hit and hitcol or safecol ), false )
     end
 
-    avoidtracetable.start = ( avoidtracetable.start - selfRight * 40 )
+    avoidtracetable.start = ( avoidtracetable.start - selfRight * 25 )
     avoidtracetable.endpos = avoidtracetable.start 
 
     local leftresult = TraceHull( avoidtracetable )
@@ -612,19 +641,17 @@ function ENT:AvoidCheck( goalAng )
         debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, ( leftresult.Hit and hitcol or safecol ), false )
     end
 
-    print( self:Nick(), leftresult.Entity, rightresult.Entity )
-
     selfPos = self:GetPos()
-    local loco = self.loco
     if leftresult.Hit and rightresult.Hit then -- Back up
         local lent, rent = leftresult.Entity, rightresult.Entity
         if IsValid( lent ) and doorClasses[ lent:GetClass() ] or IsValid( rent ) and doorClasses[ rent:GetClass() ] then return end
 
-        loco:Approach( selfPos + selfForward * -50, 1 )
+        self:ApproachDir( -selfForward, 0.33 )
+    end
+    if leftresult.Hit and !rightresult.Hit then -- Move to the right
+        self.loco:Approach( self:GetPos() + selfRight * self.loco:GetDesiredSpeed(), 100 )
     elseif rightresult.Hit and !leftresult.Hit then  -- Move to the left
-        loco:Approach( selfPos - selfRight * 50, 1 )
-    elseif leftresult.Hit and !rightresult.Hit then -- Move to the right
-        loco:Approach( selfPos + selfRight * 50, 1 )
+        self.loco:Approach( self:GetPos() - selfRight * self.loco:GetDesiredSpeed(), 100 )
     end
 end
 
@@ -673,25 +700,26 @@ local GetDistToSqr                                   = VectorMeta.DistToSqr
 --
 
 local crouchWalkPenalty = 5
-local jumpPenalty = 15
-local ladderPenalty = 20
-local avoidPenalty = 75
-local retreatDangerPenalty = 50
+local jumpPenalty = 20
+local ladderPenalty = 25
+local avoidPenalty = 100
+local retreatDangerPenalty = 75
+local combatFirePenalty = 200
 
 -- Returns a pathfinding function for the :Compute() function
-function ENT:PathGenerator()
+function ENT:PathGenerator( canUpdate )
     local loco = self.loco
     local stepHeight = CLuaLocomotion_GetStepHeight( loco )
     local jumpHeight = CLuaLocomotion_GetJumpHeight( loco ) + 12
     local thirdHealth = ( self:Health() * 0.75 )
-
     local obeyNavmesh = obeynav:GetBool()
     local isInNoClip = self:IsInNoClip()
+    local isAttacking = ( self:InCombat() and self:GetIsFiring() )
 
     local retreatTargArea, retreatTargPos
     if self:IsPanicking() and IsValid( self:GetEnemy() ) then
         retreatTargPos = self:GetEnemy():GetPos()
-        retreatTargArea = GetNearestNavArea( retreatTargPos, true, 512, false, true, 0 )
+        retreatTargArea = GetNearestNavArea( retreatTargPos, true, 400, false, true, 0 )
     end
 
     local randomizeCost = randomizepathfinding:GetBool()
@@ -715,10 +743,7 @@ function ENT:PathGenerator()
         local cost = ( CNavArea_GetCostSoFar( fromArea ) + dist )
 
         if randomizeCost then
-            if !updates or random( 20 ) == 1 then
-                randCost = Rand( minRandCost, maxRandCost )
-            end
-
+            if !canUpdate then randCost = Rand( minRandCost, maxRandCost ) end
             cost = ( cost * randCost ) 
         end
 
@@ -744,8 +769,8 @@ function ENT:PathGenerator()
                         cost = ( cost + dist * jumpPenalty )
                     end
                 end
-            elseif self:InCombat() and self:GetIsFiring() then
-                return -1
+            elseif isAttacking then
+                cost = ( cost + dist * combatFirePenalty )
             end
 
             if obeyNavmesh then
@@ -784,6 +809,12 @@ local GetNavArea = navmesh.GetNavArea
 function ENT:IsAreaTraversable( area, startArea, pathGenerator )
     if isvector( area ) then area = GetNavArea( area, 120 ) end 
     if !IsValid( area ) then return false end
+
+    local isCached = self.l_cachedunreachableares[ area ]
+    if isCached then 
+        if CurTime() < isCached then return false end
+        self.l_cachedunreachableares[ area ] = nil
+    end
 
     local myArea = startArea or self.l_currentnavarea
     if isvector( myArea ) then myArea = GetNavArea( myArea, 120 ) end 
@@ -865,7 +896,7 @@ function ENT:IsAreaTraversable( area, startArea, pathGenerator )
             end
             if !IsValid( newArea ) or newArea == curArea then continue end
 
-            local newCostSoFar = pathGenerator( newArea, curArea, ladder, NULL, -1 )
+            local newCostSoFar = pathGenerator( newArea, curArea, ladder, nil, -1 )
             if !isnumber( newCostSoFar ) then 
                 newCostSoFar = 1e30 
             elseif newCostSoFar < 0 then 
@@ -891,5 +922,6 @@ function ENT:IsAreaTraversable( area, startArea, pathGenerator )
         CNavArea_AddToClosedList( curArea )
     end
 
+    self.l_cachedunreachableares[ area ] = ( CurTime() + 60 )
     return false
 end

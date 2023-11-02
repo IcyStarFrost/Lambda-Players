@@ -4,7 +4,6 @@
 -- Definitely a lot more cleaner this way
 
 local CurTime = CurTime
-local RandomPairs = RandomPairs
 local random = math.random
 local Rand = math.Rand
 local ceil = math.ceil
@@ -14,6 +13,7 @@ local Vector = Vector
 local coroutine_wait = coroutine.wait
 local table_insert = table.insert
 local ignoreLambdas = GetConVar( "lambdaplayers_combat_dontrdmlambdas" )
+local spawnEntities = GetConVar( "lambdaplayers_building_allowentity" )
 
 local wandertbl = { autorun = true }
 function ENT:Idle()
@@ -42,26 +42,34 @@ function ENT:Combat()
     self:MoveToPos( self:GetEnemy(), combattbl )
 end
 
+local spawnMedkits = GetConVar( "lambdaplayers_combat_spawnmedkits" )
 -- Heal ourselves when hurt
-function ENT:HealUp()
+function ENT:HealUp( failState )
+    if !spawnEntities:GetBool() or !spawnMedkits:GetBool() or self:Health() >= self:GetMaxHealth() then
+        return ( failState or true )
+    end
+    if !self.l_isswimming and !self:IsInNoClip() and !self.loco:IsOnGround() then
+        return 
+    end
+
     local rndVec = ( self:GetForward() * random( -16, 16 ) + self:GetRight() * random( -16, 16 ) + self:GetUp() * random( -16, -4 ) )
-    if !self:Trace( ( self:GetPos() + rndVec ), self:GetAttachmentPoint( "eyes" ).Pos ).Hit then
+    if !self:Trace( ( self:GetPos() + rndVec ), self:EyePos() ).Hit then
         self:MoveToPos( self:GetRandomPosition( nil, 100 ) )
         if !self:GetState( "HealUp" ) then return true end
     end
 
-    local spawnRate = Rand( 0.2, 0.4 )
+    local spawnRate = Rand( 0.15, 0.4 )
     coroutine_wait( spawnRate )
     
     local spawnCount = ceil( ( self:GetMaxHealth() - self:Health() ) / 25 )
     for i = 1, random( ( spawnCount / 2 ), spawnCount ) do
-        if !self:GetState( "HealUp" ) or !self:IsUnderLimit( "Entity" ) then break end
+        if self:InCombat() or self:IsPanicking() or !self:IsUnderLimit( "Entity" ) then break end
         if self:Health() >= self:GetMaxHealth() then break end
 
         local lookPos = ( self:GetPos() + rndVec )
-        self:LookTo( lookPos, spawnRate )
+        self:LookTo( lookPos, spawnRate * 2 )
         
-        local healthkit = LambdaSpawn_SENT( self, "item_healthkit", self:Trace( lookPos, self:GetAttachmentPoint( "eyes" ).Pos ) )
+        local healthkit = LambdaSpawn_SENT( self, "item_healthkit", self:Trace( lookPos, self:EyePos() ) )
         if !IsValid( healthkit ) then break end
         
         self:DebugPrint( "spawned an entity item_healthkit" )
@@ -74,27 +82,35 @@ function ENT:HealUp()
     return true
 end
 
+local spawnBatteries = GetConVar( "lambdaplayers_combat_spawnbatteries" )
 -- Armor ourselves for better chance at surviving in combat
-function ENT:ArmorUp()
+function ENT:ArmorUp( failState )
+    if !spawnEntities:GetBool() or !spawnBatteries:GetBool() or self:Armor() >= self:GetMaxArmor() then
+        return ( failState or true )
+    end
+    if !self.l_isswimming and !self:IsInNoClip() and !self.loco:IsOnGround() then
+        return 
+    end
+
     local rndVec = ( self:GetForward() * random( -16, 16 ) + self:GetRight() * random( -16, 16 ) + self:GetUp() * random( -16, -4 ) )
-    if !self:Trace( ( self:GetPos() + rndVec ), self:GetAttachmentPoint( "eyes" ).Pos ).Hit then
+    if !self:Trace( ( self:GetPos() + rndVec ), self:EyePos() ).Hit then
         self.l_noclipheight = 0
         self:MoveToPos( self:GetRandomPosition( nil, 100 ) )
         if !self:GetState( "ArmorUp" ) then return true end
     end
 
-    local spawnRate = Rand( 0.2, 0.4 )
+    local spawnRate = Rand( 0.15, 0.4 )
     coroutine_wait( spawnRate )
     
     local spawnCount = ceil( ( self:GetMaxArmor() - self:Armor() ) / 15 )
     for i = 1, random( ( spawnCount / 3 ), spawnCount ) do
-        if !self:GetState( "ArmorUp" ) or !self:IsUnderLimit( "Entity" ) then break end
+        if self:InCombat() or self:IsPanicking() or !self:IsUnderLimit( "Entity" ) then break end
         if self:Armor() >= self:GetMaxArmor() then break end
 
         local lookPos = ( self:GetPos() + rndVec )
-        self:LookTo( lookPos, spawnRate )
+        self:LookTo( lookPos, spawnRate * 2 )
 
-        local battery = LambdaSpawn_SENT( self, "item_battery", self:Trace( lookPos, self:GetAttachmentPoint( "eyes" ).Pos ) )
+        local battery = LambdaSpawn_SENT( self, "item_battery", self:Trace( lookPos, self:EyePos() ) )
         if !IsValid( battery ) then break end
 
         self:DebugPrint( "spawned an entity item_battery" )
@@ -105,6 +121,12 @@ function ENT:ArmorUp()
     end
     
     return true
+end
+
+function ENT:CombatSpawnBehavior( target )
+    if random( 3 ) == 1 then self:ArmorUp() end
+    if !IsValid( target ) or !self:CanTarget( target ) then return true end
+    self:AttackTarget( target ) 
 end
 
 -- Wander around until we find someone to jump
@@ -136,8 +158,8 @@ local ft_options = { cbTime = 0.5, callback = function( lambda )
 end }
 function ENT:FindTarget()
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
-    ft_options.walk = ( random( 5 ) == 1 )
-    self:MoveToPos( self:GetRandomPosition(), ft_options )
+    ft_options.walk = ( random( 4 ) == 1 )
+    self:MoveToPos( self:GetRandomPosition( nil, 2000 ), ft_options )
     return ( random( 100 ) > self:GetCombatChance() )
 end
 
