@@ -14,6 +14,7 @@ local coroutine_wait = coroutine.wait
 local table_insert = table.insert
 local ignoreLambdas = GetConVar( "lambdaplayers_combat_dontrdmlambdas" )
 local spawnEntities = GetConVar( "lambdaplayers_building_allowentity" )
+local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 
 local wandertbl = { autorun = true }
 function ENT:Idle()
@@ -32,7 +33,7 @@ function ENT:Idle()
         pos = triggers[ random( #triggers ) ]:WorldSpaceCenter()
     end
 
-    self:MoveToPos( ( pos or self:GetRandomPosition() ), wandertbl )
+    self:MoveToPos( ( pos or self:GetRandomPosition( nil, unlimiteddistance:GetBool() ) ), wandertbl )
 end
 
 local combattbl = { update = 0.2, run = true, tol = 10 }

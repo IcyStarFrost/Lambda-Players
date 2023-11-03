@@ -711,7 +711,8 @@ function ENT:Think()
                 end
 
                 if !isPanicking then
-                    local lowOnAmmo = ( self:GetIsReloading() or self.l_MaxClip > 0 and self.l_Clip <= ( self.l_MaxClip * 0.33 ) )
+                    local isReloading = self:GetIsReloading()
+                    local lowOnAmmo = ( self.l_MaxClip > 0 and self.l_Clip <= ( self.l_MaxClip * 0.25 ) )
 
                     if curTime >= self.l_CombatPosUpdateTime then
                         self.l_CombatPosUpdateTime = ( curTime + 0.1 )
@@ -719,7 +720,7 @@ function ENT:Think()
                         local keepDist, myOrigin = self.l_CombatKeepDistance, self:GetPos()
                         local posCopy = target:GetPos(); posCopy.z = myOrigin.z
 
-                        if keepDist and ( lowOnAmmo or canSee and self:IsInRange( posCopy, ( keepDist * rand( 0.8, 1.2 ) ) ) ) then
+                        if keepDist and ( isReloading or canSee and ( lowOnAmmo or self:IsInRange( posCopy, ( keepDist * rand( 0.8, 1.2 ) ) ) ) ) then
                             local moveAng = ( myOrigin - posCopy ):Angle()
                             local runSpeed = self:GetRunSpeed()
                             local potentialPos = ( myOrigin + moveAng:Forward() * random( -( runSpeed * 0.5 ), keepDist ) + moveAng:Right() * random( -runSpeed, runSpeed ) )
@@ -730,7 +731,7 @@ function ENT:Think()
                     end
 
                     local preCombatMovePos = self.l_precombatmovepos
-                    if preCombatMovePos and lowOnAmmo then
+                    if preCombatMovePos and isReloading then
                         self.l_movepos = preCombatMovePos
                     else
                         self.l_precombatmovepos = nil

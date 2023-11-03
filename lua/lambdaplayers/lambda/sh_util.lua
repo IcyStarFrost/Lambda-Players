@@ -58,7 +58,6 @@ local debugcvar = GetConVar( "lambdaplayers_debug" )
 local chatAllowed = GetConVar( "lambdaplayers_text_enabled" )
 local chatlimit = GetConVar( "lambdaplayers_text_chatlimit" )
 local collisionPly = GetConVar( "lambdaplayers_lambda_noplycollisions" )
-local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 local rasp = GetConVar( "lambdaplayers_lambda_respawnatplayerspawns" )
 local serversidecleanup = GetConVar( "lambdaplayers_lambda_serversideremovecorpseonrespawn" )
 local serversidecleanupeffect = GetConVar( "lambdaplayers_lambda_serversideragdollcleanupeffect" )
@@ -920,18 +919,22 @@ if SERVER then
     -- Returns a sequential table full of nav areas near the position
     function ENT:GetNavAreas( pos, dist )
         local neartbl = {}
-        if !unlimiteddistance:GetBool() then
-            pos = ( pos or self:GetPos() )
-            for _, area in ipairs( navmesh_Find( pos, 1500, 1500, 1500 ) ) do
-                if !area:IsValid() or area:GetSizeX() < 75 or area:GetSizeY() < 75 or area:GetCenter():IsUnderwater() then continue end
-                neartbl[ #neartbl + 1 ] = area
-            end
-        else
+
+        if dist == true then
             for _, area in ipairs( GetAllNavAreas() ) do
                 if !area:IsValid() or area:GetSizeX() < 75 or area:GetSizeY() < 75 or area:GetCenter():IsUnderwater() then continue end
                 neartbl[ #neartbl + 1 ] = area
             end
+        else
+            pos = ( pos or self:GetPos() )
+            dist = ( dist or 1500 )
+
+            for _, area in ipairs( navmesh_Find( pos, dist, dist, dist ) ) do
+                if !area:IsValid() or area:GetSizeX() < 75 or area:GetSizeY() < 75 or area:GetCenter():IsUnderwater() then continue end
+                neartbl[ #neartbl + 1 ] = area
+            end
         end
+        
         return neartbl
     end
     
@@ -943,7 +946,7 @@ if SERVER then
         -- If the navmesh is loaded then find a nav area to go to
         if IsNavmeshLoaded() then
             for _, area in RandomPairs( self:GetNavAreas( pos, dist ) ) do
-                local rndPoint = area:GetRandomPoint()
+                local rndPoint = self:GetNavAreaRandomPoint( area )
                 if filter and filter( pos, area, rndPoint ) == true then continue end
                 if !self:IsAreaTraversable( area ) then continue end
                 return rndPoint
@@ -951,6 +954,7 @@ if SERVER then
         end
 
         -- If not, try to go to a entirely random spot
+        if !isnumber( dist ) then dist = 1500 end
         return ( pos + VectorRand( -dist, dist ) )
     end
 
@@ -1474,6 +1478,17 @@ if SERVER then
         if !closeTarget then return end        
         self:SetState( "CombatSpawnBehavior", closeTarget )
         self:CancelMovement()
+    end
+
+    function ENT:GetNavAreaRandomPoint( area )
+        local sizeX = ( area:GetSizeX() / 2 )
+        if sizeX > 32 then sizeX = ( sizeX - 32 ) end
+
+        local sizeY = ( area:GetSizeY() / 2 )
+        if sizeY > 32 then sizeY = ( sizeY - 32 ) end
+
+        local vecOff = Vector( random( -sizeX, sizeX ), random( -sizeY, sizeY ) )
+        return ( area:GetCenter() + vecOff )
     end
 end
 

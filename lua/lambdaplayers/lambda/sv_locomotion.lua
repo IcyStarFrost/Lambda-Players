@@ -47,6 +47,8 @@ function ENT:MoveToPos( pos, options )
     local movePos = ( isvector( pos ) and pos or ( IsValid( pos ) and pos:GetPos() or nil ) )
     if !movePos then return "failed" end
 
+    options = ( options or {} )
+
     -- If there is no nav mesh, try to go to the postion anyway
     local curArea = self.l_currentnavarea
     if !IsValid( curArea ) or !navmesh_IsLoaded() then 
@@ -54,20 +56,22 @@ function ENT:MoveToPos( pos, options )
         return "failed"
     end 
 
-    options = options or {}
-    self.l_moveoptions = table_Copy( options )
-
-    local path = Path( "Follow" )
-    path:SetGoalTolerance( options.tol or 20 )
-    path:SetMinLookAheadDistance( self.l_LookAheadDistance )
+    local overridePath, overrideOptions = LambdaRunHook( "LambdaOnBeginMove", self, movePos, true, options )
+    if overridePath then movePos = overridePath end
+    if overrideOptions then options = overrideOptions end
 
     local costFunctor = self:PathGenerator( options.update )
+    local path = Path( "Follow" )
 
-    path:Compute( self, movePos, costFunctor )
+    path:Compute( self, overridePath or movePos, costFunctor )
     if !IsValid( path ) then return "failed" end
 
+    path:SetGoalTolerance( options.tol or 20 )
+    path:SetMinLookAheadDistance( self.l_LookAheadDistance )
+    
     self.l_issmoving = true
     self.l_movepos = movePos
+    self.l_moveoptions = table_Copy( options )
     self.l_CurrentPath = path
 
     self:SetSlowWalk( options.walk or false )
@@ -86,8 +90,6 @@ function ENT:MoveToPos( pos, options )
     local returnMsg = "ok"
     local callbackRunT = ( CurTime() + ( options.cbTime or 0 ) )
     local nearLadderCheckT = 0
-
-    LambdaRunHook( "LambdaOnBeginMove", self, movePos, true )
 
     while ( IsValid( path ) ) do
         if self:GetIsDead() then 
@@ -134,8 +136,8 @@ function ENT:MoveToPos( pos, options )
             local updateTime = math_max( update, update * ( path:GetLength() / runSpeed ) )
             if update > updateTime then 
                 updateTime = update
-            elseif updateTime > 1.0 then
-                updateTime = 1.0
+            elseif updateTime > 3.0 then
+                updateTime = 3.0
             end
             if path:GetAge() >= updateTime then path:Compute( self, movePos, costFunctor ) end
         end
@@ -256,10 +258,14 @@ function ENT:MoveToPosOFFNAV( pos, options )
     if !movePos then return "failed" end
 
     options = options or {}
-    self.l_moveoptions = table_Copy( options )
-    
+
+    local overridePath, overrideOptions = LambdaRunHook( "LambdaOnBeginMove", self, movePos, false, options )
+    if overridePath then movePos = overridePath end
+    if overrideOptions then options = overrideOptions end
+
     self.l_issmoving = true
     self.l_movepos = movePos
+    self.l_moveoptions = table_Copy( options )
     self.l_CurrentPath = movePos
 
     local timeout = options.timeout
@@ -593,8 +599,8 @@ function ENT:ObstacleCheck( pathDir )
 end
 
 local avoidtracetable = {
-    mins = Vector( -10, -10, -10 ),
-    maxs = Vector( 10, 10, 10 )
+    mins = Vector( -10, -10, 0 ),
+    maxs = Vector( 10, 10, 20 )
 } -- Recycled table
 local hitcol = Color( 255, 0, 0, 10 )
 local safecol = Color( 0, 255, 0, 10 )
@@ -620,11 +626,11 @@ function ENT:AvoidCheck( goalAng )
     self.l_AvoidCheck_IsStuck = isStuck
     if isStuck then return end
 
-    local selfPos = self:WorldSpaceCenter()
+    local selfPos = self:GetPos()
     local selfRight = goalAng:Right()
     local selfForward = goalAng:Forward()
 
-    avoidtracetable.start = ( selfPos + vector_up * 20 + selfForward * 30 + selfRight * 12.5 )
+    avoidtracetable.start = ( selfPos + vector_up * self.loco:GetStepHeight() + selfForward * 30 + selfRight * 12.5 )
     avoidtracetable.endpos = avoidtracetable.start 
     avoidtracetable.filter = self
 
@@ -641,12 +647,11 @@ function ENT:AvoidCheck( goalAng )
         debugoverlay.Box( avoidtracetable.start, avoidtracetable.mins, avoidtracetable.maxs, 0.1, ( leftresult.Hit and hitcol or safecol ), false )
     end
 
-    selfPos = self:GetPos()
     if leftresult.Hit and rightresult.Hit then -- Back up
         local lent, rent = leftresult.Entity, rightresult.Entity
         if IsValid( lent ) and doorClasses[ lent:GetClass() ] or IsValid( rent ) and doorClasses[ rent:GetClass() ] then return end
 
-        self:ApproachDir( -selfForward, 0.33 )
+        self:ApproachDir( -selfForward, 0.25 )
     end
     if leftresult.Hit and !rightresult.Hit then -- Move to the right
         self.loco:Approach( self:GetPos() + selfRight * self.loco:GetDesiredSpeed(), 100 )
@@ -700,11 +705,11 @@ local GetDistToSqr                                   = VectorMeta.DistToSqr
 --
 
 local crouchWalkPenalty = 5
-local jumpPenalty = 20
-local ladderPenalty = 25
+local jumpPenalty = 15
+local ladderPenalty = 20
 local avoidPenalty = 100
-local retreatDangerPenalty = 75
-local combatFirePenalty = 200
+local retreatDangerPenalty = 125
+local combatLadderPenalty = 175
 
 -- Returns a pathfinding function for the :Compute() function
 function ENT:PathGenerator( canUpdate )
@@ -770,7 +775,7 @@ function ENT:PathGenerator( canUpdate )
                     end
                 end
             elseif isAttacking then
-                cost = ( cost + dist * combatFirePenalty )
+                cost = ( cost + dist * combatLadderPenalty )
             end
 
             if obeyNavmesh then
