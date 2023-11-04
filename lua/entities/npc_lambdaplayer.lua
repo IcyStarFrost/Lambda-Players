@@ -247,7 +247,7 @@ function ENT:Initialize()
         self.l_SpawnPos = self:GetPos()
         self.l_SpawnAngles = self:GetAngles()
 
-        local nearArea = navmesh_GetNavArea( self.l_SpawnPos, 400 ) -- The current nav area we are in
+        local nearArea = navmesh_GetNavArea( self.l_SpawnPos, 80 ) -- The current nav area we are in
         if IsValid( nearArea ) then 
             self.l_SpawnPos = nearArea:GetClosestPointOnArea( self.l_SpawnPos )
             self.l_currentnavarea = nearArea

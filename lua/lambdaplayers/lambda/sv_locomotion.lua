@@ -663,7 +663,7 @@ end
 -- CNavArea --
 local CNavAreaMeta                                   = FindMetaTable( "CNavArea" )
 local CNavArea_GetCenter                             = CNavAreaMeta.GetCenter
-local CNavArea_GetAdjacentAreasAtSide                = CNavAreaMeta.GetAdjacentAreasAtSide
+local CNavArea_GetAdjacentAreas                      = CNavAreaMeta.GetAdjacentAreas
 local CNavArea_GetLaddersAtSide                      = CNavAreaMeta.GetLaddersAtSide
 local CNavArea_ClearSearchLists                      = CNavAreaMeta.ClearSearchLists
 local CNavArea_AddToOpenList                         = CNavAreaMeta.AddToOpenList
@@ -712,7 +712,7 @@ local retreatDangerPenalty = 125
 local combatLadderPenalty = 175
 
 -- Returns a pathfinding function for the :Compute() function
-function ENT:PathGenerator( canUpdate )
+function ENT:PathGenerator( canUpdate, isLambdaCheck )
     local loco = self.loco
     local stepHeight = CLuaLocomotion_GetStepHeight( loco )
     local jumpHeight = CLuaLocomotion_GetJumpHeight( loco ) + 12
@@ -741,12 +741,16 @@ function ENT:PathGenerator( canUpdate )
         local dist = 0
         if !isInNoClip and IsValid( ladder ) then
             dist = ( CNavLadder_GetLength( ladder ) * ladderPenalty )
+            if isLambdaCheck then dist = ( dist * dist ) end
+        elseif length > 0 then
+            dist = length
+        elseif isLambdaCheck then
+            dist = GetDistToSqr( fromPos, areaPos )
         else
-            dist = ( length > 0 and length or GetDistTo( fromPos, areaPos ) )
+            dist = GetDistTo( fromPos, areaPos )
         end
 
         local cost = ( CNavArea_GetCostSoFar( fromArea ) + dist )
-
         if randomizeCost then
             if !canUpdate then randCost = Rand( minRandCost, maxRandCost ) end
             cost = ( cost * randCost ) 
@@ -806,13 +810,14 @@ function ENT:PathGenerator( canUpdate )
 end
 
 local GetNavArea = navmesh.GetNavArea
+local GetNavAreaCount = navmesh.GetNavAreaCount
 
 -- Using the A* algorithm and navmesh, finds out if we can reach the given area
 -- Was created because base CLuaLocomotion's 'IsAreaTraversable' seems to be broken
 -- Not recommended to use in loops with large tables
 -- The 'area' and 'startArea' variables can be either a vector or a navmesh area
 function ENT:IsAreaTraversable( area, startArea, pathGenerator )
-    if isvector( area ) then area = GetNavArea( area, 120 ) end 
+    if isvector( area ) then area = GetNavArea( area, 100 ) end 
     if !IsValid( area ) then return false end
 
     local isCached = self.l_cachedunreachableares[ area ]
@@ -822,11 +827,11 @@ function ENT:IsAreaTraversable( area, startArea, pathGenerator )
     end
 
     local myArea = startArea or self.l_currentnavarea
-    if isvector( myArea ) then myArea = GetNavArea( myArea, 120 ) end 
+    if isvector( myArea ) then myArea = GetNavArea( myArea, 100 ) end 
     if !IsValid( myArea ) then return false end
 
     if area == myArea then return true end
-    pathGenerator = pathGenerator or self:PathGenerator()
+    pathGenerator = pathGenerator or self:PathGenerator( nil, true )
 
     CNavArea_ClearSearchLists( myArea )
     CNavArea_AddToOpenList( myArea )
@@ -834,8 +839,10 @@ function ENT:IsAreaTraversable( area, startArea, pathGenerator )
 
     local areaPos = CNavArea_GetCenter( area )
     CNavArea_SetTotalCost( myArea, GetDistToSqr( CNavArea_GetCenter( myArea ), areaPos ) )
-
     CNavArea_UpdateOnOpenList( myArea )
+
+    local foundAreas = 0
+    local navCount = GetNavAreaCount()
 
     while ( !CNavArea_IsOpenListEmpty( myArea ) ) do
         local curArea = CNavArea_PopOpenList( myArea )
@@ -844,24 +851,18 @@ function ENT:IsAreaTraversable( area, startArea, pathGenerator )
         local ladderList
         local searchIndex = 1
         local searchLadders = false
-        local searchDir = 0
         local ladderUp = true
         local ladderTopDir = 0
-        local floorList = CNavArea_GetAdjacentAreasAtSide( curArea, searchDir )
+        local floorList = CNavArea_GetAdjacentAreas( curArea )
 
         while ( true ) do
             local newArea, ladder
 
             if !searchLadders then
                 if searchIndex > #floorList then
-                    searchDir = ( searchDir + 1 )
-                    if searchDir == 4 then
-                        searchLadders = true
-                        ladderList = CNavArea_GetLaddersAtSide( curArea, 0 )
-                    else
-                        floorList = CNavArea_GetAdjacentAreasAtSide( curArea, searchDir )
-                    end
-
+                    searchLadders = true
+                    ladderList = CNavArea_GetLaddersAtSide( curArea, 0 )
+                    
                     searchIndex = 1
                     continue
                 end
@@ -909,7 +910,6 @@ function ENT:IsAreaTraversable( area, startArea, pathGenerator )
             end
 
             if ( CNavArea_IsOpen( newArea ) or CNavArea_IsClosed( newArea ) ) and CNavArea_GetCostSoFar( newArea ) <= newCostSoFar then continue end
-
             CNavArea_SetCostSoFar( newArea, newCostSoFar )
             CNavArea_SetTotalCost( newArea, newCostSoFar + GetDistToSqr( CNavArea_GetCenter( newArea ), areaPos ) )
 
@@ -922,11 +922,14 @@ function ENT:IsAreaTraversable( area, startArea, pathGenerator )
             else
                 CNavArea_AddToOpenList( newArea )
             end
+
+            foundAreas = ( foundAreas + 1 )
+            if foundAreas >= navCount then break end
         end
 
         CNavArea_AddToClosedList( curArea )
     end
 
-    self.l_cachedunreachableares[ area ] = ( CurTime() + 60 )
+    self.l_cachedunreachableares[ area ] = ( CurTime() + 120 )
     return false
 end
