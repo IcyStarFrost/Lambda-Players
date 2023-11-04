@@ -413,9 +413,9 @@ function LambdaGetPossibleSpawns()
     local info_player_rebel = FindByClass( "info_player_rebel" )
     local info_player_allies = FindByClass( "info_player_allies" )
     local info_player_axis = FindByClass( "info_player_axis" )
+    local info_player_deathmatch = FindByClass( "info_player_deathmatch" )
     local info_coop_spawn = FindByClass( "info_coop_spawn" )
     local info_survivor_position = FindByClass( "info_survivor_position" )
-
 
     table_Add( info_player_starts, info_player_teamspawns )
     table_Add( info_player_starts, info_player_terrorist )
@@ -424,6 +424,7 @@ function LambdaGetPossibleSpawns()
     table_Add( info_player_starts, info_player_rebel )
     table_Add( info_player_starts, info_player_allies )
     table_Add( info_player_starts, info_player_axis )
+    table_Add( info_player_starts, info_player_deathmatch )
     table_Add( info_player_starts, info_coop_spawn )
     table_Add( info_player_starts, info_survivor_position )
 

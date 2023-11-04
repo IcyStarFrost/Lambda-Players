@@ -997,13 +997,14 @@ function ENT:InitializeMiniHooks()
         self:Hook( "PreDrawEffects", "flashlighteffects", function()
             if !self.l_flashlighton or self:GetIsDead() or self:IsDormant() then return end
 
-            local hand = self:GetAttachmentPoint( "hand" )
-            local start = hand.Pos + hand.Ang:Forward() * 3
-            local endpos = hand.Pos + hand.Ang:Forward() * 150
-
+            local handPos = self:GetAttachmentPoint( "hand" ).Pos
+            local eyeFwd = self:GetAimVector()
+            
+            local start = handPos + eyeFwd * 3
             SetMaterial( flashlightsprite )
             DrawSprite( start, 4, 4, color_white )
-
+            
+            local endpos = handPos + eyeFwd * 150
             SetMaterial( flashlightbeam )
             DrawBeam( start, endpos, 40, 0, 0.9, faded )
         end, true )

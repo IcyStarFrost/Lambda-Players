@@ -436,7 +436,6 @@ end
 if SERVER then
 
     local GetAllNavAreas = navmesh.GetAllNavAreas
-    local navmesh_Find = navmesh.Find
     local ignoreplayer = GetConVar( "ai_ignoreplayers" )
     local realisticfalldamage = GetConVar( "lambdaplayers_lambda_realisticfalldamage" )
 
@@ -919,20 +918,14 @@ if SERVER then
     -- Returns a sequential table full of nav areas near the position
     function ENT:GetNavAreas( pos, dist )
         local neartbl = {}
-
-        if dist == true then
-            for _, area in ipairs( GetAllNavAreas() ) do
-                if !area:IsValid() or area:GetSizeX() < 75 or area:GetSizeY() < 75 or area:GetCenter():IsUnderwater() then continue end
-                neartbl[ #neartbl + 1 ] = area
-            end
-        else
-            pos = ( pos or self:GetPos() )
-            dist = ( dist or 1500 )
-
-            for _, area in ipairs( navmesh_Find( pos, dist, dist, dist ) ) do
-                if !area:IsValid() or area:GetSizeX() < 75 or area:GetSizeY() < 75 or area:GetCenter():IsUnderwater() then continue end
-                neartbl[ #neartbl + 1 ] = area
-            end
+        pos = ( pos or self:GetPos() )
+        dist = ( dist or 1500 )
+    
+        for _, area in ipairs( GetAllNavAreas() ) do
+            if !area:IsValid() or area:GetSizeX() < 75 or area:GetSizeY() < 75 then continue end
+            local areaPos = area:GetCenter()
+            if areaPos:IsUnderwater() or dist != true and areaPos:DistToSqr( pos ) > ( dist * dist ) then continue end
+            neartbl[ #neartbl + 1 ] = area
         end
         
         return neartbl

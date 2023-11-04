@@ -394,7 +394,7 @@ function ENT:Initialize()
         self:SwitchWeapon( "physgun", true )
         
         self:HandleAllValidNPCRelations()
-
+        self:SetAllowFlashlight( true )
 
         if LambdaPersonalProfiles and random( 0, 100 ) < profilechance:GetInt() then
             for k, v in RandomPairs( LambdaPersonalProfiles ) do
@@ -1170,7 +1170,7 @@ function ENT:Think()
 
     if ( CLIENT ) then
         local selfCenter = self:WorldSpaceCenter()
-        local selfAngles = self:GetAngles()
+        local selfAngles = self:EyeAngles()
         local flashlight = self.l_flashlight
         local allowFlashlight = self:CanUseFlashlight()
 

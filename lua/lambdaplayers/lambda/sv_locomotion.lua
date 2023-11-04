@@ -273,7 +273,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
         options.timeout = ( CurTime() + timeout ) 
     end
 
-    self:SetSlowWalk( options.walk != nil )
+    self:SetSlowWalk( options.walk or false )
     if options.run then
         self:SetRun( true )
     else
@@ -424,7 +424,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
 
         if climbState != 2 or ( !self:IsDisabled() or self:GetIsTyping() ) and CurTime() >= self.l_moveWaitTime then
             if !IsValid( TraceHull( laddermovetable ).Entity ) then
-                climbFract = ( climbFract + ( 250 * FrameTime() * 2 ) )
+                climbFract = ( climbFract + ( 250 * FrameTime() ) )
                 stuckTime = ( CurTime() + random( 2, 5 ) )
 
                 if climbFract >= climbDist then
