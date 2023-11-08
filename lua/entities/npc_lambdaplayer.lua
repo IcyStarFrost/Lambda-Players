@@ -1267,7 +1267,7 @@ function ENT:RunBehaviour()
     end
 
     while true do
-        if !self:GetIsDead() and !self:IsDisabled() then
+        if !self:GetIsDead() and ( !self:IsDisabled() or self:GetIsTyping() ) then
             local curState = self:GetState()
             local statefunc = self[ curState ] -- I forgot this was possible. See sv_states.lua
             if statefunc then

@@ -56,6 +56,8 @@ function ENT:MoveToPos( pos, options )
         return "failed"
     end 
 
+    self.l_issmoving = true
+
     local overridePath, overrideOptions = LambdaRunHook( "LambdaOnBeginMove", self, movePos, true, options )
     if overridePath then movePos = overridePath end
     if overrideOptions then options = overrideOptions end
@@ -64,12 +66,11 @@ function ENT:MoveToPos( pos, options )
     local path = Path( "Follow" )
 
     path:Compute( self, overridePath or movePos, costFunctor )
-    if !IsValid( path ) then return "failed" end
+    if !IsValid( path ) then self.l_issmoving = false; return "failed" end
 
     path:SetGoalTolerance( options.tol or 20 )
     path:SetMinLookAheadDistance( self.l_LookAheadDistance )
     
-    self.l_issmoving = true
     self.l_movepos = movePos
     self.l_moveoptions = table_Copy( options )
     self.l_CurrentPath = path
@@ -146,7 +147,7 @@ function ENT:MoveToPos( pos, options )
             path:Compute( self, movePos, costFunctor )
             self.l_recomputepath = nil
         end
-        
+
         if !self:IsDisabled() and CurTime() >= self.l_moveWaitTime then
             local callback = options.callback
             if callback and CurTime() >= callbackRunT then 
@@ -463,10 +464,9 @@ end
 
 -- If we are moving while this function is called, recompute our current path or change the goal position and recompute
 function ENT:RecomputePath( pos )
-    if self.l_issmoving then
-        self.l_movepos = pos or self.l_movepos
-        self.l_recomputepath = true
-    end
+    if !self.l_issmoving then return end
+    self.l_movepos = ( pos or self.l_movepos )
+    self.l_recomputepath = true
 end
 
 -- Stops movement from :MoveToPos() and :MoveToPosOFFNAV()
@@ -630,7 +630,7 @@ function ENT:AvoidCheck( goalAng )
     local selfRight = goalAng:Right()
     local selfForward = goalAng:Forward()
 
-    avoidtracetable.start = ( selfPos + vector_up * self.loco:GetStepHeight() + selfForward * 30 + selfRight * 12.5 )
+    avoidtracetable.start = ( selfPos + vector_up * ( self.loco:GetStepHeight() + 2 ) + selfForward * 30 + selfRight * 12.5 )
     avoidtracetable.endpos = avoidtracetable.start 
     avoidtracetable.filter = self
 
