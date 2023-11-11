@@ -107,7 +107,7 @@ function ENT:MoveToPos( pos, options )
             returnMsg = "timeout" 
             break 
         end
-        
+
         movePos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
         if !movePos then 
             returnMsg = "invalid" 
@@ -148,7 +148,7 @@ function ENT:MoveToPos( pos, options )
         end
 
         local goal = path:GetCurrentGoal()
-        if !curGoal or curGoal.area != goal.area then
+        if goal and ( !curGoal or curGoal.area != goal.area ) then
             prevGoal = curGoal
             curGoal = goal
         end
@@ -164,7 +164,7 @@ function ENT:MoveToPos( pos, options )
             end
             path:Update( self )
 
-            if !self:IsInNoClip() then
+            if curGoal and !self:IsInNoClip() then
                 local selfPos = self:GetPos()
                 local lastGoal = path:LastSegment()
                 local destPos = ( ( lastGoal and curGoal.area == lastGoal.area ) and movePos or curGoal.pos )
