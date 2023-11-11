@@ -56,12 +56,19 @@ function ENT:MoveToPos( pos, options )
     self.l_issmoving = true
     options = ( options or {} )
 
+    local costFunctor = self:PathGenerator( options.update )
+    local path = Path( "Follow" )
+
+    self:SetSlowWalk( options.walk or false )
+    if options.run then
+        self:SetRun( true )
+    else
+        self:SetRun( options.autorun and path:GetLength() > 1500 )
+    end
+
     local overridePath, overrideOptions = LambdaRunHook( "LambdaOnBeginMove", self, movePos, true, options )
     if overridePath then movePos = overridePath end
     if overrideOptions then options = overrideOptions end
-
-    local costFunctor = self:PathGenerator( options.update )
-    local path = Path( "Follow" )
 
     path:Compute( self, overridePath or movePos, costFunctor )
     if !IsValid( path ) then self.l_issmoving = false; return "failed" end
@@ -72,13 +79,6 @@ function ENT:MoveToPos( pos, options )
     self.l_movepos = movePos
     self.l_moveoptions = table_Copy( options )
     self.l_CurrentPath = path
-
-    self:SetSlowWalk( options.walk or false )
-    if options.run then
-        self:SetRun( true )
-    else
-        self:SetRun( options.autorun and path:GetLength() > 1500 )
-    end
 
     local loco = self.loco
     local runSpeed = self:GetRunSpeed()
@@ -107,7 +107,7 @@ function ENT:MoveToPos( pos, options )
             returnMsg = "timeout" 
             break 
         end
-
+        
         movePos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
         if !movePos then 
             returnMsg = "invalid" 
@@ -148,7 +148,7 @@ function ENT:MoveToPos( pos, options )
         end
 
         local goal = path:GetCurrentGoal()
-        if goal and ( !curGoal or curGoal.area != goal.area ) then
+        if goal and (!curGoal or IsValid(goal.area) and curGoal.area != goal.area) then
             prevGoal = curGoal
             curGoal = goal
         end
