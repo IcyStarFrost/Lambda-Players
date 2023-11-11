@@ -73,7 +73,8 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
         if isDorm then phys:SetPos( dormPos, true ) end
 
         local distDiff = ( phys:GetPos():Distance( dmgPos ) / forceDiv )
-        phys:ApplyForceOffset( dmgForce / distDiff, dmgPos )
+        local forceAdd = ( dmgForce / distDiff )
+        phys:ApplyForceOffset( forceAdd, dmgPos )
     end
 
     ragdoll:SetNoDraw( false )

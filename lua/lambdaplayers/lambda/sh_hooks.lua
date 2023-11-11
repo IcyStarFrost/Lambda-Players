@@ -4,6 +4,8 @@ local ents_GetAll = ents.GetAll
 local ents_Create = ents.Create
 local isfunction = isfunction
 local ipairs = ipairs
+local pairs = pairs
+local hook_Remove = hook.Remove
 local bor = bit.bor
 local CurTime = CurTime
 local coroutine_yield = coroutine.yield
@@ -57,7 +59,10 @@ if SERVER then
             dmgpos = info:GetDamagePosition()
 
             local attacker = info:GetAttacker()
+            local inflictor = info:GetInflictor()
             if IsValid( attacker ) and attacker:GetClass() == "trigger_hurt" then
+                forceScale = 8
+            elseif IsValid( inflictor ) and inflictor:GetClass() == "crossbow_bolt" then
                 forceScale = 8
             elseif info:IsExplosionDamage() then
                 forceScale = 75
@@ -211,7 +216,6 @@ if SERVER then
             if IsValid( dropEnt ) then
                 dropEnt:SetPos( wepent:GetPos() )
                 dropEnt:SetAngles( wepent:GetAngles() )
-                dropEnt:SetOwner( self )
                 dropEnt:Spawn()
 
                 dropEnt:SetSubMaterial( 1, wepent:GetSubMaterial( 1 ) )
@@ -292,6 +296,15 @@ if SERVER then
             self:DropWeapon()
         end
 
+        -- Remove all non-preserved hooks
+        for eventName, hooks in pairs( self.l_Hooks ) do
+            for hookName, hookTbl in pairs( hooks ) do
+                if hookTbl[ 2 ] == true then continue end
+                hooks[ hookName ] = nil
+                hook_Remove( hookName, hookTbl[ 1 ] )
+            end
+        end
+
         self:SetHealth( -1 ) -- SNPCs will think that we are still alive without doing this.
         self:SetIsDead( true )
         self:SetNoClip( false )
@@ -316,9 +329,8 @@ if SERVER then
 
         -- Stop playing all gesture animations
         self:RemoveAllGestures()
-        self.l_UpdateAnimations = true
+        self.l_UpdateAnimations = true 
 
-        for k, v in ipairs( self.l_Hooks ) do if !v[ 3 ] then self:RemoveHook( v[ 1 ], v[ 2 ] ) end end -- Remove all non preserved hooks
         self:RemoveTimers()
         self:TerminateNonIgnoredDeadTimers()
 
@@ -433,12 +445,11 @@ if SERVER then
     
     function ENT:OnTraceAttack( dmginfo, dir, trace )
         local hitGroup = trace.HitGroup
-        if hitGroup == HITGROUP_HEAD then
-            dmginfo:ScaleDamage( 2 )
-        end
-
         self.l_lasthitgroup = hitGroup
-        self.l_lastdamage = dmginfo:GetDamage()
+
+        local maxDmg = dmginfo:GetMaxDamage()
+        self.l_lastdamage = ( maxDmg != 0 and maxDmg or nil )
+        
         hook.Run( "ScaleNPCDamage", self, hitGroup, dmginfo )
     end
 
@@ -711,7 +722,7 @@ if SERVER then
     -- Fall damage handling
     -- Note that this doesn't always work due to nextbot quirks but that's alright.
     function ENT:OnLandOnGround( ent )
-        if self:IsUsingLadder() or self:IsInNoClip() then return end
+        if !self.l_initialized or self:IsUsingLadder() or self:IsInNoClip() then return end
         
         --hook.Run( "OnPlayerHitGround", self, self:GetPos():IsUnderwater(), false, self.l_FallVelocity )
         if LambdaRunHook( "LambdaOnLandOnGround", self, ent ) != true then

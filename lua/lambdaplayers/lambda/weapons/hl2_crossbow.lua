@@ -38,8 +38,10 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent:EmitSound( "Weapon_Crossbow.Single" )
 
             local fireDir = ( target:WorldSpaceCenter() - self:EyePos() ):Angle()
+            local firePos = ( self:EyePos() + fireDir:Forward() * 32 + fireDir:Up() * 32 )
+            fireDir = ( target:WorldSpaceCenter() - firePos ):Angle()
 
-            bolt:SetPos( self:EyePos() + fireDir:Forward() * 32 + fireDir:Up() * 32 ) 
+            bolt:SetPos( firePos ) 
             bolt:SetAngles( fireDir )
             bolt:Spawn()
             bolt:SetOwner( self )

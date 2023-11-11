@@ -44,19 +44,17 @@ end
 -- Start off simple
 -- Pos arg can be a vector or a entity.
 function ENT:MoveToPos( pos, options )
-    local movePos = ( isvector( pos ) and pos or ( IsValid( pos ) and pos:GetPos() or nil ) )
-    if !movePos then return "failed" end
-
-    options = ( options or {} )
-
     -- If there is no nav mesh, try to go to the postion anyway
     local curArea = self.l_currentnavarea
     if !IsValid( curArea ) or !navmesh_IsLoaded() then 
-        self:MoveToPosOFFNAV( movePos, options ) 
-        return "failed"
-    end 
+        return self:MoveToPosOFFNAV( pos, options ) 
+    end
+
+    local movePos = ( isvector( pos ) and pos or ( IsValid( pos ) and pos:GetPos() or nil ) )
+    if !movePos then return "failed" end
 
     self.l_issmoving = true
+    options = ( options or {} )
 
     local overridePath, overrideOptions = LambdaRunHook( "LambdaOnBeginMove", self, movePos, true, options )
     if overridePath then movePos = overridePath end
@@ -93,13 +91,13 @@ function ENT:MoveToPos( pos, options )
     local nearLadderCheckT = 0
 
     while ( IsValid( path ) ) do
-        if self:GetIsDead() then 
-            returnMsg = "dead" 
-            break
-        end
         if self.AbortMovement then 
             self.AbortMovement = false 
             returnMsg = "aborted"; break 
+        end
+        if self:GetIsDead() then 
+            returnMsg = "dead" 
+            break
         end
 
         options = self.l_moveoptions or {}
@@ -109,18 +107,41 @@ function ENT:MoveToPos( pos, options )
             returnMsg = "timeout" 
             break 
         end
-
+        
         movePos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
         if !movePos then 
             returnMsg = "invalid" 
             break 
         end
 
+        local recomputePath = self.l_recomputepath
+        if recomputePath then
+            self.l_recomputepath = nil
+            
+            local recomputePos = ( isvector( recomputePath ) and recomputePath or ( IsValid( recomputePath ) and recomputePath:GetPos() or nil ) )
+            if recomputePos then
+                movePos = recomputePos
+                self.l_movepos = recomputePos
+                path:Compute( self, recomputePos, costFunctor )
+            end
+        else
+            local update = options.update
+            if update then
+                local updateTime = math_max( update, update * ( path:GetLength() / runSpeed ) )
+                if update > updateTime then 
+                    updateTime = update
+                elseif updateTime > 3.0 then
+                    updateTime = 3.0
+                end
+                if path:GetAge() >= updateTime then path:Compute( self, movePos, costFunctor ) end
+            end
+        end
+
         if loco:IsStuck() then
             -- This prevents the stuck handling from running if we are right next to the entity we are going to            
             if isvector( movePos ) or !self:IsInRange( movePos, 100 ) then 
                 local result = self:HandleStuck()
-                if !result then returnMsg = "stuck" break end
+                if !result then returnMsg = "stuck"; break end
             else
                 loco:ClearStuck()
             end
@@ -130,22 +151,6 @@ function ENT:MoveToPos( pos, options )
         if !curGoal or curGoal.area != goal.area then
             prevGoal = curGoal
             curGoal = goal
-        end
-
-        local update = options.update
-        if update then
-            local updateTime = math_max( update, update * ( path:GetLength() / runSpeed ) )
-            if update > updateTime then 
-                updateTime = update
-            elseif updateTime > 3.0 then
-                updateTime = 3.0
-            end
-            if path:GetAge() >= updateTime then path:Compute( self, movePos, costFunctor ) end
-        end
-
-        if self.l_recomputepath then
-            path:Compute( self, movePos, costFunctor )
-            self.l_recomputepath = nil
         end
 
         if !self:IsDisabled() and CurTime() >= self.l_moveWaitTime then
@@ -258,13 +263,13 @@ function ENT:MoveToPosOFFNAV( pos, options )
     local movePos = ( isvector( pos ) and pos or ( IsValid( pos ) and pos:GetPos() or nil ) )
     if !movePos then return "failed" end
 
+    self.l_issmoving = true
     options = options or {}
 
     local overridePath, overrideOptions = LambdaRunHook( "LambdaOnBeginMove", self, movePos, false, options )
     if overridePath then movePos = overridePath end
     if overrideOptions then options = overrideOptions end
 
-    self.l_issmoving = true
     self.l_movepos = movePos
     self.l_moveoptions = table_Copy( options )
     self.l_CurrentPath = movePos
@@ -284,8 +289,6 @@ function ENT:MoveToPosOFFNAV( pos, options )
     local returnMsg = "ok"
     local loco = self.loco
     local callbackRunT = ( CurTime() + ( options.cbTime or 0 ) )
-
-    LambdaRunHook( "LambdaOnBeginMove", self, movePos, false )
 
     while ( IsValid( self ) ) do 
         if self:GetIsDead() then 
@@ -465,8 +468,7 @@ end
 -- If we are moving while this function is called, recompute our current path or change the goal position and recompute
 function ENT:RecomputePath( pos )
     if !self.l_issmoving then return end
-    self.l_movepos = ( pos or self.l_movepos )
-    self.l_recomputepath = true
+    self.l_recomputepath = ( pos or self.l_movepos )
 end
 
 -- Stops movement from :MoveToPos() and :MoveToPosOFFNAV()
@@ -630,7 +632,7 @@ function ENT:AvoidCheck( goalAng )
     local selfRight = goalAng:Right()
     local selfForward = goalAng:Forward()
 
-    avoidtracetable.start = ( selfPos + vector_up * ( self.loco:GetStepHeight() + 2 ) + selfForward * 30 + selfRight * 12.5 )
+    avoidtracetable.start = ( selfPos + vector_up * ( self.loco:GetStepHeight() + 8 ) + selfForward * 30 + selfRight * 12.5 )
     avoidtracetable.endpos = avoidtracetable.start 
     avoidtracetable.filter = self
 

@@ -112,19 +112,8 @@ AddUActionToLambdaUA( function( self )
     self:SwitchWeapon( "gmod_medkit" )
 end, "HealWithMedkit" )
 
-local allowShots = GetConVar( "lambdaplayers_viewshots_enabled" )
 local shotChance = GetConVar( "lambdaplayers_viewshots_chance" )
 -- Request a view shot
 AddUActionToLambdaUA( function( self )
-    if !allowShots:GetBool() or random( 100 ) > shotChance:GetInt() then return end
-
-    local pvsEnd = ( CurTime() + 0.1 )
-    self:Hook( "SetupPlayerVisibility", "ViewShotPVS", function()
-        AddOriginToPVS( self:GetPos() )
-        if CurTime() >= pvsEnd then return "end" end
-    end )
-
-    net.Start( "lambdaplayers_takeviewshot" )
-        net.WriteEntity( self )
-    net.Broadcast()
+    if random( 100 ) <= shotChance:GetInt() then self:TakeViewShot() end
 end, "RequestViewShot" )

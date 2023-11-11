@@ -1,8 +1,12 @@
 local string = string
 local table = table
 local math = math
+local hook_GetTable = hook.GetTable
+local hook_Add = hook.Add
+local hook_Remove = hook.Remove
 local RandomPairs = RandomPairs
 local LambdaIsValid = LambdaIsValid
+local print = print
 local ipairs = ipairs
 local pairs = pairs
 local CurTime = CurTime
@@ -75,6 +79,7 @@ local spawnBehavInitSpawn = GetConVar( "lambdaplayers_combat_spawnbehavior_initi
 local spawnBehavUseRange = GetConVar( "lambdaplayers_combat_spawnbehavior_usedistance" )
 local ignoreFriendNPCs = GetConVar( "lambdaplayers_combat_ignorefriendlynpcs" )
 local slightDelay = GetConVar( "lambdaplayers_voice_slightdelay" )
+local allowShots = GetConVar( "lambdaplayers_viewshots_enabled" )
 
 ---- Anything Shared can go here ----
 
@@ -88,38 +93,51 @@ end
 -- preserve makes the hook not remove itself when the Entity is considered "dead" by self:GetIsDead(). Mainly used by Respawning
 -- cooldown arg is meant to be used with Tick and Think hooks
 function ENT:Hook( hookname, uniquename, func, preserve, cooldown )
-    local id = self:EntIndex()
-    local curtime = CurTime() + ( cooldown or 0 )
+    cooldown = ( cooldown or 0 )
+    local curTime = ( CurTime() + cooldown )
+    local hookIdent = "lambdaplayershook" .. self:EntIndex() .. "_" .. uniquename
 
     self:DebugPrint( "Created a hook: " .. hookname .. " | " .. uniquename )
-    table_insert( self.l_Hooks, { hookname, "lambdaplayershook" .. id .. "_" .. uniquename, preserve } )
-    hook.Add( hookname, "lambdaplayershook" .. id .. "_" .. uniquename, function( ... )
-        if CurTime() < curtime then return end
-        if preserve and !IsValid( self ) or !preserve and !LambdaIsValid( self ) then hook.Remove( hookname, "lambdaplayershook" .. id .. "_" .. uniquename ) return end 
+    self.l_Hooks[ hookname ] = ( self.l_Hooks[ hookname ] or {} )
+    self.l_Hooks[ hookname ][ uniquename ] = { hookIdent, preserve }
+
+    hook_Add( hookname, hookIdent, function( ... )
+        if CurTime() < curTime then return end
+        if !IsValid( self ) then hook_Remove( hookname, hookIdent ) return end 
+        if !preserve and self:GetIsDead() then self:RemoveHook( hookname, uniquename ) return end 
+
         local result = func( ... )
-        if result == "end" then self:DebugPrint( "Removed a hook: " .. hookname .. " | " .. uniquename ) hook.Remove( hookname, "lambdaplayershook" .. id .. "_" .. uniquename) return end
-        curtime = CurTime() + ( cooldown or 0 )
+        if result == "end" then self:RemoveHook( hookname, uniquename ) return end
+
+        curTime = ( CurTime() + cooldown )
         return result 
     end )
 end
 
 -- Returns if the hook exists
 function ENT:HookExists( hookname, uniquename )
-    local hooks = hook.GetTable()
-    return hooks[ hookname ] != nil and hooks[ hookname ][ uniquename ] != nil
+    local hooks = self.l_Hooks
+    return ( hooks[ hookname ] != nil and hooks[ hookname ][ uniquename ] != nil )
 end
 
 -- Removes a hook created by the function above
 function ENT:RemoveHook( hookname, uniquename )
+    local hooks = self.l_Hooks
+    if hooks[ hookname ] == nil then return end
+
+    local hookTbl = hooks[ hookname ][ uniquename ]
+    if hookTbl == nil then return end
+
     self:DebugPrint( "Removed a hook: " .. hookname .. " | " .. uniquename )
-    for k, v in ipairs( self.l_Hooks ) do if v[ 1 ] == hookname and v[ 2 ] == "lambdaplayershook" .. self:EntIndex() .. "_" .. uniquename then table_remove( self.l_Hooks, k ) end end 
-    hook.Remove( hookname, "lambdaplayershook" .. self:EntIndex() .. "_" .. uniquename )
+    hooks[ hookname ][ uniquename ] = nil
+    hook_Remove( hookname, hookTbl[ 1 ] )
 end
 
 -- Creates a coroutine thread
 function ENT:Thread( func, name, preserve )
     local thread = coroutine.create( func )
     self:DebugPrint( "Created a Thread | " .. name  )
+    
     self:Hook( "Tick", "CoroutineThread_" .. name, function()
         if coroutine.status( thread ) != "dead" then
             local ok, msg = coroutine.resume( thread )
@@ -1473,6 +1491,23 @@ if SERVER then
         self:CancelMovement()
     end
 
+    -- Takes a view screenshot from Lambda's point of view
+    function ENT:TakeViewShot()
+        if !allowShots:GetBool() then return end
+
+        local pvsEnd = ( CurTime() + 0.1 )
+        self:Hook( "SetupPlayerVisibility", "ViewShotPVS", function()
+            AddOriginToPVS( self:GetPos() )
+            if CurTime() >= pvsEnd then return "end" end
+        end, true )
+    
+        net.Start( "lambdaplayers_takeviewshot" )
+            net.WriteEntity( self )
+        net.Broadcast()
+    end
+
+    -- Returns a random position point of a nav area
+    -- Difference from the CNavArea:GetRandomPoint is this one limits the boundaries
     function ENT:GetNavAreaRandomPoint( area )
         local sizeX = ( area:GetSizeX() / 2 )
         if sizeX > 32 then sizeX = ( sizeX - 32 ) end
