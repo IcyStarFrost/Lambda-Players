@@ -229,13 +229,13 @@ end
 
 -- MW2/Halo lives in us forever
 local t_options = { run = true, callback = function( lambda )
-    if lambda:GetState() != "TBaggingPosition" then return false end
+    if !lambda:GetState( "TBaggingPosition" ) then return false end
 end }
 function ENT:TBaggingPosition( pos )
     self:MoveToPos( pos, t_options )
 
-    for i = 1, random( 2, 8 ) do
-        if self:GetState() != "TBaggingPosition" then return end
+    for i = 1, random( 3, 10 ) do
+        if !self:GetState( "TBaggingPosition" ) then return end
 
         self:SetCrouch( true )
         coroutine_wait( 0.2 )
@@ -252,7 +252,7 @@ local retreatOptions = { run = true, callback = function( lambda )
 end }
 function ENT:Retreat()
     local target = self:GetEnemy()
-    if CurTime() > self.l_retreatendtime or IsValid( target ) and ( ( target.IsLambdaPlayer or target:IsPlayer() ) and !target:Alive() or !self:IsInRange( target, 2000 ) ) then 
+    if CurTime() >= self.l_retreatendtime or IsValid( target ) and ( ( target.IsLambdaPlayer or target:IsPlayer() ) and !target:Alive() or !self:IsInRange( target, 2000 ) ) then 
         return true
     end
 
