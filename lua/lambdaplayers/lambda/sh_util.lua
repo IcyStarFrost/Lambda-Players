@@ -787,8 +787,10 @@ if SERVER then
             LambdaSpawnPoints = ( LambdaSpawnPoints or LambdaGetPossibleSpawns() )
             if LambdaSpawnPoints and #LambdaSpawnPoints > 0 then 
                 local rndPoint = LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]
-                spawnPos = rndPoint:GetPos()
-                spawnAng = rndPoint:GetAngles()
+                if IsValid( rndPoint ) then
+                    spawnPos = rndPoint:GetPos()
+                    spawnAng = rndPoint:GetAngles()
+                end
             end
         end
         self:SetPos( spawnPos )
