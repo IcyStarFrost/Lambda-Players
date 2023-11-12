@@ -612,10 +612,8 @@ function ENT:Think()
     -- Allow addons to add stuff to Lambda's Think
     LambdaRunHook( "LambdaOnThink", self, wepent, isDead )
     -- -- -- -- --
-
-    if isDead then return end
     
-    if ( SERVER ) then
+    if ( SERVER and !isDead ) then
 
         local loco = self.loco
         local selfPos = self:GetPos()
@@ -1175,8 +1173,8 @@ function ENT:Think()
         local allowFlashlight = self:CanUseFlashlight()
 
         -- Update our flashlight
-        if curTime >= self.l_lightupdate or !allowFlashlight and self.l_flashlighton then
-            self.l_lightupdate = ( curTime + 1 )
+        if curTime >= self.l_lightupdate or isDead or !allowFlashlight then
+            self.l_lightupdate = ( curTime + 2 )
 
             local isAtLight = ( GetLightColor( selfCenter ):LengthSqr() > 0.0004 )
             local beingDrawn = !self:IsDormant()
@@ -1196,7 +1194,9 @@ function ENT:Think()
                 if !IsValid( flashlight ) then
                     flashlight = ProjectedTexture() 
                     flashlight:SetTexture( "effects/flashlight001" ) 
-                    flashlight:SetFarZ( 600 ) 
+                    flashlight:SetFarZ( 750 ) 
+                    flashlight:SetNearZ( 4 ) 
+                    flashlight:SetFOV( 60 ) 
                     flashlight:SetEnableShadows( false )
                     flashlight:SetPos( selfCenter )
                     flashlight:SetAngles( selfAngles )
