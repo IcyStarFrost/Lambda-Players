@@ -36,55 +36,43 @@ end
 local function InstallMPConVarHandling( PANEL, convar, paneltype, isserverside )
     if paneltype == "Bool" then
         function PANEL:OnChange( val )
-            if !isserverside then
-                if IsSinglePlayer() then
-                    RunConsoleCommand( convar, val and "1" or "0" )
-                end
-            elseif !IsSinglePlayer() then
-                if LocalPlayer():IsSuperAdmin() then
-                    net.Start( "lambdaplayers_updateconvar" )
-                        net.WriteString( convar )
-                        net.WriteString( val and "1" or "0" )
-                    net.SendToServer()
-                else
-                    chat.AddText( "Only Super Admins can change Server-Side settings!" )
-                end
+            if IsSinglePlayer() or !isserverside then
+                RunConsoleCommand( convar, val and "1" or "0" )
+            elseif LocalPlayer():IsSuperAdmin() then
+                net.Start( "lambdaplayers_updateconvar" )
+                    net.WriteString( convar )
+                    net.WriteString( val and "1" or "0" )
+                net.SendToServer()
+            else
+                chat.AddText( "Only Super Admins can change Server-Side settings!" )
             end
         end
     elseif paneltype == "Text" then 
         function PANEL:OnChange()
             local val = self:GetText()
 
-            if !isserverside then
-                if IsSinglePlayer() then
-                    RunConsoleCommand( convar, val )
-                end
-            elseif !IsSinglePlayer() then
-                if LocalPlayer():IsSuperAdmin() then
-                    net.Start( "lambdaplayers_updateconvar" )
-                        net.WriteString( convar )
-                        net.WriteString( val )
-                    net.SendToServer()
-                else
-                    chat.AddText( "Only Super Admins can change Server-Side settings!" )
-                end
+            if IsSinglePlayer() or !isserverside then
+                RunConsoleCommand( convar, val )
+            elseif LocalPlayer():IsSuperAdmin() then
+                net.Start( "lambdaplayers_updateconvar" )
+                    net.WriteString( convar )
+                    net.WriteString( val )
+                net.SendToServer()
+            else
+                chat.AddText( "Only Super Admins can change Server-Side settings!" )
             end
         end
     elseif paneltype == "Slider" then 
         function PANEL:OnValueChanged( val )
-            if !isserverside then
-                if IsSinglePlayer() then
-                    RunConsoleCommand( convar, tostring( val ) )
-                end
-            elseif !IsSinglePlayer() then
-                if LocalPlayer():IsSuperAdmin() then
-                    net.Start( "lambdaplayers_updateconvar" )
-                        net.WriteString( convar )
-                        net.WriteString( tostring( val ) )
-                    net.SendToServer()
-                else
-                    chat.AddText( "Only Super Admins can change Server-Side settings!" )
-                end
+            if IsSinglePlayer() or !isserverside then
+                RunConsoleCommand( convar, tostring( val ) )
+            elseif LocalPlayer():IsSuperAdmin() then
+                net.Start( "lambdaplayers_updateconvar" )
+                    net.WriteString( convar )
+                    net.WriteString( tostring( val ) )
+                net.SendToServer()
+            else
+                chat.AddText( "Only Super Admins can change Server-Side settings!" )
             end
         end
     elseif paneltype == "Color" then 
@@ -93,64 +81,52 @@ local function InstallMPConVarHandling( PANEL, convar, paneltype, isserverside )
             local gvar = self:GetConVarG()
             local bvar = self:GetConVarB()
 
-            if !isserverside then
-                if IsSinglePlayer() then
-                    RunConsoleCommand( rvar, tostring( col.r ) )
-                    RunConsoleCommand( gvar, tostring( col.g ) )
-                    RunConsoleCommand( bvar, tostring( col.b ) )
-                end
-            elseif !IsSinglePlayer() then
-                if LocalPlayer():IsSuperAdmin() then
-                    net.Start( "lambdaplayers_updateconvar" )
-                        net.WriteString( rvar )
-                        net.WriteString( tostring( col.r ) )
-                    net.SendToServer()
+            if IsSinglePlayer() or !isserverside then
+                RunConsoleCommand( rvar, tostring( col.r ) )
+                RunConsoleCommand( gvar, tostring( col.g ) )
+                RunConsoleCommand( bvar, tostring( col.b ) )
+            elseif LocalPlayer():IsSuperAdmin() then
+                net.Start( "lambdaplayers_updateconvar" )
+                    net.WriteString( rvar )
+                    net.WriteString( tostring( col.r ) )
+                net.SendToServer()
 
-                    net.Start( "lambdaplayers_updateconvar" )
-                        net.WriteString( gvar )
-                        net.WriteString( tostring( col.g ) )
-                    net.SendToServer()
+                net.Start( "lambdaplayers_updateconvar" )
+                    net.WriteString( gvar )
+                    net.WriteString( tostring( col.g ) )
+                net.SendToServer()
 
-                    net.Start( "lambdaplayers_updateconvar" )
-                        net.WriteString( bvar )
-                        net.WriteString( tostring( col.b ) )
-                    net.SendToServer()
-                else
-                    chat.AddText( "Only Super Admins can change Server-Side settings!" )
-                end
+                net.Start( "lambdaplayers_updateconvar" )
+                    net.WriteString( bvar )
+                    net.WriteString( tostring( col.b ) )
+                net.SendToServer()
+            else
+                chat.AddText( "Only Super Admins can change Server-Side settings!" )
             end
         end
     elseif paneltype == "Combo" then 
         function PANEL:OnSelect( index, val, data )
-            if !isserverside then
-                if IsSinglePlayer() then
-                    RunConsoleCommand( convar, tostring( data ) )
-                end
-            elseif !IsSinglePlayer() then
-                if LocalPlayer():IsSuperAdmin() then
-                    net.Start( "lambdaplayers_updateconvar" )
-                        net.WriteString( convar )
-                        net.WriteString( tostring( data ) )
-                    net.SendToServer()
-                else
-                    chat.AddText( "Only Super Admins can change Server-Side settings!" )
-                end
+            if IsSinglePlayer() or !isserverside then
+                RunConsoleCommand( convar, tostring( data ) )
+            elseif LocalPlayer():IsSuperAdmin() then
+                net.Start( "lambdaplayers_updateconvar" )
+                    net.WriteString( convar )
+                    net.WriteString( tostring( data ) )
+                net.SendToServer()
+            else
+                chat.AddText( "Only Super Admins can change Server-Side settings!" )
             end
         end
     elseif paneltype == "Button" then 
         function PANEL:DoClick()
-            if !isserverside then
-                if IsSinglePlayer() then
-                    RunConsoleCommand( convar )
-                end
-            elseif !IsSinglePlayer() then
-                if LocalPlayer():IsSuperAdmin() then
-                    net.Start( "lambdaplayers_runconcommand" )
-                        net.WriteString( convar )
-                    net.SendToServer()
-                else
-                    chat.AddText( "Only Super Admins can run Server-Side Console Commands!" )
-                end
+            if IsSinglePlayer() or !isserverside then
+                RunConsoleCommand( convar )
+            elseif LocalPlayer():IsSuperAdmin() then
+                net.Start( "lambdaplayers_runconcommand" )
+                    net.WriteString( convar )
+                net.SendToServer()
+            else
+                chat.AddText( "Only Super Admins can run Server-Side Console Commands!" )
             end
         end
     end
