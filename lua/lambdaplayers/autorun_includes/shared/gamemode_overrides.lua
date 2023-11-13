@@ -13,11 +13,14 @@ if ( CLIENT ) then
     local Clamp = math.Clamp
     local ceil = math.ceil
     local sub = string.sub
-    local overridekillfeed = GetConVar( "lambdaplayers_lambda_overridedeathnoticehook" )
     local RoundedBox = draw.RoundedBox
     local SimpleText = draw.SimpleText
     local player_GetAll = player.GetAll
 
+    local overridekillfeed = GetConVar( "lambdaplayers_lambda_overridedeathnoticehook" )
+    local voicepopupx = GetConVar( "lambdaplayers_voice_voicepopupoffset_x" )
+    local voicepopupy = GetConVar( "lambdaplayers_voice_voicepopupoffset_y" )
+    
     local scoreBoardClr1 = Color( 93, 93, 93 )
     local scoreBoardClr2 = Color( 0, 0, 0, 200 )
     local statusClr_Connecting = Color( 200, 200, 200, 200 )
@@ -85,7 +88,9 @@ if ( CLIENT ) then
                 if !ply.IsLambdaPlayer then
                     self.Avatar:SetPlayer( ply )
                 else
-                    self.LambdaAvatar:SetMaterial( ply:GetPFPMat() )
+                    local pfpMat = ply:GetPFPMat()
+                    self.LastLambdaPfp = pfpMat
+                    self.LambdaAvatar:SetMaterial( pfpMat )
                     self.LambdaAvatar:Show()
                 end
                 
@@ -98,6 +103,14 @@ if ( CLIENT ) then
                     self:SetZPos( 9999 ) -- Causes a rebuild
                     self:Remove()
                     return
+                end
+
+                if ply.IsLambdaPlayer then
+                    local pfpMat = ply:GetPFPMat()
+                    if pfpMat != self.LastLambdaPfp then
+                        self.LambdaAvatar:SetMaterial( pfpMat )
+                        self.LastLambdaPfp = pfpMat
+                    end
                 end
 
                 if self.PName == nil or self.PName != ply:Nick() then
@@ -233,7 +246,13 @@ if ( CLIENT ) then
 
         local PANEL = {}
         local PlayerVoicePanels = {}
-        
+        local BaseTeams = {
+            [ TEAM_CONNECTING ] = true,
+            [ TEAM_UNASSIGNED ] = true,
+            [ TEAM_SPECTATOR ] = true
+        }
+        local PopupBoxColor = Color( 0, 255, 0, 240 )
+
         function PANEL:Init()
             self.LabelName = vgui.Create( "DLabel", self )
             self.LabelName:SetFont( "GModNotify" )
@@ -263,14 +282,29 @@ if ( CLIENT ) then
             self.Avatar:SetSize( 32, 32 )
             self.Avatar:Dock( LEFT )
 
-            self.Color = team.GetColor( ply:IsPlayer() and ply:Team() or 0 )
+            self.Team = ply:Team()
+            self.Color = team.GetColor( self.Team )
+
             self:InvalidateLayout()
         end
 
         function PANEL:Paint( w, h )
             local ply = self.ply
             if !IsValid( ply ) then return end
-            RoundedBox( 4, 0, 0, w, h, Color( 0, ply:VoiceVolume() * 255, 0, 240 ) )
+
+            local plyVol = ply:VoiceVolume()
+            if !BaseTeams[ self.Team ] then
+                local teamClr = self.Color
+                PopupBoxColor.r = ( teamClr.r * plyVol )
+                PopupBoxColor.g = ( teamClr.g * plyVol )
+                PopupBoxColor.b = ( teamClr.b * plyVol )
+            else
+                PopupBoxColor.r = 0
+                PopupBoxColor.g = ( 255 * plyVol )
+                PopupBoxColor.b = 0
+            end
+
+            RoundedBox( 4, 0, 0, w, h, PopupBoxColor )
         end
 
         function PANEL:Think()
@@ -336,7 +370,7 @@ if ( CLIENT ) then
         local function CreateVoiceVGUI()
             g_VoicePanelList = vgui.Create( "DPanel" )
             g_VoicePanelList:ParentToHUD()
-            g_VoicePanelList:SetPos( ScrW() - 300, 100 )
+            g_VoicePanelList:SetPos( ScrW() - 300 + voicepopupx:GetInt(), 100 + voicepopupy:GetInt() )
             g_VoicePanelList:SetSize( 250, ScrH() - 200 )
             g_VoicePanelList:SetPaintBackground( false )
         end

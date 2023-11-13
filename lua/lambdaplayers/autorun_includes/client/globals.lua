@@ -4,17 +4,19 @@ local null_vector = Vector(0, 0, 0)
 local color_white_vector = Vector(1, 1, 1)
 local random = math.random
 local Vector = Vector
+local CurTime = CurTime
 local LerpVector = LerpVector
 local VectorRand = VectorRand
 local table_insert = table.insert
 local table_remove = table.remove
 
+_LAMBDAPLAYERS_VoiceChannels = {}
+_LAMBDAPLAYERS_VoicePopups = {}
 _LAMBDAPLAYERS_ClientSideEnts = {}
-_LAMBDAPLAYERS_Voicechannels = {}
 _LAMBDAPLAYERS_ClientSideRagdolls = {}
 
 -- Physgun color proxy
-matproxy.Add({
+matproxy.Add( {
     name = "LambdaPlayerWeaponColor",
     init = function( self, mat, values )
         self.ResultTo = values.resultvar
@@ -36,7 +38,7 @@ matproxy.Add({
         local mul = ( (1 + sin( CurTime() * 5 ) ) * 0.5 )
         mat:SetVector( self.ResultTo, ( col + col * mul ) )
     end
-})
+} )
 
 local EntMeta = FindMetaTable("Entity")
 local downvector = Vector( 0, 0, -100 )

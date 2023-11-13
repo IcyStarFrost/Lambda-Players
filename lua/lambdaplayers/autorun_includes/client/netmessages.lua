@@ -37,9 +37,11 @@ local globalvoice = GetConVar(  "lambdaplayers_voice_globalvoice" )
 local stereowarn = GetConVar( "lambdaplayers_voice_warnvoicestereo" )
 local voicevolume = GetConVar( "lambdaplayers_voice_voicevolume" )
 local voicedistance = GetConVar( "lambdaplayers_voice_voicedistance" )
-local usegmodpopups = GetConVar( "lambdaplayers_voice_usegmodvoicepopups" )
 local removeCorpse = GetConVar( "lambdaplayers_removecorpseonrespawn" )
 local dropWeapon = GetConVar( "lambdaplayers_dropweaponondeath" )
+local voicePopupClrR = GetConVar( "lambdaplayers_voice_voicepopupcolor_r" )
+local voicePopupClrG = GetConVar( "lambdaplayers_voice_voicepopupcolor_g" )
+local voicePopupClrB = GetConVar( "lambdaplayers_voice_voicepopupcolor_b" )
 
 net.Receive( "lambdaplayers_serversideragdollplycolor", function()
     local ragdoll = net.ReadEntity()
@@ -150,14 +152,112 @@ end )
 -- Voice icons, voice positioning, all that stuff will be handled in here.
 
 local Material = Material
+local team_GetColor = team.GetColor
+local Color = Color
 local voiceicon = Material( "voice/icntlk_pl" )
 local iconOffset = Vector( 0, 0, 80 )
-local lastGmodPopupValue = usegmodpopups:GetBool()
+local baseTeams = {
+    [ TEAM_CONNECTING ] = true,
+    [ TEAM_UNASSIGNED ] = true,
+    [ TEAM_SPECTATOR ] = true
+}
 
-_LambdaVoiceChatChannels = {}
+_LAMBDAPLAYERS_VoiceChannels = {}
+
+local function PlaySoundFile( ent, soundName, index, origin, delay, is3d )
+    if !IsValid( ent ) then return end
+
+    local talkLimit = speaklimit:GetInt()
+    if talkLimit > 0 and table_Count( _LAMBDAPLAYERS_VoiceChannels ) >= talkLimit then return end
+
+    local sndData = _LAMBDAPLAYERS_VoiceChannels[ ent ]
+    if sndData then
+        local prevSnd = sndData.Sound
+        if IsValid( prevSnd ) then prevSnd:Stop() end
+    end
+    if LambdaRunHook( "LambdaOnPlaySound", ent, soundName ) == true then return end
+
+    sound_PlayFile( "sound/" .. soundName, "noplay" .. ( is3d and "3d" or "" ), function( snd, errorId, errorName )
+        if errorId == 21 then
+            if stereowarn:GetBool() then print( "Lambda Players Voice Chat Warning: Sound file " ..soundName .. " has a stereo track and won't be played in 3d. Sound will continue to play. You can disable these warnings in Lambda Player>Utilities" ) end
+            PlaySoundFile( ent, soundName, index, origin, delay, false )
+            return
+        elseif !IsValid( snd ) then
+            print( "Lambda Players Voice Chat Error: Sound file " .. soundName .. " failed to open!\nError Index: " .. errorName .. "#" .. errorId )
+            return
+        end
+
+        local sndLength = snd:GetLength()
+        if sndLength <= 0 or !IsValid( ent ) then
+            snd:Stop()
+            snd = nil
+            return
+        end
+
+        local playTime = ( RealTime() + delay )
+        sndData = _LAMBDAPLAYERS_VoiceChannels[ ent ]
+        if sndData then
+            local prevSnd = sndData.Sound
+            if IsValid( prevSnd ) then prevSnd:Stop() end
+
+            sndData.Sound = snd
+            sndData.LastSndPos = origin
+            sndData.Is3D = is3d
+            sndData.PlayTime = playTime
+        else
+            _LAMBDAPLAYERS_VoiceChannels[ ent ] = {
+                Sound = snd,
+                LastSrcEnt = ent,
+                LastSndPos = origin,
+                Is3D = is3d,
+                PlayTime = playTime,
+                MouthMoveData = { 0, 0, RealTime() },
+
+                LastPlayTime = 0,
+                AlphaRatio = 0,
+                FirstDisplayTime = 0,
+                VoiceVolume = 0
+            }
+        end
+
+        local playRate = ( ent:GetVoicePitch() / 100 )
+        snd:SetPlaybackRate( playRate )
+        snd:Set3DFadeDistance( voicedistance:GetInt(), 0 )
+
+        net.Start( "lambdaplayers_server_sendsoundduration" )
+            net.WriteEntity( ent )
+            net.WriteFloat( ( sndLength / playRate ) + delay )
+        net.SendToServer()
+
+        local lambdaTeam, popupClr = ent:Team()
+        if !baseTeams[ lambdaTeam ] then
+            popupClr = team_GetColor( lambdaTeam )
+        else
+            popupClr = Color( voicePopupClrR:GetInt(), voicePopupClrG:GetInt(), voicePopupClrB:GetInt() )
+        end
+
+        local sndPopup = _LAMBDAPLAYERS_VoicePopups[ ent ]
+        if sndPopup then
+            sndPopup.Sound = snd
+            sndPopup.Color = popupClr
+        else
+            _LAMBDAPLAYERS_VoicePopups[ ent ] = {
+                Sound = snd,
+                VoiceVolume = 0,
+                Nick = ent:GetLambdaName(),
+                ProfilePicture = ent:GetPFPMat(),
+                AlphaRatio = 0,
+                PlayTime = playTime,
+                LastPlayTime = 0,
+                FirstDisplayTime = 0,
+                Color = popupClr
+            }
+        end
+    end )
+end
 
 hook.Add( "PreDrawEffects", "lambdavc_voiceicons", function()
-    for _, sndData in pairs( _LambdaVoiceChatChannels ) do
+    for _, sndData in pairs( _LAMBDAPLAYERS_VoiceChannels ) do
         if sndData.PlayTime then continue end
 
         local ang = EyeAngles()
@@ -178,9 +278,8 @@ hook.Add( "Tick", "lambdavc_updatesounds", function()
     local isGlobal = globalvoice:GetBool()
     local curPos = EyePos()
     local curTime = RealTime()
-    local gmodPopups = usegmodpopups:GetBool()
 
-    for ent, sndData in pairs( _LambdaVoiceChatChannels ) do
+    for ent, sndData in pairs( _LAMBDAPLAYERS_VoiceChannels ) do
         local snd = sndData.Sound
         local lastSrcEnt = sndData.LastSrcEnt
         local playTime = sndData.PlayTime
@@ -188,12 +287,9 @@ hook.Add( "Tick", "lambdavc_updatesounds", function()
         if !IsValid( ent ) or !IsValid( snd ) or !playTime and snd:GetState() == GMOD_CHANNEL_STOPPED then
             if IsValid( snd ) then snd:Stop() end
             if IsValid( lastSrcEnt ) then lastSrcEnt:LambdaMoveMouth( 0 ) end
-            if IsValid( ent ) then 
-                ent:SetVoiceLevel( 0 )
-                hook_Run( "PlayerEndVoice", ent ) 
-            end
+            if IsValid( ent ) then ent:SetVoiceLevel( 0 ) end
             
-            _LambdaVoiceChatChannels[ ent ] = nil
+            _LAMBDAPLAYERS_VoiceChannels[ ent ] = nil
             continue
         end
 
@@ -252,93 +348,8 @@ hook.Add( "Tick", "lambdavc_updatesounds", function()
             sndData.PlayTime = false
             snd:Play()
         end
-
-        if lastGmodPopupValue != gmodPopups then
-            lastGmodPopupValue = gmodPopups
-            hook_Run( "Player" .. ( gmodPopups and "Start" or "End" ) .. "Voice", ent ) 
-        end
     end
 end )
-
-local function PlaySoundFile( ent, soundName, index, origin, delay, is3d )
-    if !IsValid( ent ) then return end
-
-    local talkLimit = speaklimit:GetInt()
-    if talkLimit > 0 and table_Count( _LambdaVoiceChatChannels ) >= talkLimit then return end
-
-    local sndData = _LambdaVoiceChatChannels[ ent ]
-    if sndData then
-        local prevSnd = sndData.Sound
-        if IsValid( prevSnd ) then prevSnd:Stop() end
-    end
-
-    sound_PlayFile( "sound/" .. soundName, "noplay" .. ( is3d and "3d" or "" ), function( snd, errorId, errorName )
-        if errorId == 21 then
-            if stereowarn:GetBool() then print( "Lambda Players Voice Chat Warning: Sound file " ..soundName .. " has a stereo track and won't be played in 3d. Sound will continue to play. You can disable these warnings in Lambda Player>Utilities" ) end
-            PlaySoundFile( ent, soundName, index, origin, delay, false )
-            return
-        elseif !IsValid( snd ) then
-            print( "Lambda Players Voice Chat Error: Sound file " .. soundName .. " failed to open!\nError Index: " .. errorName .. "#" .. errorId )
-            return
-        end
-
-        local sndLength = snd:GetLength()
-        if sndLength <= 0 or !IsValid( ent ) then
-            snd:Stop()
-            snd = nil
-            return
-        end
-
-        sndData = _LambdaVoiceChatChannels[ ent ]
-        if sndData then
-            local prevSnd = sndData.Sound
-            if IsValid( prevSnd ) then prevSnd:Stop() end
-
-            sndData.Sound = snd
-            sndData.LastSndPos = origin
-            sndData.Is3D = is3d
-            sndData.PlayTime = ( RealTime() + delay )
-        else
-            _LambdaVoiceChatChannels[ ent ] = {
-                Sound = snd,
-                LastSrcEnt = ent,
-                LastSndPos = origin,
-                Is3D = is3d,
-                PlayTime = ( RealTime() + delay ),
-                MouthMoveData = { 0, 0, RealTime() }
-            }
-        end
-
-        local playRate = ( ent:GetVoicePitch() / 100 )
-        snd:SetPlaybackRate( playRate )
-        snd:Set3DFadeDistance( voicedistance:GetInt(), 0 )
-
-        net.Start( "lambdaplayers_server_sendsoundduration" )
-            net.WriteEntity( ent )
-            net.WriteFloat( ( sndLength / playRate ) + delay )
-        net.SendToServer()
-
-        local lambdaPopupIndex = ( #_LAMBDAPLAYERS_Voicechannels + 1 )
-        local entIndex = ent:EntIndex()
-        for k, v in ipairs( _LAMBDAPLAYERS_Voicechannels ) do
-            if v[ 5 ] != entIndex then continue end
-            popupReplaced = true
-            lambdaPopupIndex = k
-            break
-        end
-        _LAMBDAPLAYERS_Voicechannels[ lambdaPopupIndex ] = {
-            snd, 
-            ent:GetLambdaName(), 
-            ent:GetPFPMat(), 
-            sndLength, 
-            entIndex
-        }
-
-        if usegmodpopups:GetBool() then
-            hook_Run( "PlayerStartVoice", ent )
-        end
-    end )
-end
 
 net.Receive( "lambdaplayers_updatedata", function()
     LambdaPlayerNames = LAMBDAFS:GetNameTable()
@@ -366,7 +377,7 @@ net.Receive( "lambdaplayers_stopcurrentsound", function()
     local ent = net.ReadEntity()
     if !IsValid( ent ) then return end
     
-    local sndData = _LambdaVoiceChatChannels[ ent ]
+    local sndData = _LAMBDAPLAYERS_VoiceChannels[ ent ]
     if !sndData then return end
 
     local snd = sndData.Sound
@@ -413,7 +424,7 @@ net.Receive( "lambdaplayers_updatecsstatus", function()
     SafelySetNetworkVar( lambda, "Frags", net.ReadInt( 11 ) )
     SafelySetNetworkVar( lambda, "Deaths", net.ReadInt( 11 ) )
 
-    local sndData = _LambdaVoiceChatChannels[ lambda ]
+    local sndData = _LAMBDAPLAYERS_VoiceChannels[ lambda ]
     if sndData then sndData.LastSndPos = net.ReadVector() end
 end )
 

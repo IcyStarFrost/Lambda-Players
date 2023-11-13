@@ -46,6 +46,7 @@ local string_Replace = string.Replace
 local string_Explode = string.Explode
 local string_match = string.match
 local table_insert = table.insert
+local StartsWith = string.StartsWith
 local isfunction = isfunction
 local isentity = isentity
 local tostring = tostring
@@ -80,6 +81,10 @@ local spawnBehavUseRange = GetConVar( "lambdaplayers_combat_spawnbehavior_usedis
 local ignoreFriendNPCs = GetConVar( "lambdaplayers_combat_ignorefriendlynpcs" )
 local slightDelay = GetConVar( "lambdaplayers_voice_slightdelay" )
 local allowShots = GetConVar( "lambdaplayers_viewshots_enabled" )
+local changePlyMdlChance = GetConVar( "lambdaplayers_lambda_switchplymdlondeath" )
+local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
+local onlyaddonmodels = GetConVar( "lambdaplayers_lambda_onlyaddonmodels" ) 
+local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
 
 ---- Anything Shared can go here ----
 
@@ -777,6 +782,41 @@ if SERVER then
         return self:GetNW2String( "lambda_weaponprettyname", "UNAVAILABLE" )
     end
 
+    function ENT:SetPlayerModel( mdl, noBodygroups )
+        local forceMdl = LambdaRunHook( "LambdaOnSetPlayerModel", self, mdl )
+        if forceMdl != nil then
+            if forceMdl == true then return end
+            mdl = forceMdl
+        end
+
+        if !mdl then
+            local mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels
+            if allowaddonmodels:GetBool() then
+                mdlTbl = ( onlyaddonmodels:GetBool() and _LAMBDAPLAYERS_AddonPlayermodels or _LAMBDAPLAYERS_AllPlayermodels )
+                if #mdlTbl == 0 then mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels end
+            end
+            mdl = mdlTbl[ random( #mdlTbl ) ]
+        elseif istable( mdl ) then
+            mdl = mdl[ random( #mdl ) ]
+        end
+        self:SetModel( mdl )
+
+        if !noBodygroups and rndBodyGroups:GetBool() then
+            for _, v in ipairs( self:GetBodyGroups() ) do
+                local subMdls = #v.submodels
+                if subMdls == 0 then continue end 
+                self:SetBodygroup( v.id, random( 0, subMdls ) )
+            end
+
+            local skinCount = self:SkinCount()
+            if skinCount > 0 then self:SetSkin( random( 0, skinCount - 1 ) ) end
+        end
+
+        if StartsWith( self:GetProfilePicture(), "spawnicons/" ) then
+            self:SetProfilePicture( "spawnicons/".. string_sub( mdl, 1, #mdl - 4 ).. ".png" )
+        end
+    end
+
     -- Respawns the Lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time
     function ENT:LambdaRespawn()
         self:DebugPrint( "Respawned" )
@@ -802,6 +842,13 @@ if SERVER then
 
         local phys = self:GetPhysicsObject()
         if IsValid( phys ) then phys:EnableCollisions( true ) end
+
+        if !self.l_usingaprofile then
+            local rndSwitchMdl = changePlyMdlChance:GetInt()
+            if rndSwitchMdl > 0 and random( 100 ) <= rndSwitchMdl then
+                self:SetPlayerModel()
+            end
+        end
 
         self:ClientSideNoDraw( self, false )
         self:SetNoDraw( false )
