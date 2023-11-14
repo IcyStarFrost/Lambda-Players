@@ -105,11 +105,9 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cacheplayermodels", function( ply
 end, false, "WARNING: Your game will freeze for a few seconds. This will vary on the amount of playermodels you have installed.", { name = "Cache Playermodels", category = "Utilities" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_debugtogglegod", function( ply ) 
-
     if IsValid( ply ) and !ply:IsAdmin() then return end
     ply.l_godmode = !ply.l_godmode
-    LambdaPlayers_ChatAdd( ply, ( ply.l_godmode and "Enabled" or "Disabled" ) .. " the God Mode for themself" )
-
+    LambdaPlayers_ChatAdd( ply, ( ply.l_godmode and "Enabled" or "Disabled" ) .. " the God Mode" )
 end, false, "Toggles God Mode, preventing any further damage to you", { name = "Toggle God Mode", category = "Debugging" } )
 
 local dispClrR, dispClrG, dispClrB

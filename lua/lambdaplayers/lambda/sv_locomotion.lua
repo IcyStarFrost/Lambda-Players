@@ -721,7 +721,7 @@ function ENT:PathGenerator( canUpdate, isLambdaCheck )
     local thirdHealth = ( self:Health() * 0.75 )
     local obeyNavmesh = obeynav:GetBool()
     local isInNoClip = self:IsInNoClip()
-    local isAttacking = ( self:InCombat() and self:GetIsFiring() )
+    local isAttacking = ( !self.l_HasMelee and self:InCombat() and self:GetIsFiring() )
 
     local retreatTargArea, retreatTargPos
     if self:IsPanicking() and IsValid( self:GetEnemy() ) then
@@ -742,8 +742,9 @@ function ENT:PathGenerator( canUpdate, isLambdaCheck )
 
         local dist = 0
         if !isInNoClip and IsValid( ladder ) then
-            dist = ( CNavLadder_GetLength( ladder ) * ladderPenalty )
+            dist = CNavLadder_GetLength( ladder )
             if isLambdaCheck then dist = ( dist * dist ) end
+            dist = ( dist * ladderPenalty )
         elseif length > 0 then
             dist = length
         elseif isLambdaCheck then

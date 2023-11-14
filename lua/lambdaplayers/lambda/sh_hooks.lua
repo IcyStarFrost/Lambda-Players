@@ -32,7 +32,7 @@ local cleanupondeath = GetConVar( "lambdaplayers_building_cleanupondeath" )
 local flashlightsprite = Material( "sprites/light_glow02_add" )
 local flashlightbeam = Material( "effects/lamp_beam" )
 local aidisabled = GetConVar( "ai_disabled" )
-local faded = Color( 100, 100, 100, 100 )
+local faded = Color( 80, 80, 80, 80 )
 local serversideragdolls = GetConVar( "lambdaplayers_lambda_serversideragdolls" )
 local dropweaponents = GetConVar( "lambdaplayers_allowweaponentdrop" )
 local typeNameRespond = GetConVar( "lambdaplayers_text_typenameonrespond" )
@@ -1009,13 +1009,14 @@ function ENT:InitializeMiniHooks()
             if !self.l_flashlighton or self:GetIsDead() or self:IsDormant() then return end
 
             local handPos = self:GetAttachmentPoint( "hand" ).Pos
-            local eyeFwd = self:GetAimVector()
-            
-            local start = handPos + eyeFwd * 3
+            local finPos = self:GetEyeTrace().HitPos
+            local eyeFwd = ( finPos - handPos ):GetNormalized()
+
+            local start = ( handPos + eyeFwd * 3 )
             SetMaterial( flashlightsprite )
             DrawSprite( start, 4, 4, color_white )
             
-            local endpos = handPos + eyeFwd * 150
+            local endpos = ( handPos + eyeFwd * 150 )
             SetMaterial( flashlightbeam )
             DrawBeam( start, endpos, 40, 0, 0.9, faded )
         end, true )

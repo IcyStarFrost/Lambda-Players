@@ -10,6 +10,8 @@ local Left = string.Left
 local match = string.match
 local gmatch = string.gmatch
 local RunString = RunString
+local ScrW = ScrW
+local ScrH = ScrH
 local IsValidRagdoll = util.IsValidRagdoll
 local invisClr = Color( 0, 0, 0, 0 )
 
@@ -240,77 +242,112 @@ elseif CLIENT then
         end )
     end
 
-
-    -- Zeta's old voice pop up
---[[     local function LegacyVoicePopUp( x, y, name, icon, volume, alpha )
-        if #name > 17 then name = Left( name, 17 ) .. "..." end
-
-        local popupColor = Color(0, 255 * volume, 0, alpha )
-        draw.RoundedBox(4, x, y, 230, 50, popupColor)
-        surface.SetDrawColor( Color(255, 255, 255, alpha ) )
-        surface.SetMaterial( icon )
-        surface.DrawTexturedRect(x + 5, y + 9, 32, 32)
-        draw.DrawText( name, "lambdaplayers_voicepopuptext", x + 40, y + 12, Color( 255, 255, 255, alpha ), TEXT_ALIGN_LEFT )
-    end ]]
-
-    local draw_RoundedBox = draw.RoundedBox
+    local table_Empty = table.Empty
+    local max = math.max
+    local ispanel = ispanel
+    local surface_SetFont = surface.SetFont
+    local surface_GetTextSize = surface.GetTextSize
     local surface_SetDrawColor = surface.SetDrawColor
     local surface_SetMaterial = surface.SetMaterial
-    local surface_DrawTexturedRect = surface.DrawTexturedRect
-    local draw_DrawText = draw.DrawText
+    local DrawTexturedRect = surface.DrawTexturedRect
+    local sub = string.sub
+    local SortedPairsByMemberValue = SortedPairsByMemberValue
     local allowpopups = GetConVar( "lambdaplayers_voice_voicepopups" )
-    local voicepopupx = GetConVar( "lambdaplayers_voice_voicepopupxpos" )
-    local voicepopupy = GetConVar( "lambdaplayers_voice_voicepopupypos" )
-    local usegmodpopups = GetConVar( "lambdaplayers_voice_usegmodvoicepopups" )
+    local voicepopupx = GetConVar( "lambdaplayers_voice_voicepopupoffset_x" )
+    local voicepopupy = GetConVar( "lambdaplayers_voice_voicepopupoffset_y" )
 
-    -- Lambda's newer and accurate Voice Pop up
-    local function LambdaVoicePopUp( x, y, name, icon, volume, alpha )
-        if #name > 20 + uiscale:GetFloat() then name = Left( name, 20 + uiscale:GetFloat() ) .. "..." end
-        
-        local popupColor = Color(0, 255 * volume, 0, alpha )
-        draw_RoundedBox(4, x - 24, y, LambdaScreenScale( 83.5 + uiscale:GetFloat() ), LambdaScreenScale( 13.5 + uiscale:GetFloat() ), popupColor)
-        surface_SetDrawColor( Color(255, 255, 255, alpha ) )
-        surface_SetMaterial( icon )
-        surface_DrawTexturedRect(x - 19, y + 5, LambdaScreenScale( 11 + uiscale:GetFloat() ), LambdaScreenScale( 11 + uiscale:GetFloat() ))
-        draw_DrawText( name, "lambdaplayers_voicepopuptext", x + LambdaScreenScale( 9 + uiscale:GetFloat() ), y + 10, Color( 255, 255, 255, alpha ), TEXT_ALIGN_LEFT )
-    end
-
+    local popupBaseColor = Color( 255, 255, 255, 255 )
+    local popupVolColor = Color( 0, 255, 0, 240 )
+    local drawPopupIndexes = {}
 
     -- This handles the rendering of the Voice Popups to the right side 
-    hook.Add( "HUDPaint", "lambdaplayervoicepopup", function()
-        if !allowpopups:GetBool() or usegmodpopups:GetBool() then return end
+    hook.Add( "HUDPaint", "LambdaPlayers_DrawVoicePopups", function()
+        if !allowpopups:GetBool() then return end
 
-        for k, v in ipairs( _LAMBDAPLAYERS_Voicechannels ) do
-            local w, h = ScrW(), ScrH()
-            local x, y = ( w - voicepopupx:GetInt() ), ( h - voicepopupy:GetInt() )
-            y = y + ( k*-LambdaScreenScale( 17 + uiscale:GetFloat() ) )
+        local realTime = RealTime()
+        local timeOffset = 0
+        local canDrawSomething = false
+        table_Empty( drawPopupIndexes )
 
-            v[ "alpha" ] = v[ "alpha" ] or 245
-
-            local volume = 0
-            local invalid = false
-            local snd = v[ 1 ]
-            local name, icon, length = v[ 2 ], v[ 3 ], RealTime() + v[ 4 ]
-            if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then
-                invalid = true
-            else 
-                local l, r = snd:GetLevel()
-                volume = l + r
+        for lambda, vcData in SortedPairsByMemberValue( _LAMBDAPLAYERS_VoicePopups, "FirstDisplayTime" ) do
+            local playTime = vcData.PlayTime
+            if playTime then
+                if realTime >= playTime then
+                    vcData.PlayTime = false
+                else
+                    continue
+                end
             end
-
-            if RealTime() > length or invalid then
-                v[ "alpha" ] = v[ "alpha" ] - 1
+            
+            local sndVol = 0
+            local snd = vcData.Sound
+            local lastPlayTime = vcData.LastPlayTime
+            if IsValid( snd ) and snd:GetState() == GMOD_CHANNEL_PLAYING then
+                local leftChan, rightChan = snd:GetLevel()
+                sndVol = ( ( leftChan + rightChan ) * 0.5 )
+    
+                vcData.LastPlayTime = realTime
+                if vcData.FirstDisplayTime == 0 then
+                    vcData.FirstDisplayTime = ( realTime + timeOffset )
+                    timeOffset = ( timeOffset + 0.1 )
+                end 
             end
+            vcData.VoiceVolume = sndVol
 
-            if v[ "alpha" ] <= 0 then
-                table_remove( _LAMBDAPLAYERS_Voicechannels, k )
-            else
-
-                LambdaVoicePopUp( x, y, name, icon, volume, v[ "alpha" ] ) -- Call the voice pop up function
-
+            local drawAlpha = max( 0, 1 - ( ( realTime - vcData.LastPlayTime ) / 2 ) )
+            if !IsValid( snd ) and drawAlpha == 0 then 
+                _LAMBDAPLAYERS_VoicePopups[ lambda ] = nil
+                continue 
             end
+    
+            vcData.AlphaRatio = drawAlpha
+            if drawAlpha == 0 then
+                vcData.FirstDisplayTime = 0
+                continue 
+            end
+    
+            canDrawSomething = true
+            drawPopupIndexes[ lambda ] = vcData
+        end
+
+        if !canDrawSomething then return end
+        local drawX, drawY = ( ScrW() - 298 + voicepopupx:GetInt() ), ( ScrH() - 142 + voicepopupy:GetInt() )
+    
+        local plyPopups = g_VoicePanelList
+        if ispanel( plyPopups ) then drawY = ( drawY - ( 44 * #plyPopups:GetChildren() ) ) end
+
+        local popupIndex = 0
+        surface_SetFont( "GModNotify" )
+
+        for lambda, vcData in SortedPairsByMemberValue( drawPopupIndexes, "FirstDisplayTime" ) do
+            local drawAlpha = vcData.AlphaRatio
+            popupBaseColor.a = ( drawAlpha * 255 )
+    
+            local vol = ( vcData.VoiceVolume * drawAlpha )
+            local vcClr = vcData.Color
+            popupVolColor.r = ( vol * vcClr.r )
+            popupVolColor.g = ( vol * vcClr.g )
+            popupVolColor.b = ( vol * vcClr.b )
+
+            popupVolColor.a = ( drawAlpha * 240 )
+            draw.RoundedBox( 4, drawX, drawY, 246, 40, popupVolColor )
+            
+            surface_SetDrawColor( popupBaseColor )
+            surface_SetMaterial( vcData.ProfilePicture )
+            DrawTexturedRect( drawX + 4, drawY + 4, 32, 32 )
+    
+            local nickname = vcData.Nick
+            local textWidth = surface_GetTextSize( nickname )
+            if textWidth > 200 then
+                nickname = sub( nickname, 0, ( ( #nickname * ( 202.5 / textWidth ) ) - 3 ) ) .. "..."
+            end
+            DrawText( nickname, "GModNotify", drawX + 43.5, drawY + 9, popupBaseColor, TEXT_ALIGN_LEFT )
+
+            drawY = ( drawY - 44 )
+            popupIndex = ( popupIndex + 1 )
         end
     end )
+
 
     -- Removes ragdolls that are were created while not drawn in clientside
     hook.Add( "PreCleanupMap", "LambdaPlayers_OnPreCleanupMap", function()

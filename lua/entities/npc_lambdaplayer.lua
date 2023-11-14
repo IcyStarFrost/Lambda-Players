@@ -256,7 +256,7 @@ function ENT:Initialize()
 
         -- Personal Stats --
         self:SetLambdaName( self:GetOpenName() )
-        self:SetProfilePicture( #Lambdaprofilepictures > 0 and Lambdaprofilepictures[ random( #Lambdaprofilepictures ) ] or "spawnicons/".. sub( self:GetModel(), 1, #self:GetModel() - 4 ).. ".png" )
+        self:SetProfilePicture( #Lambdaprofilepictures > 0 and Lambdaprofilepictures[ random( #Lambdaprofilepictures ) ] or "spawnicons/".. sub( spawnMdl, 1, #spawnMdl - 4 ).. ".png" )
 
         self:SetMaxHealth( maxHealth:GetInt() )
         self:SetNWMaxHealth( maxHealth:GetInt() )
@@ -303,7 +303,7 @@ function ENT:Initialize()
         self:SetTextChance( random( 100 ) )
         self:SetVoicePitch( random( voicepitchmin:GetInt(), voicepitchmax:GetInt() ) )
 
-        local modelVP = LambdaModelVoiceProfiles[ lower( self:GetModel() ) ]
+        local modelVP = LambdaModelVoiceProfiles[ lower( spawnMdl ) ]
         if modelVP then 
             self.l_VoiceProfile = modelVP
         else
@@ -612,10 +612,8 @@ function ENT:Think()
     -- Allow addons to add stuff to Lambda's Think
     LambdaRunHook( "LambdaOnThink", self, wepent, isDead )
     -- -- -- -- --
-
-    if isDead then return end
     
-    if ( SERVER ) then
+    if ( SERVER and !isDead ) then
 
         local loco = self.loco
         local selfPos = self:GetPos()
@@ -739,7 +737,7 @@ function ENT:Think()
                     end
                 end
 
-                if jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.8 ) and random( isPanicking and 25 or 35 ) == 1 then
+                if !isCrouched and jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.8 ) and random( isPanicking and 25 or 35 ) == 1 then
                     combatjumptbl.start = self:GetPos()
                     combatjumptbl.endpos = ( combatjumptbl.start + locoVel )
                     combatjumptbl.filter = self
@@ -1175,8 +1173,8 @@ function ENT:Think()
         local allowFlashlight = self:CanUseFlashlight()
 
         -- Update our flashlight
-        if curTime >= self.l_lightupdate or !allowFlashlight and self.l_flashlighton then
-            self.l_lightupdate = ( curTime + 1 )
+        if curTime >= self.l_lightupdate or isDead or !allowFlashlight then
+            self.l_lightupdate = ( curTime + 2 )
 
             local isAtLight = ( GetLightColor( selfCenter ):LengthSqr() > 0.0004 )
             local beingDrawn = !self:IsDormant()
@@ -1196,7 +1194,9 @@ function ENT:Think()
                 if !IsValid( flashlight ) then
                     flashlight = ProjectedTexture() 
                     flashlight:SetTexture( "effects/flashlight001" ) 
-                    flashlight:SetFarZ( 600 ) 
+                    flashlight:SetFarZ( 750 ) 
+                    flashlight:SetNearZ( 4 ) 
+                    flashlight:SetFOV( 60 ) 
                     flashlight:SetEnableShadows( false )
                     flashlight:SetPos( selfCenter )
                     flashlight:SetAngles( selfAngles )
