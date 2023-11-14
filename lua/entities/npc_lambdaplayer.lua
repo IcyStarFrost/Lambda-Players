@@ -336,6 +336,7 @@ function ENT:Initialize()
 
         self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
         self:PhysicsInitShadow()
+        self:PhysicsInit(SOLID_VPHYSICS)
 
         if !collisionPly:GetBool() then
             self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
