@@ -11,6 +11,7 @@ local CurTime = CurTime
 local coroutine_yield = coroutine.yield
 local coroutine_wait = coroutine.wait
 local max = math.max
+local floor = math.floor
 local string_match = string.match
 local SortTable = table.sort
 local IsSinglePlayer = game.SinglePlayer
@@ -590,7 +591,8 @@ if SERVER then
 
     -- Called when our physics object collides with something
     function ENT:HandleCollision( data )
-        if self:GetIsDead() or self:GetNoClip() then return end
+        if !self:Alive() or self:GetNoClip() then return end
+        
         local collider = data.HitEntity
         if !IsValid( collider ) then return end
     
@@ -622,29 +624,38 @@ if SERVER then
             damagecode:SetInflictor( ( IsValid( owner ) and owner or collider ) )
             
             self:TakeDamageInfo( damagecode, collider )
-        else
-            local mass = data.HitObject:GetMass() or 500
-            local impactdmg = ( ( data.TheirOldVelocity:Length() * mass ) / 1000 )
-    
-            if impactdmg > 10 then
-                local dmginfo = DamageInfo()
-                dmginfo:SetAttacker( collider )
-                if IsValid( collider:GetPhysicsAttacker() ) then
-                    dmginfo:SetAttacker( collider:GetPhysicsAttacker() )
-                elseif collider:IsVehicle() and IsValid( collider:GetDriver() ) then
-                    dmginfo:SetAttacker( collider:GetDriver() )
-                    dmginfo:SetDamageType(DMG_VEHICLE)     
-                end
-                dmginfo:SetInflictor( collider )
-                dmginfo:SetDamage( impactdmg )
+        elseif ( CurTime() - self.l_LastPhysDmgTime ) > 0.1 then
+            local mass = ( data.HitObject:GetMass() or 500 )
+            local hitVel = data.TheirOldVelocity
+            
+            local impactDmg = ( mass * ( hitVel:Length() / 1000 ) )
+            if impactDmg < 5 then return end
+            impactDmg = ( floor( impactDmg / 5 ) * 5 )
+
+            local dmginfo = DamageInfo()
+            dmginfo:SetInflictor( collider )
+            dmginfo:SetDamage( impactDmg )
+            dmginfo:SetDamageForce( hitVel * impactDmg / 7.5 )
+
+            local collAttacker = collider:GetPhysicsAttacker()
+            if collider:IsVehicle() and IsValid( collider:GetDriver() ) then
+                dmginfo:SetAttacker( collider:GetDriver() )
+                dmginfo:SetDamageType( DMG_VEHICLE )     
+            else
                 dmginfo:SetDamageType( DMG_CRUSH )
-                dmginfo:SetDamageForce( data.TheirOldVelocity )
-                self.loco:SetVelocity( self.loco:GetVelocity() + data.TheirOldVelocity )
-                self:TakeDamageInfo( dmginfo )
+                if IsValid( collAttacker ) then
+                    dmginfo:SetAttacker( collAttacker )
+                else
+                    dmginfo:SetAttacker( collider )
+                end
             end
+            
+            self.loco:SetVelocity( self.loco:GetVelocity() + hitVel )
+            self:TakeDamageInfo( dmginfo )
+            self.l_LastPhysDmgTime = CurTime()
         end
     end
-
+    
     -- Apparently this took me a few hours to come up with this solution to personality presets like this
     local personalitypresets = {
         [ "custom" ] = function( ply, lambda ) -- Custom Personality set by Sliders

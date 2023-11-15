@@ -227,6 +227,7 @@ function ENT:Initialize()
         self.l_DrownActionTime = 0 -- The next time we start losing or recovering lost health when drowning
         self.l_CombatPosUpdateTime = 0 -- The next time we'll update the combat position
         self.l_ThrowQuickNadeTime = CurTime() + random( 15 ) -- The next time we'll able to throw a quick nade at enemy
+        self.l_LastPhysDmgTime = 0 -- The last time we took a damage from physics object
 
         self.l_ladderarea = nil -- The ladder nav area we are currenly using to climb
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
@@ -334,8 +335,9 @@ function ENT:Initialize()
         self:SetWalkSpeed( walkingSpeed:GetInt() )
         self:SetSlowWalkSpeed( slowWalkSpeed:GetInt() )
 
-        self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
         self:PhysicsInitShadow()
+        self:SetSolid( SOLID_BBOX )
+        self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
 
         if !collisionPly:GetBool() then
             self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
