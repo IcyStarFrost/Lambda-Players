@@ -177,7 +177,7 @@ local function PlaySoundFile( ent, soundName, index, origin, delay, is3d )
     end
     if LambdaRunHook( "LambdaOnPlaySound", ent, soundName ) == true then return end
 
-    sound_PlayFile( "sound/" .. soundName, "noplay" .. ( is3d and "3d" or "" ), function( snd, errorId, errorName )
+    sound_PlayFile( "sound/" .. soundName, "noplay " .. ( is3d and "3d" or "" ), function( snd, errorId, errorName )
         if errorId == 21 then
             if stereowarn:GetBool() then print( "Lambda Players Voice Chat Warning: Sound file " ..soundName .. " has a stereo track and won't be played in 3d. Sound will continue to play. You can disable these warnings in Lambda Player>Utilities" ) end
             PlaySoundFile( ent, soundName, index, origin, delay, false )
@@ -186,9 +186,9 @@ local function PlaySoundFile( ent, soundName, index, origin, delay, is3d )
             print( "Lambda Players Voice Chat Error: Sound file " .. soundName .. " failed to open!\nError Index: " .. errorName .. "#" .. errorId )
             return
         end
-
+        
         local sndLength = snd:GetLength()
-        if sndLength <= 0 or !IsValid( ent ) then
+        if sndLength <= 0 or !IsValid( ent ) or !ent.GetVoicePitch then
             snd:Stop()
             snd = nil
             return

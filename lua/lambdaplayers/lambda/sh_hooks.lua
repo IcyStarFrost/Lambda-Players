@@ -439,7 +439,8 @@ if SERVER then
             end
         end
 
-        if attacker != self and IsValid( attacker ) and self:GetEnemy() != attacker and ( !self:ShouldTreatAsLPlayer( attacker ) or random( 2 ) == 1 ) and self:CanTarget( attacker ) then
+        local ene = self:GetEnemy()
+        if attacker != self and attacker != ene and IsValid( attacker ) and ( !self:ShouldTreatAsLPlayer( attacker ) or random( 2 ) == 1 ) and ( !IsValid( ene ) or self:GetRangeSquaredTo( attacker ) < self:GetRangeSquaredTo( ene ) ) and self:CanTarget( attacker ) then
             self:AttackTarget( attacker )
         end
     end
@@ -463,6 +464,7 @@ if SERVER then
         if attacker == self then
             self:DebugPrint( "I killed", victim )
             self:SetFrags( self:GetFrags() + 1 )
+
             if !victim.IsLambdaPlayer then LambdaKillFeedAdd( victim, attacker, inflictor ) end
         end
 
@@ -471,6 +473,8 @@ if SERVER then
             self:DebugPrint( "My enemy was killed by", attacker )
             self:SetEnemy( NULL )
             self:CancelMovement()
+
+            self.l_nextnpccheck = 0 -- Search for the next enemy NPC immediately
         end
 
         if preventDefActs == true then return end
@@ -549,7 +553,7 @@ if SERVER then
             self:SetRun( self.l_moveoptions and self.l_moveoptions.run and !hasEntered ) 
         end,
         [ NAV_MESH_WALK ] = function( self, hasEntered ) 
-            self:SetSlowWalk( hasEntered == true or self.l_moveoptions and self.l_moveoptions.walk ) 
+            self:SetSlowWalk( hasEntered or self.l_moveoptions and self.l_moveoptions.walk ) 
         end,
         [ NAV_MESH_JUMP ] = function( self, hasEntered ) 
             if !hasEntered then return end
@@ -835,7 +839,7 @@ function ENT:InitializeMiniHooks()
 
             -- VJ Base's 'Become enemy to a friendly player' feature
             local attacker = info:GetAttacker()
-            if attacker == self and target.IsVJBaseSNPC and !target.VJ_IsBeingControlled and target:CheckRelationship( self ) != D_LI then
+            if attacker == self and target.IsVJBaseSNPC and !target.VJ_IsBeingControlled and target:CheckRelationship( self ) == D_LI then
                 local curAnger = ( target.AngerLevelTowardsPlayer + 1 )
                 target.AngerLevelTowardsPlayer = curAnger
 

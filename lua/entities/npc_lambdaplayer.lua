@@ -670,9 +670,18 @@ function ENT:Think()
 
         -- Attack nearby NPCs
         if curTime >= self.l_nextnpccheck then 
-            if !self:InCombat() then
-                local npcs = self:FindInSphere( nil, 2000, function( ent ) return LambdaIsValid( ent ) and ( ent:IsNPC() or ent:IsNextBot() and !self:ShouldTreatAsLPlayer( ent ) ) and ent:Health() > 0 and self:ShouldAttackNPC( ent ) and self:CanSee( ent ) end )
-                if #npcs != 0 then self:AttackTarget( npcs[ random( #npcs ) ] ) end
+            if !self:InCombat() or self:IsPanicking() and !LambdaIsValid( self:GetEnemy() ) then
+                local npcs = self:FindInSphere( nil, 2000, function( ent ) 
+                    return ( IsValid( ent ) and ( ent:IsNPC() or ent:IsNextBot() and !self:ShouldTreatAsLPlayer( ent ) ) and self:CanTarget( ent ) and self:CanSee( ent ) )
+                end )
+                if #npcs != 0 then
+                    local rndNpc = npcs[ random( #npcs ) ]
+                    if self:IsPanicking() then
+                        self:SetEnemy( rndNpc )
+                    else
+                        self:AttackTarget( rndNpc ) 
+                    end
+                end
             else
                 local ene = self:GetEnemy()
                 if ene.IsDrGNextbot and ene:IsDown() then
@@ -684,6 +693,7 @@ function ENT:Think()
             self.l_nextnpccheck = ( curTime + 1 )
         end
 
+        -- Handle weapon usage & attacking
         local isFiring = false
         if !isDisabled then 
             local target = self:GetEnemy()

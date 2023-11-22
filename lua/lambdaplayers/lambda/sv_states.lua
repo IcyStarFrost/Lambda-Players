@@ -36,7 +36,7 @@ function ENT:Idle()
     self:MoveToPos( ( pos or self:GetRandomPosition( nil, unlimiteddistance:GetBool() ) ), wandertbl )
 end
 
-local combattbl = { update = 0.2, run = true, tol = 10 }
+local combattbl = { update = 0.33, run = true, tol = 10 }
 function ENT:Combat()
     if !LambdaIsValid( self:GetEnemy() ) then self:SetEnemy( NULL ) return true end
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end

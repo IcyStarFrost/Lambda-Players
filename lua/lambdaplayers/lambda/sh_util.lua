@@ -411,7 +411,11 @@ function ENT:CanSee( ent )
     local result = Trace( visibilitytrace )
     if LambdaRunHook( "LambdaOnCanSeeEntity", self, ent, result ) == true then return false end
 
-    return ( result.Fraction == 1.0 or result.Entity == ent )
+    local hitEnt = result.Entity
+    if IsValid( hitEnt ) and hitEnt:IsVehicle() and !ent:IsVehicle() then
+        hitEnt = hitEnt:GetDriver()
+    end
+    return ( hitEnt == ent or result.Fraction == 1.0 )
 end
 
 -- Returns the color that should be used in displays such as Name Display, Text Chat, ect
