@@ -515,7 +515,7 @@ if SERVER then
         if self:IsInRange( victim, 1500 ) and self:CanSee( victim ) then
             local witnessChance = random( 10 )
             if witnessChance == 1 or ( attacker == victim or attacker:IsWorld() ) and witnessChance >= 6 then
-                self:SetState( "Laughing", { victim, self.l_movepos } )
+                self:SetState( "Laughing", { victim, self:GetDestination() } )
                 self:CancelMovement() 
                 self:DebugPrint( "I killed or saw someone die. Laugh at this man!" )
             elseif attacker != self and victim != enemy then
@@ -573,7 +573,7 @@ if SERVER then
         self.l_currentnavarea = new
         
         local movePos = self.l_CurrentPath
-        if movePos == self.l_movepos and self.l_issmoving then
+        if self.l_issmoving and movePos == self:GetDestination() then
             self:CancelMovement()
             self:MoveToPos( ( isentity( movePos ) and IsValid( movePos ) and movePos:GetPos() or movePos ), self.l_moveoptions )
         end

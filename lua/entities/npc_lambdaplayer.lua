@@ -812,7 +812,7 @@ function ENT:Think()
                     end
                 end
             else
-                self.l_precombatmovepos = self.l_movepos
+                self.l_precombatmovepos = self:GetDestination()
             end
         end
         self:SetIsFiring( isFiring )
@@ -829,11 +829,13 @@ function ENT:Think()
         -- Update our physics object
         if curTime >= self.l_nextphysicsupdate then
             local phys = self:GetPhysicsObject()
+
+            local newPos = ( selfPos + vector_up * loco:GetStepHeight() )
             if waterLvl == 0 then
-                phys:SetPos( selfPos )
+                phys:SetPos( newPos, true )
                 phys:SetAngles( selfAngles )
             else
-                phys:UpdateShadow( selfPos, selfAngles, 0 )
+                phys:UpdateShadow( newPos, selfAngles, FrameTime(   ) )
             end
 
             -- Change collision bounds based on if we are crouching or not.
@@ -995,7 +997,7 @@ function ENT:Think()
                 self.l_nextswimposupdate = curTime + 0.1
 
                 local ene = self:GetEnemy()
-                local movePos = self.l_movepos
+                local movePos = self:GetDestination()
                 local newSwimPos = self.l_CurrentPath
                 if movePos and self:GetState() == "Combat" and LambdaIsValid( ene ) and ene:WaterLevel() != 0 and self:CanSee( ene ) then -- Move to enemy's position if valid
                     newSwimPos = ( ( isentity( movePos ) and IsValid( movePos ) ) and movePos:GetPos() or movePos )

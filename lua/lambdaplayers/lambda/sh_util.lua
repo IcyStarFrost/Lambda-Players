@@ -569,7 +569,8 @@ if SERVER then
 
     -- Returns the position we are going to
     function ENT:GetDestination()
-        return ( isentity( self.l_movepos ) and self.l_movepos:GetPos() or self.l_movepos )
+        local pos = self.l_movepos
+        return ( ( isentity( pos ) and IsValid( pos ) ) and pos:GetPos() or pos )
     end
 
     -- If the we can target the ent
