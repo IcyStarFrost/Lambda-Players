@@ -10,6 +10,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 10,
         attackrange = 55,
+        dropentity = "weapon_crowbar",
 
         damage = 10,
         rateoffire = 0.4,

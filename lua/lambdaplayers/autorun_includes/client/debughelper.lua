@@ -21,7 +21,7 @@ hook.Add( "PreDrawEffects", "lambdaplayers-debughelper", function()
     if !debugmode:GetBool() then return end
 
     for k, lambda in ipairs( ents.FindByClass( "npc_lambdaplayer" ) ) do 
-        if IsValid( lambda ) and lambda:GetPos():DistToSqr( LocalPlayer():GetPos() ) < 600 ^ 2 then
+        if IsValid( lambda ) and lambda:IsBeingDrawn() and lambda:GetPos():DistToSqr( LocalPlayer():GetPos() ) < 600 ^ 2 then
 
             if !lambda.l_debughelperspawndelay then
                 lambda.l_debughelperspawndelay = SysTime() + 0.1

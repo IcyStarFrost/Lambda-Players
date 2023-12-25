@@ -2,6 +2,12 @@ local pairs = pairs
 local string_find = string.find
 local tostring = tostring
 local iconColor = Color(255, 80, 0, 255)
+local net = net
+local PlaySound = ( CLIENT and surface.PlaySound )
+local AddNotification = ( CLIENT and notification.AddLegacy )
+local ipairs = ipairs
+local SortedPairs = SortedPairs
+local max = math.max
 
 _LAMBDAPLAYERSWEAPONS = {}
 
@@ -11,7 +17,7 @@ function LambdaMergeWeapons()
     for _, luafile in ipairs( weaponluafiles ) do
         AddCSLuaFile( "lambdaplayers/lambda/weapons/" .. luafile )
         include( "lambdaplayers/lambda/weapons/" .. luafile )
-        print( "Lambda Players: Merged Weapon from [ " .. luafile .. " ]" )
+        print( "Lambda Players: Merged Weapon(s) from [ " .. luafile .. " ]" )
     end
 
     if ( CLIENT ) then
@@ -22,7 +28,7 @@ function LambdaMergeWeapons()
 
     for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
         if name == "none" then continue end -- Don't count the empty hands
-        
+
         local convar = CreateLambdaConvar( "lambdaplayers_weapons_allow_" .. name, 1, true, false, false, "Allows the Lambda Players to equip " .. data.prettyname .. " from " .. data.origin .. " category", 0, 1 )
         _LAMBDAWEAPONALLOWCONVARS[ name ] = convar
 
@@ -43,7 +49,9 @@ function LambdaMergeWeapons()
             end
         end
 
-        _LAMBDAWEAPONCLASSANDPRINTS[ data.prettyname ] = name
+        if !data.cantbeselected then
+            _LAMBDAWEAPONCLASSANDPRINTS[ data.prettyname ] = name
+        end
     end
 
     if SERVER and LambdaHasFirstMergedWeapons then
@@ -59,27 +67,25 @@ concommand.Add( "lambdaplayers_dev_mergeweapons", LambdaMergeWeapons )
 
 local spawnWep = CreateLambdaConvar( "lambdaplayers_lambda_spawnweapon", "physgun", true, true, true, "The weapon Lambda Players will spawn with only if the specified weapon is allowed", 0, 1 )
 
-local net = net
-local PlaySound = ( CLIENT and surface.PlaySound )
-local AddNotification = ( CLIENT and notification.AddLegacy )
-local ipairs = ipairs
-local SortedPairs = SortedPairs
-local max = math.max
+function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc, showAll, includeRnd, showNotif )
+    showNotif = ( showNotif == nil and true or showNotif )
+    includeRnd = ( includeRnd == nil and true or includeRnd )
 
-local function OpenSpawnWeaponPanel() 
-    local mainframe = LAMBDAPANELS:CreateFrame( "Spawn Weapon Selection", 700, 500 )
+    local mainframe = LAMBDAPANELS:CreateFrame( "Weapon Selection Menu", 700, 500 )
     local mainscroll = LAMBDAPANELS:CreateScrollPanel( mainframe, true, FILL )
 
     local weplinelist = {}
     local weplistlist = {}
 
-    local currentWep = spawnWep:GetString()
+    local isCvar = ( type( wepSelectVar ) == "ConVar" )
+
+    local currentWep = ( isCvar and wepSelectVar:GetString() or wepSelectVar )
     if currentWep == "random" then 
         currentWep = "Random Weapon"
     else
-        currentWep = _LAMBDAPLAYERSWEAPONS[ currentWep ] and _LAMBDAPLAYERSWEAPONS[ currentWep ].prettyname or "!!NON EXISTENT WEAPON"
+        currentWep = ( _LAMBDAPLAYERSWEAPONS[ currentWep ] and _LAMBDAPLAYERSWEAPONS[ currentWep ].prettyname or "!!NON EXISTENT WEAPON!!" )
     end
-    LAMBDAPANELS:CreateLabel( "Currenly selected spawn weapon: " .. currentWep, mainframe, TOP )
+    LAMBDAPANELS:CreateLabel( "Currenly selected weapon: " .. currentWep, mainframe, TOP )
 
     for weporigin, _ in pairs( _LAMBDAPLAYERSWEAPONORIGINS ) do
         local originlist = vgui.Create( "DListView", mainscroll )
@@ -89,8 +95,15 @@ local function OpenSpawnWeaponPanel()
         originlist:SetMultiSelect( false )
 
         function originlist:DoDoubleClick( id, line )
-            spawnWep:SetString( line:GetSortValue( 1 ) )
-            AddNotification( "Selected " .. line:GetColumnText( 1 ) .. " from " .. weporigin .. " as a spawn weapon!", NOTIFY_GENERIC, 3 )
+            local selectedWep = line:GetSortValue( 1 )
+            if ( !onSelectFunc or onSelectFunc( selectedWep ) != true ) and isCvar then 
+                wepSelectVar:SetString( selectedWep )
+            end
+
+            if showNotif then
+                AddNotification( "Selected " .. line:GetColumnText( 1 ) .. " from " .. weporigin .. " as a weapon!", NOTIFY_GENERIC, 3 )
+            end
+
             PlaySound( "buttons/button15.wav" )
             mainframe:Close()
         end
@@ -100,9 +113,12 @@ local function OpenSpawnWeaponPanel()
         for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
             if name == "none" then continue end
             if data.origin != weporigin then continue end
+            if data.cantbeselected then continue end
 
-            local allowCvar = _LAMBDAWEAPONALLOWCONVARS[ name ]
-            if allowCvar and !allowCvar:GetBool() then continue end
+            if !showAll then
+                local allowCvar = _LAMBDAWEAPONALLOWCONVARS[ name ]
+                if allowCvar and !allowCvar:GetBool() then continue end
+            end
 
             local line = originlist:AddLine( data.notagprettyname )
             line:SetSortValue( 1, name )
@@ -139,18 +155,34 @@ local function OpenSpawnWeaponPanel()
     end
 
     LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select None", function()
-        spawnWep:SetString( "none" )
-        AddNotification( "Selected none as a spawn weapon!", NOTIFY_GENERIC, 3 )
+        local selectedWep = "none"
+        if ( !onSelectFunc or onSelectFunc( selectedWep ) != true ) and isCvar then 
+            wepSelectVar:SetString( selectedWep )
+        end
+
+        if showNotif then
+            AddNotification( "Selected none as a weapon!", NOTIFY_GENERIC, 3 )
+        end
+        
         PlaySound( "buttons/button15.wav" )
         mainframe:Close()
     end )
 
-    LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select Random", function()
-        spawnWep:SetString( "random" )
-        AddNotification( "Selected random as a spawn weapon!", NOTIFY_GENERIC, 3 )
-        PlaySound( "buttons/button15.wav" )
-        mainframe:Close()
-    end )
+    if includeRnd then
+        LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select Random", function()
+            local selectedWep = "random"
+            if ( !onSelectFunc or onSelectFunc( selectedWep ) != true ) and isCvar then 
+                wepSelectVar:SetString( selectedWep )
+            end
+
+            if showNotif then
+                AddNotification( "Selected random as a weapon!", NOTIFY_GENERIC, 3 )
+            end
+
+            PlaySound( "buttons/button15.wav" )
+            mainframe:Close()
+        end )
+    end
 end
 
 local function OpenWeaponPermissionPanel( ply ) 
@@ -231,7 +263,9 @@ local function OpenWeaponPermissionPanel( ply )
     mainframe:OnSizeChanged( mainframe:GetWide() )
 end
 
-CreateLambdaConsoleCommand( "lambdaplayers_lambda_openspawnweaponpanel", OpenSpawnWeaponPanel, true, "Opens a panel that allows you to select the weapon the next spawned Lambda Player by you will start with", { name = "Select Spawn Weapon", category = "Lambda Weapons" } )
+CreateLambdaConsoleCommand( "lambdaplayers_lambda_openspawnweaponpanel", function()
+    LambdaWeaponSelectPanel( spawnWep )
+end, true, "Opens a panel that allows you to select the weapon the next spawned Lambda Player by you will start with", { name = "Select Spawn Weapon", category = "Lambda Weapons" } )
 CreateLambdaConsoleCommand( "lambdaplayers_lambda_openweaponpermissionpanel", OpenWeaponPermissionPanel, true, "Opens a panel that allows you to allow and disallow certain weapons to be used by Lambda Players", { name = "Select Weapon Permissions", category = "Lambda Weapons" } )
 
 -- One part of the duplicator support
@@ -307,11 +341,64 @@ function EntMeta:RemoveLambdaHookTick( name )
     hook.Remove( "Tick", "lambdaplayers_hooktick" .. name .. id )
 end
 
-if SERVER then
+function EntMeta:GetBodyGroupData()
+    local data = {}
+    for _, group in ipairs( self:GetBodyGroups() ) do
+        local subMdls = #group.submodels
+        if subMdls == 0 then continue end 
+        
+        local index = group.id
+        data[ index ] = self:GetBodygroup( index )
+    end
+    return data
+end
+
+_LambdaOldEyePos = _LambdaOldEyePos or EntMeta.EyePos
+function EntMeta:EyePos()
+    if self.IsLambdaPlayer then return self:GetAttachmentPoint( "eyes" ).Pos end
+    return _LambdaOldEyePos( self )
+end
+
+_LambdaOldEyeAngles = _LambdaOldEyeAngles or EntMeta.EyeAngles
+function EntMeta:EyeAngles()
+    if self.IsLambdaPlayer then 
+        local eyes = self:GetAttachmentPoint( "eyes" )
+        local eyeAng = eyes.Ang
+        
+        local facePos = self:GetNW2Vector( "lambda_facepos", vector_origin )
+        if !facePos:IsZero() then 
+            eyeAng = ( facePos - eyes.Pos ):Angle()
+        elseif !self:IsPlayingTaunt() then
+            eyeAng.y = self:GetAngles().y
+        end
+
+        eyeAng.z = 0
+        return eyeAng
+    end
+
+    return _LambdaOldEyeAngles( self )
+end
+
+if ( SERVER ) then
     _LambdaOldEntitySetHealth = _LambdaOldEntitySetHealth or EntMeta.SetHealth
     function EntMeta:SetHealth( newHealth )
         if self.IsLambdaPlayer then self:UpdateHealthDisplay( newHealth ) end
         _LambdaOldEntitySetHealth( self, newHealth )
+    end
+
+    _LambdaOldDrG_RagdollDeath = _LambdaOldDrG_RagdollDeath or EntMeta.DrG_RagdollDeath
+    function EntMeta:DrG_RagdollDeath( dmginfo )
+        if !self.IsLambdaPlayer then return _LambdaOldDrG_RagdollDeath( self, dmginfo ) end
+        if self:GetIsDead() then return NULL end
+
+        self:KillSilent()
+        if dmginfo then LambdaKillFeedAdd( self, dmginfo:GetAttacker(), dmginfo:GetInflictor() ) end
+        self:PlaySoundFile( "death" )
+
+        local ragdoll = self:CreateServersideRagdoll( dmginfo )
+        self:SetNW2Entity( "lambda_serversideragdoll", ragdoll )
+
+        return ragdoll
     end
 end
 

@@ -11,10 +11,11 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         prettyname = "Toolgun",
         holdtype = "revolver",
         bonemerge = true,
+        dropentity = "gmod_tool",
 
         OnAttack = function( self, wepent, target )
 
-            wepent:EmitSound( "weapons/airboat/airboat_gun_lastshot" .. random( 1, 2 ) .. ".wav", 70, 100, 1, CHAN_WEAPON )
+            wepent:EmitSound( "weapons/airboat/airboat_gun_lastshot" .. random( 2 ) .. ".wav", 70, 100, 1, CHAN_WEAPON )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER )

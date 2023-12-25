@@ -1,26 +1,31 @@
 local random = math.random
+local CurTime = CurTime
+local Rand = math.Rand
 local ents_Create = ents.Create
 local Angle = Angle
 local IsValid = IsValid
-local CurTime = CurTime
-local IsValid = IsValid
+local VectorRand = VectorRand
 
-local function IsCharacter( ent )
-    return ent:IsNPC() or ent:IsPlayer() or ent:IsNextBot()
-end
+local antLimit = GetConVar( "lambdaplayers_weapons_bugbait_antlionlimit" )
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
-
     bugbait = {
         model = "models/weapons/w_bugbait.mdl",
         origin = "Half-Life 2",
         prettyname = "Bug Bait",
         holdtype = "grenade",
         bonemerge = true,
+        dropentity = "weapon_bugbait",
+        
+        islethal = true,
+        keepdistance = 600,
+        attackrange = 1500,
 
         OnDeploy = function( self, wepent )
-            wepent.NextSqueezeTime = CurTime() + random( 1, 20 )
-            wepent.NextThrowTime = CurTime() + random( 1, 20 )
+            self.l_AntlionCount = 0
+            
+            wepent.NextSqueezeTime = ( CurTime() + random( 20 ) )
+            wepent.NextThrowTime = ( CurTime() + random( 10 ) )
         end,
 
         OnHolster = function( self, wepent )
@@ -28,42 +33,55 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent.NextThrowTime = nil
         end,
 
-        OnThink = function( self, wepent, dead )
-            if !dead then
-                if CurTime() > wepent.NextSqueezeTime then
-                    wepent:EmitSound( "weapons/bugbait/bugbait_squeeze" .. random( 1, 3 ) .. ".wav", 65, 100, 10, CHAN_WEAPON )
-                    wepent.NextSqueezeTime = CurTime() + random( 1, 20 )
-                end
+        OnAttack = function( self, wepent, target )
+            if self.l_AntlionCount >= antLimit:GetInt() then return true end
 
-                if CurTime() > wepent.NextThrowTime then
-                    wepent.NextThrowTime = CurTime() + random( 1, 10 )
+            self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
+            self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
+            self.l_WeaponUseCooldown = ( CurTime() + 2 )
 
-                    local nearby = self:FindInSphere( nil, 200, function( ent ) return ( IsCharacter( ent ) or self:HasVPhysics( ent ) ) end )
-                    local rndent = nearby[ random( #nearby ) ]
-                    local time = ( IsValid( rndent ) and 1 or 0 )
-                    
-                    self:LookTo( ( ( time == 1 ) and rndent or nil ), 3 )
-                    
-                    self:SimpleWeaponTimer( time, function()
-                        self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
-                        self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
+            local bait = ents_Create( "npc_grenade_bugbait" )
+            bait:SetPos( wepent:GetPos() )
+            bait:SetSaveValue( "m_hThrower", self )
+            bait:SetOwner( self )
+            bait:Spawn()
+            bait:SetCollisionGroup( COLLISION_GROUP_WEAPON )
 
-                        local bait = ents_Create( "npc_grenade_bugbait" )
-                        bait:SetPos( wepent:GetPos() )
-                        bait:SetSaveValue( "m_hThrower", self )
-                        bait:SetOwner( self )
-                        bait:Spawn()
+            bait:SetVelocity( ( ( ( isvector( target ) and target or target:GetPos() ) + VectorRand( -60, 60 ) ) - wepent:GetPos() ):GetNormalized() * 1000 )
+            bait:SetLocalAngularVelocity( Angle( 600, random( -1200, 1200 ), 0 ) )
 
-                        bait:SetVelocity( ( self:GetEyeTrace().HitPos - bait:GetPos() ):GetNormalized() * 1000 )
-                        bait:SetLocalAngularVelocity( Angle( 600, random( -1200, 1200 ), 0 ) )
-                    end )
+            bait:CallOnRemove( "LambdaPlayers_BugbaitSpawnAntlion" .. bait:GetCreationID(), function()
+                if !IsValid( self ) then return end
+
+                local ant = ents_Create( "npc_lambdaantlion" )
+                ant:SetPos( bait:GetPos() )
+                ant:SetAngles( Angle( 0, bait:GetAngles().y, 0 ) )
+                ant:SetOwner( self )
+                ant:Spawn()
+            end )
+
+            return true
+        end,
+
+        OnThink = function( self, wepent, isDead )
+            if isDead then return end
+
+            if CurTime() >= wepent.NextSqueezeTime then
+                wepent.NextSqueezeTime = ( CurTime() + random( 20 ) )
+                wepent:EmitSound( "weapons/bugbait/bugbait_squeeze" .. random( 3 ) .. ".wav", 65, 100, 10, CHAN_WEAPON )
+            end
+
+            if CurTime() >= wepent.NextThrowTime then 
+                wepent.NextThrowTime = ( CurTime() + random( 10 ) )
+
+                if self.l_AntlionCount < antLimit:GetInt() then
+                    local rndPos = self:GetRandomPosition( nil, 750 )
+                    self:LookTo( rndPos, 3 )
+                    self:SimpleWeaponTimer( Rand( 1, 2 ), function() self:UseWeapon( rndPos ) end )
                 end
             end
 
             return 1.0
-        end,
-
-        islethal = false
+        end
     }
-
-})
+} )

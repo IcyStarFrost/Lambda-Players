@@ -10,6 +10,7 @@ local table_insert = table.insert
 local rand = math.Rand
 local random = math.random
 local net = net
+local tonumber = tonumber
 local PlaySound = ( CLIENT and surface.PlaySound )
 local AddNotification = ( CLIENT and notification.AddLegacy )
 local ipairs = ipairs
@@ -50,7 +51,7 @@ local personalitypresets = {
     [ "builder" ] = function( self ) -- Focused on Building
         local tbl = {}
         for k, v in ipairs( LambdaPersonalityConVars ) do
-            tbl[ v[ 1 ] ] = random( 1, 100 )
+            tbl[ v[ 1 ] ] = random( 100 )
         end
         tbl[ "Build" ] = 80
         tbl[ "Combat" ] = 5
@@ -85,19 +86,15 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_openmwscustompersonalitypresetpan
     tbl[ "lambdaplayers_mwspersonality_voicechance" ] = 30
     tbl[ "lambdaplayers_mwspersonality_textchance" ] = 30
     for _, v in ipairs( MWSConvars ) do
-        tbl[ v[ 2 ]:GetName() ] = v[ 2 ]:GetDefault()
+        tbl[ v[ 2 ]:GetName() ] = ( tonumber( v[ 2 ]:GetDefault() ) or 30  )
     end
     LAMBDAPANELS:CreateCVarPresetPanel( "Custom Personality Preset Editor", tbl, "custommwspersonalities", false )
 end, true, "Opens a panel to allow you to create custom preset personalities and load them", { name = "Custom Personality Presets", category = "MWS" } )
 
 
-
-
-
 local spawnWep = CreateLambdaConvar( "lambdaplayers_mws_spawnweapon", "physgun", true, false, false, "The weapon MWS spawned Lambda Players will spawn with only if the specified weapon is allowed", 0, 1 )
 
-
-if SERVER then
+if ( SERVER ) then
     util.AddNetworkString( "lambdamws_selectspawnweapon" )
 
     net.Receive( "lambdamws_selectspawnweapon", function( len, ply )
@@ -106,111 +103,21 @@ if SERVER then
     end )
 end 
 
-local function OpenSpawnWeaponPanel( ply ) 
+CreateLambdaConsoleCommand( "lambdaplayers_mws_openspawnweaponpanel", function( ply )
     if !ply:IsSuperAdmin() then 
         AddNotification( "You must be a Super Admin in order to use this!", 1, 4 )
         PlaySound( "buttons/button10.wav" ) 
         return 
     end
 
-    local mainframe = LAMBDAPANELS:CreateFrame( "Spawn Weapon Selection", 700, 500 )
-    local mainscroll = LAMBDAPANELS:CreateScrollPanel( mainframe, true, FILL )
-
-    local weplinelist = {}
-    local weplistlist = {}
-
-    local currentWep = spawnWep:GetString()
-    if currentWep == "random" then 
-        currentWep = "Random Weapon"
-    else
-        currentWep = _LAMBDAPLAYERSWEAPONS[ currentWep ].prettyname
-    end
-    LAMBDAPANELS:CreateLabel( "Currenly selected spawn weapon: " .. currentWep, mainframe, TOP )
-
-    for weporigin, _ in pairs( _LAMBDAPLAYERSWEAPONORIGINS ) do
-        local originlist = vgui.Create( "DListView", mainscroll )
-        originlist:SetSize( 200, 400 )
-        originlist:Dock( LEFT )
-        originlist:AddColumn( weporigin, 1 )
-        originlist:SetMultiSelect( false )
-
-        function originlist:DoDoubleClick( id, line )
-            net.Start( "lambdamws_selectspawnweapon" )
-            net.WriteString( line:GetSortValue( 1 ) )
-            net.SendToServer()
-            AddNotification( "Selected " .. line:GetColumnText( 1 ) .. " from " .. weporigin .. " as a spawn weapon!", NOTIFY_GENERIC, 3 )
-            PlaySound( "buttons/button15.wav" )
-            mainframe:Close()
-        end
-
-        mainscroll:AddPanel( originlist )
-
-        for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
-            if name == "none" then continue end
-            if data.origin != weporigin then continue end
-
-            local allowCvar = _LAMBDAWEAPONALLOWCONVARS[ name ]
-            if allowCvar and !allowCvar:GetBool() then continue end
-
-            local line = originlist:AddLine( data.notagprettyname )
-            line:SetSortValue( 1, name )
-
-            function line:OnSelect()
-                for _, v in ipairs( weplinelist ) do
-                    if v != line then v:SetSelected( false ) end
-                end
-            end
-            
-            weplinelist[ #weplinelist + 1 ] = line
-        end
-
-        if #originlist:GetLines() == 0 then
-            originlist:Remove()
-            continue
-        end
-
-        originlist:SortByColumn( 1 )
-        weplistlist[ #weplistlist + 1 ] = originlist
-    end
-
-    if #weplistlist > 0 then
-        function mainframe:OnSizeChanged( width )
-            local columnWidth = max( 200, ( width - 10 ) / #weplistlist )
-            for _, list in ipairs( weplistlist ) do
-                list:SetWidth( columnWidth )
-            end
-        end
-
-        mainframe:OnSizeChanged( mainframe:GetWide() )
-    else
-        LAMBDAPANELS:CreateLabel( "You currenly have every weapon restricted and disallowed to be used by Lambda Players!", mainframe, TOP )
-    end
-
-    LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select None", function()
+    LambdaWeaponSelectPanel( spawnWep, function( selectedWep )
         net.Start( "lambdamws_selectspawnweapon" )
-        net.WriteString( "none" )
+            net.WriteString( selectedWep )
         net.SendToServer()
-        AddNotification( "Selected none as a spawn weapon!", NOTIFY_GENERIC, 3 )
-        PlaySound( "buttons/button15.wav" )
-        mainframe:Close()
+
+        return true
     end )
-
-    LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select Random", function()
-        net.Start( "lambdamws_selectspawnweapon" )
-        net.WriteString( "random" )
-        net.SendToServer()
-        AddNotification( "Selected random as a spawn weapon!", NOTIFY_GENERIC, 3 )
-        PlaySound( "buttons/button15.wav" )
-        mainframe:Close()
-    end )
-end
-
-CreateLambdaConsoleCommand( "lambdaplayers_mws_openspawnweaponpanel", OpenSpawnWeaponPanel, true, "Opens a panel that allows you to select the weapon the next MWS spawned Lambda Player will start with", { name = "Select Spawn Weapon", category = "MWS" } )
-
-
-
-
-
+end, true, "Opens a panel that allows you to select the weapon the next MWS spawned Lambda Player will start with", { name = "Select Spawn Weapon", category = "MWS" } )
 
 if ( CLIENT ) then return end
 
@@ -242,7 +149,7 @@ local function GetRandomSpawnPoint()
     local allAreas = GetAllNavAreas()
     local areaCount = #allAreas
     for index, area in RandomPairs( allAreas ) do
-        if !IsValid( area ) or area:IsUnderwater() or area:GetSizeX() <= 50 or area:GetSizeY() <= 50 then continue end
+        if !IsValid( area ) or area:GetSizeX() <= 50 or area:GetSizeY() <= 50 or area:GetCenter():IsUnderwater() then continue end
         if plys and index != areaCount then
             local outofreach = true
             for _, ply in ipairs( plys ) do

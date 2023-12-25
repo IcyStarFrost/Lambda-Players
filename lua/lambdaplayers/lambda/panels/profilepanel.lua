@@ -1,9 +1,11 @@
 local table_insert = table.insert
 local ipairs = ipairs
 local pairs = pairs
+local file_Exists = file.Exists
 local round = math.Round
 local table_Merge = table.Merge
 local table_Empty = table.Empty
+local table_IsEmpty = table.IsEmpty
 local string_upper = string.upper
 local isfunction = isfunction
 local table_Copy = table.Copy
@@ -11,6 +13,7 @@ local string_Explode = string.Explode
 local string_len = string.len
 local string_Left = string.Left
 local string_Right = string.Right
+local string_Replace = string.Replace
 
 local function MakeNiceName( str )
     local newname = {}
@@ -164,6 +167,7 @@ local function OpenProfilePanel( ply )
             if v.model and !file.Exists( v.model, "GAME" ) then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a error playermodel! ( " .. v.model .. " )" ) end
             if v.voiceprofile and !file.Exists( "sound/lambdaplayers/voiceprofiles/" .. v.voiceprofile, "GAME" ) and !file.Exists( "sound/zetaplayer/custom_vo/" .. v.voiceprofile, "GAME" ) then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a non existent Voice Profile! ( " .. v.voiceprofile .. " )" ) end
             if v.spawnwep and !_LAMBDAPLAYERSWEAPONS[ v.spawnwep ] then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a non existent Spawn Weapon! ( " .. v.spawnwep .. " )" ) end
+            if v.favwep and !_LAMBDAPLAYERSWEAPONS[ v.favwep ] then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a non existent Favorite Weapon! ( " .. v.favwep .. " )" ) end
             if v.profilepicture and !file.Exists( "materials/" .. v.profilepicture, "GAME" ) then hasissue = true print( "Lambda Profile Validate: " .. k .. " has a non existent Profile Picture! ( " .. v.profilepicture .. " )" ) end
 
         end
@@ -192,7 +196,7 @@ local function OpenProfilePanel( ply )
                         voicepitch = profiletbl.voicepitch and round( profiletbl.voicepitch, 0 ) or 100,
                         voice = profiletbl.personality and round( profiletbl.personality.voice, 0 ) or 30,
                         voiceprofile = profiletbl.voicepack or nil,
-                        pingrange = random( 1, 120 ),
+                        pingrange = random( 60 ),
 
                         personality = {
                             Build = profiletbl.personality and profiletbl.personality.build or 30,
@@ -387,15 +391,87 @@ local function OpenProfilePanel( ply )
     LAMBDAPANELS:CreateLabel( "Voice Pitch", mainscroll, TOP )
     local voicepitch = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 100, "Voice Pitch", 30, 255, 0 )
 
+    --
+
     LAMBDAPANELS:CreateLabel( "Spawn Weapon", mainscroll, TOP )
     LAMBDAPANELS:CreateLabel( "The weapon to spawn with", mainscroll, TOP )
-    local copy = table_Copy( _LAMBDAWEAPONCLASSANDPRINTS )
-    copy[ "No Weapon" ] = "/NIL"
-    local spawnweapon = LAMBDAPANELS:CreateComboBox( mainscroll, TOP, copy )
+    
+
+    local spawnweapon = "none"
+    LAMBDAPANELS:CreateButton( mainscroll, TOP, "Select Spawn Weapon", function()
+        LambdaWeaponSelectPanel( spawnweapon, function( selectedWep )
+            spawnweapon = selectedWep
+        end, true )
+    end )
+
+    LAMBDAPANELS:CreateLabel( "Favorite Weapon", mainscroll, TOP )
+    LAMBDAPANELS:CreateLabel( "This Lambda's favorite weapon", mainscroll, TOP )
+
+    local favoriteweapon = "none"
+    LAMBDAPANELS:CreateButton( mainscroll, TOP, "Select Favorite Weapon", function()
+        LambdaWeaponSelectPanel( favoriteweapon, function( selectedWep )
+            favoriteweapon = favoriteweapon
+        end, true )
+    end )
+
+    ---- Weapon Restrictions ----
+    LAMBDAPANELS:CreateLabel( "Weapon Restrictions", mainscroll, TOP )
+    LAMBDAPANELS:CreateLabel( "Weapons this Lambda is only allowed to use", mainscroll, TOP )
+
+    local weaponrestrictions = {}
+    LAMBDAPANELS:CreateButton( mainscroll, TOP, "Edit Weapon Restrictions", function()
+        local weppermframe = LAMBDAPANELS:CreateFrame( "Weapon Restrictions", 800, 400 )
+        local weppermscroll = LAMBDAPANELS:CreateScrollPanel( weppermframe, true, FILL )
+
+        LAMBDAPANELS:CreateLabel( "Leaving all weapons un-checked will disable the system.", weppermframe, TOP )
+
+        local weaponcheckboxes = {}
+        for weporigin, _ in pairs( _LAMBDAPLAYERSWEAPONORIGINS ) do
+            local weppermscroll2 = LAMBDAPANELS:CreateScrollPanel( weppermscroll, false, LEFT )
+            weppermscroll2:SetSize( 250, 350 )
+            weppermscroll:AddPanel( weppermscroll2 )
+
+            LAMBDAPANELS:CreateLabel( "------ " .. weporigin .. " ------ ", weppermscroll2, TOP )
+
+            local togglestate = false
+            weaponcheckboxes[ weporigin ] = {}
+
+            LAMBDAPANELS:CreateButton( weppermscroll2, TOP, "Toggle " .. weporigin .. " Weapons", function()
+                togglestate = !togglestate
+                for _, check in ipairs( weaponcheckboxes[ weporigin ] ) do
+                    check[1]:SetChecked( togglestate )
+                end
+            end )
+
+            for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
+                if data.origin == weporigin and name != "none" and name != "physgun" and name != "toolgun" then
+                    local weprettyname = string_Replace( data.prettyname, "[" .. weporigin .. "] ", "" )
+                    local weppermcheckbox = LAMBDAPANELS:CreateCheckBox( weppermscroll2, TOP, ( weaponrestrictions[ name ] or false ), weprettyname )
+                    table_insert( weaponcheckboxes[ weporigin ], { weppermcheckbox, name } )
+                end
+            end
+        end
+
+        LAMBDAPANELS:CreateButton( weppermscroll, BOTTOM, "Done", function()
+            table_Empty( weaponrestrictions )
+            for _, v in pairs( weaponcheckboxes ) do
+                for _, j in ipairs( v ) do
+                    if !j[ 1 ]:GetChecked() then continue end
+                    weaponrestrictions[ j[ 2 ] ] = true
+                end
+            end
+
+            surface.PlaySound( "buttons/button15.wav" )
+            weppermframe:Close()
+        end )
+    end )
+
+    ---- ---- ---- ---- ---- ----
+
 
     LAMBDAPANELS:CreateLabel( "Ping", mainscroll, TOP )
-    LAMBDAPANELS:CreateLabel( "The lowest point this Lambda's Ping can get", mainscroll, TOP )
-    local pingrange = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 100, "Ping Range", 1, 130, 0 )
+    LAMBDAPANELS:CreateLabel( "The average ping of this Lambda", mainscroll, TOP )
+    local averageping = LAMBDAPANELS:CreateNumSlider( mainscroll, TOP, 40, "Ping Range", 1, 130, 0 )
 
     LAMBDAPANELS:CreateLabel( "Health", mainscroll, TOP )
     LAMBDAPANELS:CreateLabel( "The Health this Lambda will have", mainscroll, TOP )
@@ -448,8 +524,10 @@ local function OpenProfilePanel( ply )
     playermodelpreview:Dock( TOP )
     playermodelpreview:SetModel( "models/error.mdl" )
 
+    local mdlPreviewAng = Angle()
     function playermodelpreview:LayoutEntity( Entity )
-        Entity:SetAngles( Angle( 0, RealTime() * 20 % 360, 0 ) )
+        mdlPreviewAng[ 2 ] = ( RealTime() * 20 % 360 )
+        Entity:SetAngles( mdlPreviewAng )
     end
 
     function playermodelpreview:UpdateColors( vector )
@@ -458,7 +536,10 @@ local function OpenProfilePanel( ply )
     end
 
     function model:OnChange() 
-        playermodelpreview:SetModel( model:GetText() != "" and model:GetText() or "models/error.mdl" )
+        local mdlPath = model:GetText()
+        if !file_Exists( mdlPath, "GAME" ) then return end
+
+        playermodelpreview:SetModel( mdlPath )
         if isfunction( UpdateSBSliders ) then UpdateSBSliders() end
     end
     ---- ---- ---- ---- ---- ----
@@ -532,15 +613,16 @@ local function OpenProfilePanel( ply )
     UpdateSBSliders = function()
         local ent = playermodelpreview:GetEntity()
 
-        if skinslider then skinslider:Remove() skinslider = nil end
-        for k, v in pairs( bodygroupdata ) do if v then v:Remove() v = nil end end
+        for k, v in pairs( bodygroupdata ) do 
+            if v then v:Remove() end
+            bodygroupdata[ k ] = nil
+        end
 
+        if skinslider then skinslider:Remove() end
         skinslider = LAMBDAPANELS:CreateNumSlider( sbscroll, TOP, 0, "Skin", 0, ent:SkinCount() - 1, 0 )
-
         function skinslider:OnValueChanged( val ) ent:SetSkin( round( val, 0 ) ) end
 
         local groups = ent:GetBodyGroups() or {}
-        
         for _, v in ipairs( groups ) do
             local smds = #v.submodels
             if smds == 0 then continue end 
@@ -597,10 +679,8 @@ local function OpenProfilePanel( ply )
         if name:GetText() == "" then chat.AddText( "No name is set!" ) return end
         local _, vp = voiceprofile:GetSelected()
         local _, tp = textprofile:GetSelected()
-        
-        local _, weapon = spawnweapon:GetSelected()
-        local infotable = {
 
+        local infotable = {
             name = name:GetText(),
             model = model:GetText() != "" and model:GetText() or nil,
             profilepicture = profilepicture:GetText() != "" and "lambdaplayers/custom_profilepictures/" .. profilepicture:GetText() or nil,
@@ -615,14 +695,15 @@ local function OpenProfilePanel( ply )
             text = usepersonality:GetChecked() and round( textchance:GetValue(), 0 ) or nil,
             voiceprofile = vp != "/NIL" and vp or nil,
             textprofile = tp != "/NIL" and tp or nil,
-            pingrange = round( pingrange:GetValue(), 0 ),
+            averageping = round( averageping:GetValue(), 0 ),
             health = round( health:GetValue(), 0 ),
             armor = round( armor:GetValue(), 0 ),
 
             externalvars = profileinfo and profileinfo.externalvars or nil,
 
-            spawnwep = weapon != "/NIL" and weapon or nil
-
+            spawnwep = ( spawnweapon != "none" and spawnweapon or nil ),
+            favwep = ( favoriteweapon != "none" and favoriteweapon or nil ),
+            weaponrestrictions = ( !table_IsEmpty( weaponrestrictions ) and weaponrestrictions or nil )
         }
 
         infotable.bodygroups = {}
@@ -692,9 +773,11 @@ local function OpenProfilePanel( ply )
         if infotable.voiceprofile then voiceprofile:SelectOptionByKey( infotable.voiceprofile ) else voiceprofile:SelectOptionByKey( "/NIL" ) end
         if infotable.textprofile then textprofile:SelectOptionByKey( infotable.textprofile ) else textprofile:SelectOptionByKey( "/NIL" ) end
         
-        pingrange:SetValue( infotable.pingrange )
+        averageping:SetValue( infotable.averageping or infotable.pingrange )
 
-        if infotable.spawnwep then spawnweapon:SelectOptionByKey( infotable.spawnwep ) else spawnweapon:SelectOptionByKey( "/NIL" ) end
+        spawnweapon = infotable.spawnwep or "none"
+        favoriteweapon = infotable.favwep or "none"
+        weaponrestrictions = infotable.weaponrestrictions or {}
 
         if externalpanels then
             for k, v in pairs( externalpanels ) do

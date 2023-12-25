@@ -1,20 +1,31 @@
-
+local CurTime = CurTime
 local IsValid = IsValid
 local ipairs = ipairs
 local table_remove = table.remove
 local RealTime = RealTime
+local isnumber = isnumber
+local isfunction = isfunction
 local LambdaScreenScale = LambdaScreenScale
 local Left = string.Left
+local match = string.match
+local gmatch = string.gmatch
+local RunString = RunString
+local ScrW = ScrW
+local ScrH = ScrH
+local IsValidRagdoll = util.IsValidRagdoll
+local invisClr = Color( 0, 0, 0, 0 )
 
 if SERVER then
 
-    local wepDmgScale = GetConVar( "lambdaplayers_combat_weapondmgmultiplier" )
+    local wepDmgScalePlys = GetConVar( "lambdaplayers_combat_weapondmgmultiplier_players" )
+    local wepDmgScaleLambdas = GetConVar( "lambdaplayers_combat_weapondmgmultiplier_lambdas" )
+    local wepDmgScaleMisc = GetConVar( "lambdaplayers_combat_weapondmgmultiplier_misc" )
 
-    hook.Add( "ScalePlayerDamage", "LambdaScalePlayerDamage", function( ply, hit, dmginfo )
-        if !ply.IsLambdaPlayer then return end
-        ply.l_lasthitgroup = hit
-        ply.l_lastdamage = dmginfo:GetDamage()
-    end )
+    function LambdaGetWeaponDamageScale( target )
+        if target.IsLambdaPlayer then return wepDmgScaleLambdas:GetFloat() end
+        if target:IsPlayer() then return wepDmgScalePlys:GetFloat() end
+        return wepDmgScaleMisc:GetFloat()
+    end
 
     -- God mode simple stuff
     hook.Add( "EntityTakeDamage", "LambdaMainDamageHook", function( ent, dmginfo )
@@ -28,8 +39,8 @@ if SERVER then
         end
 
         local inflictor = dmginfo:GetInflictor()
-        if IsValid( inflictor ) and inflictor.IsLambdaWeapon then
-            dmginfo:ScaleDamage( wepDmgScale:GetFloat() )
+        if IsValid( inflictor ) and ( inflictor.IsLambdaWeapon or inflictor.l_UseLambdaDmgModifier ) then
+            dmginfo:ScaleDamage( LambdaGetWeaponDamageScale( ent ) )
         end
     end )
 
@@ -46,8 +57,96 @@ if SERVER then
             _LambdaPlayerBirthdays[ ply:SteamID() ] = { month = month, day = day } 
         end )
     end )
-
     
+    -- Fixes ReAgdoll throwing errors when a ragdoll doesn't have bones it need to use (like head)
+    hook.Add( "OnEntityCreated", "LambdaOnEntityCreated", function( ent )
+        if !IsValid( ent ) then return end
+
+        local class = ent:GetClass() 
+        if class == "lua_run" then
+            function ent:RunCode( activator, caller, code )
+                self:SetupGlobals( activator, caller )
+                    if activator.IsLambdaPlayer then
+                        for funcName in gmatch( code, "[%TRIGGER_PLAYER%ACTIVATOR]:([%w_]+)" ) do
+                            if !isfunction( activator[ funcName ] ) then self:KillGlobals() return end
+                        end
+                    end
+                    if caller.IsLambdaPlayer then
+                        for funcName in gmatch( code, "CALLER:([%w_]+)" ) do
+                            if !isfunction( caller[ funcName ] ) then self:KillGlobals() return end
+                        end
+                    end
+
+                    RunString( code, "lua_run#" .. self:EntIndex() )
+                self:KillGlobals()
+            end
+
+            function ent:SetupGlobals( activator, caller )
+                ACTIVATOR = activator
+                CALLER = caller
+
+                if IsValid( activator ) && ( activator.IsLambdaPlayer or activator:IsPlayer() ) then
+                    TRIGGER_PLAYER = activator
+                end
+            end
+        elseif class == "puppetmaster" then
+            local oldGetBoneTbl = ent.GetBoneTable
+            function ent:GetBoneTable( tbl )
+                self.BoneTable = tbl
+                oldGetBoneTbl( self, tbl )
+            end
+
+            local oldInit = ent.Initialize
+            function ent:Initialize()
+                local ragdoll = self:GetRagdoll()
+                if !IsValid( ragdoll ) or ragdoll:GetPhysicsObjectCount() <= 0 then
+                    self:Remove()
+                    return
+                end
+                local rootPhys = ragdoll:TranslatePhysBoneToBone( 0 )
+                if !rootPhys then 
+                    self:Remove()
+                    return
+                end
+
+                ragdoll:DeleteOnRemove(self)
+                ragdoll.RD_PhysStats = {}
+
+                local boneTbl = self.BoneTable
+                if !boneTbl then oldInit( self ) return end
+
+                local anim = self:GetAnim()
+                anim:DeleteOnRemove( self )
+                self:DeleteOnRemove( anim )
+
+                if self:GetBalancing() then
+                    self:SetShouldFloat( true )
+                end
+
+                self:SetRootbone( rootPhys )
+                self:SetStartTime( CurTime() )
+                self:SetColor( invisClr )
+                self:SetRenderMode( RENDERMODE_TRANSCOLOR )      
+                self:StartMotionController()
+                if !match( ragdoll:GetBoneName( 0 ), "ValveBiped" ) then return end
+
+                for _, bone in ipairs( boneTbl ) do
+                    local boneIndex = ragdoll:LookupBone( bone )
+                    if !isnumber( boneIndex ) then continue end
+
+                    boneIndex = ragdoll:TranslateBoneToPhysBone( boneIndex )
+                    if boneIndex == -1 then continue end
+
+                    local ragphys = ragdoll:GetPhysicsObjectNum( boneIndex )        
+                    if !IsValid( ragphys ) then continue end
+
+                    self:AddToMotionController( ragphys )
+                    ragdoll.RD_PhysStats[ ragphys:GetSurfaceArea() ] = boneIndex
+                end
+            end
+        end
+    end )
+
     local specialkeywords = { 
         "|birthday|", 
         "|christmas|",
@@ -143,77 +242,112 @@ elseif CLIENT then
         end )
     end
 
-
-    -- Zeta's old voice pop up
---[[     local function LegacyVoicePopUp( x, y, name, icon, volume, alpha )
-        if #name > 17 then name = Left( name, 17 ) .. "..." end
-
-        local popupColor = Color(0, 255 * volume, 0, alpha )
-        draw.RoundedBox(4, x, y, 230, 50, popupColor)
-        surface.SetDrawColor( Color(255, 255, 255, alpha ) )
-        surface.SetMaterial( icon )
-        surface.DrawTexturedRect(x + 5, y + 9, 32, 32)
-        draw.DrawText( name, "lambdaplayers_voicepopuptext", x + 40, y + 12, Color( 255, 255, 255, alpha ), TEXT_ALIGN_LEFT )
-    end ]]
-
-    local draw_RoundedBox = draw.RoundedBox
+    local table_Empty = table.Empty
+    local max = math.max
+    local ispanel = ispanel
+    local surface_SetFont = surface.SetFont
+    local surface_GetTextSize = surface.GetTextSize
     local surface_SetDrawColor = surface.SetDrawColor
     local surface_SetMaterial = surface.SetMaterial
-    local surface_DrawTexturedRect = surface.DrawTexturedRect
-    local draw_DrawText = draw.DrawText
+    local DrawTexturedRect = surface.DrawTexturedRect
+    local sub = string.sub
+    local SortedPairsByMemberValue = SortedPairsByMemberValue
     local allowpopups = GetConVar( "lambdaplayers_voice_voicepopups" )
-    local voicepopupx = GetConVar( "lambdaplayers_voice_voicepopupxpos" )
-    local voicepopupy = GetConVar( "lambdaplayers_voice_voicepopupypos" )
-    local usegmodpopups = GetConVar( "lambdaplayers_voice_usegmodvoicepopups" )
+    local voicepopupx = GetConVar( "lambdaplayers_voice_voicepopupoffset_x" )
+    local voicepopupy = GetConVar( "lambdaplayers_voice_voicepopupoffset_y" )
 
-    -- Lambda's newer and accurate Voice Pop up
-    local function LambdaVoicePopUp( x, y, name, icon, volume, alpha )
-        if #name > 20 + uiscale:GetFloat() then name = Left( name, 20 + uiscale:GetFloat() ) .. "..." end
-        
-        local popupColor = Color(0, 255 * volume, 0, alpha )
-        draw_RoundedBox(4, x - 24, y, LambdaScreenScale( 83.5 + uiscale:GetFloat() ), LambdaScreenScale( 13.5 + uiscale:GetFloat() ), popupColor)
-        surface_SetDrawColor( Color(255, 255, 255, alpha ) )
-        surface_SetMaterial( icon )
-        surface_DrawTexturedRect(x - 19, y + 5, LambdaScreenScale( 11 + uiscale:GetFloat() ), LambdaScreenScale( 11 + uiscale:GetFloat() ))
-        draw_DrawText( name, "lambdaplayers_voicepopuptext", x + LambdaScreenScale( 9 + uiscale:GetFloat() ), y + 10, Color( 255, 255, 255, alpha ), TEXT_ALIGN_LEFT )
-    end
-
+    local popupBaseColor = Color( 255, 255, 255, 255 )
+    local popupVolColor = Color( 0, 255, 0, 240 )
+    local drawPopupIndexes = {}
 
     -- This handles the rendering of the Voice Popups to the right side 
-    hook.Add( "HUDPaint", "lambdaplayervoicepopup", function()
-        if !allowpopups:GetBool() or usegmodpopups:GetBool() then return end
+    hook.Add( "HUDPaint", "LambdaPlayers_DrawVoicePopups", function()
+        if !allowpopups:GetBool() then return end
 
-        for k, v in ipairs( _LAMBDAPLAYERS_Voicechannels ) do
-            local w, h = ScrW(), ScrH()
-            local x, y = ( w - voicepopupx:GetInt() ), ( h - voicepopupy:GetInt() )
-            y = y + ( k*-LambdaScreenScale( 17 + uiscale:GetFloat() ) )
+        local realTime = RealTime()
+        local timeOffset = 0
+        local canDrawSomething = false
+        table_Empty( drawPopupIndexes )
 
-            v[ "alpha" ] = v[ "alpha" ] or 245
-
-            local volume = 0
-            local invalid = false
-            local snd = v[ 1 ]
-            local name, icon, length = v[ 2 ], v[ 3 ], RealTime() + v[ 4 ]
-            if !IsValid( snd ) or snd:GetState() == GMOD_CHANNEL_STOPPED then
-                invalid = true
-            else 
-                local l, r = snd:GetLevel()
-                volume = l + r
+        for lambda, vcData in SortedPairsByMemberValue( _LAMBDAPLAYERS_VoicePopups, "FirstDisplayTime" ) do
+            local playTime = vcData.PlayTime
+            if playTime then
+                if realTime >= playTime then
+                    vcData.PlayTime = false
+                else
+                    continue
+                end
             end
-
-            if RealTime() > length or invalid then
-                v[ "alpha" ] = v[ "alpha" ] - 1
+            
+            local sndVol = 0
+            local snd = vcData.Sound
+            local lastPlayTime = vcData.LastPlayTime
+            if IsValid( snd ) and snd:GetState() == GMOD_CHANNEL_PLAYING then
+                local leftChan, rightChan = snd:GetLevel()
+                sndVol = ( ( leftChan + rightChan ) * 0.5 )
+    
+                vcData.LastPlayTime = realTime
+                if vcData.FirstDisplayTime == 0 then
+                    vcData.FirstDisplayTime = ( realTime + timeOffset )
+                    timeOffset = ( timeOffset + 0.1 )
+                end 
             end
+            vcData.VoiceVolume = sndVol
 
-            if v[ "alpha" ] <= 0 then
-                table_remove( _LAMBDAPLAYERS_Voicechannels, k )
-            else
-
-                LambdaVoicePopUp( x, y, name, icon, volume, v[ "alpha" ] ) -- Call the voice pop up function
-
+            local drawAlpha = max( 0, 1 - ( ( realTime - vcData.LastPlayTime ) / 2 ) )
+            if !IsValid( snd ) and drawAlpha == 0 then 
+                _LAMBDAPLAYERS_VoicePopups[ lambda ] = nil
+                continue 
             end
+    
+            vcData.AlphaRatio = drawAlpha
+            if drawAlpha == 0 then
+                vcData.FirstDisplayTime = 0
+                continue 
+            end
+    
+            canDrawSomething = true
+            drawPopupIndexes[ lambda ] = vcData
+        end
+
+        if !canDrawSomething then return end
+        local drawX, drawY = ( ScrW() - 298 + voicepopupx:GetInt() ), ( ScrH() - 142 + voicepopupy:GetInt() )
+    
+        local plyPopups = g_VoicePanelList
+        if ispanel( plyPopups ) then drawY = ( drawY - ( 44 * #plyPopups:GetChildren() ) ) end
+
+        local popupIndex = 0
+        surface_SetFont( "GModNotify" )
+
+        for lambda, vcData in SortedPairsByMemberValue( drawPopupIndexes, "FirstDisplayTime" ) do
+            local drawAlpha = vcData.AlphaRatio
+            popupBaseColor.a = ( drawAlpha * 255 )
+    
+            local vol = ( vcData.VoiceVolume * drawAlpha )
+            local vcClr = vcData.Color
+            popupVolColor.r = ( vol * vcClr.r )
+            popupVolColor.g = ( vol * vcClr.g )
+            popupVolColor.b = ( vol * vcClr.b )
+
+            popupVolColor.a = ( drawAlpha * 240 )
+            draw.RoundedBox( 4, drawX, drawY, 246, 40, popupVolColor )
+            
+            surface_SetDrawColor( popupBaseColor )
+            surface_SetMaterial( vcData.ProfilePicture )
+            DrawTexturedRect( drawX + 4, drawY + 4, 32, 32 )
+    
+            local nickname = vcData.Nick
+            local textWidth = surface_GetTextSize( nickname )
+            if textWidth > 200 then
+                nickname = sub( nickname, 0, ( ( #nickname * ( 202.5 / textWidth ) ) - 3 ) ) .. "..."
+            end
+            DrawText( nickname, "GModNotify", drawX + 43.5, drawY + 9, popupBaseColor, TEXT_ALIGN_LEFT )
+
+            drawY = ( drawY - 44 )
+            popupIndex = ( popupIndex + 1 )
         end
     end )
+
 
     -- Removes ragdolls that are were created while not drawn in clientside
     hook.Add( "PreCleanupMap", "LambdaPlayers_OnPreCleanupMap", function()

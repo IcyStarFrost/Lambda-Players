@@ -37,18 +37,28 @@ end
 
 -- Localization
 
+    local GetLightColor
+
     local random = math.random
     local rand = math.Rand
+    local max = math.max
+    local min = math.min
+    local abs = math.abs
     local SortTable = table.sort
+    local CopyTable = table.Copy
+    local table_Random = table.Random
     local eyetracing = GetConVar( "lambdaplayers_debug_eyetracing" )
     local isfunction = isfunction
     local isnumber = isnumber
+    local isstring = isstring
     local Lerp = Lerp
     local LerpVector = LerpVector
     local isentity = isentity
+    local istable = istable
     local VectorRand = VectorRand
     local Vector = Vector
     local IsValid = IsValid
+    local IsValidModel = util.IsValidModel
     local coroutine_status = coroutine.status
     local coroutine_wait = coroutine.wait
     local undo = undo
@@ -75,16 +85,27 @@ end
     local color_white = color_white
     local RandomPairs = RandomPairs
     local TraceHull = util.TraceHull
+    local IsInWorld = util.IsInWorld
     local FrameTime = FrameTime
-    local unstucktable = {}
-    local swimtable = { collisiongroup = COLLISION_GROUP_PLAYER }
-    local sub = string.sub
-    local lower = string.lower
-    local RealTime = RealTime
-    local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
     local collisionmins = Vector( -16, -16, 0 )
     local standingcollisionmaxs = Vector( 16, 16, 72 )
     local crouchingcollisionmaxs = Vector( 16, 16, 36 )
+    local unstucktable = {}
+    local swimtable = { collisiongroup = COLLISION_GROUP_PLAYER }
+    local combatjumptbl = {
+        filter = NULL,
+        collisiongroup = COLLISION_GROUP_PLAYER,
+        mins = collisionmins,
+        maxs = standingcollisionmaxs
+    }
+    local sub = string.sub
+    local match = string.match
+    local string_find = string.find
+    local lower = string.lower
+    local gmatch = string.gmatch
+    local string_Replace = string.Replace
+    local RealTime = RealTime
+    local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
     local maxHealth = GetConVar( "lambdaplayers_lambda_maxhealth" )
     local debugmode = GetConVar( "lambdaplayers_debug" )
     local spawnHealth = GetConVar( "lambdaplayers_lambda_spawnhealth" )
@@ -93,22 +114,32 @@ end
     local collisionPly = GetConVar( "lambdaplayers_lambda_noplycollisions" )
     local walkingSpeed = GetConVar( "lambdaplayers_lambda_walkspeed" )
     local runningSpeed = GetConVar( "lambdaplayers_lambda_runspeed" )
-    local LambdaSpawnBehavior = GetConVar( "lambdaplayers_combat_spawnbehavior" )
+    local slowWalkSpeed = GetConVar( "lambdaplayers_lambda_slowwalkspeed" )
+    local crouchSpeed = GetConVar( "lambdaplayers_lambda_crouchspeed" )
+    local noclipSpeed = GetConVar( "lambdaplayers_lambda_noclipspeed" )
+    local jumpHeight = GetConVar( "lambdaplayers_lambda_jumpheight" )
+    local silentStepsSpeed = GetConVar( "lambdaplayers_lambda_nostepsndspeed" )
     local ignorePlys = GetConVar( "ai_ignoreplayers" )
     local sv_gravity = GetConVar( "sv_gravity" )
     local physUpdateTime = GetConVar( "lambdaplayers_lambda_physupdatetime" )
+    local lethalWaters = GetConVar( "lambdaplayers_lambda_lethalwaters" )
+    local useWeaponPanic = GetConVar( "lambdaplayers_combat_useweapononretreat" )
+    local jumpInCombat = GetConVar( "lambdaplayers_combat_usejumpsincombat" )
+    local forcePlyMdl = GetConVar( "lambdaplayers_lambda_forceplayermodel" )
+    local drownTime = GetConVar( "lambdaplayers_lambda_drowntime" )
+    local saveInterrupt = GetConVar( "lambdaplayers_text_saveoninterrupted" )
+    local nadeUsage = GetConVar( "lambdaplayers_combat_allownadeusage" )
 --
 
 if CLIENT then
+
+    GetLightColor = render.GetLightColor
 
     language.Add( "npc_lambdaplayer", "Lambda Player" )
 
 end
 
 function ENT:Initialize()
-
-    self.l_SpawnPos = self:GetPos() -- Used for Respawning
-    self.l_SpawnAngles = self:GetAngles()
     self.l_Hooks = {} -- The table holding all our created hooks
     self.l_Timers = {} -- The table holding all named timers
     self.l_SimpleTimers = {} -- The table holding all simple timers
@@ -118,13 +149,22 @@ function ENT:Initialize()
     self:BuildPersonalityTable() -- Builds all personality chances from autorun_includes/shared/lambda_personalityfuncs.lua for use in chance testing and creates Get/Set functions for each one
 
     if SERVER then
-        
-        local mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels
-        if allowaddonmodels:GetBool() then
-            mdlTbl = ( onlyaddonmodels:GetBool() and _LAMBDAPLAYERS_AddonPlayermodels or _LAMBDAPLAYERS_AllPlayermodels )
-            if #mdlTbl == 0 then mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels end
-        end    
-        self:SetModel( mdlTbl[ random( #mdlTbl ) ] )
+
+        local spawnMdl = "models/player/kleiner.mdl"
+        if !self.l_NoRandomModel then
+            local forceMdl = forcePlyMdl:GetString()
+            if forceMdl != "" and IsValidModel( forceMdl ) then
+                spawnMdl = forceMdl
+            else
+                local mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels
+                if allowaddonmodels:GetBool() then
+                    mdlTbl = ( onlyaddonmodels:GetBool() and _LAMBDAPLAYERS_AddonPlayermodels or _LAMBDAPLAYERS_AllPlayermodels )
+                    if #mdlTbl == 0 then mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels end
+                end
+                spawnMdl = mdlTbl[ random( #mdlTbl ) ]
+            end    
+        end
+        self:SetModel( spawnMdl )
 
         self.l_SpawnedEntities = {} -- The table holding every entity we have spawned
         self.l_ExternalVars = {} -- The table holding any custom variables external addons want saved onto the Lambda so it can exported along with other Lambda Info
@@ -134,13 +174,17 @@ function ENT:Initialize()
             self[ "l_Spawned" .. name ] = {}
         end
 
-        self.l_State = "Idle" -- The current state we are in
-        self.l_LastState = "Idle" -- The last state we were in
+        self.l_BehaviorState = "Idle" -- The state our behavior thread is currently running
         self.l_Weapon = "" -- The weapon we currently have
         self.l_queuedtext = nil -- The text that we want to send in chat
         self.l_typedtext = nil -- The current text we have typed out so far
+        self.l_lasttypedchar = "" -- The last character we used when typing
+        self.l_combolastchar = 0 -- How many times we used the same character when typing
         self.l_nexttext = 0 -- The next time we can type the next character
         self.l_starttypestate = "" -- The state we started typing in
+        self.l_interruptedtext = nil -- The text that we wanted to send but were suddenly interrupted
+        self.l_interruptchecktime = 0 -- The next time we'll check if have an interrupted message stored
+        self.l_lastspokenvoicetype = "" -- The last type of voiceline we spoke with
 
         self.l_issmoving = false -- If we are moving
         self.l_isfrozen = false -- If set true, stop moving as if ai_disable is on
@@ -149,14 +193,14 @@ function ENT:Initialize()
         self.l_UpdateAnimations = true -- If we can update our animations. Used for the purpose of playing sequences
         self.VJ_AddEntityToSNPCAttackList = true -- Makes creature-based VJ SNPCs able to damages us with melee and leap attacks
         self.l_isswimming = false -- If we are currenly swimming (only used to recompute paths when exitting swimming)
-        self.l_AvoidCheck_NextToDoor = false -- If we are currenly near a door and shouldn't use obstacle avoidance
+        self.l_cansprint = true -- If we are able to sprint
 
         self.l_UnstuckBounds = 50 -- The distance the unstuck process will use to check. This value increments during the process and set back to 50 when done
         self.l_nextspeedupdate = 0 -- The next time we update our speed
         self.l_NexthealthUpdate = 0 -- The next time we update our networked health
         self.l_stucktimes = 0 -- How many times did we get stuck in the past 10 seconds
         self.l_stucktimereset = 0 -- The time until l_stucktimes gets reset to 0
-        self.l_nextfootsteptime = 0 -- The next time we play a footstep sound
+        self.l_lastfootsteptime = 0 -- The last time we played a footstep sound
         self.l_nextobstaclecheck = 0 -- The next time we will check for obstacles on our path
         self.l_nextphysicsupdate = 0 -- The next time we will update our Physics Shadow
         self.l_WeaponUseCooldown = 0 -- The time before we can use our weapon again
@@ -167,36 +211,61 @@ function ENT:Initialize()
         self.l_outboundsreset = CurTime() + 5 -- The time until we get teleported back to spawn because we are out of bounds
         self.l_nextnpccheck = CurTime() + 1 -- The next time we will check for surrounding NPCs
         self.l_nextnoclipheightchange = 0 -- The next time we will change our height while in noclip
-        self.l_nextUA = CurTime() + rand( 1, 15 ) -- The next time we will run a UAction. See lambda/sv_x_universalactions.lua
+        self.l_nextUA = CurTime() + random( 1, 15 ) -- The next time we will run a UAction. See lambda/sv_x_universalactions.lua
         self.l_NextPickupCheck = 0 -- The next time we will check for nearby items to pickup
         self.l_moveWaitTime = 0 -- The time we will wait until continuing moving through our path
         self.l_nextswimposupdate = 0 -- the next time we will update our swimming position
-        self.l_ladderfailtimer = CurTime() + 15 -- The time until we are removed and recreated due to Gmod issues with nextbots and ladders. Thanks Facepunch
+        self.l_ladderfailtimer = CurTime() + 5 -- The time until we are removed and recreated due to Gmod issues with nextbots and ladders. Thanks Facepunch
         self.l_NextWeaponThink = 0 -- The next time we will run the currenly held weapon's think callback
         self.l_CurrentPlayedGesture = -1 -- Gesture ID that is assigned when the ENT:PlayGestureAndWait( id ) function is ran
         self.l_retreatendtime = 0 -- The time until we stop retreating
-        self.l_AvoidCheck_NextDoorCheck = 0 -- The next time we will check if we are next to a door while using obstacle avoidance
+        self.l_PreDeathDamage = 0 -- The damage we took before running our death function and setting it to zero
+        self.l_NextSprayUseTime = 0 -- The next time we can use sprays to spray
+        self.l_DStepsWhichFoot = 1 -- The foot that is used in DSteps for stepping. 0 for left, 1 for right
+        self.l_DrownStartTime = false -- The time we will start drowning in water
+        self.l_DrownLostHealth = 0 -- The amount of health we lost while drowning
+        self.l_DrownActionTime = 0 -- The next time we start losing or recovering lost health when drowning
+        self.l_CombatPosUpdateTime = 0 -- The next time we'll update the combat position
+        self.l_ThrowQuickNadeTime = CurTime() + random( 15 ) -- The next time we'll able to throw a quick nade at enemy
+        self.l_LastPhysDmgTime = 0 -- The last time we took a damage from physics object
 
-        self.l_ladderarea = NULL -- The ladder nav area we are currenly using to climb
+        self.l_ladderarea = nil -- The ladder nav area we are currenly using to climb
         self.l_CurrentPath = nil -- The current path (PathFollower) we are on. If off navmesh, this will hold a Vector
         self.l_movepos = nil -- The position or entity we are going to
         self.l_moveoptions = nil -- The move position's options, such as updating, goal tolerance, etc.
         self.l_noclippos = self:GetPos() -- The position we want to noclip to
         self.l_swimpos = self:GetPos() -- The position we are currently swimming to
-        
-        local nearArea = navmesh_GetNavArea( self:WorldSpaceCenter(), 400 ) -- The current nav area we are in
-        if IsValid( nearArea ) then self.l_currentnavarea = nearArea; self:OnNavAreaChanged( nearArea, nearArea ) end
+        self.l_combatpos = self:GetPos() -- The position we are moving to in combat
+        self.l_statearg = nil -- Our state's optional arguments we set in
+        self.l_precombatmovepos = nil
+        self.l_cachedunreachableares = {}
+
+        self.l_AvoidCheck_IsStuck = false -- If we are currenly stuck due to obstacle avoidance and shouldn't use it
+        self.l_AvoidCheck_LastPos = self:GetPos()
+        self.l_AvoidCheck_NextStuckCheck = 0 -- The next time we will check if we are stuck in one place due to obstacle avoidance
+
+        -- Used for Respawning
+        self.l_SpawnPos = self:GetPos()
+        self.l_SpawnAngles = self:GetAngles()
+
+        local nearArea = navmesh_GetNavArea( self.l_SpawnPos, 80 ) -- The current nav area we are in
+        if IsValid( nearArea ) then 
+            self.l_SpawnPos = nearArea:GetClosestPointOnArea( self.l_SpawnPos )
+            self.l_currentnavarea = nearArea
+            self:OnNavAreaChanged( nearArea, nearArea ) 
+        end
 
         -- Personal Stats --
         self:SetLambdaName( self:GetOpenName() )
-        self:SetProfilePicture( #Lambdaprofilepictures > 0 and Lambdaprofilepictures[ random( #Lambdaprofilepictures ) ] or "spawnicons/".. sub( self:GetModel(), 1, #self:GetModel() - 4 ).. ".png" )
+        self:SetProfilePicture( #Lambdaprofilepictures > 0 and Lambdaprofilepictures[ random( #Lambdaprofilepictures ) ] or "spawnicons/".. sub( spawnMdl, 1, #spawnMdl - 4 ).. ".png" )
 
         self:SetMaxHealth( maxHealth:GetInt() )
         self:SetNWMaxHealth( maxHealth:GetInt() )
         self:SetHealth( spawnHealth:GetInt() )
         self:UpdateHealthDisplay()
 
-        self:SetArmor( spawnArmor:GetInt() ) -- Our current armor
+        self.l_SpawnArmor = spawnArmor:GetInt()
+        self:SetArmor( self.l_SpawnArmor ) -- Our current armor
         self:SetMaxArmor( maxArmor:GetInt() ) -- Our maximum armor
 
         self:SetPlyColor( Vector( random( 255 ) / 225, random( 255 ) / 255, random( 255 ) / 255 ) )
@@ -204,26 +273,24 @@ function ENT:Initialize()
         self.l_PlyRealColor = self:GetPlyColor():ToColor()
         self.l_PhysRealColor = self:GetPhysColor():ToColor()
 
-        local rndpingrange = random( 1, 120 )
-        self:SetAbsPing( rndpingrange )  -- The lowest point our fake ping can get
+        local rndpingrange = random( 150 )
+        self:SetAvgPing( rndpingrange )  -- Our average ping we'll use for calculations
         self:SetPing( rndpingrange ) -- Our actual fake ping
-        self:SetSteamID64( 90071996842377216 + random( 1, 10000000 ) )
-        self:SetTextPerMinute( 400 ) -- The amount of characters we can type within a minute
-        self:SetNW2String( "lambda_steamid", "STEAM_0:0:" .. random( 1, 200000000 ) )
+        self:SetSteamID64( 90071996842377216 + random( 10000000 ) )
+        self:SetTextPerMinute( random( 4, 8 ) * 100 ) -- The amount of characters we can type within a minute
+        self:SetTeam( 1001 )
+        self:SetNW2String( "lambda_steamid", "STEAM_0:0:" .. random( 200000000 ) )
         self:SetNW2String( "lambda_ip", "192." .. random( 10, 200 ) .. "." .. random( 10 ).. "." .. random( 10, 200 ) .. ":27005" )
         self:SetNW2String( "lambda_state", "Idle" )
         self:SetNW2String( "lambda_laststate", "Idle" )
+        self:SetNW2Int( "lambda_curanimgesture", -1 )
         
-        self.l_BodyGroupData = {}
         if rndBodyGroups:GetBool() then
             -- Randomize my model's bodygroups
             for _, v in ipairs( self:GetBodyGroups() ) do
                 local subMdls = #v.submodels
                 if subMdls == 0 then continue end 
-                    
-                local rndID = random( 0, subMdls )
-                self:SetBodygroup( v.id, rndID )
-                self.l_BodyGroupData[ v.id ] = rndID
+                self:SetBodygroup( v.id, random( 0, subMdls ) )
             end
 
             -- Randomize my model's skingroup
@@ -233,16 +300,16 @@ function ENT:Initialize()
 
         -- Personality function was relocated to the start of the code since it needs to be shared so clients can have Get functions
         
-        self:SetVoiceChance( random( 1, 100 ) )
-        self:SetTextChance( random( 1, 100 ))
+        self:SetVoiceChance( random( 100 ) )
+        self:SetTextChance( random( 100 ) )
         self:SetVoicePitch( random( voicepitchmin:GetInt(), voicepitchmax:GetInt() ) )
 
-        local modelVP = LambdaModelVoiceProfiles[ lower( self:GetModel() ) ]
+        local modelVP = LambdaModelVoiceProfiles[ lower( spawnMdl ) ]
         if modelVP then 
             self.l_VoiceProfile = modelVP
         else
             local vpchance = voiceprofilechance:GetInt()
-            if vpchance > 0 and random( 1, 100 ) <= vpchance then 
+            if vpchance > 0 and random( 100 ) <= vpchance then 
                 local vps = table_GetKeys( LambdaVoiceProfiles ) 
                 self.l_VoiceProfile = vps[ random( #vps ) ] 
             end
@@ -250,27 +317,27 @@ function ENT:Initialize()
         self:SetNW2String( "lambda_vp", self.l_VoiceProfile )
 
         local tpchance = textprofilechance:GetInt()
-        if tpchance > 0 and random( 1, 100 ) < tpchance then local tps = table_GetKeys( LambdaTextProfiles ) self.l_TextProfile = tps[ random( #tps ) ] end
+        if tpchance > 0 and random( 100 ) < tpchance then local tps = table_GetKeys( LambdaTextProfiles ) self.l_TextProfile = tps[ random( #tps ) ] end
         self:SetNW2String( "lambda_tp", self.l_TextProfile )
 
         ----
 
         SortTable( self.l_Personality, function( a, b ) return a[ 2 ] > b[ 2 ] end )
-
-        self.loco:SetJumpHeight( 50 )
+        self.loco:SetJumpHeight( jumpHeight:GetInt() )
         self.loco:SetAcceleration( 2000 )
         self.loco:SetDeceleration( 1000000 )
-        self.loco:SetStepHeight( 30 )
+        self.loco:SetStepHeight( 18 )
         self.l_LookAheadDistance = 0
         self.loco:SetGravity( sv_gravity:GetFloat() ) -- Makes us fall at the same speed as the real players do
 
         self:SetRunSpeed( runningSpeed:GetInt() )
-        self:SetCrouchSpeed( 60 )
+        self:SetCrouchSpeed( crouchSpeed:GetInt() )
         self:SetWalkSpeed( walkingSpeed:GetInt() )
-        self:SetSlowWalkSpeed( 100 )
+        self:SetSlowWalkSpeed( slowWalkSpeed:GetInt() )
 
-        self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
         self:PhysicsInitShadow()
+        self:SetSolid( SOLID_BBOX )
+        self:SetCollisionBounds( collisionmins, standingcollisionmaxs )
 
         if !collisionPly:GetBool() then
             self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
@@ -278,42 +345,58 @@ function ENT:Initialize()
             self:SetCollisionGroup( COLLISION_GROUP_PASSABLE_DOOR )
         end
 
+        self:SetLagCompensated( true )
+        self:AddFlags( FL_OBJECT + FL_NPC + FL_CLIENT )
         self:SetSolidMask( MASK_PLAYERSOLID )
         self:AddCallback( "PhysicsCollide", function( self, data )
             self:HandleCollision( data )
-        end)
+        end )
 
-        if LambdaSpawnBehavior:GetInt() == 1 then
-            local plys = self:FindInSphere( nil, 25000, function( ent ) return ( ent:IsPlayer()) end )
-            self:AttackTarget( plys[ random( #plys ) ] )
-        elseif LambdaSpawnBehavior:GetInt() == 2 then
-            local randomtarg = self:FindInSphere( nil, 25000, function( ent ) return ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and !ignorePlys:GetBool() and ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 1 and ent:Alive() ) end )
-            self:AttackTarget( randomtarg[ random( #randomtarg ) ] )
+        local wepent = ents_Create( "base_anim" )
+        local attachPoint = self:GetAttachmentPoint( "hand" )
+        wepent:SetPos( attachPoint.Pos )
+        wepent:SetAngles( attachPoint.Ang )
+        
+        wepent:SetParent( self, attachPoint.Index )
+        if attachPoint.Bone then wepent:FollowBone( self, attachPoint.Bone ) end
+
+        wepent:Spawn()
+        wepent:SetNW2Vector( "lambda_weaponcolor", self:GetPhysColor() )
+        wepent:SetNoDraw( true )
+
+        wepent.IsLambdaWeapon = true
+        wepent.AutomaticFrameAdvance = true
+
+        wepent.Think = function( entity )
+            if !IsValid( self ) then return end
+            local curTime = CurTime()
+
+            -- Run our weapon's think callback if possible
+            if curTime >= self.l_NextWeaponThink then
+                local wepThinkFunc = self.l_WeaponThinkFunction
+                if wepThinkFunc then
+                    local thinkTime = wepThinkFunc( self, entity, self:GetIsDead() )
+                    if isnumber( thinkTime ) and thinkTime > 0 then self.l_NextWeaponThink = curTime + thinkTime end 
+                end
+            end
+
+            entity:NextThink( curTime )
+            return true
         end
 
-        self:SetLagCompensated( true )
-        self:AddFlags( FL_OBJECT + FL_NPC )
-
-        local ap = self:LookupAttachment( "anim_attachment_RH" )
-        local attachpoint = self:GetAttachmentPoint( "hand" )
-
-        self.WeaponEnt = ents_Create( "base_anim" )
-        self.WeaponEnt:SetPos( attachpoint.Pos )
-        self.WeaponEnt:SetAngles( attachpoint.Ang )
-        self.WeaponEnt:SetParent( self, ap )
-        self.WeaponEnt:Spawn()
-        self.WeaponEnt.IsLambdaWeapon = true
-        self.WeaponEnt:SetNW2Vector( "lambda_weaponcolor", self:GetPhysColor() )
-        self.WeaponEnt:SetNoDraw( true )
-        self:SetWeaponENT( self.WeaponEnt )
         self.l_SpawnWeapon = "physgun" -- The weapon we spawned with
+        self:SetExternalVar( "l_FavoriteWeapon", false ) -- Our favorite weapon
+        self:SetExternalVar( "l_WeaponRestrictions", false ) -- Our weapon restrictions
+
+        self.WeaponEnt = wepent
+        self:SetWeaponENT( wepent )
         self:SetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon )
 
         self:InitializeMiniHooks()
         self:SwitchWeapon( "physgun", true )
         
         self:HandleAllValidNPCRelations()
-
+        self:SetAllowFlashlight( true )
 
         if LambdaPersonalProfiles and random( 0, 100 ) < profilechance:GetInt() then
             for k, v in RandomPairs( LambdaPersonalProfiles ) do
@@ -324,6 +407,10 @@ function ENT:Initialize()
         end
 
         self:ProfileCheck()
+
+        self:SimpleTimer( 0.2, function()
+            self:ApplyCombatSpawnBehavior()
+        end )
 
     elseif CLIENT then
 
@@ -341,8 +428,14 @@ function ENT:Initialize()
             if !IsValid( wep ) then return end
 
             wep.Draw = function( entity )
-                if self:GetIsDead() then return end
+                local deadFunc = self.GetIsDead
+                if deadFunc and deadFunc( self ) then return end
                 entity:DrawModel()
+            end
+
+            wep.Think = function( entity )
+                entity:NextThink( CurTime() )
+                return true
             end
         end )
 
@@ -385,6 +478,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", 8, "IsFiring" )
     self:NetworkVar( "Bool", 9, "IsTyping" )
     self:NetworkVar( "Bool", 10, "SlowWalk" )
+    self:NetworkVar( "Bool", 11, "AllowFlashlight" )
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )
@@ -398,7 +492,7 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 3, "Frags" )
     self:NetworkVar( "Int", 4, "Deaths" )
     self:NetworkVar( "Int", 5, "Ping" )
-    self:NetworkVar( "Int", 6, "AbsPing" )
+    self:NetworkVar( "Int", 6, "AvgPing" )
     self:NetworkVar( "Int", 7, "Armor" )
     self:NetworkVar( "Int", 8, "MaxArmor" )
     self:NetworkVar( "Int", 9, "SteamID64" )
@@ -412,6 +506,7 @@ function ENT:SetupDataTables()
 
     self:NetworkVar( "Float", 0, "LastSpeakingTime" )
     self:NetworkVar( "Float", 1, "VoiceLevel" )
+    self:NetworkVar( "Float", 2, "PingUpdateTime" )
 
 end
 
@@ -425,57 +520,114 @@ end
 function ENT:Think()
 
     local curTime = CurTime()
+    local isDead = self:GetIsDead()
 
     -- Text Chat --
     -- Pretty simple stuff actually
+
+    local interruptedText = self.l_interruptedtext
+    if interruptedText and curTime >= self.l_interruptchecktime then
+        self.l_interruptchecktime = ( curTime + 0.5 )
+
+        if !self:InCombat() and !self:IsPanicking() then
+            if !queuedText then
+                self:TypeMessage( interruptedText[ 1 ], false )
+                self.l_typedtext = interruptedText[ 2 ]
+            end
+
+            self.l_interruptedtext = nil
+        end
+    end
+
     local queuedText = self.l_queuedtext
-    self:SetIsTyping( queuedText != nil )
-    
-    if queuedText and curTime > self.l_nexttext then
+    if queuedText and curTime >= self.l_nexttext then
         local typedText = self.l_typedtext
         local typedLen = #typedText
 
-        if typedLen == #queuedText or self:GetState() != self.l_starttypestate then 
-            self.l_queuedtext = nil
-            self:Say( typedText )
+        local doneTyping = ( typedLen >= #queuedText )
+        if doneTyping or self:GetState() != self.l_starttypestate then 
+            if !doneTyping and saveInterrupt:GetBool() then
+                self.l_interruptedtext = {
+                    queuedText,
+                    typedText
+                }
+            else
+                local sayMsg = ( match( queuedText, "(https?://%S+)" ) != nil and queuedText or typedText )
+                self:Say( sayMsg )
+            end
+
             self:OnEndMessage( typedText )
+            queuedText = nil
+            self.l_queuedtext = queuedText
         else
-            self.l_typedtext = typedText .. sub( queuedText, typedLen + 1, typedLen + 1 )
-            self.l_nexttext = ( curTime + 1 / ( self:GetTextPerMinute() / 60 ) )
+            local lastWord = ""
+            for word in gmatch( typedText, "%S+" ) do 
+                lastWord = word 
+            end
+            
+            local nextChar = sub( queuedText, typedLen + 1, typedLen + 1 )
+            if nextChar == self.l_lasttypedchar then
+                self.l_combolastchar = ( self.l_combolastchar + 3 )
+            else
+                self.l_combolastchar = 0
+            end
+
+            local foundLink = match( lastWord, "(https?://%S+)" )
+            local ctrlplused = false
+            if foundLink != nil then 
+                local linkStart, linkEnd = string_find( queuedText, lastWord .. "(%S+)" )
+                if linkStart and linkEnd then
+                    ctrlplused = true
+                    self.l_typedtext = string_Replace( typedText, foundLink, sub( queuedText, linkStart, linkEnd ) )
+                end
+            end
+            if !ctrlplused then
+                self.l_typedtext = typedText .. nextChar
+                self.l_lasttypedchar = nextChar
+            end
+
+            local typePerMinute = ( 60 - self.l_combolastchar )
+            if isDead then
+                typePerMinute = ( typePerMinute / 1.33 )
+            end
+            self.l_nexttext = ( curTime + 1 / ( self:GetTextPerMinute() / max( typePerMinute, 10 ) ) )
+        end
+    end
+
+    self:SetIsTyping( queuedText != nil )
+    -- -- -- -- --
+
+    local wepent = self:GetWeaponENT()
+
+    -- Handle our ping rising or dropping
+    if curTime >= self:GetPingUpdateTime() then
+        self:SetPingUpdateTime( curTime + 1 )
+
+        if ( SERVER or self:IsDormant() ) and random( 3 ) == 1 then
+            local curPing, avgPing = self:GetPing(), self:GetAvgPing()
+            local newPing = Clamp( random( avgPing - ( avgPing / 2 ), avgPing + ( avgPing / ( random( 15, 20 ) * 0.1 ) ) ), 0, 999 )            
+            self:SetPing( newPing )
         end
     end
     -- -- -- -- --
 
-    local isDead = self:GetIsDead()
-    local wepent = self:GetWeaponENT()
-
-    -- Run our weapon's think callback if possible
-    if SERVER and curTime > self.l_NextWeaponThink then
-        local wepThinkFunc = self.l_WeaponThinkFunction
-        if wepThinkFunc then
-            local thinkTime = wepThinkFunc( self, wepent, isDead )
-            if isnumber( thinkTime ) and thinkTime > 0 then self.l_NextWeaponThink = curTime + thinkTime end 
-        end
-    end
-
     -- Allow addons to add stuff to Lambda's Think
     LambdaRunHook( "LambdaOnThink", self, wepent, isDead )
-
-    if isDead then return end
+    -- -- -- -- --
     
-    if ( SERVER ) then
+    if ( SERVER and !isDead ) then
 
         local loco = self.loco
         local selfPos = self:GetPos()
         local selfAngles = self:GetAngles()
         local locoVel = loco:GetVelocity()
-        local onGround = self:IsOnGround()
+        local onGround = loco:IsOnGround()
         local waterLvl = self:GetWaterLevel()
         local frameTime = FrameTime()
         local isDisabled = self:IsDisabled()
         local isCrouched = self:GetCrouch()
 
-        if curTime > self.l_debugupdate then 
+        if curTime >= self.l_debugupdate then 
             local thread = self.BehaveThread
             if thread and debugmode:GetBool() then 
                 self:SetNW2String( "lambda_threadstatus", coroutine_status( thread ) )
@@ -491,61 +643,199 @@ function ENT:Think()
             loco:SetVelocity( locoVel ) 
         end
 
-        -- Footstep sounds
-        if curTime > self.l_nextfootsteptime and onGround and !locoVel:IsZero() then
-            self:PlayStepSound()
-            self.l_nextfootsteptime = curTime + self:GetStepSoundTime()
+        -- Update our movement speed
+        if curTime >= self.l_nextspeedupdate then
+            loco:SetDesiredSpeed( ( isCrouched and self:GetCrouchSpeed() or ( self:GetSlowWalk() and self:GetSlowWalkSpeed() or ( ( self:GetRun() and self.l_cansprint == true ) and self:GetRunSpeed() or self:GetWalkSpeed() ) ) ) * self.l_WeaponSpeedMultiplier )
+            self.l_nextspeedupdate = curTime + 0.1
         end
 
-        -- Play random Idle lines depending on current state
-        if curTime > self.l_nextidlesound then
-            if !isDisabled and !self:GetIsTyping() and !self:IsSpeaking() and !self.l_preventdefaultspeak then
-                if random( 1, 100 ) <= self:GetVoiceChance() then
-                    local idleLine = ( self:IsPanicking() and "panic" or ( self:InCombat() and "taunt" or "idle" ) )
-                    self:PlaySoundFile( self:GetVoiceLine( idleLine ) )
-                elseif random( 1, 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
-                    local line = self:GetTextLine( "idle" )
-                    line = LambdaRunHook( "LambdaOnStartTyping", self, line, "idle" ) or line
-                    self:TypeMessage( line )
+        -- Footstep sounds
+        if onGround and !locoVel:IsZero() and loco:GetDesiredSpeed() > silentStepsSpeed:GetInt() and !self:IsInNoClip() and ( curTime - self.l_lastfootsteptime ) >= self:GetStepSoundTime() then
+            self:PlayStepSound()
+            self.l_lastfootsteptime = curTime
+        end
+
+        -- Play random Idle lines depending on current state or speak in text chat
+        if curTime >= self.l_nextidlesound then
+            if !isDisabled and !self.l_preventdefaultspeak and !self:GetIsTyping() and !self:IsSpeaking() then
+                if random( 100 ) <= self:GetVoiceChance() then
+                    self:PlaySoundFile( self:IsPanicking() and "panic" or ( self:InCombat() and "taunt" or "idle" ) )
+                elseif random( 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
+                    self:TypeMessage( self:GetTextLine( "idle" ) )
                 end
             end
 
-            self.l_nextidlesound = curTime + 5
-        end
-
-        -- Update our speed after some time
-        if curTime > self.l_nextspeedupdate then
-            loco:SetDesiredSpeed( ( isCrouched and self:GetCrouchSpeed() or ( self:GetSlowWalk() and self:GetSlowWalkSpeed() or ( self:GetRun() and self:GetRunSpeed() or self:GetWalkSpeed() ) ) ) * self.l_WeaponSpeedMultiplier )
-            self.l_nextspeedupdate = curTime + 0.5
+            self.l_nextidlesound = ( curTime + 5 )
         end
 
         -- Attack nearby NPCs
-        if curTime > self.l_nextnpccheck then 
-            if !self:InCombat() then
-                local npcs = self:FindInSphere( nil, 2000, function( ent ) return LambdaIsValid( ent ) and ( ent:IsNPC() or ent:IsNextBot() and !self:ShouldTreatAsLPlayer( ent ) ) and ent:Health() > 0 and self:ShouldAttackNPC( ent ) and self:CanSee( ent ) end )
-                if #npcs > 0 then self:AttackTarget( npcs[ random( #npcs ) ] ) end
+        if curTime >= self.l_nextnpccheck then 
+            if !self:InCombat() or self:IsPanicking() and !LambdaIsValid( self:GetEnemy() ) then
+                local npcs = self:FindInSphere( nil, 2000, function( ent ) 
+                    return ( IsValid( ent ) and ( ent:IsNPC() or ent:IsNextBot() and !self:ShouldTreatAsLPlayer( ent ) ) and self:CanTarget( ent ) and self:CanSee( ent ) )
+                end )
+                if #npcs != 0 then
+                    local rndNpc = npcs[ random( #npcs ) ]
+                    if self:IsPanicking() then
+                        self:SetEnemy( rndNpc )
+                    else
+                        self:AttackTarget( rndNpc ) 
+                    end
+                end
+            else
+                local ene = self:GetEnemy()
+                if ene.IsDrGNextbot and ene:IsDown() then
+                    self:SetEnemy( NULL )
+                    self:CancelMovement()
+                end
             end
-            
-            self.l_nextnpccheck = curTime + 1
+
+            self.l_nextnpccheck = ( curTime + 1 )
         end
+
+        -- Handle weapon usage & attacking
+        local isFiring = false
+        if !isDisabled then 
+            local target = self:GetEnemy()
+            local behavState = self:GetBehaviorState()
+            local isPanicking = ( behavState == "Retreat" )
+            
+            if LambdaIsValid( target ) and ( isPanicking or behavState == "Combat" ) then
+                local canSee = self:CanSee( target )
+                local attackRange = self.l_CombatAttackRange
+
+                if attackRange and ( !isPanicking or useWeaponPanic:GetBool() ) then 
+                    if isPanicking then attackRange = ( attackRange * 0.8 ) end
+
+                    if canSee then 
+                        if self:IsInRange( target, attackRange * ( self.l_HasMelee and 3 or 1 ) ) then
+                            self.Face = target
+                            self.l_Faceend = ( CurTime() + rand( 0.5, 2.0 ) )
+                        end
+
+                        if self:IsInRange( target, attackRange ) then
+                            isFiring = true
+                            self:UseWeapon( target )
+                        end
+                    end
+                end
+
+                if !isPanicking then
+                    local isReloading = self:GetIsReloading()
+                    local lowOnAmmo = ( self.l_MaxClip > 0 and self.l_Clip <= ( self.l_MaxClip * 0.25 ) )
+
+                    if curTime >= self.l_CombatPosUpdateTime then
+                        self.l_CombatPosUpdateTime = ( curTime + 0.1 )
+
+                        local keepDist, myOrigin = self.l_CombatKeepDistance, self:GetPos()
+                        local posCopy = target:GetPos(); posCopy.z = myOrigin.z
+
+                        if keepDist and ( isReloading or canSee and ( lowOnAmmo or self:IsInRange( posCopy, ( keepDist * rand( 0.8, 1.2 ) ) ) ) ) then
+                            local moveAng = ( myOrigin - posCopy ):Angle()
+                            local runSpeed = self:GetRunSpeed()
+                            local potentialPos = ( myOrigin + moveAng:Forward() * random( -( runSpeed * 0.5 ), keepDist ) + moveAng:Right() * random( -runSpeed, runSpeed ) )
+                            self.l_combatpos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )
+                        else
+                            self.l_combatpos = target
+                        end
+                    end
+
+                    local preCombatMovePos = self.l_precombatmovepos
+                    if preCombatMovePos and isReloading then
+                        self.l_movepos = preCombatMovePos
+                    else
+                        self.l_precombatmovepos = nil
+                        self.l_movepos = self.l_combatpos
+                    end
+                end
+
+                if !isCrouched and jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.8 ) and random( isPanicking and 25 or 35 ) == 1 then
+                    combatjumptbl.start = self:GetPos()
+                    combatjumptbl.endpos = ( combatjumptbl.start + locoVel )
+                    combatjumptbl.filter = self
+
+                    local jumpTr = TraceHull( combatjumptbl )
+                    local hitNorm = jumpTr.HitNormal
+                    local invertVel = false
+                    local canJump = ( hitNorm.x == 0 and hitNorm.y == 0 and hitNorm.z <= 0 )
+
+                    if !canJump and !isPanicking then 
+                        invertVel = Vector( -locoVel.x, -locoVel.y, locoVel.z )
+                        combatjumptbl.endpos = ( combatjumptbl.start + invertVel )
+                        jumpTr = TraceHull( combatjumptbl )
+                        hitNorm = jumpTr.HitNormal
+
+                        canJump = ( hitNorm.z < 0 and hitNorm.x == 0 and hitNorm.y == 0 )
+                    end
+
+                    if canJump and self:LambdaJump() and invertVel then
+                        locoVel = invertVel
+                        loco:SetVelocity( locoVel )
+                    end
+                end
+
+                if curTime >= self.l_ThrowQuickNadeTime then
+                    self.l_ThrowQuickNadeTime = curTime + random( 15 )
+
+                    if canSee and !self:GetIsReloading() and nadeUsage:GetBool() and random( 4 ) == 1 then
+                        local nades = LambdaQuickNades
+                        if #nades > 0 then
+                            local hasNade = false
+
+                            local curWep = self:GetWeaponName()
+                            for _, nade in ipairs( nades ) do if nade == curWep then hasNade = true; break end end
+
+                            if !hasNade then
+                                local rndNade = _LAMBDAPLAYERSWEAPONS[ nades[ random( #nades ) ] ]
+                                if rndNade and !rndNade.attackrange or self:IsInRange( target, rndNade.attackrange ) then
+                                    self:ClientSideNoDraw( wepent, true )
+                                    wepent:SetNoDraw( true )
+                                    wepent:DrawShadow( false )  
+                
+                                    local coolDown = self.l_WeaponUseCooldown
+                                    local callback = ( rndNade.OnAttack or rndNade.callback )
+                                    callback( self, wepent, target )
+
+                                    if coolDown != self.l_WeaponUseCooldown then
+                                        self.l_WeaponUseCooldown = ( ( curTime >= coolDown and curTime or coolDown ) + 0.75 )
+                                    end
+                
+                                    self:SimpleWeaponTimer( 0.75, function()
+                                        local isMarked = self:IsWeaponMarkedNodraw()
+                                        self:ClientSideNoDraw( wepent, isMarked )
+                                        wepent:SetNoDraw( isMarked )
+                                        wepent:DrawShadow( isMarked )  
+                                    end )
+                                end
+                            end
+                        end
+                    end
+                end
+            else
+                self.l_precombatmovepos = self:GetDestination()
+            end
+        end
+        self:SetIsFiring( isFiring )
 
         -- Ladder Physics Failure (LPF to sound cool) fallback
         if !loco:IsUsingLadder() then
-            self.l_ladderfailtimer = curTime + 15
-        elseif curTime > self.l_ladderfailtimer then
-            self:Recreate( true, selfPos, selfAngles )
+            self.l_ladderfailtimer = curTime + 3
+        elseif curTime >= self.l_ladderfailtimer then
+            self:Recreate( true, true )
             self.l_ladderfailtimer = curTime + 1
         end
         --
 
         -- Update our physics object
-        if curTime > self.l_nextphysicsupdate then
+        if curTime >= self.l_nextphysicsupdate then
             local phys = self:GetPhysicsObject()
+
+            local newPos = ( selfPos + vector_up * loco:GetStepHeight() )
             if waterLvl == 0 then
-                phys:SetPos( selfPos )
+                phys:SetPos( newPos, true )
                 phys:SetAngles( selfAngles )
             else
-                phys:UpdateShadow( selfPos, selfAngles, 0 )
+                phys:UpdateShadow( newPos, selfAngles, FrameTime(   ) )
             end
 
             -- Change collision bounds based on if we are crouching or not.
@@ -554,57 +844,56 @@ function ENT:Think()
             self.l_nextphysicsupdate = ( curTime + physUpdateTime:GetFloat() )
         end
 
-        -- Handle picking up entities
-        if curTime > self.l_NextPickupCheck then
-            for _, v in ipairs( self:FindInSphere( selfPos, 58 ) ) do
-                local pickFunc = _LAMBDAPLAYERSItemPickupFunctions[ v:GetClass() ]
-                if isfunction( pickFunc ) and v:Visible( self ) then 
-                    LambdaRunHook( "LambdaOnPickupEnt", self, v ) 
-                    pickFunc( self, v ) 
+        -- Handle entities that are near our pickup range
+        if curTime >= self.l_NextPickupCheck then
+            for _, ent in ipairs( self:FindInSphere( selfPos, 58 ) ) do
+                local pickFunc = _LAMBDAPLAYERSItemPickupFunctions[ ent:GetClass() ]
+                if isfunction( pickFunc ) and ent:Visible( self ) then 
+                    LambdaRunHook( "LambdaOnPickupEnt", self, ent ) 
+                    pickFunc( self, ent )
                 end
             end
 
             self.l_NextPickupCheck = curTime + 0.1
         end
 
-        -- Handle our ping rising or dropping
-        if random( 125 ) == 1 then
-            local ping, absPing = self:GetPing(), self:GetAbsPing()
-            self:SetPing( Clamp( ping + random( -20, ( 24 - ( ping / absPing ) ) ), absPing, 999 ) )
-        end
-
         -- Reload randomly when we aren't shooting
-        if self.l_Clip < self.l_MaxClip and random( 100 ) == 1 and curTime > self.l_WeaponUseCooldown + 1 then
+        if !isDisabled and self.l_Clip < self.l_MaxClip and random( 100 ) == 1 and curTime >= self.l_WeaponUseCooldown + 1 then
             self:ReloadWeapon()
         end
 
         -- Out of Bounds Fail Safe --
-        if self:IsInWorld() then
+        if self:IsInWorld() and ( waterLvl == 0 or !lethalWaters:GetBool() ) then
             self.l_outboundsreset = curTime + 5
-        elseif curTime > self.l_outboundsreset then
+        elseif curTime >= self.l_outboundsreset then
             self:Kill()
+            self.l_outboundsreset = curTime + 5
         end
 
         -- UA, Universal Actions
         -- See sv_x_universalactions.lua
-        if curTime > self.l_nextUA and !isDisabled then
-            local UAfunc = LambdaUniversalActions[ random( #LambdaUniversalActions ) ]
+        if !isDisabled and curTime >= self.l_nextUA then
+            local UAfunc, UAname = table_Random( LambdaUniversalActions )
             UAfunc( self )
-            self.l_nextUA = curTime + rand( 1, 15 )
-        end
-
-        local eyeAttach = self:GetAttachmentPoint( "eyes" )
-
-        -- Eye tracing
-        if eyetracing:GetBool() then
-            debugoverlay.Line( eyeAttach.Pos, self:GetEyeTrace().HitPos, 0.1, color_white, false )
+            self.l_nextUA = ( curTime + random( 1, 15 ) )
         end
 
         -- How fast we are falling
         if !onGround then
-            local fallSpeed = -locoVel.z
-            if ( fallSpeed - self.l_FallVelocity ) <= 1000 then
-                self.l_FallVelocity = fallSpeed
+            if waterLvl == 3 or self:IsUsingLadder() then
+                self.l_FallVelocity = 0
+            else
+                local fallSpeed = -locoVel.z
+                if ( fallSpeed - self.l_FallVelocity ) <= 1000 then
+                    self.l_FallVelocity = fallSpeed
+                end
+
+                if !self.l_preventdefaultspeak and !self:IsSpeaking( "fall" ) then
+                    local fallDmg = self:GetFallDamage( fallSpeed, true )
+                    if ( fallDmg > 30 or fallDmg >= self:Health() ) and !self:Trace( ( selfPos + locoVel ), selfPos ).HitPos:IsUnderwater() then
+                        self:PlaySoundFile( "fall", false )
+                    end
+                end
             end
         end
 
@@ -622,26 +911,36 @@ function ENT:Think()
                 end
 
                 -- Randomly change height
-                if curTime > self.l_nextnoclipheightchange then
-                    self.l_noclipheight = random( 0, 500 )
-                    self.l_nextnoclipheightchange = curTime + random( 1, 20 )
+                if !self:GetState( "Idle" ) and ( !self:InCombat() or self.l_HasMelee ) then
+                    self.l_noclipheight = 0
+                elseif curTime >= self.l_nextnoclipheightchange then
+                    self.l_noclipheight = random( 0, 400 )
+                    self.l_nextnoclipheightchange = curTime + random( 10 )
                 end
 
-                local pathPos = ( isvector( self.l_CurrentPath ) and self.l_CurrentPath or ( IsValid( self.l_CurrentPath ) and self.l_CurrentPath:GetEnd() or nil ) )
-                if pathPos then
-                    local trace = self:Trace( pathPos + Vector( 0, 0, self.l_noclipheight ), pathPos + Vector( 0, 0, 3 ) ) -- Trace the height
+                local movePos = self:GetDestination()
+                local curPath = self.l_CurrentPath
+                if !isvector( curPath ) and IsValid( curPath ) then
+                    movePos = curPath:GetEnd()
+                end
+                if movePos then
+                    local trace = self:Trace( movePos + vector_up * self.l_noclipheight, movePos + vector_up * 3 ) -- Trace the height
                     local endPos = ( trace.HitPos + trace.HitNormal * 70 ) -- Subtract the normal so we are hovering below a ceiling by 70 Source Units
                     local copy = Vector( endPos[ 1 ], endPos[ 2 ], selfPos[ 3 ] ) -- Vector used if we are close to our goal
 
-                    local ene = self:GetEnemy()
-                    if self:GetState() == "Combat" and LambdaIsValid( ene ) then endPos[ 3 ] = ( ene:GetPos()[ 3 ] + ( self.l_HasMelee and 0 or 50 ) ) end
+                    if self.l_HasMelee then
+                        local ene = self:GetEnemy()
+                        local attackRange = self.l_CombatAttackRange
+                        if attackRange and self:GetState( "Combat" ) and LambdaIsValid( ene ) then
+                            endPos = ( endPos + VectorRand( -attackRange, attackRange ) )
+                        end
+                    end
 
                     if self:IsInRange( copy, 20 ) then 
                         self:CancelMovement() 
                     else 
                         loco:FaceTowards( endPos )
-                        local noclipSpeed = ( ( self:GetRun() and 1500 or 500 ) * frameTime )
-                        self.l_noclippos = ( self.l_noclippos + ( endPos - self.l_noclippos ):GetNormalized() * noclipSpeed ) 
+                        self.l_noclippos = ( self.l_noclippos + ( endPos - self.l_noclippos ):GetNormalized() * ( noclipSpeed:GetFloat() * frameTime ) ) 
                     end
                 end
 
@@ -657,16 +956,51 @@ function ENT:Think()
             self.l_noclippos = selfPos
         end
 
+        -- Drowning Mechanic
+        if waterLvl == 3 then
+            if !self.l_DrownStartTime then 
+                local airTime = drownTime:GetFloat()
+                if airTime > 0 then self.l_DrownStartTime = ( curTime + airTime ) end
+            elseif curTime >= self.l_DrownStartTime and curTime >= self.l_DrownActionTime then
+                local preDmgHp = self:Health()
+
+                local drownDmg = DamageInfo()
+                drownDmg:SetDamage( 10 )
+                drownDmg:SetAttacker( Entity( 0 ) )
+                drownDmg:SetDamageType( DMG_DROWN )
+                self:TakeDamageInfo( drownDmg )
+
+                local lostHp = ( preDmgHp - self:Health() )
+                if lostHp > 0 then
+                    if self:Health() > 0 then
+                        self.l_DrownLostHealth = ( self.l_DrownLostHealth + lostHp )
+                    end
+                    
+                    self:EmitSound( "Player.DrownContinue" )
+                end
+                self.l_DrownActionTime = ( curTime + 1 )
+            end
+        else
+            self.l_DrownStartTime = false
+
+            if self.l_DrownLostHealth > 0 and curTime >= self.l_DrownActionTime then
+                local recoverHp = min( self.l_DrownLostHealth, 10 )
+                self.l_DrownLostHealth = max( self.l_DrownLostHealth - recoverHp, 0 )
+                self:SetHealth( self:Health() + recoverHp )
+                self.l_DrownActionTime = ( curTime + 3 )
+            end
+        end
+
         -- Handle swimming
-        if waterLvl >= 2 and !self:IsInNoClip() then -- Don't swim if we are noclipping
-            if curTime > self.l_nextswimposupdate then -- Update our swimming position over time
+        if waterLvl == 3 and !self:IsInNoClip() then -- Don't swim if we are noclipping
+            if curTime >= self.l_nextswimposupdate then -- Update our swimming position over time
                 self.l_nextswimposupdate = curTime + 0.1
 
                 local ene = self:GetEnemy()
-                local movePos = self.l_movepos
+                local movePos = self:GetDestination()
                 local newSwimPos = self.l_CurrentPath
                 if movePos and self:GetState() == "Combat" and LambdaIsValid( ene ) and ene:WaterLevel() != 0 and self:CanSee( ene ) then -- Move to enemy's position if valid
-                    newSwimPos = ( !isvector( movePos ) and movePos:GetPos() or movePos )
+                    newSwimPos = ( ( isentity( movePos ) and IsValid( movePos ) ) and movePos:GetPos() or movePos )
                     if self.l_HasMelee then newSwimPos = newSwimPos + VectorRand( -50, 50 ) end -- Prevents not moving when enclose with enemy
                     self.l_nextswimposupdate = self.l_nextswimposupdate + rand( 0.1, 0.2 ) -- Give me more time to update my swim position
                 elseif newSwimPos and !isvector( newSwimPos ) then 
@@ -704,7 +1038,7 @@ function ENT:Think()
 
                         if swimPos.z > selfPos.z then
                             swimtable.start = selfPos
-                            swimtable.endpos = ( selfPos + swimDir * ( swimSpeed * FrameTime() * 10 ) )
+                            swimtable.endpos = ( selfPos + swimDir * ( swimSpeed * frameTime * 10 ) )
                             swimtable.filter = self
                             
                             local mins, maxs = self:GetCollisionBounds()
@@ -741,18 +1075,18 @@ function ENT:Think()
                 local anim = anims.idle
                 
                 if !self:IsInNoClip() then
-                    if onGround then
+                    if self.l_isswimming then
+                        local moveVel = locoVel; moveVel.z = 0
+                        anim = ( !moveVel:IsZero() and anims.swimMove or anims.swimIdle )
+                    elseif !onGround or self:IsUsingLadder() then
+                        anim = anims.jump
+                    else
                         local locoVel = locoVel
                         if !locoVel:IsZero() then
-                            anim = ( isCrouched and anims.crouchWalk or ( ( !self:GetSlowWalk() and locoVel:LengthSqr() > ( 150 ^ 2 ) ) and anims.run or anims.walk ) )
+                            anim = ( isCrouched and anims.crouchWalk or ( ( !self:GetSlowWalk() and locoVel:LengthSqr() > 22500 ) and anims.run or anims.walk ) )
                         elseif isCrouched then
                             anim = anims.crouchIdle
                         end
-                    elseif self.l_isswimming then
-                        local moveVel = locoVel; moveVel.z = 0
-                        anim = ( !moveVel:IsZero() and anims.swimMove or anims.swimIdle )
-                    else
-                        anim = anims.jump
                     end
                 end
 
@@ -763,19 +1097,35 @@ function ENT:Think()
         end
         --
 
-        -- Handles facing positions or entities --
-        local lookAng = Angle( 0, 0, 0 )
-        local faceTarg = self.Face
+        local eyeAttach
 
+        -- Eye tracing
+        if eyetracing:GetBool() then
+            eyeAttach = self:GetAttachmentPoint( "eyes" )
+            debugoverlay.Line( eyeAttach.Pos, self:GetEyeTrace().HitPos, 0.1, color_white, false )
+        end
+
+        -- Handles facing positions or entities --
+        self:SetNW2Vector( "lambda_facepos", vector_origin )
+        local lookAng = angle_zero
+
+        local faceTarg = self.Face
         if faceTarg then
-            if self.l_Faceend and curTime > self.l_Faceend or isentity( faceTarg ) and !IsValid( faceTarg ) then 
+            if self.l_Faceend and curTime >= self.l_Faceend or isentity( faceTarg ) and !IsValid( faceTarg ) or self:IsPlayingTaunt() then 
                 self.Face = nil 
                 self.l_Faceend = nil 
-                self.l_PoseOnly = nil 
+                self.l_PoseOnly = nil
             else
-                local pos = ( isentity( faceTarg ) and ( isfunction( faceTarg.EyePos ) and faceTarg:EyePos() or faceTarg:WorldSpaceCenter() ) or faceTarg )
+                local pos = faceTarg
+                if isentity( faceTarg ) then
+                    pos = ( isfunction( faceTarg.EyePos ) and faceTarg:EyePos() )
+                    if !pos or !self:IsInRange( pos, 750 ) then pos = faceTarg:WorldSpaceCenter() end
+                end
                 if !self.l_PoseOnly then loco:FaceTowards( pos ); loco:FaceTowards( pos ) end
+
+                if !eyeAttach then eyeAttach = self:GetAttachmentPoint( "eyes" ) end
                 lookAng = self:WorldToLocalAngles( ( pos - eyeAttach.Pos ):Angle() )
+                self:SetNW2Vector( "lambda_facepos", pos )
             end
         end
 
@@ -792,7 +1142,7 @@ function ENT:Think()
         --
 
         -- UNSTUCK --
-        if self.l_stucktimes > 0 and curTime > self.l_stucktimereset then
+        if self.l_stucktimes > 0 and curTime >= self.l_stucktimereset then
             self.l_stucktimes = 0
         end
 
@@ -810,11 +1160,9 @@ function ENT:Think()
             end
 
             if randompoint then
-                local mins, maxs = self:GetCollisionBounds()
                 unstucktable.start = randompoint
                 unstucktable.endpos = randompoint
-                unstucktable.mins = mins
-                unstucktable.maxs = maxs
+                unstucktable.mins, unstucktable.maxs = self:GetCollisionBounds()
 
                 if TraceHull( unstucktable ).Hit then
                     self.l_UnstuckBounds = unstuckbounds + 5
@@ -831,46 +1179,53 @@ function ENT:Think()
         -- -- -- -- --
 
     end
-    
+
     if ( CLIENT ) then
-        
         local selfCenter = self:WorldSpaceCenter()
-        local selfAngles = self:GetAngles()
+        local selfAngles = self:EyeAngles()
+        local flashlight = self.l_flashlight
+        local allowFlashlight = self:CanUseFlashlight()
 
         -- Update our flashlight
-        if curTime > self.l_lightupdate then
-            local lightvec = render.GetLightColor( selfCenter )
+        if curTime >= self.l_lightupdate or isDead or !allowFlashlight then
+            self.l_lightupdate = ( curTime + 2 )
 
-            if lightvec:LengthSqr() < ( 0.02 ^ 2 ) and !self:GetIsDead() and drawflashlight:GetBool() and self:IsBeingDrawn() then
-                if !IsValid( self.l_flashlight ) then
-                    self:SetFlashlightOn( true )
-                    self.l_flashlighton = true
-                    self.l_flashlight = ProjectedTexture() 
-                    self.l_flashlight:SetTexture( "effects/flashlight001" ) 
-                    self.l_flashlight:SetFarZ( 600 ) 
-                    self.l_flashlight:SetEnableShadows( false )
-                    self.l_flashlight:SetPos( selfCenter )
-                    self.l_flashlight:SetAngles( selfAngles )
-                    self.l_flashlight:Update()
-    
-                    self:EmitSound( "items/flashlight1.wav", 60 )
-                end
-            elseif IsValid( self.l_flashlight ) then
+            local isAtLight = ( GetLightColor( selfCenter ):LengthSqr() > 0.0004 )
+            local beingDrawn = !self:IsDormant()
+
+            if isDead or !beingDrawn or isAtLight or !allowFlashlight or !drawflashlight:GetBool() then
                 self:SetFlashlightOn( false )
                 self.l_flashlighton = false
-                self.l_flashlight:Remove()
-                self:EmitSound( "items/flashlight1.wav", 60 )
+
+                if IsValid( flashlight ) then
+                    flashlight:Remove()
+                    if !isDead and beingDrawn then self:EmitSound( "HL2Player.FlashLightOff" ) end
+                end
+            elseif !isAtLight then
+                self:SetFlashlightOn( true )
+                self.l_flashlighton = true
+
+                if !IsValid( flashlight ) then
+                    flashlight = ProjectedTexture() 
+                    flashlight:SetTexture( "effects/flashlight001" ) 
+                    flashlight:SetFarZ( 750 ) 
+                    flashlight:SetNearZ( 4 ) 
+                    flashlight:SetFOV( 60 ) 
+                    flashlight:SetEnableShadows( false )
+                    flashlight:SetPos( selfCenter )
+                    flashlight:SetAngles( selfAngles )
+                    flashlight:Update()
+
+                    self.l_flashlight = flashlight
+                    if beingDrawn then self:EmitSound( "HL2Player.FlashLightOn" ) end
+                end
             end
-
-            self.l_lightupdate = curTime + 1
         end
-
-        if IsValid( self.l_flashlight ) then
-            self.l_flashlight:SetPos( selfCenter )
-            self.l_flashlight:SetAngles( selfAngles )
-            self.l_flashlight:Update()
+        if IsValid( flashlight ) then
+            flashlight:SetPos( selfCenter )
+            flashlight:SetAngles( selfAngles )
+            flashlight:Update()
         end
-
     end
 
     -- Think Delay
@@ -926,18 +1281,28 @@ function ENT:RunBehaviour()
     end
 
     while true do
-        if !self:GetIsDead() and !self:IsDisabled() then
-            local statefunc = self[ self:GetState() ] -- I forgot this was possible. See sv_states.lua
-            if statefunc then statefunc( self ) end
+        if !self:GetIsDead() and ( !self:IsDisabled() or self:GetIsTyping() ) then
+            local curState = self:GetState()
+            local statefunc = self[ curState ] -- I forgot this was possible. See sv_states.lua
+            if statefunc then
+                self.l_BehaviorState = curState
+
+                local stateArg = self.l_statearg
+                local returnState = statefunc( self, ( istable( stateArg ) and CopyTable( stateArg ) or stateArg ) )
+
+                if returnState and curState == self:GetState() then 
+                    self:SetState( ( isstring( returnState ) and returnState ) ) 
+                end
+            end
         end
 
-        local time = ( InSinglePlayer() and thinkrate:GetFloat() or 0.2 )
+        local time = ( InSinglePlayer() and max( 0.1, thinkrate:GetFloat() ) or 0.2 )
         coroutine_wait( time )
     end
 end
 
 list.Set( "NPC", "npc_lambdaplayer", {
-	Name = "Lambda Player",
-	Class = "npc_lambdaplayer",
-	Category = "Lambda Players"
+    Name = "Lambda Player",
+    Class = "npc_lambdaplayer",
+    Category = "Lambda Players"
 } )

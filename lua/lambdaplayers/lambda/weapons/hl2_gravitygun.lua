@@ -26,6 +26,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         killicon = "weapon_physcannon", -- No idea if this is needed but why not
         bonemerge = true,
         holdtype = "physgun",
+        dropentity = "weapon_physcannon",
 
         OnDraw = function( lambda, wepent )
             if IsValid( wepent ) then
@@ -74,7 +75,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             if IsValid( phys ) then
                 if !self:IsInRange( target, 175 ) then wepent:EmitSound( "weapons/physcannon/physcannon_dryfire.wav", 70 ) return end
-                wepent:EmitSound( "weapons/physcannon/superphys_launch"..random( 1, 4 )..".wav", 70, random( 110, 120 ) )
+                wepent:EmitSound( "weapons/physcannon/superphys_launch"..random( 4 )..".wav", 70, random( 110, 120 ) )
 
                 --[[
                     for i = 0, target:GetPhysicsObjectCount() - 1 do

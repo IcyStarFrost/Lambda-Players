@@ -1,6 +1,7 @@
 local table_insert = table.insert
 local random = math.random
 local RandomPairs = RandomPairs
+local tonumber = tonumber
 
 LambdaPersonalities = {}
 LambdaPersonalityConVars = {}
@@ -29,13 +30,15 @@ local function Chance_Build( self )
 
     for index, buildtable in RandomPairs( LambdaBuildingFunctions ) do
         if !buildtable[ 2 ]:GetBool() then continue end
-        if LambdaRunHook( "LambdaOnUseBuildFunction", self, buildtable[ 1 ] ) == true then return end
-        local result 
+        
+        local name = buildtable[ 1 ]
+        if LambdaRunHook( "LambdaOnUseBuildFunction", self, name ) == true then break end
 
+        local result 
         local ok, msg = pcall( function() result = buildtable[ 3 ]( self ) end )
 
-        if !ok and buildtable[ 1 ] != "entity" and buildtable[ 1 ] != "npc" then ErrorNoHaltWithStack( buildtable[ 1 ] .. " Building function had a error! If this is from a addon, report it to the author!", msg ) end
-        if result then self:DebugPrint( "Used a building function: " .. buildtable[ 1 ] ) break end
+        if !ok and name != "entity" and name != "npc" then ErrorNoHaltWithStack( name .. " Building function had a error! If this is from a addon, report it to the author!", msg ) end
+        if result then self:DebugPrint( "Used a building function: " .. name ) break end
     end
 
     self:PreventWeaponSwitch( false )
@@ -53,18 +56,18 @@ local function Chance_Tool( self )
     local target = find[ random( #find ) ]
 
     -- Loops through random tools and only stops if a tool tells us it actually got used by returning true 
-    
     for index, tooltable in RandomPairs( LambdaToolGunTools ) do
         if !tooltable[ 2 ]:GetBool() then continue end -- If the tool is allowed
-        if LambdaRunHook( "LambdaOnToolUse", self, tooltable[ 1 ] ) == true then return end
+ 
+        local name = tooltable[ 1 ]
+        if LambdaRunHook( "LambdaOnToolUse", self, name ) == true then break end
+
         local result
-        
         local ok, msg = pcall( function() result = tooltable[ 3 ]( self, target ) end )
 
-        if !ok then ErrorNoHaltWithStack( tooltable[ 1 ] .. " Tool had a error! If this is from a addon, report it to the author!", msg ) end
-        if result then self:DebugPrint( "Used " .. tooltable[ 1 ] .. " Tool" ) break end
+        if !ok then ErrorNoHaltWithStack( name .. " Tool had a error! If this is from a addon, report it to the author!", msg ) end
+        if result then self:DebugPrint( "Used " .. name .. " Tool" ) break end
     end
-
 
     self:PreventWeaponSwitch( false )
 end
@@ -76,11 +79,11 @@ local function Chance_Combat( self )
     spawnEntities = spawnEntities or GetConVar( "lambdaplayers_building_allowentity" )
     local allowEntities = spawnEntities:GetBool()
     
-    local rndCombat = random( 1, 4 )
-    if rndCombat == 1 and allowEntities and spawnBatteries:GetBool() and self:Armor() < self:GetMaxArmor() then
-        self:SetState( "ArmorUp" )
-    elseif rndCombat == 2 and allowEntities and spawnMedkits:GetBool() and self:Health() < self:GetMaxHealth() then
-        self:SetState( "HealUp" )
+    local rndCombat = random( 3 )
+    if rndCombat == 1 then
+        self:SetState( "HealUp", "FindTarget" )
+    elseif rndCombat == 2 then
+        self:SetState( "ArmorUp", "FindTarget" )
     else
         self:SetState( "FindTarget" )
     end
@@ -88,17 +91,15 @@ end
 
 local ignorePlys = GetConVar( "ai_ignoreplayers" )
 local function Chance_Friendly( self )
-    if self:InCombat() or !self:CanEquipWeapon( "gmod_medkit" ) then return end
+    if self:InCombat() or self:IsPanicking() or !self:CanEquipWeapon( "gmod_medkit" ) then return end
 
     local nearbyEnts = self:FindInSphere( nil, 1000, function( ent )
         if !LambdaIsValid( ent ) or !ent.Health or !ent:IsNPC() and !ent:IsNextBot() and ( !ent:IsPlayer() or !ent:Alive() or ignorePlys:GetBool() ) then return false end
         return ( ent:Health() < ent:GetMaxHealth() and self:CanSee( ent ) )
     end )
     
-    if #nearbyEnts > 0 then
-        self.l_HealTarget = nearbyEnts[ random( #nearbyEnts ) ]
-        self:SetState( "HealSomeone" )
-    end
+    if #nearbyEnts == 0 then return end
+    self:SetState( "HealSomeone", nearbyEnts[ random( #nearbyEnts ) ] )
 end
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_opencustompersonalitypresetpanel", function( ply ) 
@@ -106,7 +107,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_opencustompersonalitypresetpanel"
     tbl[ "lambdaplayers_personality_voicechance" ] = 30
     tbl[ "lambdaplayers_personality_textchance" ] = 30
     for k, v in ipairs( LambdaPersonalityConVars ) do
-        tbl[ v[ 2 ]:GetName() ] = v[ 2 ]:GetDefault()
+        tbl[ v[ 2 ]:GetName() ] = ( tonumber( v[ 2 ]:GetDefault() ) or 30  )
     end
     LAMBDAPANELS:CreateCVarPresetPanel( "Custom Personality Preset Editor", tbl, "custompersonalities", true )
 end, true, "Opens a panel to allow you to create custom preset personalities and load them", { name = "Custom Personality Presets", category = "Lambda Player Settings" } )

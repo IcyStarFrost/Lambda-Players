@@ -298,9 +298,9 @@ local function UseDynamiteTool( self, target )
     table_insert( self.l_SpawnedEntities, 1, ent )
 
     ent:SetPlayer( self )
-    ent:SetDamage( random( 1, 500 ) )
+    ent:SetDamage( random( 500 ) )
     ent:SetShouldRemove( tobool( random( 0, 1 ) ) )
-    ent:SetDelay( random( 1, 60 ) )
+    ent:SetDelay( random( 60 ) )
     
     function ent:Explode( delay, ply ) -- Override the old Explode function with our own. Although we don't change much we just make the explosion repeat it self if it isn't set for removal
 
@@ -511,14 +511,14 @@ local function UseHoverballTool( self, target )
     
     ent:SetPlayer( self )
     ent:SetEnabled( true )
-    ent:SetSpeed( random( 1, 10 ) )
+    ent:SetSpeed( random( 10 ) )
     ent:SetAirResistance( Round( rand( 0, 10 ), 2 ) )
-    ent:SetStrength( random( 1, 10 ) )
+    ent:SetStrength( random( 10 ) )
 
     local rndtime = CurTime() + rand( 1, 10 )
     ent:LambdaHookTick( "Hoverballrandommovement", function( hoverball )
         if CurTime() > rndtime then
-            if !IsValid( hoverball ) then return true end
+            if !IsValid( hoverball ) or !IsValid( hoverball:GetPhysicsObject() ) then return true end
             hoverball:SetZVelocity( random( -1, 1 ) )
 
             rndtime = CurTime() + rand( 1, 10 )
@@ -592,7 +592,7 @@ local function UseLampTool( self, target )
     coroutine.wait( 1 )
 
     self:UseWeapon( trace.HitPos )
-    local ent = CreateGmodEntity( "gmod_lamp", lampmodels[ random( 1, 3 ) ], trace.HitPos, angle_zero, self )
+    local ent = CreateGmodEntity( "gmod_lamp", lampmodels[ random( 3 ) ], trace.HitPos, angle_zero, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Lamp" )

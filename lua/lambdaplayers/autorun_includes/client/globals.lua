@@ -4,17 +4,19 @@ local null_vector = Vector(0, 0, 0)
 local color_white_vector = Vector(1, 1, 1)
 local random = math.random
 local Vector = Vector
+local CurTime = CurTime
 local LerpVector = LerpVector
 local VectorRand = VectorRand
 local table_insert = table.insert
 local table_remove = table.remove
 
+_LAMBDAPLAYERS_VoiceChannels = {}
+_LAMBDAPLAYERS_VoicePopups = {}
 _LAMBDAPLAYERS_ClientSideEnts = {}
-_LAMBDAPLAYERS_Voicechannels = {}
 _LAMBDAPLAYERS_ClientSideRagdolls = {}
 
 -- Physgun color proxy
-matproxy.Add({
+matproxy.Add( {
     name = "LambdaPlayerWeaponColor",
     init = function( self, mat, values )
         self.ResultTo = values.resultvar
@@ -36,7 +38,7 @@ matproxy.Add({
         local mul = ( (1 + sin( CurTime() * 5 ) ) * 0.5 )
         mat:SetVector( self.ResultTo, ( col + col * mul ) )
     end
-})
+} )
 
 local EntMeta = FindMetaTable("Entity")
 local downvector = Vector( 0, 0, -100 )
@@ -53,7 +55,7 @@ function EntMeta:LambdaDisintegrate()
     if self.l_IsDisintegrating then return end
     if #disintegratingents > 8 then if self.isclientside then self:Remove() end return end -- The effect is limitted so we don't overload the emitters
 
-    local id = random( 1, 10000000 )
+    local id = random( 10000000 )
     local curpos
     local pos
     local nextparticle = 0
@@ -62,7 +64,7 @@ function EntMeta:LambdaDisintegrate()
 
     self.l_IsDisintegrating = true
     self:SetRenderClipPlaneEnabled( true )
-    self:EmitSound( "lambdaplayers/misc/disintegrate" .. random( 1, 3 ) .. ".mp3", 65, random( 80, 100 ) )
+    self:EmitSound( "lambdaplayers/misc/disintegrate" .. random( 3 ) .. ".mp3", 65, random( 80, 100 ) )
 
     table_insert( disintegratingents, self )
     
@@ -90,7 +92,7 @@ function EntMeta:LambdaDisintegrate()
                     part:SetStartSize( 3 )
                     part:SetEndSize( 0 )
                     part:SetCollide( true )
-                    part:SetGravity( random( 1, 10 ) == 1 and upvector or downvector )
+                    part:SetGravity( random( 10 ) == 1 and upvector or downvector )
                     part:SetVelocity( VectorRand() * 40 )
                     part:SetAngleVelocity( AngleRand( -10, 10 ) )
                     part:SetColor( 255, 174, 0 )
