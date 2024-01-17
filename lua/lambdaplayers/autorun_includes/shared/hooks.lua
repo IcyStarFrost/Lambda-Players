@@ -89,61 +89,6 @@ if SERVER then
                     TRIGGER_PLAYER = activator
                 end
             end
-        elseif class == "puppetmaster" then
-            local oldGetBoneTbl = ent.GetBoneTable
-            function ent:GetBoneTable( tbl )
-                self.BoneTable = tbl
-                oldGetBoneTbl( self, tbl )
-            end
-
-            local oldInit = ent.Initialize
-            function ent:Initialize()
-                local ragdoll = self:GetRagdoll()
-                if !IsValid( ragdoll ) or ragdoll:GetPhysicsObjectCount() <= 0 then
-                    self:Remove()
-                    return
-                end
-                local rootPhys = ragdoll:TranslatePhysBoneToBone( 0 )
-                if !rootPhys then 
-                    self:Remove()
-                    return
-                end
-
-                ragdoll:DeleteOnRemove(self)
-                ragdoll.RD_PhysStats = {}
-
-                local boneTbl = self.BoneTable
-                if !boneTbl then oldInit( self ) return end
-
-                local anim = self:GetAnim()
-                anim:DeleteOnRemove( self )
-                self:DeleteOnRemove( anim )
-
-                if self:GetBalancing() then
-                    self:SetShouldFloat( true )
-                end
-
-                self:SetRootbone( rootPhys )
-                self:SetStartTime( CurTime() )
-                self:SetColor( invisClr )
-                self:SetRenderMode( RENDERMODE_TRANSCOLOR )      
-                self:StartMotionController()
-                if !match( ragdoll:GetBoneName( 0 ), "ValveBiped" ) then return end
-
-                for _, bone in ipairs( boneTbl ) do
-                    local boneIndex = ragdoll:LookupBone( bone )
-                    if !isnumber( boneIndex ) then continue end
-
-                    boneIndex = ragdoll:TranslateBoneToPhysBone( boneIndex )
-                    if boneIndex == -1 then continue end
-
-                    local ragphys = ragdoll:GetPhysicsObjectNum( boneIndex )        
-                    if !IsValid( ragphys ) then continue end
-
-                    self:AddToMotionController( ragphys )
-                    ragdoll.RD_PhysStats[ ragphys:GetSurfaceArea() ] = boneIndex
-                end
-            end
         end
     end )
 

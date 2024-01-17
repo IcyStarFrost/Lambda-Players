@@ -98,9 +98,9 @@ if SERVER then
         
         ragdoll.GS2Player = self -- Fixes black player color when GibSplat'd
         ragdoll.LambdaOwner = self
-        self.ragdoll = ragdoll
         ragdoll.IsLambdaSpawned = true
-
+        
+        self.ragdoll = ragdoll
         self:SetNW2Entity( "lambda_serversideragdoll", ragdoll )
     
         ragdoll:SetSkin( visualEnt:GetSkin() )

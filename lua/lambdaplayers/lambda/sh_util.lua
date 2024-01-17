@@ -1194,8 +1194,7 @@ if SERVER then
                     incomplete = true
                     break
                 end
-                if incomplete then continue 
-                end
+                if incomplete then continue end
 
                 -- Cache the lines that don't contain any keywords to avoid unnecesary resources at checking for them
                 if line == modLine and line == keyLine then
@@ -1248,8 +1247,9 @@ if SERVER then
                 tbl = copyTbl
             end
 
-            if usemarkovgenerator:GetBool() then
-                textLine = GetRandomMarkovLine( self, tbl )
+            local markovLine = ( usemarkovgenerator:GetBool() and GetRandomMarkovLine( self, tbl ) )
+            if markovLine then
+                textLine = markovLine
             else
                 for _, textline in RandomPairs( tbl ) do
                     local condition, modifiedline = LambdaConditionalKeyWordCheck( self, textline )
