@@ -82,9 +82,10 @@ local ignoreFriendNPCs = GetConVar( "lambdaplayers_combat_ignorefriendlynpcs" )
 local slightDelay = GetConVar( "lambdaplayers_voice_slightdelay" )
 local allowShots = GetConVar( "lambdaplayers_viewshots_enabled" )
 local changePlyMdlChance = GetConVar( "lambdaplayers_lambda_switchplymdlondeath" )
-local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" ) 
-local onlyaddonmodels = GetConVar( "lambdaplayers_lambda_onlyaddonmodels" ) 
+local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodels" )
+local onlyaddonmodels = GetConVar( "lambdaplayers_lambda_onlyaddonmodels" )
 local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
+local allowMdlBgSets = GetConVar( "lambdaplayers_lambda_enablemdlbodygroupsets" )
 
 ---- Anything Shared can go here ----
 
@@ -108,14 +109,14 @@ function ENT:Hook( hookname, uniquename, func, preserve, cooldown )
 
     hook_Add( hookname, hookIdent, function( ... )
         if CurTime() < curTime then return end
-        if !IsValid( self ) then hook_Remove( hookname, hookIdent ) return end 
-        if !preserve and self:GetIsDead() then self:RemoveHook( hookname, uniquename ) return end 
+        if !IsValid( self ) then hook_Remove( hookname, hookIdent ) return end
+        if !preserve and self:GetIsDead() then self:RemoveHook( hookname, uniquename ) return end
 
         local result = func( ... )
         if result == "end" then self:RemoveHook( hookname, uniquename ) return end
 
         curTime = ( CurTime() + cooldown )
-        return result 
+        return result
     end )
 end
 
@@ -142,7 +143,7 @@ end
 function ENT:Thread( func, name, preserve )
     local thread = coroutine.create( func )
     self:DebugPrint( "Created a Thread | " .. name  )
-    
+
     self:Hook( "Tick", "CoroutineThread_" .. name, function()
         if coroutine.status( thread ) != "dead" then
             local ok, msg = coroutine.resume( thread )
@@ -173,10 +174,10 @@ end
 function ENT:SimpleWeaponTimer( delay, func, ignoredead, ignorewepname )
     local id = tostring( func ) .. random( 100000 )
     self.l_SimpleTimers[ id ] = !ignoredead
-    
+
     local wepent = self:GetWeaponENT()
     local curWep = self:GetWeaponName()
-    
+
     timer_simple( delay, function()
         if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) or !ignoredead and !self.l_SimpleTimers[ id ] then return end
         if !IsValid( wepent ) or !ignorewepname and self:GetWeaponName() != curWep then return end
@@ -196,7 +197,7 @@ function ENT:NamedTimer( name, delay, repeattimes, func, ignoredead )
     local id = self:EntIndex()
     local intname = "lambdaplayers_" .. name .. id
     self:DebugPrint( "Created a Timer: " .. name )
-    timer_create( intname, delay, repeattimes, function() 
+    timer_create( intname, delay, repeattimes, function()
         if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) then return end
         local result = func( self )
         if result == true then timer_Remove( intname ) self:DebugPrint( "Removed a Timer: " .. name ) end
@@ -210,11 +211,11 @@ function ENT:NamedWeaponTimer( name, delay, repeattimes, func, ignoredead, ignor
     local id = self:EntIndex()
     local intname = "lambdaplayers_" .. name .. id
     self:DebugPrint( "Created a Weapon Timer: " .. name )
-    
+
     local wepent = self:GetWeaponENT()
     local curWep = self:GetWeaponName()
-    
-    timer_create( intname, delay, repeattimes, function() 
+
+    timer_create( intname, delay, repeattimes, function()
         if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) then return end
         if !IsValid( wepent ) or !ignorewepname and self:GetWeaponName() != curWep then return end
         local result = func()
@@ -253,7 +254,7 @@ function ENT:FindInSphere( pos, radius, filter )
         if IsValid( v ) and v != self and ( filter == nil or filter( v ) ) then
             enttbl[ #enttbl + 1 ] = v
         end
-    end 
+    end
 
     return enttbl
 end
@@ -261,7 +262,7 @@ end
 -- Returns the closest entity to us
 function ENT:GetClosestEntity( pos, radius, filter )
     pos = pos or self:GetPos()
-    local closestent 
+    local closestent
     local dist
     local find = self:FindInSphere( pos, radius, filter )
 
@@ -289,7 +290,7 @@ function ENT:GetBoneTransformation( bone, target )
             ang = matrix:GetAngles()
         end
     end
-    
+
     return { Pos = pos, Ang = ang, Bone = bone }
 end
 
@@ -314,7 +315,7 @@ function ENT:GetAttachmentPoint( pointType, target )
         local lookup = target:LookupAttachment( "eyes" )
         local eyeAttach = target:GetAttachment( lookup )
 
-        if !eyeAttach then 
+        if !eyeAttach then
             attachData.Pos = ( attachData.Pos + vector_up * 30 )
             attachData.Ang = ( attachData.Ang + eyeOffAng )
         else
@@ -395,12 +396,12 @@ end
 function ENT:Trace( pos, overridestart, ignoreEnt )
     tracetable.start = overridestart or self:WorldSpaceCenter()
     tracetable.endpos = ( isentity( pos ) and IsValid( pos ) and pos:GetPos() or pos )
-    tracetable.filter = ( ignoreEnt and { self, ignoreEnt } or self ) 
+    tracetable.filter = ( ignoreEnt and { self, ignoreEnt } or self )
     return Trace( tracetable )
 end
 
 -- Returns if we can see the ent in question.
--- Simple trace 
+-- Simple trace
 function ENT:CanSee( ent )
     if !IsValid( ent ) then return false end
 
@@ -552,7 +553,7 @@ if SERVER then
                     self:SetNW2Var( k, vartable.value )
                 end
             end ]]
-            
+
         end, true )
     end
 
@@ -573,16 +574,21 @@ if SERVER then
         return ( ( isentity( pos ) and IsValid( pos ) ) and pos:GetPos() or pos )
     end
 
+    -- Returns if the given entity is a player, NPC, or a Nextbot
+    function ENT:IsValidTarget( ent )
+        return ( ent:IsPlayer() or ent:IsNPC() or ent:IsNextBot() )
+    end
+
     -- If the we can target the ent
     function ENT:CanTarget( ent )
-        if ent.IsLambdaPlayer then 
+        if ent.IsLambdaPlayer then
             if !ent:Alive() then return false end
             if ent:IsFlagSet( FL_NOTARGET ) then return false end
         elseif ent:IsPlayer() then
-            if !ent:Alive() then return false end 
+            if !ent:Alive() then return false end
             if ent:IsFlagSet( FL_NOTARGET ) then return false end
             if ent:GetInfoNum( "lambdaplayers_combat_allowtargetyou", 0 ) == 0 then return false end
-            if ignoreplayer:GetBool() then return false end 
+            if ignoreplayer:GetBool() then return false end
         elseif ent:IsNPC() or ent:IsNextBot() then
             if ent.IsLambdaAntlion and ( self:GetWeaponName() == "hl2_bugbait" or ent:GetOwner() == self ) then return false end
             if ent.IsDrGNextbot and ent:IsDown() then return false end
@@ -604,7 +610,7 @@ if SERVER then
     -- Attacks the specified entity
     function ENT:AttackTarget( ent, forceAttack )
         if !LambdaIsValid( ent ) then return end
-        
+
         local overrideTarget = LambdaRunHook( "LambdaOnAttackTarget", self, ent )
         if overrideTarget == true then return end
 
@@ -615,19 +621,20 @@ if SERVER then
         if random( 100 ) <= self:GetVoiceChance() and !self:GetIsTyping() and !self:IsSpeaking( "taunt" ) then self:PlaySoundFile( "taunt" ) end
         self:SetState( "Combat" )
         self:CancelMovement()
+        self.l_combatendtime = ( CurTime() + random( 180, 300 ) )
     end
 
     -- Retreats from entity target
     -- If the target is not specified, then Lambda will stop retreating only when time runs out
     function ENT:RetreatFrom( target, timeout )
         local alreadyPanic = self:IsPanicking()
-        if !alreadyPanic then 
+        if !alreadyPanic then
             self:CancelMovement()
             self:SetState( "Retreat" )
             if self:GetVoiceChance() > 0 then self:PlaySoundFile( "panic" ) end
         end
 
-        local retreatTime = ( CurTime() + ( timeout or random( 8, 20 ) ) )
+        local retreatTime = ( CurTime() + ( timeout or random( 15, 30 ) ) )
         if retreatTime > self.l_retreatendtime then self.l_retreatendtime = retreatTime end
 
         local target = self:GetEnemy()
@@ -638,8 +645,8 @@ if SERVER then
     function ENT:PlayGestureAndWait( id, speed )
 
         local hookId, hookSpeed = LambdaRunHook( "LambdaOnPlayGestureAndWait", self, id, speed )
-        if hookId == true then 
-            return 
+        if hookId == true then
+            return
         else
             id = ( hookId or id )
             speed = ( hookSpeed or speed )
@@ -657,7 +664,7 @@ if SERVER then
 
         local len = self:GetLayerDuration( layer )
         speed = speed or 1
-    
+
         self:SetPlaybackRate( speed )
 
         -- wait for it to finish
@@ -669,13 +676,13 @@ if SERVER then
         if self:IsValidLayer( layer ) then
             self:SetLayerCycle( layer, 1 )
         end
-        if !isSeq then 
+        if !isSeq then
             self:RemoveGesture( id )
         end
 
         self.l_UpdateAnimations = true
         self:SetNW2Int( "lambda_curanimgesture", -1 )
-    
+
     end
 
     -- Updates our networked health
@@ -712,7 +719,7 @@ if SERVER then
     function ENT:ProfileCheck()
         local info = LambdaPersonalProfiles and LambdaPersonalProfiles[ self:GetLambdaName() ] or nil
         if !info then return end
-        
+
         self:ApplyLambdaInfo( info )
         self.l_usingaprofile = true
         self:SimpleTimer( 0, function() LambdaRunHook( "LambdaOnProfileApplied", self, info ) end, true )
@@ -771,7 +778,7 @@ if SERVER then
         local result = LambdaRunHook( "LambdaOnNoclip", self, bool )
         if !result then self:SetNoClip( bool ) end
     end
-    
+
     -- Returns whether the given position or entity is at a given range
     function ENT:IsInRange( target, range )
         return ( ( !isentity( target ) or IsValid( target ) ) and self:GetRangeSquaredTo( target ) <= ( range * range ) )
@@ -807,14 +814,24 @@ if SERVER then
         self:SetModel( mdl )
 
         if !noBodygroups and rndBodyGroups:GetBool() then
-            for _, v in ipairs( self:GetBodyGroups() ) do
-                local subMdls = #v.submodels
-                if subMdls == 0 then continue end 
-                self:SetBodygroup( v.id, random( 0, subMdls ) )
-            end
+            local mdlSets = LambdaPlayermodelBodySkinSets[ spawnMdl ]
+            if mdlSets and #mdlSets != 0 and allowMdlBgSets:GetBool() then
+                local rndSet = mdlSets[ random( #mdlSets ) ]
+                self:SetSkin( rndSet.skin or 0 )
 
-            local skinCount = self:SkinCount()
-            if skinCount > 0 then self:SetSkin( random( 0, skinCount - 1 ) ) end
+                for index, bg in pairs( rndSet.bodygroups ) do
+                    self:SetBodygroup( index, bg )
+                end
+            else
+                for _, v in ipairs( self:GetBodyGroups() ) do
+                    local subMdls = #v.submodels
+                    if subMdls == 0 then continue end
+                    self:SetBodygroup( v.id, random( 0, subMdls ) )
+                end
+
+                local skinCount = self:SkinCount()
+                if skinCount > 0 then self:SetSkin( random( 0, skinCount - 1 ) ) end
+            end
         end
 
         if StartsWith( self:GetProfilePicture(), "spawnicons/" ) then
@@ -830,7 +847,7 @@ if SERVER then
         local spawnPos, spawnAng = self.l_SpawnPos, self.l_SpawnAngles
         if rasp:GetBool() then
             LambdaSpawnPoints = ( LambdaSpawnPoints or LambdaGetPossibleSpawns() )
-            if LambdaSpawnPoints and #LambdaSpawnPoints > 0 then 
+            if LambdaSpawnPoints and #LambdaSpawnPoints > 0 then
                 local rndPoint = LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]
                 if IsValid( rndPoint ) then
                     spawnPos = rndPoint:GetPos()
@@ -863,11 +880,11 @@ if SERVER then
         local isMarked = self:IsWeaponMarkedNodraw()
         self:ClientSideNoDraw( wepent, isMarked )
         wepent:SetNoDraw( isMarked )
-        wepent:DrawShadow( !isMarked )  
+        wepent:DrawShadow( !isMarked )
 
         self:SetIsDead( false )
         self:SetHealth( self:GetMaxHealth() )
-        self:SetArmor( self.l_SpawnArmor ) 
+        self:SetArmor( self.l_SpawnArmor )
         self:SetState()
         self:SetCrouch( false )
         self:SetEnemy( NULL )
@@ -902,13 +919,13 @@ if SERVER then
 
             self.ragdoll = nil
             self.weapondrop = nil
-            
+
             local disintegrate = serversidecleanupeffect:GetBool()
             if disintegrate then
                 net.Start( "lambdaplayers_disintegrationeffect" )
                     net.WriteEntity( ragdoll )
                 net.Broadcast()
-                
+
                 net.Start( "lambdaplayers_disintegrationeffect" )
                     net.WriteEntity( dropEnt )
                 net.Broadcast()
@@ -928,7 +945,7 @@ if SERVER then
     end
 
     -- Delete ourself and spawn a recreation of ourself.
-    -- If ignoreprehook is true, the LambdaPreRecreated hook won't run meaning addons won't be able to stop this 
+    -- If ignoreprehook is true, the LambdaPreRecreated hook won't run meaning addons won't be able to stop this
     function ENT:Recreate( ignoreprehook, inPlace )
         local shouldblock = LambdaRunHook( "LambdaPreRecreated", self )
         self:SimpleTimer( 0.1, function() self:Remove() end, true )
@@ -943,7 +960,7 @@ if SERVER then
             tracetable.filter = self
             tracetable.mins, tracetable.maxs = self:GetCollisionBounds()
 
-            pos = TraceHull( tracetable ).HitPos 
+            pos = TraceHull( tracetable ).HitPos
             ang = self:GetAngles()
         end
 
@@ -951,7 +968,7 @@ if SERVER then
         local newlambda = ents_Create( "npc_lambdaplayer" )
         newlambda:SetPos( pos )
         newlambda:SetAngles( ang )
-        
+
         local creator = self:GetCreator()
         newlambda:SetCreator( creator )
 
@@ -967,7 +984,7 @@ if SERVER then
             newlambda:SetState( self:GetState() )
             newlambda:SetEnemy( self:GetEnemy() )
             newlambda.l_statearg = self.l_statearg
-            
+
             local curWep = self:GetWeaponName()
             newlambda:SimpleTimer( 0.1, function() newlambda:SwitchWeapon( curWep ) end )
         end
@@ -992,18 +1009,18 @@ if SERVER then
         local neartbl = {}
         pos = ( pos or self:GetPos() )
         dist = ( dist or 1500 )
-    
+
         for _, area in ipairs( GetAllNavAreas() ) do
             if !area:IsValid() or area:GetSizeX() < 75 or area:GetSizeY() < 75 then continue end
             local areaPos = area:GetCenter()
             if areaPos:IsUnderwater() or dist != true and areaPos:DistToSqr( pos ) > ( dist * dist ) then continue end
             neartbl[ #neartbl + 1 ] = area
         end
-        
+
         return neartbl
     end
-    
-    -- Returns a random position near the position 
+
+    -- Returns a random position near the position
     function ENT:GetRandomPosition( pos, dist, filter )
         pos = ( pos or self:GetPos() )
         dist = ( dist or 1500 )
@@ -1026,7 +1043,7 @@ if SERVER then
     -- Gets a entirely random sound from the source engine sound folder
     function ENT:GetRandomSound()
         local dir = "sound/"
-        
+
         for i = 1, 10 do
             local files, directories = file_Find( dir .. "*", "GAME", "nameasc" )
 
@@ -1077,45 +1094,45 @@ if SERVER then
     -- Combines a table of strings into one string
 --[[     local function CombineStringTable( tbl )
         local strin = ""
-     
+
          for k, v in ipairs( tbl ) do
-             strin = strin .. " " .. v    
-         end 
-         
+             strin = strin .. " " .. v
+         end
+
          return strin
      end
-         
+
      -- Prototype created in StarFall
      -- Mixes sentences together for a wacky result
      local function sentencemixing( text, feed )
-         
+
          local mod = ""
-         
+
          local feedstring = CombineStringTable( feed )
          local textsplit = string_Explode( " ", text )
          local validwords = {}
          local smallwords = {}
-         
+
          for k, word in ipairs( string_Explode( " ", feedstring ) ) do
              if #word > 3 then validwords[ #validwords + 1 ] = word end
          end
-         
+
          for k, word in ipairs( string_Explode( " ", feedstring ) ) do
              if #word < 3 then smallwords[ #smallwords + 1 ] = word end
          end
-         
+
          for k, word in ipairs( textsplit ) do
              local preword = word
-             
+
              if #preword > 3 and random( 2 ) == 1 then
                  preword = validwords[ random( #validwords ) ]
              elseif #preword < 3 and random( 6 ) == 1 then
                  preword = smallwords[ random( #smallwords ) ]
-             end    
-             
+             end
+
              mod = mod .. " " .. preword
          end
-    
+
          return mod
      end ]]
 
@@ -1133,7 +1150,7 @@ if SERVER then
             local char = string_sub( text, i, ( i + markovLookFwd - 1 ) )
             if !charactertable[ char ] then charactertable[ char ] = {} end
         end
-    
+
         for i = 1, #text - markovLookFwd do
             local char_index = string_sub( text, i, ( i + markovLookFwd - 1 ) )
             local char_count = string_sub( text, ( i + markovLookFwd ), ( i + markovLookFwd * 2 - 1 ) )
@@ -1143,10 +1160,10 @@ if SERVER then
 
         return charactertable
     end
-    
+
     local function return_weighted_char( array )
         if !next( array ) then return false end
-    
+
         local items, total = {}, 0
         for item, weight in pairs( array ) do
             items[ #items + 1 ] = item
@@ -1161,10 +1178,10 @@ if SERVER then
         end
     end
 
-    local function generate_markov_text( length, markov_table )        
+    local function generate_markov_text( length, markov_table )
         local char = next( markov_table )
         local o = char
-    
+
         for i = 1, floor( length / markovLookFwd ) do
             local newchar = return_weighted_char( markov_table[ char ] )
             if newchar then
@@ -1174,7 +1191,7 @@ if SERVER then
                 char = next( markov_table )
             end
         end
-    
+
         return o
     end
 
@@ -1212,7 +1229,7 @@ if SERVER then
             end
         end
 
-        if #feedLines != 0 then 
+        if #feedLines != 0 then
             local markovtable = generate_markov_table( table_concat( feedLines, "\n" ) )
             local generated = generate_markov_text( 1000, markovtable )
             validLines = table_Add( validLines, string_Explode( "\n", generated ) )
@@ -1225,7 +1242,7 @@ if SERVER then
 
     -- Literally the same thing as :GetVoiceLine() but for Text Lines
     function ENT:GetTextLine( texttype )
-        local textLine = ""
+        local textLine, preModText = ""
         local tbl = LambdaTextTable[ texttype ]
 
         local textPfl = self.l_TextProfile
@@ -1238,14 +1255,15 @@ if SERVER then
             if !allowlinks:GetBool() then
                 local copyTbl = {}
                 for index, line in ipairs( tbl ) do
-                    if textLinks[ line ] or string_match( line, "(https?://%S+)" ) then 
+                    if textLinks[ line ] or string_match( line, "(https?://%S+)" ) then
                         textLinks[ line ] = true
-                        continue 
-                    end 
+                        continue
+                    end
                     copyTbl[ #copyTbl + 1 ] = line
                 end
                 tbl = copyTbl
             end
+            preModText = textLine
 
             local markovLine = ( usemarkovgenerator:GetBool() and GetRandomMarkovLine( self, tbl ) )
             if markovLine then
@@ -1253,8 +1271,8 @@ if SERVER then
             else
                 for _, textline in RandomPairs( tbl ) do
                     local condition, modifiedline = LambdaConditionalKeyWordCheck( self, textline )
-                    if !condition then continue end 
-                    
+                    if !condition then continue end
+
                     textLine = LambdaKeyWordModify( self, modifiedline )
                     break
                 end
@@ -1263,21 +1281,21 @@ if SERVER then
             textLine = ( LambdaRunHook( "LambdaOnStartTyping", self, textLine, texttype ) or textLine )
         end
 
-        return textLine
+        return textLine, preModText
     end
 
     -- Makes the Lambda say the specified file
     function ENT:PlaySoundFile( filepath, delay )
         if !filepath then return end
-        
+
         if !isnumber( delay ) then
-            delay = ( ( delay == nil and slightDelay:GetBool() ) and Rand( 0.1, 0.75 ) or 0 ) 
+            delay = ( ( delay == nil and slightDelay:GetBool() ) and Rand( 0.1, 0.75 ) or 0 )
         end
 
         local voiceType = filepath
         local isVoiceType = self:GetVoiceLine( filepath )
-        if isVoiceType then 
-            self.l_lastspokenvoicetype = filepath 
+        if isVoiceType then
+            self.l_lastspokenvoicetype = filepath
             filepath = isVoiceType
         end
 
@@ -1296,7 +1314,7 @@ if SERVER then
     local maxSafeFallSpeed = math.sqrt( 2 * 600 * 20 * 12 )
     local fatalFallSpeed = math.sqrt( 2 * 600 * 60 * 12 )
     function ENT:GetFallDamage( speed, realDmg )
-        realDmg = ( realDmg == nil and realisticfalldamage:GetBool() )
+        realDmg = ( realDmg == nil and realisticfalldamage:GetBool() or realDmg )
         speed = ( speed or self.l_FallVelocity )
         if !realDmg and speed > maxSafeFallSpeed then return 10 end
 
@@ -1340,7 +1358,7 @@ if SERVER then
     -- Makes the Lambda say the provided text
     -- if instant is true, the Lambda will say the text instantly.
     -- teamOnly is just so this function is compatible with addons basically
-    -- recipients is optional 
+    -- recipients is optional
     function ENT:Say( text, teamOnly, recipients )
         local replacement = LambdaRunHook( "LambdaPlayerSay", self, text, ( teamOnly or false ) )
         if isstring( replacement ) then text = replacement end
@@ -1369,8 +1387,8 @@ if SERVER then
     function ENT:TypeMessage( text, sendCur )
         if text == "" then return end
 
-        if sendCur != false and self:GetIsTyping() then 
-            self:Say( self.l_typedtext ) 
+        if sendCur != false and self:GetIsTyping() then
+            self:Say( self.l_typedtext )
         end
         self:SetIsTyping( true )
 
@@ -1390,8 +1408,8 @@ if SERVER then
 
         local count = 0
         for _, v in ipairs( GetLambdaPlayers() ) do
-            if !v:GetIsTyping() then continue end 
-            count = ( count + 1 ) 
+            if !v:GetIsTyping() then continue end
+            count = ( count + 1 )
             if count >= chatMax then return false end
         end
 
@@ -1409,7 +1427,7 @@ if SERVER then
     end
 
     -- Gets our relationship with entity
-    function ENT:Relations( ent )        
+    function ENT:Relations( ent )
         if ent.IsVJBaseSNPC then
             if ent.PlayerFriendly then return D_LI end
             for _, v in ipairs( ent.VJ_NPC_Class ) do if v == "CLASS_PLAYER_ALLY" then return D_LI end end
@@ -1432,7 +1450,7 @@ if SERVER then
         addRelationFunc( ent, self, relations, ( priority or 1 ) )
 
         if relations == D_HT and ent.IsVJBaseSNPC then
-            self:SimpleTimer( 0.1, function() 
+            self:SimpleTimer( 0.1, function()
                 if !IsValid( ent ) or !ent.VJ_AddCertainEntityAsEnemy or !ent.CurrentPossibleEnemies then return end
                 ent.VJ_AddCertainEntityAsEnemy[ #ent.VJ_AddCertainEntityAsEnemy + 1 ] = self
                 ent.CurrentPossibleEnemies[ #ent.CurrentPossibleEnemies + 1 ] = self
@@ -1442,9 +1460,9 @@ if SERVER then
 
     -- Calls ENT:HandleAllValidNPCRelations for all NPCs and Nextbots
     function ENT:HandleAllValidNPCRelations()
-        for _, v in ipairs( ents_GetAll() ) do 
-            if !IsValid( v ) or v.IsLambdaPlayer or !v:IsNPC() and !v:IsNextBot() then continue end 
-            self:HandleNPCRelations( v ) 
+        for _, v in ipairs( ents_GetAll() ) do
+            if !IsValid( v ) or v.IsLambdaPlayer or !v:IsNPC() and !v:IsNextBot() then continue end
+            self:HandleNPCRelations( v )
         end
     end
 
@@ -1464,7 +1482,7 @@ if SERVER then
     -- Returns the time we will play our next footsteps ound
     function ENT:GetStepSoundTime()
         local stepTime = 0.35
-        
+
         if self:GetWaterLevel() != 2 then
             local maxSpeed = self.loco:GetVelocity():Length2D()
             stepTime = Clamp( stepTime * ( 200 / maxSpeed ), 0.25, 0.45 )
@@ -1483,7 +1501,7 @@ if SERVER then
         if !forceJump then
             if !self:IsOnGround() then return end
             local curNav = self.l_currentnavarea
-            if obeynav:GetBool() and IsValid( curNav ) and ( curNav:HasAttributes( NAV_MESH_NO_JUMP ) or curNav:HasAttributes( NAV_MESH_STAIRS ) ) then return end       
+            if obeynav:GetBool() and IsValid( curNav ) and ( curNav:HasAttributes( NAV_MESH_NO_JUMP ) or curNav:HasAttributes( NAV_MESH_STAIRS ) ) then return end
             if LambdaRunHook( "LambdaOnJump", self, curNav ) == true then return end
         end
 
@@ -1540,7 +1558,7 @@ if SERVER then
             searchDist = entDist
         end
 
-        if !closeTarget then return end        
+        if !closeTarget then return end
         self:SetState( "CombatSpawnBehavior", closeTarget )
         self:CancelMovement()
     end
@@ -1554,7 +1572,7 @@ if SERVER then
             AddOriginToPVS( self:GetPos() )
             if CurTime() >= pvsEnd then return "end" end
         end, true )
-    
+
         net.Start( "lambdaplayers_takeviewshot" )
             net.WriteEntity( self )
         net.Broadcast()
@@ -1587,7 +1605,7 @@ if ( CLIENT ) then
 
         local isVTF = string.EndsWith( pfp, ".vtf" )
         local profilepicturematerial
-    
+
         -- VTF ( Valve Texture Format ) support. This allows animated Profile Pictures
         if isVTF then
             _LambdaPfpIndex = _LambdaPfpIndex + 1
@@ -1605,7 +1623,7 @@ if ( CLIENT ) then
         else
             profilepicturematerial = Material( pfp )
         end
-    
+
         if profilepicturematerial:IsError() then
             local model = self:GetModel()
             profilepicturematerial = Material( "spawnicons/" .. string.sub( model, 1, #model - 4 ) .. ".png" )

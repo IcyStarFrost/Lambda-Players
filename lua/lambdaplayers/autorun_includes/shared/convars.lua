@@ -23,7 +23,7 @@ function CreateLambdaConvar( name, val, shouldsave, isclient, userinfo, desc, mi
     local strVar = tostring( val )
     if !_LAMBDAPLAYERSCONVARS[ name ] then _LAMBDAPLAYERSCONVARS[ name ] = strVar end
 
-    local convar = GetConVar( name ) 
+    local convar = GetConVar( name )
     if !convar then
         shouldsave = shouldsave or true
         if isclient then
@@ -101,20 +101,18 @@ end
 -- category | String | The Lambda Settings category to place the convar into. Will create one if one doesn't exist already
 -- options | Table | Combo only! A table with its keys being the text and values being the data
 
--- Other Convars
-CreateLambdaConvar( "lambdaplayers_uiscale", 0, true, true, false, "How much to scale UI such as Voice popups, name pop ups, ect.", ( CLIENT and -ScrW() or 1 ), ( CLIENT and ScrW() or 1 ), { type = "Slider", name = "UI Scale", decimals = 1, category = "Utilities" } )
-CreateLambdaConvar( "lambdaplayers_displayarmor", 0, true, true, false, "If Lambda Player's current armor should be displayed when we're looking at it and it's above zero", 0, 1, { type = "Bool", name = "Display Armor", category = "Lambda Player Settings" } )
-CreateLambdaConvar( "lambdaplayers_drawflashlights", 1, true, true, false, "If Lambda Player flashlights should be rendered", 0, 1, { type = "Bool", name = "Draw Flashlights", category = "Lambda Player Settings" } )
-CreateLambdaConvar( "lambdaplayers_corpsecleanuptime", 15, true, true, false, "The amount of time before a corpse is removed. Set to zero to disable this", 0, 190, { type = "Slider", name = "Corpse Cleanup Time", decimals = 0, category = "Utilities" } )
-CreateLambdaConvar( "lambdaplayers_corpsecleanupeffect", 0, true, true, false, "If corpses should have a disintegration effect before they are removed", 0, 1, { type = "Bool", name = "Corpse Disintegration Effect", category = "Utilities" } )
-CreateLambdaConvar( "lambdaplayers_removecorpseonrespawn", 0, true, true, false, "If corpses should be removed after their owner had respawned.", 0, 1, { type = "Bool", name = "Remove Corpse On Respawn", category = "Utilities" } )
-CreateLambdaConvar( "lambdaplayers_lambda_serversideragdolls", 0, true, false, false, "If Lambda Player ragdolls should be server side. This will allow addons to interact with the ragdolls. You may lose more FPS because of that!", 0, 1, { type = "Bool", name = "Server-Side Ragdolls", category = "Utilities" } )
-CreateLambdaConvar( "lambdaplayers_lambda_serversideragdollcleanuptime", 15, true, false, false, "The time before Server-side Lambda ragdolls are removed. Set to zero to disable this", 0, 190, { type = "Slider", decimals = 0, name = "Ragdoll Cleanup Time", category = "Utilities" } )
-CreateLambdaConvar( "lambdaplayers_lambda_serversideragdollcleanupeffect", 0, true, false, false, "If Server-side corpses should have a disintegration effect before they are removed", 0, 1, { type = "Bool", name = "Corpse Disintegration Effect", category = "Utilities" } )
-CreateLambdaConvar( "lambdaplayers_lambda_serversideremovecorpseonrespawn", 0, true, false, false, "If Server-side corpses should be removed after their owner had respawned.", 0, 1, { type = "Bool", name = "Remove Corpse On Respawn", category = "Utilities" } )
-CreateLambdaConvar( "lambdaplayers_dropweaponondeath", 1, true, true, false, "If Lambda Player should drop a clientsided prop of their weapon they died with.", 0, 1, { type = "Bool", name = "Drop Weapon On Death", category = "Utilities" } )
-CreateLambdaConvar( "lambdaplayers_allowweaponentdrop", 0, true, false, false, "If Lambda Players should drop an entity if their weapon has one set.", 0, 1, { type = "Bool", name = "Allow Weapon Entity Drop", category = "Utilities" } )
-CreateLambdaConvar( "lambdaplayers_voice_warnvoicestereo", 0, true, true, false, "If console should warn you about voice lines that have stereo channels", 0, 1, { type = "Bool", name = "Warn Stereo Voices", category = "Utilities" } )
+-- Lambda Ragdolls
+CreateLambdaConvar( "lambdaplayers_corpsecleanuptime", 15, true, true, false, "The amount of time before a Lambda corpse is removed. Set to zero to disable this.", 0, 180, { type = "Slider", name = "Corpse Cleanup Time", decimals = 0, category = "Ragdoll Settings" } )
+CreateLambdaConvar( "lambdaplayers_corpsecleanupeffect", 0, true, true, false, "If Lambda corpses should have a disintegration effect before they are removed.", 0, 1, { type = "Bool", name = "Corpse Disintegration Effect", category = "Ragdoll Settings" } )
+CreateLambdaConvar( "lambdaplayers_removecorpseonrespawn", 0, true, true, false, "If Lambda corpses should be removed when their owner respawns.", 0, 1, { type = "Bool", name = "Remove Corpse On Respawn", category = "Ragdoll Settings" } )
+--
+CreateLambdaConvar( "lambdaplayers_lambda_serversideragdolls", 0, true, false, false, "If Lambda corpses should spawn serverside. This will allow other addons to interact with them, but you may lose some performance because of this!", 0, 1, { type = "Bool", name = "Server-Side Ragdolls", category = "Ragdoll Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_serversideragdollcleanuptime", 15, true, false, false, "The amount of time before a Lambda corpse is removed. Set to zero to disable this.", 0, 180, { type = "Slider", name = "Corpse Cleanup Time", decimals = 0, category = "Ragdoll Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_serversideragdollcleanupeffect", 0, true, false, false, "If Lambda corpses should have a disintegration effect before they are removed.", 0, 1, { type = "Bool", name = "Corpse Disintegration Effect", category = "Ragdoll Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_serversideremovecorpseonrespawn", 0, true, false, false, "If Lambda corpses should be removed when their owner respawns.", 0, 1, { type = "Bool", name = "Remove Corpse On Respawn", category = "Ragdoll Settings" } )
+--
+CreateLambdaConvar( "lambdaplayers_dropweaponondeath", 1, true, true, false, "If Lambda Player should drop a clientsided prop of their weapon they died with.", 0, 1, { type = "Bool", name = "Drop Weapon On Death", category = "Ragdoll Settings" } )
+CreateLambdaConvar( "lambdaplayers_allowweaponentdrop", 0, true, false, false, "If Lambda Players should drop an entity if their weapon has one set.", 0, 1, { type = "Bool", name = "Allow Weapon Entity Drop", category = "Ragdoll Settings" } )
 
 -- View Shots
 CreateLambdaConvar( "lambdaplayers_viewshots_enabled", 0, true, false, false, "If Lambda Players are allowed to occasionally take a screenshot of their current eye view and save it as a picture to players. The pictures are saved in 'garrysmod/data/lambdaplayers/viewshots/' folder path", 0, 1, { type = "Bool", name = "Enable View Shots", category = "Utilities" } )
@@ -124,6 +122,8 @@ CreateLambdaConvar( "lambdaplayers_viewshots_viewfov", 90, true, true, false, "T
 CreateLambdaConvar( "lambdaplayers_viewshots_saveaspng", 0, true, true, false, "If the view shot should be saved in the .png format, making it better quality but bigger in file size", 0, 1, { type = "Bool", name = "Save View Shots In PNG", category = "Utilities" } )
 --
 
+-- Other Convars
+CreateLambdaConvar( "lambdaplayers_uiscale", 0, true, true, false, "How much to scale UI such as Voice popups, name pop ups, ect.", ( CLIENT and -ScrW() or 1 ), ( CLIENT and ScrW() or 1 ), { type = "Slider", name = "UI Scale", decimals = 1, category = "Misc" } )
 CreateLambdaConvar( "lambdaplayers_useplayermodelcolorasdisplaycolor", 0, true, true, true, "If Lambda Player's Playermodel Color should be its Display Color. This has priority over the Display Color below", 0, 1, { type = "Bool", name = "Playermodel Color As Display Color", category = "Misc" } )
 CreateLambdaColorConvar( "lambdaplayers_displaycolor", defDisplayClr, true, true, "The display color to use for Name Display and others", { name = "Display Color", category = "Misc" } )
 CreateLambdaConvar( "lambdaplayers_randomizepathingcost", 0, true, false, false, "Randomizes Pathfinding in a way that will make Lambdas try different approaches to reaching their destination rather than finding the fastest and closest route", 0, 1, { type = "Bool", name = "Randomize PathFinding Cost", category = "Misc" } )
@@ -136,14 +136,18 @@ CreateLambdaConvar( "lambdaplayers_weapons_bugbait_antliondamage", 15, true, fal
 CreateLambdaConvar( "lambdaplayers_weapons_bugbait_antlionlimit", 4, true, false, false, "Determines the amount of Lambda Antlions Lambdas with bugbaits are allowed have. Set to zero for unlimited amount", 0, 15, { type = "Slider", decimals = 0, name = "Bugbait - Antlion Limit", category = "Weapon Utilities" } )
 --
 
+-- Playermodel Related
+CreateLambdaConvar( "lambdaplayers_lambda_allowrandomaddonsmodels", 0, true, false, false, "If Lambda Players can use random addon playermodels", 0, 1, { type = "Bool", name = "Addon Playermodels", category = "Playermodels" } )
+CreateLambdaConvar( "lambdaplayers_lambda_onlyaddonmodels", 0, true, false, false, "If Lambda Players should only use playermodels that are from addons. Addon Playermodels should be enabled to work.", 0, 1, { type = "Bool", name = "Only Addon Playermodels", category = "Playermodels" } )
+CreateLambdaConvar( "lambdaplayers_lambda_forceplayermodel", "", true, false, false, "The path of the playermodel the next spawned Lambda Player will use. Make empty to disable", 0, 1, { type = "Text", name = "Force Playermodel", category = "Playermodels" } )
+CreateLambdaConvar( "lambdaplayers_lambda_switchplymdlondeath", "0", true, false, false, "The chance that the Lambda Player will change its playermodel after respawning. Doesn't affect Lambda Profiles. Set to 0 to disable", 0, 100, { type = "Slider", decimals = 0, name = "Change Playermodel On Respawn Chance", category = "Playermodels" } )
+CreateLambdaConvar( "lambdaplayers_lambda_allowrandomskinsandbodygroups", 1, true, false, false, "If Lambda Players can have their model's skins and bodygroups randomized", 0, 1, { type = "Bool", name = "Random Skins & Bodygroups", category = "Playermodels" } )
+CreateLambdaConvar( "lambdaplayers_lambda_enablemdlbodygroupsets", 1, true, false, false, "If Lambda Players that use a playermodel with bodygroup sets be spawned with them instead of randomized ones", 0, 1, { type = "Bool", name = "Enable Model Bodygroup Sets", category = "Playermodels" } )
+CreateLambdaConvar( "lambdaplayers_lambda_enablemdlspecificvps", 1, true, false, false, "If Lambda Players that use a playermodel with specific voice profile be forced to use it on spawn", 0, 1, { type = "Bool", name = "Enable Model-Specific VPs", category = "Playermodels" } )
+
 -- Lambda Player Server Convars
-CreateLambdaConvar( "lambdaplayers_lambda_allowrandomaddonsmodels", 0, true, false, false, "If Lambda Players can use random addon playermodels", 0, 1, { type = "Bool", name = "Addon Playermodels", category = "Lambda Server Settings" } )
-CreateLambdaConvar( "lambdaplayers_lambda_onlyaddonmodels", 0, true, false, false, "If Lambda Players should only use playermodels that are from addons. Addon Playermodels should be enabled to work.", 0, 1, { type = "Bool", name = "Only Addon Playermodels", category = "Lambda Server Settings" } )
-CreateLambdaConvar( "lambdaplayers_lambda_allowrandomskinsandbodygroups", 1, true, false, false, "If Lambda Players can have their model's skins and bodygroups randomized", 0, 1, { type = "Bool", name = "Random Skins & Bodygroups", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_respawntime", 3, true, false, false, "The amount of seconds Lambda Player will take before respawning after dying.", 0.1, 30, { type = "Slider", decimals = 1, name = "Respawn Time", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_respawnatplayerspawns", 0, true, false, false, "If Lambda Players should respawn at player spawn points", 0, 1, { type = "Bool", name = "Respawn At Player Spawns", category = "Lambda Server Settings" } )
-CreateLambdaConvar( "lambdaplayers_lambda_forceplayermodel", "", true, false, false, "The path of the playermodel the next spawned Lambda Player will use. Make empty to disable", 0, 1, { type = "Text", name = "Force Playermodel", category = "Lambda Server Settings" } )
-CreateLambdaConvar( "lambdaplayers_lambda_switchplymdlondeath", "0", true, false, false, "The chance that the Lambda Player will change its playermodel after respawning. Doesn't affect Lambda Profiles. Set to 0 to disable", 0, 100, { type = "Slider", decimals = 0, name = "Change Playermodel On Respawn Chance", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_profileusechance", 0, true, false, false, "The chance a Lambda will spawn with a profile that isn't being used. Normally profile Lambda Players only spawn when a Lambda Player has the profile's name. This chance can make profiles appear more often. Do not confuse this with Voice Profiles!", 0, 100, { type = "Slider", decimals = 0, name = "Profile Use Chance", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_voiceprofileusechance", 0, true, false, false, "The chance a Lambda Player will use a random Voice Profile if one exists. Set to 0 to disable", 0, 100, { type = "Slider", decimals = 0, name = "VP Use Chance", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_textprofileusechance", 0, true, false, false, "The chance a Lambda Player will use a random Text Profile if one exists. Set to 0 to disable", 0, 100, { type = "Slider", decimals = 0, name = "TP Use Chance", category = "Lambda Server Settings" } )
@@ -176,7 +180,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_overridedeathnoticehook", 1, true, fal
 CreateLambdaConvar( "lambdaplayers_lambda_panicanimations", 0, true, false, false, "If panicking Lambda Players should use Panic Animations", 0, 1, { type = "Bool", name = "Use Panic Animations", category = "Lambda Server Settings" } )
 --
 
--- Combat Convars 
+-- Combat Convars
 CreateLambdaConvar( "lambdaplayers_combat_allowtargetyou", 1, true, true, true, "If Lambda Players are allowed to attack you", 0, 1, { type = "Bool", name = "Target You", category = "Combat" } )
 CreateLambdaConvar( "lambdaplayers_combat_dontrdmlambdas", 0, true, false, false, "If Lambda Players shouldn't randomly start attacking other Lambda Players. They'll still get in fights if directly damaged or by other conditions", 0, 1, { type = "Bool", name = "Don't RDM Other Lambdas", category = "Combat" } )
 CreateLambdaConvar( "lambdaplayers_combat_ignorefriendlynpcs", 0, true, false, false, "If Lambda Players shouldn't target NPCs and nextbots that are allied with them", 0, 1, { type = "Bool", name = "Ignore Friendly NPCs", category = "Combat" } )
@@ -198,6 +202,8 @@ CreateLambdaConvar( "lambdaplayers_combat_allownadeusage", 0, true, false, false
 
 -- Lambda Player Convars
 CreateLambdaConvar( "lambdaplayers_lambda_shouldrespawn", 0, true, true, true, "If Lambda Players should respawn when they die. Note: Changing this will only apply to newly spawned Lambda Players", 0, 1, { type = "Bool", name = "Respawn", category = "Lambda Player Settings" } )
+CreateLambdaConvar( "lambdaplayers_displayarmor", 0, true, true, false, "If Lambda Player's current armor should be displayed when we're looking at it and it's above zero", 0, 1, { type = "Bool", name = "Display Armor", category = "Lambda Player Settings" } )
+CreateLambdaConvar( "lambdaplayers_drawflashlights", 1, true, true, false, "If Lambda Player flashlights should be rendered", 0, 1, { type = "Bool", name = "Draw Flashlights", category = "Lambda Player Settings" } )
 ---- lambdaplayers_lambda_voiceprofile Located in shared/voiceprofiles.lua
 ---- lambdaplayers_lambda_spawnweapon  Located in shared/globals.lua due to code order
 --
@@ -220,6 +226,7 @@ CreateLambdaConvar( "lambdaplayers_voice_voicepitchmax", 100, true, false, false
 CreateLambdaConvar( "lambdaplayers_voice_voicepitchmin", 100, true, false, false, "The lowest pitch a Lambda Voice can get", 10, 100, { type = "Slider", decimals = 0, name = "Voice Pitch Min", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_talklimit", 0, true, true, false, "The amount of Lambda Players that can speak at a time. 0 for infinite", 0, 20, { type = "Slider", decimals = 0, name = "Speak Limit", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_slightdelay", 1, true, false, false, "If there should be a slight random delay before the Lambda Player starts speaking to simulate reaction times", 0, 1, { type = "Bool", name = "Slight Delay Before Playing", category = "Voice Options" } )
+CreateLambdaConvar( "lambdaplayers_voice_warnvoicestereo", 0, true, true, false, "If console should warn you about voice lines that have stereo channels", 0, 1, { type = "Bool", name = "Warn Stereo Voices", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_alwaysplaydeathsnds", 0, true, false, false, "If Lambda Players should always play their death sounds instead of it being based on their voice chance. Keep in mind that this won't override their death text lines!", 0, 1, { type = "Bool", name = "Always Play Death Voicelines", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_mergeaddonvoicelines", 1, true, false, false, "If custom voice lines added by addons should be included. Make sure you update Lambda Data after you change this!", 0, 1, { type = "Bool", name = "Include Addon Voicelines", category = "Voice Options" } )
 CreateLambdaConvar( "lambdaplayers_voice_voicepopups", 1, true, true, false, "If Lambda Players who are speaking should have a Voice Popup", 0, 1, { type = "Bool", name = "Draw Voice Popups", category = "Voice Options" } )

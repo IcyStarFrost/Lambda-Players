@@ -15,7 +15,7 @@ local function OpenModelVoiceProfilePanel( ply )
         return 
     end
 
-    local frame = LAMBDAPANELS:CreateFrame( "Playermodel Voice Profile", 700, 500 )
+    local frame = LAMBDAPANELS:CreateFrame( "Playermodel Voice Profile", 1100, 600 )
     LAMBDAPANELS:CreateLabel( "Select a playermodel from the right panel and pick a voice profile from the list below it", frame, TOP )
     LAMBDAPANELS:CreateLabel( "Changes are applied by a button below the list", frame, TOP )
 
@@ -23,12 +23,17 @@ local function OpenModelVoiceProfilePanel( ply )
         chat.AddText( "Remember to Update Lambda Data after any changes!" )
     end
 
-    local mdlpanel = LAMBDAPANELS:CreateBasicPanel( frame, RIGHT )
-    mdlpanel:SetSize( 312, 200 )
+    local listpanel = LAMBDAPANELS:CreateBasicPanel( frame, LEFT )
+    listpanel:SetSize( 400, 200 )
+
+    local mdlvplist = CreateVGUI( "DListView", listpanel )
+    mdlvplist:Dock( FILL )
+    mdlvplist:AddColumn( "Model", 1 )
+    mdlvplist:AddColumn( "VP", 2 )
 
     local mdlpreview = CreateVGUI( "DModelPanel", frame )
     mdlpreview:SetSize( 375, 200 )
-    mdlpreview:Dock( LEFT )
+    mdlpreview:Dock( RIGHT )
     mdlpreview:SetModel( "" )
     
     function mdlpreview:LayoutEntity( Entity )
@@ -38,10 +43,20 @@ local function OpenModelVoiceProfilePanel( ply )
     local mdlcolor = Vector( Rand( 0.0, 1.0 ), Rand( 0.0, 1.0 ), Rand( 0.0, 1.0 ) )
     local function GetPlayerColor() return mdlcolor end
 
-    local mdlvplist = {}
-    LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/modelvoiceprofiles.json", "json", function( data ) if data then mdlvplist = data end end )
+    local mdllist = {}
+    LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/modelvoiceprofiles.json", "json", function( data ) 
+        if !data then return end 
+        mdllist = data 
+        
+        for mdl, vp in SortedPairs( data ) do
+            mdlvplist:AddLine( mdl, vp )
+        end
+    end )
 
-    local mdlselected, vpselected
+    local mdlselected, vpselected, listId
+
+    local mdlpanel = LAMBDAPANELS:CreateBasicPanel( frame, RIGHT )
+    mdlpanel:SetSize( 312, 200 )
 
     LAMBDAPANELS:CreateButton( mdlpanel, BOTTOM, "Apply", function()
         if !mdlselected then
@@ -49,18 +64,21 @@ local function OpenModelVoiceProfilePanel( ply )
             PlaySound( "buttons/button10.wav" ) 
             return 
         end
-        if mdlvplist[ mdlselected ] == vpselected then return end
+        if mdllist[ mdlselected ] == vpselected then return end
 
         if vpselected == "/NIL" then 
-            if !mdlvplist[ mdlselected ] then return end
+            if !mdllist[ mdlselected ] then return end
+            if listId then mdlvplist:RemoveLine( listId ) end
             LAMBDAPANELS:RemoveVarFromKVFile( "lambdaplayers/modelvoiceprofiles.json", mdlselected, "json" ) 
+            AddNotification( 'Removed model voice profile from "' .. mdlselected .. '"!', 0, 4 )
         else
+            listId = mdlvplist:AddLine( mdlselected, vpselected ):GetID()
             LAMBDAPANELS:UpdateKeyValueFile( "lambdaplayers/modelvoiceprofiles.json", { [ lower( mdlselected ) ] = vpselected }, "json" )
+            AddNotification( 'Assigned "' .. vpselected .. '" voice profile to "' .. mdlselected .. '"!', 0, 4 )
         end
-        AddNotification( "Successfully applied the change!", 0, 4 )
-        PlaySound( "buttons/button15.wav" )
 
-        mdlvplist[ mdlselected ] = vpselected
+        PlaySound( "buttons/button15.wav" )
+        mdllist[ mdlselected ] = vpselected
     end )
     
     local vptbl = { [ "No Voice Profile" ] = "/NIL" }
@@ -82,14 +100,42 @@ local function OpenModelVoiceProfilePanel( ply )
         function modelbutton:DoClick()
             mdlselected = modelbutton:GetModelName()
             mdlpreview:SetModel( mdlselected )
-
+            
             mdlcolor = Vector( Rand( 0.0, 1.0 ), Rand( 0.0, 1.0 ), Rand( 0.0, 1.0 ) )
             mdlpreview.Entity.GetPlayerColor = GetPlayerColor
-
+            
+            for id, line in ipairs( mdlvplist:GetLines() ) do
+                if line:GetColumnText( 1 ) != mdlselected then continue end
+                listId = id; break
+            end
 
             PlaySound( "buttons/lightswitch2.wav" )
-            vplist:SelectOptionByKey( mdlvplist[ mdlselected ] or "/NIL" )
+            vplist:SelectOptionByKey( mdllist[ mdlselected ] or "/NIL" )
         end
+    end
+    
+    function mdlvplist:DoDoubleClick( id, line )
+        mdlselected = line:GetColumnText( 1 )
+        mdlpreview:SetModel( mdlselected )
+        
+        mdlcolor = Vector( Rand( 0.0, 1.0 ), Rand( 0.0, 1.0 ), Rand( 0.0, 1.0 ) )
+        mdlpreview.Entity.GetPlayerColor = GetPlayerColor
+        
+        listId = id
+        PlaySound( "buttons/lightswitch2.wav" )
+        vplist:SelectOptionByKey( vptbl[ line:GetColumnText( 2 ) ] or "/NIL" )
+    end
+
+    function mdlvplist:OnRowRightClick( id, line )
+        if listId == id then listId = nil end
+        
+        local mdl = line:GetColumnText( 1 )
+        AddNotification( 'Removed model voice profile from "' .. mdl .. '"!', 0, 4 )
+        PlaySound( "buttons/button15.wav" )
+
+        mdllist[ mdl ] = nil
+        mdlvplist:RemoveLine( id )
+        LAMBDAPANELS:RemoveVarFromKVFile( "lambdaplayers/modelvoiceprofiles.json", mdl, "json" ) 
     end
 end
 

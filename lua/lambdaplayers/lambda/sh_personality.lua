@@ -7,13 +7,16 @@ function ENT:BuildPersonalityTable( overridetable )
     self.l_Personality = {}
 
     for k, v in ipairs( LambdaPersonalities ) do
-        self[ "Chance_" .. v[ 1 ] ] = v[ 2 ] -- Set the functions
-        self[ "Get" .. v[ 1 ] .. "Chance" ] = function( self ) return self:GetNW2Int( "lambda_chance_" .. v[ 1 ], 0 ) end -- Create Get Function
-        self[ "Set" .. v[ 1 ] .. "Chance" ] = function( self, int ) self:SetNW2Int( "lambda_chance_" .. v[ 1 ], int ) end -- Create Set Function
+        local name, func = v[ 1 ], v[ 2 ]
 
-        self:SetNW2Int( "lambda_chance_" .. v[ 1 ], overridetable and overridetable[ v[ 1 ] ] or random( 0, 100 ) ) 
+        -- Set the functions if any is set
+        if func then self[ "Chance_" .. name ] = func end
 
-        table_insert( self.l_Personality, { v[ 1 ], self:GetNW2Int( "lambda_chance_" .. v[ 1 ], 0 ) } )
+        self[ "Get" .. name .. "Chance" ] = function( self ) return self:GetNW2Int( "lambda_chance_" .. name, 0 ) end -- Create Get Function
+        self[ "Set" .. name .. "Chance" ] = function( self, int ) self:SetNW2Int( "lambda_chance_" .. name, int ) end -- Create Set Function
+
+        local rndChan = ( overridetable and overridetable[ name ] or random( 0, 100 ) )
+        self:SetNW2Int( "lambda_chance_" .. name, rndChan )
+        table_insert( self.l_Personality, { name, rndChan, func } )
     end
-
 end

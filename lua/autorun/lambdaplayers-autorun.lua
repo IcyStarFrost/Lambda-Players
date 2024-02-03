@@ -7,7 +7,7 @@ LambdaIsForked = true -- For some things...
 
 function LambdaReloadAddon( ply )
 
-    if SERVER and IsValid( ply ) then 
+    if SERVER and IsValid( ply ) then
         if !ply:IsSuperAdmin() then return end -- No lol
         PrintMessage( HUD_PRINTTALK, "SERVER is reloading all Lambda Lua files.." )
     end
@@ -94,7 +94,7 @@ function LambdaReloadAddon( ply )
     hook.Run( "LambdaOnModulesLoaded" )
     --
 
-    if SERVER and IsValid( ply ) then 
+    if SERVER and IsValid( ply ) then
         PrintMessage( HUD_PRINTTALK, "SERVER has reloaded all Lambda Lua files" )
     end
 
@@ -124,6 +124,7 @@ LambdaPlayerSprays = LambdaPlayerSprays or LAMBDAFS:GetSprays()
 LambdaTextTable = LambdaTextTable or LAMBDAFS:GetTextTable()
 LambdaTextProfiles = LambdaTextProfiles or LAMBDAFS:GetTextProfiles()
 LambdaModelVoiceProfiles = LambdaModelVoiceProfiles or LAMBDAFS:GetModelVoiceProfiles()
+LambdaPlayermodelBodySkinSets = LambdaPlayermodelBodySkinSets or LAMBDAFS:GetPlayermodelBodySkinSets()
 LambdaQuickNades = LambdaQuickNades or LAMBDAFS:GetQuickNadeWeapons()
 --
 
@@ -134,7 +135,7 @@ local combotable = {}
 for k, v in pairs( LambdaVoiceProfiles ) do
     combotable[ k ] = k
 end
-combotable[ "None" ] = "" 
+combotable[ "None" ] = ""
 
 CreateLambdaConvar( "lambdaplayers_lambda_voiceprofile", "", true, true, true, "The Voice Profile your newly spawned Lambda Players should spawn with. Note: This will only work if the server has the specified Voice Profile", 0, 1, { type = "Combo", options = combotable, name = "Voice Profile", category = "Lambda Player Settings" } )
 --
@@ -145,7 +146,7 @@ combotable = {}
 for k, v in pairs( LambdaTextProfiles ) do
     combotable[ k ] = k
 end
-combotable[ "None" ] = "" 
+combotable[ "None" ] = ""
 
 CreateLambdaConvar( "lambdaplayers_lambda_textprofile", "", true, true, true, "The Text Profile your newly spawned Lambda Players should spawn with. Note: This will only work if the server has the specified Text Profile", 0, 1, { type = "Combo", options = combotable, name = "Text Profile", category = "Lambda Player Settings" } )
 --

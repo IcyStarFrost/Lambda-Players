@@ -13,7 +13,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         killicon = "weapon_stunstick",
         ismelee = true,
         bonemerge = true,
-        keepdistance = 10,
+        keepdistance = 40,
         attackrange = 55,
         dropentity = "weapon_stunstick",
 

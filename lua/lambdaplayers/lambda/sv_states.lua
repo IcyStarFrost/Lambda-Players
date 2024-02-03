@@ -25,7 +25,7 @@ function ENT:Idle()
 
     local pos
     if random( 3 ) == 1 then
-        local triggers = self:FindInSphere( nil, 2000, function( ent ) 
+        local triggers = self:FindInSphere( nil, 2000, function( ent )
             return ( ent:GetClass() == "trigger_teleport" and !ent:GetInternalVariable( "StartDisabled" ) and bit_band( ent:GetInternalVariable( "spawnflags" ), 2 ) == 2 and self:CanSee( ent ) )
         end )
 
@@ -50,7 +50,7 @@ function ENT:HealUp( failState )
         return ( failState or true )
     end
     if !self.l_isswimming and !self:IsInNoClip() and !self.loco:IsOnGround() then
-        return 
+        return
     end
 
     local rndVec = ( self:GetForward() * random( -16, 16 ) + self:GetRight() * random( -16, 16 ) + self:GetUp() * random( -16, -4 ) )
@@ -61,7 +61,7 @@ function ENT:HealUp( failState )
 
     local spawnRate = Rand( 0.15, 0.4 )
     coroutine_wait( spawnRate )
-    
+
     local spawnCount = ceil( ( self:GetMaxHealth() - self:Health() ) / 25 )
     for i = 1, random( ( spawnCount / 2 ), spawnCount ) do
         if self:InCombat() or self:IsPanicking() or !self:IsUnderLimit( "Entity" ) then break end
@@ -69,10 +69,10 @@ function ENT:HealUp( failState )
 
         local lookPos = ( self:GetPos() + rndVec )
         self:LookTo( lookPos, spawnRate * 2 )
-        
+
         local healthkit = LambdaSpawn_SENT( self, "item_healthkit", self:Trace( lookPos, self:EyePos() ) )
         if !IsValid( healthkit ) then break end
-        
+
         self:DebugPrint( "spawned an entity item_healthkit" )
         self:ContributeEntToLimit( healthkit, "Entity" )
         table_insert( self.l_SpawnedEntities, 1, healthkit )
@@ -90,7 +90,7 @@ function ENT:ArmorUp( failState )
         return ( failState or true )
     end
     if !self.l_isswimming and !self:IsInNoClip() and !self.loco:IsOnGround() then
-        return 
+        return
     end
 
     local rndVec = ( self:GetForward() * random( -16, 16 ) + self:GetRight() * random( -16, 16 ) + self:GetUp() * random( -16, -4 ) )
@@ -102,7 +102,7 @@ function ENT:ArmorUp( failState )
 
     local spawnRate = Rand( 0.15, 0.4 )
     coroutine_wait( spawnRate )
-    
+
     local spawnCount = ceil( ( self:GetMaxArmor() - self:Armor() ) / 15 )
     for i = 1, random( ( spawnCount / 3 ), spawnCount ) do
         if self:InCombat() or self:IsPanicking() or !self:IsUnderLimit( "Entity" ) then break end
@@ -120,20 +120,20 @@ function ENT:ArmorUp( failState )
 
         coroutine_wait( spawnRate )
     end
-    
+
     return true
 end
 
 function ENT:CombatSpawnBehavior( target )
     if random( 3 ) == 1 then self:ArmorUp() end
     if !IsValid( target ) or !self:CanTarget( target ) then return true end
-    self:AttackTarget( target ) 
+    self:AttackTarget( target )
 end
 
 -- Wander around until we find someone to jump
 local ft_options = { cbTime = 0.5, callback = function( lambda )
     if lambda:InCombat() or !lambda:GetState( "FindTarget" ) then return false end
-    
+
     local ene = lambda:GetEnemy()
     if LambdaIsValid( ene ) and lambda:CanTarget( ene ) then
         lambda:AttackTarget( ene )
@@ -217,7 +217,7 @@ function ENT:Laughing( args )
 
     if !self.l_preventdefaultspeak and !self:IsSpeaking( "laugh" ) then self:PlaySoundFile( "laugh", false ) end
     if self:GetState( "Laughing" ) then self:PlayGestureAndWait( ACT_GMOD_TAUNT_LAUGH ) end
-    
+
     return self:GetLastState()
 end
 
@@ -239,7 +239,7 @@ function ENT:TBaggingPosition( pos )
 
         self:SetCrouch( true )
         coroutine_wait( 0.2 )
-        
+
         self:SetCrouch( false )
         coroutine_wait( 0.2 )
     end
@@ -249,20 +249,22 @@ end
 
 local retreatOptions = { run = true, callback = function( lambda )
     if CurTime() >= lambda.l_retreatendtime then return false end
+
+    local target = lambda:GetEnemy()
+    if IsValid( target ) and ( ( target.IsLambdaPlayer or target:IsPlayer() ) and !target:Alive() or !lambda:IsInRange( target, 3000 ) ) then
+        return false
+    end
 end }
 function ENT:Retreat()
-    local target = self:GetEnemy()
-    if CurTime() >= self.l_retreatendtime or IsValid( target ) and ( ( target.IsLambdaPlayer or target:IsPlayer() ) and !target:Alive() or !self:IsInRange( target, 2000 ) ) then 
-        return true
-    end
+    if retreatOptions.callback( self ) == false then return true end
 
     local rndPos = self:GetRandomPosition( nil, 4000, function( selfPos, area, rndPoint )
-        if !IsValid( target ) then return end 
+        if !IsValid( target ) then return end
 
         local targetPos = target:GetPos()
         if rndPoint:DistToSqr( targetPos ) > 250000 and ( targetPos - selfPos ):GetNormalized():Dot( ( rndPoint - selfPos ):GetNormalized() ) <= 0.2 then return end
 
-        return true 
+        return true
     end )
     self:MoveToPos( rndPos, retreatOptions )
 end
@@ -273,7 +275,7 @@ function ENT:HealSomeone( target )
     end
 
     if self.l_Weapon != "gmod_medkit" then
-        if !self:CanEquipWeapon( "gmod_medkit" ) then return true end 
+        if !self:CanEquipWeapon( "gmod_medkit" ) then return true end
         self:SwitchWeapon( "gmod_medkit" )
     end
 
@@ -297,7 +299,7 @@ function ENT:HealSomeone( target )
             if self:IsInRange( target, 64 ) then return false end
         end } )
 
-        self:PreventWeaponSwitch( false ) 
+        self:PreventWeaponSwitch( false )
         if cancelled then return true end
     end
 end

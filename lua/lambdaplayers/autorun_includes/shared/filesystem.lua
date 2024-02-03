@@ -26,11 +26,11 @@ file.CreateDir( "lambdaplayers/cachedfiles" )
 LAMBDAFS = {}
 
 -- Writes to a file. If content is a table, input json or compressed for the type arg
-function LAMBDAFS:WriteFile( filename, content, type ) 
+function LAMBDAFS:WriteFile( filename, content, type )
 	local f = file_Open( filename, ( ( type == "binary" or type == "compressed" ) and "wb" or "w" ), "DATA" )
 	if !f then return end
 
-    if type == "json" then 
+    if type == "json" then
         content = TableToJSON( content, true )
     elseif type == "compressed" then
         content = TableToJSON( content )
@@ -43,7 +43,7 @@ end
 
 -- Updates or creates a new file containing a sequential table
 -- type should be json or compressed
-function LAMBDAFS:UpdateSequentialFile( filename, addcontent, type ) 
+function LAMBDAFS:UpdateSequentialFile( filename, addcontent, type )
     local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
 
     if contents then
@@ -57,7 +57,7 @@ end
 
 -- Updates or creates a new file containing a table that uses strings as keys
 -- type should be json or compressed
-function LAMBDAFS:UpdateKeyValueFile( filename, addcontent, type ) 
+function LAMBDAFS:UpdateKeyValueFile( filename, addcontent, type )
     local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
 
     if contents then
@@ -73,14 +73,14 @@ end
 
 -- If a file has the provided value
 -- Only works if the file contains a sequential table
-function LAMBDAFS:FileHasValue( filename, value, type ) 
+function LAMBDAFS:FileHasValue( filename, value, type )
     if !file_Exists( filename, "DATA" ) then return false end
     local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
     return table_HasValue( contents, value )
 end
 
 -- Returns if the specified key's value is valid
-function LAMBDAFS:FileKeyIsValid( filename, key, type ) 
+function LAMBDAFS:FileKeyIsValid( filename, key, type )
     if !file_Exists( filename, "DATA" ) then return false end
     local contents = LAMBDAFS:ReadFile( filename, type, "DATA" )
     return contents[ key ] != nil
@@ -115,7 +115,7 @@ function LAMBDAFS:ReadFile( filename, type, path )
 
 	if !str then return nil end
 
-    if str != "" and type == "json" then 
+    if str != "" and type == "json" then
         str = JSONToTable( str )
     elseif str != "" and type == "compressed" then
         str = Decompress( str )
@@ -132,20 +132,20 @@ local function HandleCustomNameFile( path, default )
     local tbl = {}
     if isjson then
         local jsoncontents = LAMBDAFS:ReadFile( path, "json", "GAME" )
-        
+
         for k, v in ipairs( jsoncontents ) do
-            if !table.HasValue( default, v ) then 
+            if !table.HasValue( default, v ) then
                 table_insert( tbl, v )
             end
         end
 
     else
-        local txtcontents = LAMBDAFS:ReadFile( path, nil, "GAME" ) 
+        local txtcontents = LAMBDAFS:ReadFile( path, nil, "GAME" )
         txtcontents = txtcontents and string_Explode( "\n", txtcontents ) or nil
 
         if txtcontents then
             for k, v in ipairs( txtcontents ) do
-                if !table.HasValue( default, v ) then 
+                if !table.HasValue( default, v ) then
                     table_insert( tbl, v )
                 end
             end
@@ -209,7 +209,7 @@ function LAMBDAFS:GetVoiceLinesTable()
         for k, v in ipairs( files ) do table_insert( tbl, dir .. v ) end
         for k, v in ipairs( dirs ) do MergeDirectory( dir .. v, tbl ) end
     end
-    
+
     for k, v in ipairs( LambdaValidVoiceTypes ) do
         MergeDirectory( GetConVar( v[ 2 ] ):GetString(), LambdaVoiceLinesTable[ v[ 1 ] ] )
     end
@@ -220,7 +220,7 @@ function LAMBDAFS:GetVoiceLinesTable()
             MergeDirectory( "lambdaplayers/vo/custom/" .. v[ 1 ], LambdaVoiceLinesTable[ v[ 1 ] ] )
         end
     end
-    
+
     return LambdaVoiceLinesTable
 end
 
@@ -235,7 +235,7 @@ function LAMBDAFS:GetProfilePictures()
     end
 
     MergeDirectory( "lambdaplayers/custom_profilepictures" )
-    
+
     return Lambdaprofilepictures
 end
 
@@ -247,13 +247,13 @@ function LAMBDAFS:GetTextTable()
         dir = dir .. "/"
         local files, dirs = file_Find( path .. "/" .. dir .. "*", "GAME", "nameasc" )
 
-        for k, v in ipairs( files ) do 
+        for k, v in ipairs( files ) do
             local filename = string_StripExtension( v )
             local texttype = string_Explode( "_", filename )[ 1 ] -- 1st result to the left of the underscore should always be the text type. The rest to the right is simply used for having unique names to prevent conflicts
             local content = LAMBDAFS:ReadFile( path .. "/" .. dir .. v, "json", "GAME" )
 
             if !content then
-                local txtcontents = LAMBDAFS:ReadFile( path .. "/" .. dir .. v, nil, "GAME" ) 
+                local txtcontents = LAMBDAFS:ReadFile( path .. "/" .. dir .. v, nil, "GAME" )
                 content = txtcontents and string_Explode( "\n", txtcontents ) or nil
             end
 
@@ -263,16 +263,16 @@ function LAMBDAFS:GetTextTable()
             end
         end
 
-        for k, v in ipairs( dirs ) do 
-            MergeDirectory( dir .. v ) 
+        for k, v in ipairs( dirs ) do
+            MergeDirectory( dir .. v )
         end
     end
 
-    
+
     MergeDirectory( "lambdaplayers/data/texttypes", "materials", mergedefaulttextlines:GetBool() )
     MergeDirectory( "lambdaplayers/texttypes", "materials", mergeaddontextlines:GetBool() )
     MergeDirectory( "lambdaplayers/texttypes", "data", true )
-    
+
     return LambdaTextTable
 end
 
@@ -287,18 +287,18 @@ function LAMBDAFS:GetSprays()
     end
 
     MergeDirectory( "lambdaplayers/sprays" )
-    
+
     return LambdaPlayerSprays
 end
 
 function LAMBDAFS:GetVoiceProfiles()
     LambdaVoiceProfiles = {}
-    
+
     local _, profileFiles = file_Find( "sound/lambdaplayers/voiceprofiles/*", "GAME", "nameasc" )
     for _, profile in ipairs( profileFiles ) do
-        LambdaVoiceProfiles[ profile ] = {} 
+        LambdaVoiceProfiles[ profile ] = {}
 
-        for _, v in ipairs( LambdaValidVoiceTypes ) do 
+        for _, v in ipairs( LambdaValidVoiceTypes ) do
             local voicelines,_  = file_Find( "sound/lambdaplayers/voiceprofiles/" .. profile .. "/" .. v[ 1 ] .. "/*", "GAME", "nameasc" )
 
             if voicelines and #voicelines > 0 then
@@ -315,9 +315,9 @@ function LAMBDAFS:GetVoiceProfiles()
     -- Zeta vp support I guess
     local _, zetavp  = file_Find( "sound/zetaplayer/custom_vo/vp_*", "GAME", "nameasc" )
     for _, profile in ipairs( zetavp ) do
-        LambdaVoiceProfiles[ profile ] = {} 
+        LambdaVoiceProfiles[ profile ] = {}
 
-        for _, v in ipairs( LambdaValidVoiceTypes ) do 
+        for _, v in ipairs( LambdaValidVoiceTypes ) do
             local voicelines  = file_Find( "sound/zetaplayer/custom_vo/" .. profile .. "/" .. v[ 1 ] .. "/*", "GAME", "nameasc" )
 
             if voicelines and #voicelines > 0 then
@@ -331,7 +331,7 @@ function LAMBDAFS:GetVoiceProfiles()
             end
         end
     end
-    
+
     return LambdaVoiceProfiles
 end
 
@@ -340,14 +340,14 @@ function LAMBDAFS:GetTextProfiles()
 
     local _, profileFiles = file_Find( "materials/lambdaplayers/textprofiles/*", "GAME", "nameasc" )
     for _, profile in ipairs( profileFiles ) do
-        LambdaTextProfiles[ profile ] = {} 
+        LambdaTextProfiles[ profile ] = {}
 
-        for _, texttype in ipairs( file_Find( "materials/lambdaplayers/textprofiles/" .. profile .. "/*", "GAME", "nameasc" ) ) do 
+        for _, texttype in ipairs( file_Find( "materials/lambdaplayers/textprofiles/" .. profile .. "/*", "GAME", "nameasc" ) ) do
             LambdaTextProfiles[ profile ][ string_StripExtension( texttype ) ] = {}
 
             local content = LAMBDAFS:ReadFile( "materials/lambdaplayers/textprofiles/" .. profile .. "/" .. texttype, "json", "GAME" )
             if !content then
-                local txtcontents = LAMBDAFS:ReadFile( "materials/lambdaplayers/textprofiles/" .. profile .. "/" .. texttype, nil, "GAME" ) 
+                local txtcontents = LAMBDAFS:ReadFile( "materials/lambdaplayers/textprofiles/" .. profile .. "/" .. texttype, nil, "GAME" )
                 content = txtcontents and string_Explode( "\n", txtcontents ) or nil
             end
             if content then table_Add( LambdaTextProfiles[ profile ][ string_StripExtension( texttype ) ], content ) end
@@ -358,7 +358,11 @@ function LAMBDAFS:GetTextProfiles()
 end
 
 function LAMBDAFS:GetModelVoiceProfiles()
-    return LAMBDAFS:ReadFile( "lambdaplayers/modelvoiceprofiles.json", "json" )
+    return LAMBDAFS:ReadFile( "lambdaplayers/modelvoiceprofiles.json", "json" ) or {}
+end
+
+function LAMBDAFS:GetPlayermodelBodySkinSets()
+    return LAMBDAFS:ReadFile( "lambdaplayers/pmbodygroupsets.json", "json" ) or {}
 end
 
 function LAMBDAFS:GetQuickNadeWeapons()
@@ -367,28 +371,23 @@ end
 
 if ( SERVER ) then
 
-    if !file_Exists( "lambdaplayers/npclist.json", "DATA" ) then 
-        LAMBDAFS:WriteFile( "lambdaplayers/npclist.json", LAMBDAFS:ReadFile( "materials/lambdaplayers/data/defaultnpcs.vmt", nil, "GAME", false ) ) 
+    if !file_Exists( "lambdaplayers/npclist.json", "DATA" ) then
+        LAMBDAFS:WriteFile( "lambdaplayers/npclist.json", LAMBDAFS:ReadFile( "materials/lambdaplayers/data/defaultnpcs.vmt", nil, "GAME", false ) )
     end
 
-    if !file_Exists( "lambdaplayers/entitylist.json", "DATA" ) then 
-        LAMBDAFS:WriteFile( "lambdaplayers/entitylist.json", LAMBDAFS:ReadFile( "materials/lambdaplayers/data/defaultentities.vmt", nil, "GAME", false ) ) 
+    if !file_Exists( "lambdaplayers/entitylist.json", "DATA" ) then
+        LAMBDAFS:WriteFile( "lambdaplayers/entitylist.json", LAMBDAFS:ReadFile( "materials/lambdaplayers/data/defaultentities.vmt", nil, "GAME", false ) )
     end
 
-    if !file_Exists( "lambdaplayers/proplist.json", "DATA" ) then 
-        LAMBDAFS:WriteFile( "lambdaplayers/proplist.json", LAMBDAFS:ReadFile( "materials/lambdaplayers/data/props.vmt", nil, "GAME", false ) ) 
+    if !file_Exists( "lambdaplayers/proplist.json", "DATA" ) then
+        LAMBDAFS:WriteFile( "lambdaplayers/proplist.json", LAMBDAFS:ReadFile( "materials/lambdaplayers/data/props.vmt", nil, "GAME", false ) )
     end
 
-    if !file_Exists( "lambdaplayers/modelvoiceprofiles.json", "DATA" ) then 
-        LAMBDAFS:WriteFile( "lambdaplayers/modelvoiceprofiles.json", {}, "json", false ) 
-    end
-
-    local defaultNades = {
-        "grenade",
-        "slam"
-    }
-    if !file_Exists( "lambdaplayers/quicknades.json", "DATA" ) then 
-        LAMBDAFS:WriteFile( "lambdaplayers/quicknades.json", defaultNades, "json", false ) 
+    if !file_Exists( "lambdaplayers/quicknades.json", "DATA" ) then
+        LAMBDAFS:WriteFile( "lambdaplayers/quicknades.json", {
+            "grenade",
+            "slam"
+        }, "json", false )
     end
 
 end

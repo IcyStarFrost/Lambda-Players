@@ -57,7 +57,7 @@ net.Receive( "lambdaplayers_disintegrationeffect", function()
 end )
 
 -- Net sent from ENT:OnKilled()
-net.Receive( "lambdaplayers_becomeragdoll", function() 
+net.Receive( "lambdaplayers_becomeragdoll", function()
     local lambda = net.ReadEntity()
     if !IsValid( lambda ) then return end
 
@@ -92,13 +92,13 @@ net.Receive( "lambdaplayers_becomeragdoll", function()
 
     local startTime = CurTime()
     LambdaCreateThread( function()
-        while ( cleanuptime:GetInt() == 0 or CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and ( !lambda.GetIsDead or lambda:GetIsDead() and lambda:IsSpeaking() ) ) do 
+        while ( cleanuptime:GetInt() == 0 or CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and ( !lambda.GetIsDead or lambda:GetIsDead() and lambda:IsSpeaking() ) ) do
             if !IsValid( ragdoll ) then return end
-            coroutine_yield() 
+            coroutine_yield()
         end
         if !IsValid( ragdoll ) then return end
 
-        if cleaneffect:GetBool() then ragdoll:LambdaDisintegrate() return end 
+        if cleaneffect:GetBool() then ragdoll:LambdaDisintegrate() return end
         ragdoll:Remove()
     end )
 end )
@@ -108,7 +108,7 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
 
     local wepent = net.ReadEntity()
     if !IsValid( wepent ) then return end
-    
+
     local cs_prop = CreateClientProp( net.ReadString() )
     cs_prop:SetPos( net.ReadVector() )
     cs_prop:SetAngles( wepent:GetAngles() )
@@ -119,8 +119,8 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
     cs_prop:Spawn()
 
     local lambda = net.ReadEntity()
-    if IsValid( lambda ) then lambda.cs_prop = cs_prop end 
-    
+    if IsValid( lambda ) then lambda.cs_prop = cs_prop end
+
     table_insert( _LAMBDAPLAYERS_ClientSideEnts, cs_prop )
     cs_prop.isclientside = true
 
@@ -138,15 +138,15 @@ net.Receive( "lambdaplayers_createclientsidedroppedweapon", function()
 
     local startTime = CurTime()
     LambdaCreateThread( function()
-        while ( cleanuptime:GetInt() == 0 or CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and ( !lambda.GetIsDead or lambda:GetIsDead() and lambda:IsSpeaking() ) ) do 
+        while ( cleanuptime:GetInt() == 0 or CurTime() < ( startTime + cleanuptime:GetInt() ) or IsValid( lambda ) and ( !lambda.GetIsDead or lambda:GetIsDead() and lambda:IsSpeaking() ) ) do
             if !IsValid( cs_prop ) then return end
-            coroutine_yield() 
+            coroutine_yield()
         end
         if !IsValid( cs_prop ) then return end
 
-        if cleaneffect:GetBool() then cs_prop:LambdaDisintegrate() return end 
+        if cleaneffect:GetBool() then cs_prop:LambdaDisintegrate() return end
         cs_prop:Remove()
-    end ) 
+    end )
 end )
 
 -- Voice icons, voice positioning, all that stuff will be handled in here.
@@ -186,7 +186,7 @@ local function PlaySoundFile( ent, soundName, index, origin, delay, is3d )
             print( "Lambda Players Voice Chat Error: Sound file " .. soundName .. " failed to open!\nError Index: " .. errorName .. "#" .. errorId )
             return
         end
-        
+
         local sndLength = snd:GetLength()
         if sndLength <= 0 or !IsValid( ent ) or !ent.GetVoicePitch then
             snd:Stop()
@@ -288,7 +288,7 @@ hook.Add( "Tick", "lambdavc_updatesounds", function()
             if IsValid( snd ) then snd:Stop() end
             if IsValid( lastSrcEnt ) then lastSrcEnt:LambdaMoveMouth( 0 ) end
             if IsValid( ent ) then ent:SetVoiceLevel( 0 ) end
-            
+
             _LAMBDAPLAYERS_VoiceChannels[ ent ] = nil
             continue
         end
@@ -363,8 +363,9 @@ net.Receive( "lambdaplayers_updatedata", function()
     LambdaTextProfiles = LAMBDAFS:GetTextProfiles()
     LambdaPersonalProfiles = file.Exists( "lambdaplayers/profiles.json", "DATA" ) and LAMBDAFS:ReadFile( "lambdaplayers/profiles.json", "json" ) or nil
     LambdaModelVoiceProfiles = LAMBDAFS:GetModelVoiceProfiles()
+    LambdaPlayermodelBodySkinSets = LAMBDAFS:GetPlayermodelBodySkinSets()
     LambdaQuickNades = LAMBDAFS:GetQuickNadeWeapons()
-    
+
     chat.AddText( "Lambda Data was updated by the Server" )
 end )
 
@@ -376,7 +377,7 @@ end )
 net.Receive( "lambdaplayers_stopcurrentsound", function()
     local ent = net.ReadEntity()
     if !IsValid( ent ) then return end
-    
+
     local sndData = _LAMBDAPLAYERS_VoiceChannels[ ent ]
     if !sndData then return end
 
@@ -395,11 +396,11 @@ net.Receive( "lambdaplayers_updatecsstatus", function()
     if !IsValid( lambda ) then return end
 
     local hasDied = net.ReadBool()
-    if !hasDied then 
+    if !hasDied then
         if removeCorpse:GetBool() then
             local ragdoll = lambda.ragdoll
             if IsValid( ragdoll ) then
-                if cleaneffect:GetBool() then 
+                if cleaneffect:GetBool() then
                     ragdoll:LambdaDisintegrate()
                 else
                     ragdoll:Remove()
@@ -408,7 +409,7 @@ net.Receive( "lambdaplayers_updatecsstatus", function()
 
             local cs_prop = lambda.cs_prop
             if IsValid( cs_prop ) then
-                if cleaneffect:GetBool() then 
+                if cleaneffect:GetBool() then
                     cs_prop:LambdaDisintegrate()
                 else
                     cs_prop:Remove()
@@ -428,7 +429,7 @@ net.Receive( "lambdaplayers_updatecsstatus", function()
     if sndData then sndData.LastSndPos = net.ReadVector() end
 end )
 
-net.Receive( "lambdaplayers_setnodraw", function() 
+net.Receive( "lambdaplayers_setnodraw", function()
     local ent = net.ReadEntity()
     if !IsValid( ent ) then return end
 
@@ -465,7 +466,7 @@ net.Receive( "lambdaplayers_chatadd", function()
     chat.AddText( unpack( args ) )
 end )
 
-net.Receive( "lambdaplayers_addtokillfeed", function() 
+net.Receive( "lambdaplayers_addtokillfeed", function()
     local attackername = net.ReadString()
     local attackerteam = net.ReadInt( 8 )
     local victimname = net.ReadString()
@@ -509,7 +510,7 @@ local function Spray( spraypath, tracehitpos, tracehitnormal, attemptedfallback 
     -- If we failed to load the Server's spray, try one of our own sprays and hope it works. If it does not work, give up and don't spray anything.
     if !material or material:IsError() then
         if !attemptedfallback then
-            Spray( LambdaPlayerSprays[ random( #LambdaPlayerSprays ) ], tracehitpos, tracehitnormal, true ) 
+            Spray( LambdaPlayerSprays[ random( #LambdaPlayerSprays ) ], tracehitpos, tracehitnormal, true )
         end
         return
     end
@@ -520,20 +521,20 @@ local function Spray( spraypath, tracehitpos, tracehitnormal, attemptedfallback 
     -- Sizing the Spray
     local widthPower = 256
     local heightPower = 256
-    if texWidth > texHeight then 
-        heightPower = 128 
-    elseif texHeight > texWidth then 
-        widthPower = 128 
+    if texWidth > texHeight then
+        heightPower = 128
+    elseif texHeight > texWidth then
+        widthPower = 128
     end
-    if texWidth < 256 then 
-        texWidth = ( texWidth / 256 ) 
-    else 
-        texWidth = ( widthPower / ( texWidth * 4 ) ) 
+    if texWidth < 256 then
+        texWidth = ( texWidth / 256 )
+    else
+        texWidth = ( widthPower / ( texWidth * 4 ) )
     end
-    if texHeight < 256 then 
-        texHeight = ( texHeight / 256 ) 
-    else 
-        texHeight = ( heightPower / ( texHeight * 4) ) 
+    if texHeight < 256 then
+        texHeight = ( texHeight / 256 )
+    else
+        texHeight = ( heightPower / ( texHeight * 4) )
     end
 
     -- Place the spray
@@ -541,14 +542,14 @@ local function Spray( spraypath, tracehitpos, tracehitnormal, attemptedfallback 
 
 end
 
-net.Receive( "lambdaplayers_spray", function() 
+net.Receive( "lambdaplayers_spray", function()
     local spraypath = net.ReadString()
     local tracehitpos = net.ReadVector()
     local tracehitnormal = net.ReadNormal()
     Spray( spraypath, tracehitpos, tracehitnormal )
 end )
 
-net.Receive( "lambdaplayers_getplybirthday", function() 
+net.Receive( "lambdaplayers_getplybirthday", function()
     local birthdaydata = LAMBDAFS:ReadFile( "lambdaplayers/playerbirthday.json", "json" )
 
     net.Start( "lambdaplayers_returnplybirthday" )
@@ -614,7 +615,7 @@ net.Receive( "lambdaplayers_takeviewshot", function()
     lambda:Hook( "CalcView", "ViewShotCalcView", function()
         local ragdoll = lambda:GetRagdollEntity()
         if lambda:GetIsDead() and IsValid( ragdoll ) then
-            local eyes = lambda:GetAttachmentPoint( "eyes", ragdoll )            
+            local eyes = lambda:GetAttachmentPoint( "eyes", ragdoll )
             viewshotTbl.origin = eyes.Pos
             viewshotTbl.angles = eyes.Ang
 
@@ -650,8 +651,8 @@ net.Receive( "lambdaplayers_takeviewshot", function()
         local fileName = game_GetMap() .. "_" .. lambda:GetLambdaName() .. "_" .. os_date( "%Y-%m-%d_%H-%M-%S" ) .. "-" .. rndMiliSec .. "." .. format
         LAMBDAFS:WriteFile( "lambdaplayers/viewshots/" .. fileName, render_Capture( captureTbl ), "binary" )
 
-        if headBone then 
-            DrawEntityBones( lambda, headBone, true ) 
+        if headBone then
+            DrawEntityBones( lambda, headBone, true )
             if lambdaCorpse then DrawEntityBones( lambdaCorpse, headBone, true ) end
         end
         return EndViewShotting()

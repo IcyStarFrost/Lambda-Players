@@ -30,11 +30,11 @@ local function Chance_Build( self )
 
     for index, buildtable in RandomPairs( LambdaBuildingFunctions ) do
         if !buildtable[ 2 ]:GetBool() then continue end
-        
+
         local name = buildtable[ 1 ]
         if LambdaRunHook( "LambdaOnUseBuildFunction", self, name ) == true then break end
 
-        local result 
+        local result
         local ok, msg = pcall( function() result = buildtable[ 3 ]( self ) end )
 
         if !ok and name != "entity" and name != "npc" then ErrorNoHaltWithStack( name .. " Building function had a error! If this is from a addon, report it to the author!", msg ) end
@@ -55,10 +55,10 @@ local function Chance_Tool( self )
     local find = self:FindInSphere( nil, 400, function( ent ) if self:HasVPhysics( ent ) and self:CanSee( ent ) and self:HasPermissionToEdit( ent ) then return true end end )
     local target = find[ random( #find ) ]
 
-    -- Loops through random tools and only stops if a tool tells us it actually got used by returning true 
+    -- Loops through random tools and only stops if a tool tells us it actually got used by returning true
     for index, tooltable in RandomPairs( LambdaToolGunTools ) do
         if !tooltable[ 2 ]:GetBool() then continue end -- If the tool is allowed
- 
+
         local name = tooltable[ 1 ]
         if LambdaRunHook( "LambdaOnToolUse", self, name ) == true then break end
 
@@ -72,13 +72,7 @@ local function Chance_Tool( self )
     self:PreventWeaponSwitch( false )
 end
 
-local spawnEntities
-local spawnMedkits = GetConVar( "lambdaplayers_combat_spawnmedkits" )
-local spawnBatteries = GetConVar( "lambdaplayers_combat_spawnbatteries" )
-local function Chance_Combat( self )     
-    spawnEntities = spawnEntities or GetConVar( "lambdaplayers_building_allowentity" )
-    local allowEntities = spawnEntities:GetBool()
-    
+local function Chance_Combat( self )
     local rndCombat = random( 3 )
     if rndCombat == 1 then
         self:SetState( "HealUp", "FindTarget" )
@@ -97,12 +91,12 @@ local function Chance_Friendly( self )
         if !LambdaIsValid( ent ) or !ent.Health or !ent:IsNPC() and !ent:IsNextBot() and ( !ent:IsPlayer() or !ent:Alive() or ignorePlys:GetBool() ) then return false end
         return ( ent:Health() < ent:GetMaxHealth() and self:CanSee( ent ) )
     end )
-    
+
     if #nearbyEnts == 0 then return end
     self:SetState( "HealSomeone", nearbyEnts[ random( #nearbyEnts ) ] )
 end
 
-CreateLambdaConsoleCommand( "lambdaplayers_cmd_opencustompersonalitypresetpanel", function( ply ) 
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_opencustompersonalitypresetpanel", function( ply )
     local tbl = {}
     tbl[ "lambdaplayers_personality_voicechance" ] = 30
     tbl[ "lambdaplayers_personality_textchance" ] = 30
@@ -117,6 +111,8 @@ LambdaCreatePersonalityType( "Build", Chance_Build )
 LambdaCreatePersonalityType( "Tool", Chance_Tool )
 LambdaCreatePersonalityType( "Combat", Chance_Combat )
 LambdaCreatePersonalityType( "Friendly", Chance_Friendly )
+
+LambdaCreatePersonalityType( "Cowardly" )
+
 CreateLambdaConvar( "lambdaplayers_personality_voicechance", 30, true, true, true, "The chance Voice will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = "Voice Chance", category = "Lambda Player Settings" } )
 CreateLambdaConvar( "lambdaplayers_personality_textchance", 30, true, true, true, "The chance Text will be executed. Personality Preset should be set to Custom for this slider to effect newly spawned Lambda Players!", 0, 100, { type = "Slider", decimals = 0, name = "Text Chance", category = "Lambda Player Settings" } )
-

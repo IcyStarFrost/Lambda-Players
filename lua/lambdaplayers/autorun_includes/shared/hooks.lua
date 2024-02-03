@@ -30,11 +30,16 @@ if SERVER then
     -- God mode simple stuff
     hook.Add( "EntityTakeDamage", "LambdaMainDamageHook", function( ent, dmginfo )
         if ent.l_godmode then return true end
-        
+
         if ent.IsLambdaPlayer then
             local lastDmg = ent.l_lastdamage
             if lastDmg and ( lastDmg / 4 ) == dmginfo:GetDamage() then
                 dmginfo:ScaleDamage( 4 )
+            end
+        elseif ent.IsUltrakillNextbot then
+            local attacker = dmginfo:GetAttacker()
+            if IsValid( attacker ) and attacker.IsLambdaPlayer then
+                dmginfo:SetDamage( ( ( dmginfo:GetDamage() / UltrakillBase.ConVars.TakeDmgMult:GetFloat() ) * UltrakillBase.ConVars.PlyDmgMult:GetFloat() ) * 10 )
             end
         end
 
@@ -52,18 +57,28 @@ if SERVER then
     -- So the client knows if the player is the host or not
     hook.Add("PlayerInitialSpawn", "Lambdasetserverhost", function( ply )
         if ply:IsListenServerHost() then ply:SetNW2Bool( "lambda_serverhost", true ) end
-        
+
         LambdaGetPlayerBirthday( ply, function( ply, month, day )
-            _LambdaPlayerBirthdays[ ply:SteamID() ] = { month = month, day = day } 
+            _LambdaPlayerBirthdays[ ply:SteamID() ] = { month = month, day = day }
         end )
     end )
-    
+
+    local function LambdaMedkitCanHeal( swep, ent )
+        if ent.IsLambdaPlayer or ent:IsPlayer() or ent:IsNPC() then
+            local takedamage = ent:GetInternalVariable( "m_takedamage" )
+            return ( takedamage == nil or takedamage == 2 )
+        end
+        return false
+    end
+
     -- Fixes ReAgdoll throwing errors when a ragdoll doesn't have bones it need to use (like head)
     hook.Add( "OnEntityCreated", "LambdaOnEntityCreated", function( ent )
         if !IsValid( ent ) then return end
 
-        local class = ent:GetClass() 
-        if class == "lua_run" then
+        local class = ent:GetClass()
+        if class == "weapon_medkit" then
+            ent.CanHeal = LambdaMedkitCanHeal
+        elseif class == "lua_run" then
             function ent:RunCode( activator, caller, code )
                 self:SetupGlobals( activator, caller )
                     if activator.IsLambdaPlayer then
@@ -92,8 +107,8 @@ if SERVER then
         end
     end )
 
-    local specialkeywords = { 
-        "|birthday|", 
+    local specialkeywords = {
+        "|birthday|",
         "|christmas|",
         "|newyears|",
         "|addonbirthday|",
@@ -108,16 +123,16 @@ if SERVER then
         local speciallines = {}
 
         for k, str in ipairs( tbl ) do
-            for i = 1, #specialkeywords do 
+            for i = 1, #specialkeywords do
                 local keyword = specialkeywords[ i ]
-                if string.find( str, keyword ) and LambdaConditionalKeyWordCheck( nil, str ) then 
+                if string.find( str, keyword ) and LambdaConditionalKeyWordCheck( nil, str ) then
                     speciallines[ #speciallines + 1 ] = str
                 end
             end
         end
         return speciallines[ math.random( #speciallines ) ]
     end
-    
+
     hook.Add( "LambdaOnStartTyping", "LambdaSpecialDaytext", function( lambda, text, texttype )
         if texttype != "idle" or math.random( 0, 100 ) > 10 then return end
 
@@ -129,7 +144,7 @@ if SERVER then
     end )
 
 elseif CLIENT then
-    
+
     local DrawText = draw.DrawText
     local tostring = tostring
     local uiscale = GetConVar( "lambdaplayers_uiscale" )
@@ -164,7 +179,7 @@ elseif CLIENT then
             DrawText( name, "lambdaplayers_displayname", ( sw / 2 ), ( sh / 1.95 ) , color, TEXT_ALIGN_CENTER )
             DrawText( tostring( hp ) .. "%", "lambdaplayers_healthfont", ( sw / hpW ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), color, TEXT_ALIGN_CENTER)
         end
-    
+
     end )
 
 
@@ -174,7 +189,7 @@ elseif CLIENT then
         hook.Add( "Think", "lambdaplayers_forceenablevoicechat", function()
             local vcbind = input_LookupBinding( "+voicerecord" )
             local bindenum = vcbind and input_GetKeyCode( vcbind ) or KEY_X
-        
+
             if input_IsKeyDown( bindenum ) and !limit then
                 limit = true
                 GAMEMODE:PlayerStartVoice( LocalPlayer() )
@@ -205,7 +220,7 @@ elseif CLIENT then
     local popupVolColor = Color( 0, 255, 0, 240 )
     local drawPopupIndexes = {}
 
-    -- This handles the rendering of the Voice Popups to the right side 
+    -- This handles the rendering of the Voice Popups to the right side
     hook.Add( "HUDPaint", "LambdaPlayers_DrawVoicePopups", function()
         if !allowpopups:GetBool() then return end
 
@@ -223,41 +238,41 @@ elseif CLIENT then
                     continue
                 end
             end
-            
+
             local sndVol = 0
             local snd = vcData.Sound
             local lastPlayTime = vcData.LastPlayTime
             if IsValid( snd ) and snd:GetState() == GMOD_CHANNEL_PLAYING then
                 local leftChan, rightChan = snd:GetLevel()
                 sndVol = ( ( leftChan + rightChan ) * 0.5 )
-    
+
                 vcData.LastPlayTime = realTime
                 if vcData.FirstDisplayTime == 0 then
                     vcData.FirstDisplayTime = ( realTime + timeOffset )
                     timeOffset = ( timeOffset + 0.1 )
-                end 
+                end
             end
             vcData.VoiceVolume = sndVol
 
             local drawAlpha = max( 0, 1 - ( ( realTime - vcData.LastPlayTime ) / 2 ) )
-            if !IsValid( snd ) and drawAlpha == 0 then 
+            if !IsValid( snd ) and drawAlpha == 0 then
                 _LAMBDAPLAYERS_VoicePopups[ lambda ] = nil
-                continue 
+                continue
             end
-    
+
             vcData.AlphaRatio = drawAlpha
             if drawAlpha == 0 then
                 vcData.FirstDisplayTime = 0
-                continue 
+                continue
             end
-    
+
             canDrawSomething = true
             drawPopupIndexes[ lambda ] = vcData
         end
 
         if !canDrawSomething then return end
         local drawX, drawY = ( ScrW() - 298 + voicepopupx:GetInt() ), ( ScrH() - 142 + voicepopupy:GetInt() )
-    
+
         local plyPopups = g_VoicePanelList
         if ispanel( plyPopups ) then drawY = ( drawY - ( 44 * #plyPopups:GetChildren() ) ) end
 
@@ -267,7 +282,7 @@ elseif CLIENT then
         for lambda, vcData in SortedPairsByMemberValue( drawPopupIndexes, "FirstDisplayTime" ) do
             local drawAlpha = vcData.AlphaRatio
             popupBaseColor.a = ( drawAlpha * 255 )
-    
+
             local vol = ( vcData.VoiceVolume * drawAlpha )
             local vcClr = vcData.Color
             popupVolColor.r = ( vol * vcClr.r )
@@ -276,11 +291,11 @@ elseif CLIENT then
 
             popupVolColor.a = ( drawAlpha * 240 )
             draw.RoundedBox( 4, drawX, drawY, 246, 40, popupVolColor )
-            
+
             surface_SetDrawColor( popupBaseColor )
             surface_SetMaterial( vcData.ProfilePicture )
             DrawTexturedRect( drawX + 4, drawY + 4, 32, 32 )
-    
+
             local nickname = vcData.Nick
             local textWidth = surface_GetTextSize( nickname )
             if textWidth > 200 then

@@ -651,7 +651,8 @@ function ENT:AvoidCheck( goalAng )
 
     if leftresult.Hit and rightresult.Hit then -- Back up
         local lent, rent = leftresult.Entity, rightresult.Entity
-        if IsValid( lent ) and doorClasses[ lent:GetClass() ] or IsValid( rent ) and doorClasses[ rent:GetClass() ] then return end
+        local ene = ( self.l_HasMelee and self:GetEnemy() )
+        if lent == ene or IsValid( lent ) and doorClasses[ lent:GetClass() ] or rent == ene or IsValid( rent ) and doorClasses[ rent:GetClass() ] then return end
 
         self:ApproachDir( -selfForward, 0.25 )
     end
