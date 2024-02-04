@@ -1,4 +1,4 @@
-local random = math.random
+
 local IsValid = IsValid
 local CreateEnt = ents.Create
 local ipairs = ipairs
@@ -52,7 +52,7 @@ function ENT:SpawnProp()
     if !self:IsUnderLimit( "Prop" ) then return end
 
     local trace = self:GetEyeTrace()
-    local mdl = LambdaPlayerProps[ random( #LambdaPlayerProps ) ]
+    local mdl = LambdaPlayerProps[ LambdaRNG( #LambdaPlayerProps ) ]
 
     if !mdl then return end
 
@@ -78,7 +78,7 @@ function ENT:SpawnProp()
     end
 
     if GetConVar( "lambdaplayers_building_freezeprops" ):GetBool() then
-        if random( 2 ) == 1 then
+        if LambdaRNG( 2 ) == 1 then
             local phys = prop:GetPhysicsObject()
             if IsValid( phys ) then phys:EnableMotion( false ) end
         else
@@ -102,7 +102,7 @@ end
 local function GetRandomNPCClassname()
     local npclist = LAMBDAFS:ReadFile( "lambdaplayers/npclist.json", "json" )
     if !npclist then return end
-    return npclist[ random( #npclist ) ]
+    return npclist[ LambdaRNG( #npclist ) ]
 end
 
 
@@ -138,7 +138,7 @@ function ENT:SpawnEntity()
 
     local entlist = LAMBDAFS:ReadFile( "lambdaplayers/entitylist.json", "json" )
     local trace = self:GetEyeTrace()
-    local class = entlist[ random( #entlist ) ]
+    local class = entlist[ LambdaRNG( #entlist ) ]
 
     if !class then return end
 

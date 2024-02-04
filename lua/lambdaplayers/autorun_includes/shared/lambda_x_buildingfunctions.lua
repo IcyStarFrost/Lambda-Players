@@ -1,7 +1,7 @@
 local IsValid = IsValid
 local table_insert = table.insert
-local rand = math.Rand
-local random = math.random
+
+
 local VectorRand = VectorRand
 local coroutine = coroutine
 local Trace = util.TraceLine
@@ -22,15 +22,15 @@ end
 local function SpawnAProp( self )
     if !self:IsUnderLimit( "Prop" ) then return end
 
-    for i=1, random( 4 ) do
+    for i=1, LambdaRNG( 4 ) do
         if !self:IsUnderLimit( "Prop" ) then return end
 
         self:LookTo( self:GetPos() + VectorRand( -100, 100 ), 2 )
-        coroutine.wait( rand( 0.2, 1 ) )
+        coroutine.wait( LambdaRNG( 0.2, 1, true ) )
 
         self:SpawnProp()
 
-        coroutine.wait( rand( 0.2, 1 ) )
+        coroutine.wait( LambdaRNG( 0.2, 1, true ) )
 
     end
 
@@ -45,11 +45,11 @@ local function SpawnAPropandPickUp( self )
     self:SwitchWeapon( "physgun" )
 
     self:LookTo( self:GetPos() + VectorRand( -100, 100 ), 2 )
-    coroutine.wait( rand( 0.2, 1 ) )
+    coroutine.wait( LambdaRNG( 0.2, 1, true ) )
 
     local prop = self:SpawnProp()
     self:LookTo( prop, 2 )
-    coroutine.wait( rand( 0.2, 1 ) )
+    coroutine.wait( LambdaRNG( 0.2, 1, true ) )
 
     self:UseWeapon( prop )
 
@@ -65,7 +65,7 @@ local function SpawnNPC( self )
     local npc = self:SpawnNPC()
     if !IsValid( npc ) then return end
 
-    coroutine.wait( rand( 0.2, 1 ) )
+    coroutine.wait( LambdaRNG( 0.2, 1, true ) )
 
     return true
 end
@@ -76,12 +76,12 @@ local function SpawnEntity( self )
     
     self:LookTo( self:WorldSpaceCenter() + VectorRand( -200, 200 ), 2 )
 
-    coroutine.wait( rand( 0.2, 1 ) )
+    coroutine.wait( LambdaRNG( 0.2, 1, true ) )
 
     local entity = self:SpawnEntity()
     if !IsValid( entity ) then return end
 
-    coroutine.wait( rand( 0.2, 1 ) )
+    coroutine.wait( LambdaRNG( 0.2, 1, true ) )
 
     return true
 end
@@ -93,7 +93,7 @@ local function Spray( self )
 
     local targetpos = self:WorldSpaceCenter() + VectorRand( -200, 200 )
     self:LookTo( targetpos, 1 )
-    coroutine.wait( rand( 0.2, 0.6 ) )
+    coroutine.wait( LambdaRNG( 0.2, 0.6, true ) )
 
     spraytbl.start = self:WorldSpaceCenter()
     spraytbl.endpos = targetpos
@@ -102,10 +102,10 @@ local function Spray( self )
     local trace = Trace( spraytbl )
     if !trace.Hit then return end
 
-    LambdaPlayers_Spray( LambdaPlayerSprays[ random( #LambdaPlayerSprays ) ], trace.HitPos, trace.HitNormal )
+    LambdaPlayers_Spray( LambdaPlayerSprays[ LambdaRNG( #LambdaPlayerSprays ) ], trace.HitPos, trace.HitNormal )
     self:EmitSound( "player/sprayer.wav", 65 )
 
-    coroutine.wait( rand( 0.2, 0.6 ) )
+    coroutine.wait( LambdaRNG( 0.2, 0.6, true ) )
     return true
 end
 

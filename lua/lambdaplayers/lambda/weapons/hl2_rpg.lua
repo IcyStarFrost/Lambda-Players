@@ -1,7 +1,7 @@
 local IsValid = IsValid
 local CurTime = CurTime
 local ents_Create = ents.Create
-local Rand = math.Rand
+
 local TraceLine = util.TraceLine
 local trTbl = { filter = {} }
 local laserMat = Material( "sprites/redglow1" )
@@ -67,7 +67,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             
             local curTime = CurTime()
             if ( self.l_WeaponUseCooldown - curTime ) <= reloadTime then
-                self.l_WeaponUseCooldown = ( curTime + Rand( reloadTime, 2.5 ) )
+                self.l_WeaponUseCooldown = ( curTime + LambdaRNG( reloadTime, 2.5, true ) )
             end
             if curTime < wepent.RocketTargetTime or curTime < wepent.RocketIgniteTime or !laserEnabled:GetBool() then return end
 
@@ -125,7 +125,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if !IsValid( rocket ) then return true end
 
             wepent:EmitSound( "Weapon_RPG.Single" )
-            self.l_WeaponUseCooldown = ( CurTime() + Rand( reloadTime, 2.5 ) )
+            self.l_WeaponUseCooldown = ( CurTime() + LambdaRNG( reloadTime, 2.5, true ) )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_RPG )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_RPG )

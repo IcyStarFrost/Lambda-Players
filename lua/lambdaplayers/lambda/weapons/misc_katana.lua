@@ -1,6 +1,6 @@
 local IsValid = IsValid
-local random = math.random
-local Rand = math.Rand
+
+
 local CurTime = CurTime
 local DamageInfo = DamageInfo
 local min = math.min
@@ -62,7 +62,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent:EmitSound( "lambdaplayers/weapons/katana/katana_deploy1.mp3", 70 )
 
             if getMotivated:GetBool() then
-                wepent:EmitSound( motivationSnds[ random(#motivationSnds ) ], 75, 100, 0.9, CHAN_STATIC )
+                wepent:EmitSound( motivationSnds[ LambdaRNG( #motivationSnds ) ], 75, 100, 0.9, CHAN_STATIC )
             end
         end,
 
@@ -84,7 +84,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 if CurTime() >= wepent.NextUnreadyTime then
                     if wepent.IsGripReady then
                         wepent.IsGripReady = false
-                        wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 2 ) .. ".mp3", 65 )
+                        wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. LambdaRNG( 2 ) .. ".mp3", 65 )
                         wepent:SetBodygroup( 0, 1 )
                     end
 
@@ -96,7 +96,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     self.l_HoldType = holdType
                     self.l_WeaponSpeedMultiplier = moveSpeed
                 elseif !wepent.IsGripReady then
-                    wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. random( 2 ) .. ".mp3", 65 )
+                    wepent:EmitSound( "lambdaplayers/weapons/katana/katana_roll" .. LambdaRNG( 2 ) .. ".mp3", 65 )
                     wepent:SetBodygroup( 0, 0 )
                     
                     wepent.IsGripReady = true
@@ -121,15 +121,15 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         OnTakeDamage = function( self, wepent, dmginfo )
             if CurTime() >= wepent.NextUnreadyTime then 
-                wepent.NextUnreadyTime = CurTime() + random( 4 ) 
+                wepent.NextUnreadyTime = CurTime() + LambdaRNG( 4 ) 
             end
-            wepent.NextEnergyRestoreTime = CurTime() + random( 2, 4 )
+            wepent.NextEnergyRestoreTime = CurTime() + LambdaRNG( 2, 4 )
 
             if dmginfo:IsBulletDamage()then
                 if CurTime() <= wepent.DodgeTime then return true end
 
                 local onGround = self:IsOnGround()
-                if ( !onGround or self.l_issmoving ) and random( 2 ) == 1 then
+                if ( !onGround or self.l_issmoving ) and LambdaRNG( 2 ) == 1 then
                     local selfCenter, selfPos = self:WorldSpaceCenter(), self:GetPos()
                     local stepHeight = ( vector_up * -self.loco:GetStepHeight() )
 
@@ -137,7 +137,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     local dmgSrc = ( IsValid( inflictor ) and inflictor or dmginfo:GetAttacker() ):WorldSpaceCenter()
 
                     local dmgAng = ( dmgSrc - selfCenter ):Angle(); dmgAng.z = 0
-                    local dodgeDir = ( random( 2 ) == 1 and -dmgAng:Right() or dmgAng:Right() )
+                    local dodgeDir = ( LambdaRNG( 2 ) == 1 and -dmgAng:Right() or dmgAng:Right() )
                     local dodgeVel = 128
 
                     for i = 1, 2 do
@@ -156,7 +156,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                             dodgeVel = ( dodgeVel * ( onGround and 10 or 2 ) )
                             self.loco:SetVelocity( ( onGround and self.loco:GetVelocity() or vector_origin ) + dodgeDir * dodgeVel )
 
-                            self:EmitSound( "lambdaplayers/weapons/katana/katana_dodge" .. random( 2 ) .. ".mp3", 70, random( 95, 105 ), 1, CHAN_BODY )
+                            self:EmitSound( "lambdaplayers/weapons/katana/katana_dodge" .. LambdaRNG( 2 ) .. ".mp3", 70, LambdaRNG( 95, 105 ), 1, CHAN_BODY )
                             wepent.DodgeTime = CurTime() + 0.2
                             return true
                         end
@@ -164,23 +164,23 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 end
             end
 
-            dmginfo:ScaleDamage( Rand( 0.66, 0.75 ) )
+            dmginfo:ScaleDamage( LambdaRNG( 0.66, 0.75, true ) )
         end,
 
         OnAttack = function( self, wepent, target )
-            wepent.NextUnreadyTime = CurTime() + random( 4 )
-            wepent:EmitSound( "lambdaplayers/weapons/katana/katana_swing_miss" .. random( 4 ) .. ".mp3", 70 )
+            wepent.NextUnreadyTime = CurTime() + LambdaRNG( 4 )
+            wepent:EmitSound( "lambdaplayers/weapons/katana/katana_swing_miss" .. LambdaRNG( 4 ) .. ".mp3", 70 )
 
-            self.l_WeaponUseCooldown = CurTime() + Rand( 0.4, 0.8 )
+            self.l_WeaponUseCooldown = CurTime() + LambdaRNG( 0.4, 0.8, true )
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
 
             local attackGest = self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
-            local swingSpeed = Rand( 0.9, 1.4 ); self:SetLayerPlaybackRate( attackGest, swingSpeed )
+            local swingSpeed = LambdaRNG( 0.9, 1.4, true ); self:SetLayerPlaybackRate( attackGest, swingSpeed )
 
             self:SimpleWeaponTimer( ( 0.3 / swingSpeed ), function()
                 if !LambdaIsValid( target ) or !self:IsInRange( target, 70 ) then return end
 
-                local dmg = ( random( 30, 45 ) / swingSpeed )
+                local dmg = ( LambdaRNG( 30, 45 ) / swingSpeed )
                 local dmginfo = DamageInfo()
                 dmginfo:SetDamage( dmg )
                 dmginfo:SetAttacker( self )
@@ -192,16 +192,16 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                 local postHP = target:Health()
                 target:TakeDamageInfo( dmginfo )
-                target:EmitSound( "lambdaplayers/weapons/katana/katana_swing_hit" .. random( 3 ) .. ".mp3", 70 )
+                target:EmitSound( "lambdaplayers/weapons/katana/katana_swing_hit" .. LambdaRNG( 3 ) .. ".mp3", 70 )
 
                 if target:Health() < postHP then
                     local bleedTimer = "Lambda_Katana_BleedingEffect" .. target:GetCreationID()
                     self:RemoveNamedTimer( bleedTimer )
 
-                    self:NamedTimer( bleedTimer, Rand( 0.75, 1.25 ), random( 3, 10 ), function()
+                    self:NamedTimer( bleedTimer, LambdaRNG( 0.75, 1.25, true ), LambdaRNG( 3, 10 ), function()
                         if !LambdaIsValid( target ) or target:Health() <= 0 or target:IsPlayer() and !target:Alive() then return true end
                         local bleedInfo = DamageInfo()
-                        bleedInfo:SetDamage( random( 3 ) )
+                        bleedInfo:SetDamage( LambdaRNG( 3 ) )
                         bleedInfo:SetDamageType( DMG_SLASH )
                         bleedInfo:SetInflictor( IsValid( wepent ) and wepent or IsValid( self ) and self or target )
                         bleedInfo:SetAttacker( IsValid( self ) and self or target )

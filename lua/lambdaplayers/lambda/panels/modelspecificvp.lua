@@ -6,7 +6,7 @@ local AddNotification = notification.AddLegacy
 local RealTime = RealTime
 local PlaySound = surface.PlaySound
 local lower = string.lower
-local Rand = math.Rand
+
 
 local function OpenModelVoiceProfilePanel( ply )
     if !ply:IsSuperAdmin() then 
@@ -40,7 +40,7 @@ local function OpenModelVoiceProfilePanel( ply )
         Entity:SetAngles( Angle( 0, RealTime() * 20 % 360, 0 ) )
     end
 
-    local mdlcolor = Vector( Rand( 0.0, 1.0 ), Rand( 0.0, 1.0 ), Rand( 0.0, 1.0 ) )
+    local mdlcolor = Vector( LambdaRNG( 0.0, 1.0, true ), LambdaRNG( 0.0, 1.0, true ), LambdaRNG( 0.0, 1.0, true ) )
     local function GetPlayerColor() return mdlcolor end
 
     local mdllist = {}
@@ -101,7 +101,7 @@ local function OpenModelVoiceProfilePanel( ply )
             mdlselected = modelbutton:GetModelName()
             mdlpreview:SetModel( mdlselected )
             
-            mdlcolor = Vector( Rand( 0.0, 1.0 ), Rand( 0.0, 1.0 ), Rand( 0.0, 1.0 ) )
+            mdlcolor = Vector( LambdaRNG( 0.0, 1.0, true ), LambdaRNG( 0.0, 1.0, true ), LambdaRNG( 0.0, 1.0, true ) )
             mdlpreview.Entity.GetPlayerColor = GetPlayerColor
             
             for id, line in ipairs( mdlvplist:GetLines() ) do
@@ -118,7 +118,7 @@ local function OpenModelVoiceProfilePanel( ply )
         mdlselected = line:GetColumnText( 1 )
         mdlpreview:SetModel( mdlselected )
         
-        mdlcolor = Vector( Rand( 0.0, 1.0 ), Rand( 0.0, 1.0 ), Rand( 0.0, 1.0 ) )
+        mdlcolor = Vector( LambdaRNG( 0.0, 1.0, true ), LambdaRNG( 0.0, 1.0, true ), LambdaRNG( 0.0, 1.0, true ) )
         mdlpreview.Entity.GetPlayerColor = GetPlayerColor
         
         listId = id

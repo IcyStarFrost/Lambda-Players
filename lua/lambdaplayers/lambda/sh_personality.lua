@@ -1,6 +1,6 @@
 local ipairs = ipairs
 local table_insert = table.insert
-local random = math.random
+
 
 -- Sets up the Personality chances and creates Get/Set functions. overridetable arg is mainly used by the Export/apply lambda info functions
 function ENT:BuildPersonalityTable( overridetable )
@@ -15,7 +15,7 @@ function ENT:BuildPersonalityTable( overridetable )
         self[ "Get" .. name .. "Chance" ] = function( self ) return self:GetNW2Int( "lambda_chance_" .. name, 0 ) end -- Create Get Function
         self[ "Set" .. name .. "Chance" ] = function( self, int ) self:SetNW2Int( "lambda_chance_" .. name, int ) end -- Create Set Function
 
-        local rndChan = ( overridetable and overridetable[ name ] or random( 0, 100 ) )
+        local rndChan = ( overridetable and overridetable[ name ] or LambdaRNG( 0, 100 ) )
         self:SetNW2Int( "lambda_chance_" .. name, rndChan )
         table_insert( self.l_Personality, { name, rndChan, func } )
     end

@@ -1,6 +1,6 @@
 local navmesh_IsLoaded = ( SERVER and navmesh.IsLoaded )
 local navmesh_GetAllNavAreas = ( SERVER and navmesh.GetAllNavAreas )
-local random = math.random
+
 local ents_Create = ents.Create
 local RandomPairs = RandomPairs
 local ents_FindInSphere = ents.FindInSphere
@@ -32,7 +32,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply 
     if !navmesh_IsLoaded() then return end
 
     local pos = vector_origin
-    forceSpawnAng.y = random( -180, 180 )
+    forceSpawnAng.y = LambdaRNG( -180, 180 )
 
     LambdaSpawnPoints = ( LambdaSpawnPoints or LambdaGetPossibleSpawns() )
     local plyRadius = plyradius:GetInt()
@@ -40,7 +40,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcespawnlambda", function( ply 
 
     -- Spawning at player spawn points
     if LambdaSpawnPoints and #LambdaSpawnPoints > 0 and ( !rndPos or spawnatplayerpoints:GetBool() ) then
-        pos = LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]:GetPos()
+        pos = LambdaSpawnPoints[ LambdaRNG( #LambdaSpawnPoints ) ]:GetPos()
     elseif rndPos then
         pos = rndPos
     else
@@ -80,7 +80,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_forcecombatlambda", function( ply
         if !lambda:IsInRange( ply, dist ) then continue end
         local npcs = lambda:FindInSphere( nil, math.huge, function( ent ) return ( lambda:CanTarget( ent ) ) end )
         if #npcs == 0 then continue end
-        lambda:AttackTarget( npcs[ random( #npcs ) ] )
+        lambda:AttackTarget( npcs[ LambdaRNG( #npcs ) ] )
     end
 end, false, "Forces all Lambda Players in the given radius to attack anything that they consider a target", { name = "Lambda Players Attack Anything", category = "Force Menu" } )
 

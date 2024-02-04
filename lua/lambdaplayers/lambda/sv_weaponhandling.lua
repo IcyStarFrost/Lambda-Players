@@ -3,9 +3,9 @@ local IsFirstTimePredicted = IsFirstTimePredicted
 local isfunction = isfunction
 local istable = istable
 local isstring = isstring
-local random = math.random
+
 local RandomPairs = RandomPairs
-local Rand = math.Rand
+
 local ipairs = ipairs
 local Effect = util.Effect
 local CurTime = CurTime
@@ -119,7 +119,7 @@ local function TranslateRandomization( string )
         local firsthalf = exp[ 1 ]
         local num = exp[ 2 ]
         local secondhalf = exp[ 3 ]
-        return ( firsthalf .. random( num ) .. secondhalf )
+        return ( firsthalf .. LambdaRNG( num ) .. secondhalf )
     else
         return string
     end
@@ -140,16 +140,16 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
     if !fireRate then
         local randMin = weapondata.rateoffiremin
         local randMax = weapondata.rateoffiremax
-        if randMin and randMax then fireRate = Rand( randMin, randMax ) end    
+        if randMin and randMax then fireRate = LambdaRNG( randMin, randMax, true ) end    
     end
     if fireRate and fireRate != true then 
-        local cooldown = weapondata.rateoffire or Rand( weapondata.rateoffiremin, weapondata.rateoffiremax )
+        local cooldown = weapondata.rateoffire or LambdaRNG( weapondata.rateoffiremin, weapondata.rateoffiremax, true )
         self.l_WeaponUseCooldown = CurTime() + cooldown
     end
 
     local fireSnd = ( disabletbl.sound or weapondata.attacksnd )
     if fireSnd and fireSnd != true then 
-        wepent:EmitSound( TranslateRandomization( fireSnd ), 80, random( 98, 102 ), 1, CHAN_WEAPON ) 
+        wepent:EmitSound( TranslateRandomization( fireSnd ), 80, LambdaRNG( 98, 102 ), 1, CHAN_WEAPON ) 
     end
     
     local muzzleFlash = ( disabletbl.muzzleflash or weapondata.muzzleflash )
@@ -194,15 +194,15 @@ end
 local function DefaultMeleeWeaponUse( self, wepent, target, weapondata, disabletbl )
     disabletbl = disabletbl or {}
 
-    local fireRate = ( disabletbl.cooldown or weapondata.rateoffire or Rand( weapondata.rateoffiremin, weapondata.rateoffiremax ) )
+    local fireRate = ( disabletbl.cooldown or weapondata.rateoffire or LambdaRNG( weapondata.rateoffiremin, weapondata.rateoffiremax, true ) )
     if fireRate and fireRate != true then 
-        local cooldown = weapondata.rateoffire or Rand( weapondata.rateoffiremin, weapondata.rateoffiremax )
+        local cooldown = weapondata.rateoffire or LambdaRNG( weapondata.rateoffiremin, weapondata.rateoffiremax, true )
         self.l_WeaponUseCooldown = CurTime() + cooldown
     end
 
     local attackSnd = ( disabletbl.sound or weapondata.attacksnd )
     if attackSnd and attackSnd != true then 
-        wepent:EmitSound( TranslateRandomization( attackSnd ), 75, random( 98, 102 ), 1, CHAN_WEAPON ) 
+        wepent:EmitSound( TranslateRandomization( attackSnd ), 75, LambdaRNG( 98, 102 ), 1, CHAN_WEAPON ) 
     end
 
     local hitSnd = ( disabletbl.hitsound or weapondata.hitsnd )
@@ -369,7 +369,7 @@ function ENT:SwitchToRandomWeapon( returnOnly )
         wepList[ #wepList + 1 ] = name
     end
 
-    local rndWeapon = ( ( hasFavWep and random( #wepList * 2 ) >= #wepList ) and favWep or wepList[ random( #wepList ) ] )
+    local rndWeapon = ( ( hasFavWep and LambdaRNG( #wepList * 2 ) >= #wepList ) and favWep or wepList[ LambdaRNG( #wepList ) ] )
     if !returnOnly then self:SwitchWeapon( returnOnly, true ) end
     return rndWeapon
 end
@@ -392,7 +392,7 @@ function ENT:SwitchToLethalWeapon()
         wepList[ #wepList + 1 ] = name
     end
 
-    self:SwitchWeapon( ( hasFavWep and random( #wepList * 2 ) >= #wepList ) and favWep or wepList[ random( #wepList ) ] )
+    self:SwitchWeapon( ( hasFavWep and LambdaRNG( #wepList * 2 ) >= #wepList ) and favWep or wepList[ LambdaRNG( #wepList ) ] )
 end
 
 -- Switches our weapon to the one we first spawned with

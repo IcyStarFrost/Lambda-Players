@@ -1,6 +1,6 @@
 local IsValid = IsValid
 local CurTime = CurTime
-local random = math.random
+
 local ents_Create = ents.Create
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
@@ -47,7 +47,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local phys = grenade:GetPhysicsObject()
             if IsValid( phys ) then
                 phys:ApplyForceCenter( throwDir * throwForce )
-                phys:AddAngleVelocity( Vector( 600, random(-1200, 1200) ) )
+                phys:AddAngleVelocity( Vector( 600, LambdaRNG( -1200, 1200) ) )
             end
 
             return true

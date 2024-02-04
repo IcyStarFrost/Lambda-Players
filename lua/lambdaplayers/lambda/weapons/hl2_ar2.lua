@@ -1,8 +1,8 @@
 local IsValid = IsValid
 local CurTime = CurTime
 local ents_Create = ents.Create
-local random = math.random
-local Rand = math.Rand
+
+
 local ballIntertia = Vector( 500, 500, 500 )
 
 local ballMass = GetConVar( "sk_weapon_ar2_alt_fire_mass" )
@@ -42,9 +42,9 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         },
 
         OnAttack = function( self, wepent, target )
-            if random( 75 ) != 1 then return end
+            if LambdaRNG( 75 ) != 1 then return end
 
-            self.l_WeaponUseCooldown = ( CurTime() + Rand( 1.25, 1.5 ) )
+            self.l_WeaponUseCooldown = ( CurTime() + LambdaRNG( 1.25, 1.5, true ) )
             wepent:EmitSound( "Weapon_CombineGuard.Special1" )
 
             self:SimpleWeaponTimer( 0.75, function()

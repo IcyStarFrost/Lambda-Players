@@ -130,11 +130,11 @@ if SERVER then
                 end
             end
         end
-        return speciallines[ math.random( #speciallines ) ]
+        return speciallines[ LambdaRNG( #speciallines ) ]
     end
 
     hook.Add( "LambdaOnStartTyping", "LambdaSpecialDaytext", function( lambda, text, texttype )
-        if texttype != "idle" or math.random( 0, 100 ) > 10 then return end
+        if texttype != "idle" or LambdaRNG( 0, 100 ) > 10 then return end
 
         local line = GetSpecialDayLine()
 

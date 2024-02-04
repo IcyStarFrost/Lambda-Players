@@ -21,8 +21,8 @@ local GetGroundHeight = navmesh.GetGroundHeight
 local navmesh_IsLoaded = navmesh.IsLoaded
 local navmesh_Find = navmesh.Find
 local GetNearestNavArea = navmesh.GetNearestNavArea
-local random = math.random
-local Rand = math.Rand
+
+
 local ipairs = ipairs
 local coroutine_yield = coroutine.yield
 local isnumber = isnumber
@@ -399,7 +399,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
     local climbEnd = ( startPos + ( ladder:GetNormal() * 20 ) )
     local climbNormal = ( climbEnd - climbStart ):GetNormalized()
     local climbDist = climbStart:Distance( climbEnd )
-    local stuckTime = ( CurTime() + random( 2, 5 ) )
+    local stuckTime = ( CurTime() + LambdaRNG( 2, 5 ) )
 
     while ( true ) do
         local climbPos = ( climbStart + climbNormal * climbFract )
@@ -429,7 +429,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
         if climbState != 2 or ( !self:IsDisabled() or self:GetIsTyping() ) and CurTime() >= self.l_moveWaitTime then
             if !IsValid( TraceHull( laddermovetable ).Entity ) then
                 climbFract = ( climbFract + ( 250 * FrameTime() ) )
-                stuckTime = ( CurTime() + random( 2, 5 ) )
+                stuckTime = ( CurTime() + LambdaRNG( 2, 5 ) )
 
                 if climbFract >= climbDist then
                     if climbState == 1 then
@@ -449,7 +449,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
                 end
 
                 if climbState == 2 and CurTime() >= nextSndTime then
-                    self:EmitSound( "player/footsteps/ladder" .. random( 4 ) .. ".wav" )
+                    self:EmitSound( "player/footsteps/ladder" .. LambdaRNG( 4 ) .. ".wav" )
                     nextSndTime = CurTime() + 0.466
                 end
             end
@@ -591,7 +591,7 @@ function ENT:ObstacleCheck( pathDir )
     if self:HookExists( "Tick", "ShootAtObstacle" ) then return end
 
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
-    local fireTime = ( CurTime() + Rand( 0.5, 1.0 ) )
+    local fireTime = ( CurTime() + LambdaRNG( 0.5, 1.0, true ) )
 
     self:Hook( "Tick", "ShootAtObstacle", function()
         if CurTime() >= fireTime or !IsValid( ent ) or ent:Health() <= 0 then return "end" end
@@ -733,7 +733,7 @@ function ENT:PathGenerator( canUpdate, isLambdaCheck )
     local randomizeCost = randomizepathfinding:GetBool()
     local minRandCost = mincostscale:GetFloat()
     local maxRandCost = maxcostscale:GetFloat()
-    local randCost = Rand( minRandCost, maxRandCost )
+    local randCost = LambdaRNG( minRandCost, maxRandCost, true )
 
     return function( area, fromArea, ladder, elevator, length )
         if !IsValid( fromArea ) then return 0 end
@@ -756,7 +756,7 @@ function ENT:PathGenerator( canUpdate, isLambdaCheck )
 
         local cost = ( CNavArea_GetCostSoFar( fromArea ) + dist )
         if randomizeCost then
-            if !canUpdate then randCost = Rand( minRandCost, maxRandCost ) end
+            if !canUpdate then randCost = LambdaRNG( minRandCost, maxRandCost, true ) end
             cost = ( cost * randCost ) 
         end
 
@@ -772,7 +772,7 @@ function ENT:PathGenerator( canUpdate, isLambdaCheck )
                         end
                         cost = ( cost + dist * ( fallDamage * 2 ) )
                     end
-                    cost = ( cost + dist * random( height * 0.5, height ) )
+                    cost = ( cost + dist * LambdaRNG( height * 0.5, height ) )
                 end
 
                 if !fromPos:IsUnderwater() then

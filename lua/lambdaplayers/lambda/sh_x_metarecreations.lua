@@ -1,5 +1,5 @@
 -- Functions below are recreations of whatever gmod meta functions
-local random = math.random
+
 local eyetracetable = {}
 
 -- Our name
@@ -122,12 +122,12 @@ function ENT:PlayStepSound( volume )
     local sndPitch, sndName = 100
     local waterLvl = self:GetWaterLevel()
     if waterLvl != 0 and waterLvl != 3 and self:IsOnGround() then
-        sndName = "player/footsteps/wade" .. random( 8 ) .. ".wav"
-        sndPitch = random( 90, 110 )
+        sndName = "player/footsteps/wade" .. LambdaRNG( 8 ) .. ".wav"
+        sndPitch = LambdaRNG( 90, 110 )
         if !volume then volume = 0.65 end
     else
         local stepSnds = ( _LAMBDAPLAYERSFootstepMaterials[ stepMat ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ] )
-        sndName = stepSnds[ random( #stepSnds ) ]
+        sndName = stepSnds[ LambdaRNG( #stepSnds ) ]
         if !volume then volume = 0.5 end
     end
 
@@ -341,7 +341,7 @@ if SERVER then
         spraytbl.collisiongroup = COLLISION_GROUP_WORLD
         local trace = Trace( spraytbl )
 
-        LambdaPlayers_Spray( LambdaPlayerSprays[ random( #LambdaPlayerSprays ) ], trace.HitPos, trace.HitNormal, self:GetCreationID() )
+        LambdaPlayers_Spray( LambdaPlayerSprays[ LambdaRNG( #LambdaPlayerSprays ) ], trace.HitPos, trace.HitNormal, self:GetCreationID() )
         self:EmitSound( "player/sprayer.wav", 65 )
     end
 

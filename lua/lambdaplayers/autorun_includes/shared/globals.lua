@@ -10,8 +10,8 @@ local SortedPairs = SortedPairs
 local os_time = os.time
 local SysTime = SysTime
 local max = math.max
-local random = math.random
 local Rand = math.Rand
+local random = math.random
 local randomseed = math.randomseed
 
 _LAMBDAPLAYERSWEAPONS = {}
@@ -532,5 +532,7 @@ local rngCalled = 0
 function LambdaRNG( min, max, float )
     rngCalled = ( rngCalled + 1 )
     randomseed( os_time() + SysTime() + rngCalled )
-    return ( float and Rand( min, max ) or random( min, max ) )
+    
+    if !min and !max then return random() end
+    return ( float and Rand( min, max ) or ( max and random( min, max ) or random( min ) ) )
 end

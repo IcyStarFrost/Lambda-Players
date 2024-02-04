@@ -233,7 +233,7 @@ for index, swep in ipairs( weapons.GetList() ) do
     
                     while ( lambda.l_Clip < lambda.l_MaxClip ) do
                         local ene = lambda:GetEnemy()
-                        if lambda.l_Clip > 0 and math.random( 2 ) == 1 and lambda:InCombat() and lambda:IsInRange( ene, 512 ) and lambda:CanSee( ene ) then break end
+                        if lambda.l_Clip > 0 and LambdaRNG( 2 ) == 1 and lambda:InCombat() and lambda:IsInRange( ene, 512 ) and lambda:CanSee( ene ) then break end
 
                         lambda.l_Clip = ( lambda.l_Clip + 1 )
                         vmEnt:PlayAnim( reloadTime[ 2 ][ 1 ] )
@@ -241,7 +241,7 @@ for index, swep in ipairs( weapons.GetList() ) do
                     end
     
                     local ene = lambda:GetEnemy()
-                    if lambda.l_Clip > 0 and math.random( 2 ) == 1 and lambda:InCombat() and lambda:IsInRange( ene, 512 ) and lambda:CanSee( ene ) then 
+                    if lambda.l_Clip > 0 and LambdaRNG( 2 ) == 1 and lambda:InCombat() and lambda:IsInRange( ene, 512 ) and lambda:CanSee( ene ) then 
                         wepent:EmitSound( "Weapon_Shotgun.Special1" )
                     else
                         vmEnt:PlayAnim( reloadTime[ 3 ][ 1 ] )

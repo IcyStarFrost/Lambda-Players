@@ -13,7 +13,7 @@ local CurTime = CurTime
 local RealTime = RealTime
 local IsValid = IsValid
 local file_Find = file.Find
-local random = math.random
+
 local abs = math.abs
 local max = math.max
 local Clamp = math.Clamp
@@ -69,7 +69,7 @@ local serversidecleanupeffect = GetConVar( "lambdaplayers_lambda_serversideragdo
 local usemarkovgenerator = GetConVar( "lambdaplayers_text_markovgenerate" )
 local allowlinks = GetConVar( "lambdaplayers_text_allowimglinks" )
 local player_GetAll = player.GetAll
-local Rand = math.Rand
+
 local isnumber = isnumber
 local ismatrix = ismatrix
 local IsValidModel = util.IsValidModel
@@ -161,7 +161,7 @@ end
 
 -- Creates a simple timer that won't run if we are invalid or dead. ignoredead var will run the timer even if self:GetIsDead() is true
 function ENT:SimpleTimer( delay, func, ignoredead )
-    local id = tostring( func ) .. random( 100000 )
+    local id = tostring( func ) .. LambdaRNG( 100000 )
     self.l_SimpleTimers[ id ] = !ignoredead
     timer_simple( delay, function()
         if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) or !ignoredead and !self.l_SimpleTimers[ id ] then return end
@@ -172,7 +172,7 @@ end
 
 -- Same as ENT:SimpleTimer(), but also checks if our weapon is valid and weapon name is the same one we created this timer with
 function ENT:SimpleWeaponTimer( delay, func, ignoredead, ignorewepname )
-    local id = tostring( func ) .. random( 100000 )
+    local id = tostring( func ) .. LambdaRNG( 100000 )
     self.l_SimpleTimers[ id ] = !ignoredead
 
     local wepent = self:GetWeaponENT()
@@ -618,10 +618,10 @@ if SERVER then
         self:SetEnemy( ent )
         if !forceAttack and self:IsPanicking() then return end
 
-        if random( 100 ) <= self:GetVoiceChance() and !self:GetIsTyping() and !self:IsSpeaking( "taunt" ) then self:PlaySoundFile( "taunt" ) end
+        if LambdaRNG( 100 ) <= self:GetVoiceChance() and !self:GetIsTyping() and !self:IsSpeaking( "taunt" ) then self:PlaySoundFile( "taunt" ) end
         self:SetState( "Combat" )
         self:CancelMovement()
-        self.l_combatendtime = ( CurTime() + random( 180, 300 ) )
+        self.l_combatendtime = ( CurTime() + LambdaRNG( 180, 300 ) )
     end
 
     -- Retreats from entity target
@@ -634,7 +634,7 @@ if SERVER then
             if self:GetVoiceChance() > 0 then self:PlaySoundFile( "panic" ) end
         end
 
-        local retreatTime = ( CurTime() + ( timeout or random( 15, 30 ) ) )
+        local retreatTime = ( CurTime() + ( timeout or LambdaRNG( 15, 30 ) ) )
         if retreatTime > self.l_retreatendtime then self.l_retreatendtime = retreatTime end
 
         local target = self:GetEnemy()
@@ -702,8 +702,8 @@ if SERVER then
             if v == self then continue end
             table_RemoveByValue( nametablecopy, v:GetLambdaName() )
         end
-        local name = nametablecopy[ random( #nametablecopy ) ]
-        if !name then name = LambdaPlayerNames[ random( #LambdaPlayerNames ) ] end
+        local name = nametablecopy[ LambdaRNG( #nametablecopy ) ]
+        if !name then name = LambdaPlayerNames[ LambdaRNG( #LambdaPlayerNames ) ] end
         return name
     end
 
@@ -807,16 +807,16 @@ if SERVER then
                 mdlTbl = ( onlyaddonmodels:GetBool() and _LAMBDAPLAYERS_AddonPlayermodels or _LAMBDAPLAYERS_AllPlayermodels )
                 if #mdlTbl == 0 then mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels end
             end
-            mdl = mdlTbl[ random( #mdlTbl ) ]
+            mdl = mdlTbl[ LambdaRNG( #mdlTbl ) ]
         elseif istable( mdl ) then
-            mdl = mdl[ random( #mdl ) ]
+            mdl = mdl[ LambdaRNG( #mdl ) ]
         end
         self:SetModel( mdl )
 
         if !noBodygroups and rndBodyGroups:GetBool() then
             local mdlSets = LambdaPlayermodelBodySkinSets[ spawnMdl ]
             if mdlSets and #mdlSets != 0 and allowMdlBgSets:GetBool() then
-                local rndSet = mdlSets[ random( #mdlSets ) ]
+                local rndSet = mdlSets[ LambdaRNG( #mdlSets ) ]
                 self:SetSkin( rndSet.skin or 0 )
 
                 for index, bg in pairs( rndSet.bodygroups ) do
@@ -826,11 +826,11 @@ if SERVER then
                 for _, v in ipairs( self:GetBodyGroups() ) do
                     local subMdls = #v.submodels
                     if subMdls == 0 then continue end
-                    self:SetBodygroup( v.id, random( 0, subMdls ) )
+                    self:SetBodygroup( v.id, LambdaRNG( 0, subMdls ) )
                 end
 
                 local skinCount = self:SkinCount()
-                if skinCount > 0 then self:SetSkin( random( 0, skinCount - 1 ) ) end
+                if skinCount > 0 then self:SetSkin( LambdaRNG( 0, skinCount - 1 ) ) end
             end
         end
 
@@ -848,7 +848,7 @@ if SERVER then
         if rasp:GetBool() then
             LambdaSpawnPoints = ( LambdaSpawnPoints or LambdaGetPossibleSpawns() )
             if LambdaSpawnPoints and #LambdaSpawnPoints > 0 then
-                local rndPoint = LambdaSpawnPoints[ random( #LambdaSpawnPoints ) ]
+                local rndPoint = LambdaSpawnPoints[ LambdaRNG( #LambdaSpawnPoints ) ]
                 if IsValid( rndPoint ) then
                     spawnPos = rndPoint:GetPos()
                     spawnAng = rndPoint:GetAngles()
@@ -867,7 +867,7 @@ if SERVER then
 
         if !self.l_usingaprofile then
             local rndSwitchMdl = changePlyMdlChance:GetInt()
-            if rndSwitchMdl > 0 and random( 100 ) <= rndSwitchMdl then
+            if rndSwitchMdl > 0 and LambdaRNG( 100 ) <= rndSwitchMdl then
                 self:SetPlayerModel()
             end
         end
@@ -1047,11 +1047,11 @@ if SERVER then
         for i = 1, 10 do
             local files, directories = file_Find( dir .. "*", "GAME", "nameasc" )
 
-            if #files > 0 and ( i != 10 and random( 2 ) ==  1 ) then
-                local selectedfile = files[ random( #files ) ]
+            if #files > 0 and ( i != 10 and LambdaRNG( 2 ) ==  1 ) then
+                local selectedfile = files[ LambdaRNG( #files ) ]
                 if selectedfile and EndsWith( selectedfile, ".mp3" ) or selectedfile and EndsWith( selectedfile, ".wav" ) then return string.Replace( dir .. selectedfile, "sound/", "" ) end
             else
-                local rnd = directories[ random( #directories ) ]
+                local rnd = directories[ LambdaRNG( #directories ) ]
                 if rnd then
                     dir = dir .. rnd .. "/"
                 end
@@ -1067,7 +1067,7 @@ if SERVER then
         if self.l_VoiceProfile and LambdaVoiceProfiles[ self.l_VoiceProfile ] then
             local vptable = LambdaVoiceProfiles[ self.l_VoiceProfile ][ voicetype ]
             if vptable and #vptable > 0 then
-                return vptable[ random( #vptable ) ]
+                return vptable[ LambdaRNG( #vptable ) ]
             end
         end
 
@@ -1075,7 +1075,7 @@ if SERVER then
         if voiceDir and voiceDir:GetString() == "randomengine" then return self:GetRandomSound() end
 
         local tbl = LambdaVoiceLinesTable[ voicetype ]
-        return ( tbl and tbl[ random( #tbl ) ] )
+        return ( tbl and tbl[ LambdaRNG( #tbl ) ] )
     end
 
     -- Disables or re-enables Lambda's ability to use voice chat/type in chat.
@@ -1124,10 +1124,10 @@ if SERVER then
          for k, word in ipairs( textsplit ) do
              local preword = word
 
-             if #preword > 3 and random( 2 ) == 1 then
-                 preword = validwords[ random( #validwords ) ]
-             elseif #preword < 3 and random( 6 ) == 1 then
-                 preword = smallwords[ random( #smallwords ) ]
+             if #preword > 3 and LambdaRNG( 2 ) == 1 then
+                 preword = validwords[ LambdaRNG( #validwords ) ]
+             elseif #preword < 3 and LambdaRNG( 6 ) == 1 then
+                 preword = smallwords[ LambdaRNG( #smallwords ) ]
              end
 
              mod = mod .. " " .. preword
@@ -1170,7 +1170,7 @@ if SERVER then
             total = total + weight
         end
 
-        local rand = random( total )
+        local rand = LambdaRNG( total )
         for _, item in ipairs( items ) do
             local weight = array[ item ]
             if rand <= weight then return item end
@@ -1234,10 +1234,10 @@ if SERVER then
             local generated = generate_markov_text( 1000, markovtable )
             validLines = table_Add( validLines, string_Explode( "\n", generated ) )
         elseif #validLines == 0 then
-            return tbl[ random( #tbl ) ]
+            return tbl[ LambdaRNG( #tbl ) ]
         end
 
-        return validLines[ random( #validLines ) ]
+        return validLines[ LambdaRNG( #validLines ) ]
     end
 
     -- Literally the same thing as :GetVoiceLine() but for Text Lines
@@ -1289,7 +1289,7 @@ if SERVER then
         if !filepath then return end
 
         if !isnumber( delay ) then
-            delay = ( ( delay == nil and slightDelay:GetBool() ) and Rand( 0.1, 0.75 ) or 0 )
+            delay = ( ( delay == nil and slightDelay:GetBool() ) and LambdaRNG( 0.1, 0.75, true ) or 0 )
         end
 
         local voiceType = filepath
@@ -1588,7 +1588,7 @@ if SERVER then
         local sizeY = ( area:GetSizeY() / 2 )
         if sizeY > 32 then sizeY = ( sizeY - 32 ) end
 
-        local vecOff = Vector( random( -sizeX, sizeX ), random( -sizeY, sizeY ) )
+        local vecOff = Vector( LambdaRNG( -sizeX, sizeX ), LambdaRNG( -sizeY, sizeY ) )
         return ( area:GetCenter() + vecOff )
     end
 end

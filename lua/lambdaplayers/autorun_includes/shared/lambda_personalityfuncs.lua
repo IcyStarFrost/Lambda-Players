@@ -1,5 +1,5 @@
 local table_insert = table.insert
-local random = math.random
+
 local RandomPairs = RandomPairs
 local tonumber = tonumber
 
@@ -53,7 +53,7 @@ local function Chance_Tool( self )
     self:PreventWeaponSwitch( true )
 
     local find = self:FindInSphere( nil, 400, function( ent ) if self:HasVPhysics( ent ) and self:CanSee( ent ) and self:HasPermissionToEdit( ent ) then return true end end )
-    local target = find[ random( #find ) ]
+    local target = find[ LambdaRNG( #find ) ]
 
     -- Loops through random tools and only stops if a tool tells us it actually got used by returning true
     for index, tooltable in RandomPairs( LambdaToolGunTools ) do
@@ -73,7 +73,7 @@ local function Chance_Tool( self )
 end
 
 local function Chance_Combat( self )
-    local rndCombat = random( 3 )
+    local rndCombat = LambdaRNG( 3 )
     if rndCombat == 1 then
         self:SetState( "HealUp", "FindTarget" )
     elseif rndCombat == 2 then
@@ -93,7 +93,7 @@ local function Chance_Friendly( self )
     end )
 
     if #nearbyEnts == 0 then return end
-    self:SetState( "HealSomeone", nearbyEnts[ random( #nearbyEnts ) ] )
+    self:SetState( "HealSomeone", nearbyEnts[ LambdaRNG( #nearbyEnts ) ] )
 end
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_opencustompersonalitypresetpanel", function( ply )

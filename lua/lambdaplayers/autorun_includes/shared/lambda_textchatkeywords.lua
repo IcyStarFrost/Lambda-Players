@@ -87,7 +87,7 @@ end
 -- Returns a random map name
 local function RandomMap( self )
     local maps = file.Find( "maps/gm_*", "GAME", "namedesc" )
-    return string.StripExtension( maps[ math.random( #maps ) ] )
+    return string.StripExtension( maps[ LambdaRNG( #maps ) ] )
 end
 
 -- Return the Server's name

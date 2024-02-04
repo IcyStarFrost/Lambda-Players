@@ -196,7 +196,7 @@ local function OpenProfilePanel( ply )
                         voicepitch = profiletbl.voicepitch and round( profiletbl.voicepitch, 0 ) or 100,
                         voice = profiletbl.personality and round( profiletbl.personality.voice, 0 ) or 30,
                         voiceprofile = profiletbl.voicepack or nil,
-                        pingrange = random( 60 ),
+                        pingrange = LambdaRNG( 60 ),
 
                         personality = {
                             Build = profiletbl.personality and profiletbl.personality.build or 30,

@@ -1,5 +1,5 @@
 local ipairs = ipairs
-local random = math.random
+
 
 -- Tests highest chances before low chances
 function ENT:ComputeChance()
@@ -15,13 +15,13 @@ function ENT:ComputeChance()
         if !v[ 3 ] then continue end
 
         local chan = v[ 2 ]
-        if chan == 100 and hundreds > 1 and random( 2 ) == 1 then
+        if chan == 100 and hundreds > 1 and LambdaRNG( 2 ) == 1 then
             hundreds = ( hundreds - 1 )
             self:DebugPrint( v[ 1 ] .. " one of their hundred percent chances failed" )
             continue
         end
 
-        local rnd = random( 100 )
+        local rnd = LambdaRNG( 100 )
         if rnd < chan then
             self:DebugPrint( v[ 1 ] .. " chance succeeded in its chance. ( " .. rnd .. " to " .. chan .. " )" )
             self[ "Chance_" .. v[ 1 ] ]( self )

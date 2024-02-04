@@ -1,4 +1,4 @@
-local random = math.random
+
 local tobool = tobool
 local ents_GetAll = ents.GetAll
 local ents_Create = ents.Create
@@ -23,7 +23,7 @@ local FrameTime = FrameTime
 local TickInterval = engine.TickInterval
 local ceil = math.ceil
 local band = bit.band
-local rand = math.Rand
+
 local debugvar = GetConVar( "lambdaplayers_debug" )
 local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
 local callnpchook = GetConVar( "lambdaplayers_lambda_callonnpckilledhook" )
@@ -281,7 +281,7 @@ if SERVER then
 
             self:EmitSound( info:IsDamageType( DMG_FALL ) and "Player.FallGib" or "Player.Death" )
 
-            if ( !self.l_killbinded and deathAlways:GetBool() or random( 100 ) <= self:GetVoiceChance() ) and !self:GetIsTyping() then
+            if ( !self.l_killbinded and deathAlways:GetBool() or LambdaRNG( 100 ) <= self:GetVoiceChance() ) and !self:GetIsTyping() then
                 self:PlaySoundFile( self.l_killbinded and "laugh" or "death" )
             else
                 self:StopCurrentVoiceLine()
@@ -358,7 +358,7 @@ if SERVER then
         self:Thread( function()
             while ( ( CurTime() - deathTime ) < ( canRespawn and respawnTime:GetFloat() or 0.1 ) or self:GetIsTyping() or self:IsSpeaking( "death" ) and ( !canRespawn or respawnSpeech:GetBool() ) ) or CurTime() < spawnCheckTime do
                 if CurTime() >= spawnCheckTime then
-                    spawnCheckTime = ( CurTime() + ( random( 0, 10 ) * 0.1 ) )
+                    spawnCheckTime = ( CurTime() + ( LambdaRNG( 0, 10 ) * 0.1 ) )
                 end
 
                 coroutine_yield()
@@ -398,7 +398,7 @@ if SERVER then
                 attacker:AddFrags( 1 )
             end
 
-            if !self.l_preventdefaultspeak and random( 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
+            if !self.l_preventdefaultspeak and LambdaRNG( 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
                 self.l_keyentity = attacker
 
                 local deathtype = ( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and "deathbyplayer" or "death" )
@@ -428,16 +428,16 @@ if SERVER then
         local attacker = info:GetAttacker()
 
         if !self:IsPanicking() then
-            if retreatLowHP:GetBool() and ( attacker != self and IsValid( attacker ) or self:InCombat() and ( attacker != self:GetEnemy() or !attacker.IsLambdaPlayer or !attacker:IsPanicking() or random( 1, 3 ) == 1 ) ) then
+            if retreatLowHP:GetBool() and ( attacker != self and IsValid( attacker ) or self:InCombat() and ( attacker != self:GetEnemy() or !attacker.IsLambdaPlayer or !attacker:IsPanicking() or LambdaRNG( 1, 3 ) == 1 ) ) then
                 local chance = self:GetCowardlyChance()
                 if chance <= 20 then
-                    chance = ( chance * rand( 1.0, 2.5 ) )
+                    chance = ( chance * LambdaRNG( 1.0, 2.5, true ) )
                 elseif chance > 60 then
-                    chance = ( chance / rand( 1.5, 2.5 ) )
+                    chance = ( chance / LambdaRNG( 1.5, 2.5, true ) )
                 end
 
-                local hpThreshold = random( ( chance / 4 ), chance )
-                local predHp = ( self:Health() - ( info:GetDamage() * rand( 1.0, 1.5 ) ) )
+                local hpThreshold = LambdaRNG( ( chance / 4 ), chance )
+                local predHp = ( self:Health() - ( info:GetDamage() * LambdaRNG( 1.0, 1.5, true ) ) )
                 if predHp <= hpThreshold then
                     self:RetreatFrom( attacker != self and attacker )
                     return
@@ -448,7 +448,7 @@ if SERVER then
         end
 
         local ene = self:GetEnemy()
-        if attacker != self and attacker != ene and IsValid( attacker ) and ( !self:ShouldTreatAsLPlayer( attacker ) or random( 2 ) == 1 ) and ( !IsValid( ene ) or self:GetRangeSquaredTo( attacker ) < self:GetRangeSquaredTo( ene ) ) and self:CanTarget( attacker ) then
+        if attacker != self and attacker != ene and IsValid( attacker ) and ( !self:ShouldTreatAsLPlayer( attacker ) or LambdaRNG( 2 ) == 1 ) and ( !IsValid( ene ) or self:GetRangeSquaredTo( attacker ) < self:GetRangeSquaredTo( ene ) ) and self:CanTarget( attacker ) then
             self:AttackTarget( attacker )
         end
     end
@@ -490,56 +490,56 @@ if SERVER then
         if attacker == self then
             if victim == enemy then
                 if !self.l_preventdefaultspeak then
-                    if random( 100 ) <= self:GetVoiceChance() then
+                    if LambdaRNG( 100 ) <= self:GetVoiceChance() then
                         self:PlaySoundFile( "kill" )
-                    elseif random( 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
+                    elseif LambdaRNG( 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
                         self.l_keyentity = victim
                         self:TypeMessage( self:GetTextLine( "kill" ) )
                     end
                 end
 
-                if random( 10 ) == 1 then
+                if LambdaRNG( 10 ) == 1 then
                     self:SetState( "TBaggingPosition", victim:GetPos() )
                     self:DebugPrint( "I killed my enemy. It's t-bagging time..." )
                     return
                 end
             end
 
-            if random( 100 ) <= ( self:GetCowardlyChance() / 1.5 ) and retreatLowHP:GetBool() then
+            if LambdaRNG( 100 ) <= ( self:GetCowardlyChance() / 1.5 ) and retreatLowHP:GetBool() then
                 self:DebugPrint( "I killed someone. Retreating..." )
                 self:RetreatFrom()
                 self:CancelMovement()
                 return
             end
-        elseif victim == enemy and !self.l_preventdefaultspeak and random( 100 ) <= self:GetVoiceChance() and ( attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot() ) then
+        elseif victim == enemy and !self.l_preventdefaultspeak and LambdaRNG( 100 ) <= self:GetVoiceChance() and ( attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot() ) then
             if self:CanSee( attacker ) then
                 self:LookTo( attacker, 1 )
             end
-            self:PlaySoundFile( "assist", rand( 0.1, 1.0 ) )
+            self:PlaySoundFile( "assist", LambdaRNG( 0.1, 1.0, true ) )
         end
 
         if self:IsInRange( victim, 1500 ) and self:CanSee( victim ) then
-            local witnessChance = random( 10 )
+            local witnessChance = LambdaRNG( 10 )
             if witnessChance == 1 or ( attacker == victim or attacker:IsWorld() ) and witnessChance >= 6 then
                 self:SetState( "Laughing", { victim, self:GetDestination() } )
                 self:CancelMovement()
                 self:DebugPrint( "I killed or saw someone die. Laugh at this man!" )
             elseif attacker != self and victim != enemy then
                 if witnessChance == 2 and !self.l_preventdefaultspeak then
-                    self:LookTo( victimPos, random( 3 ) )
+                    self:LookTo( victimPos, LambdaRNG( 3 ) )
 
-                    if random( 100 ) <= self:GetVoiceChance() then
-                        self:PlaySoundFile( "witness", rand( 0.1, 1.0 ) )
-                    elseif random( 100 ) <= self:GetTextChance() and ( victim.IsLambdaPlayer or victim:IsPlayer() ) and !self:IsSpeaking() and self:CanType() then
+                    if LambdaRNG( 100 ) <= self:GetVoiceChance() then
+                        self:PlaySoundFile( "witness", LambdaRNG( 0.1, 1.0, true ) )
+                    elseif LambdaRNG( 100 ) <= self:GetTextChance() and ( victim.IsLambdaPlayer or victim:IsPlayer() ) and !self:IsSpeaking() and self:CanType() then
                         self.l_keyentity = victim
                         self:TypeMessage( self:GetTextLine( "witness" ) )
                     end
-                elseif !self:InCombat() and random( 100 ) <= ( self:GetCowardlyChance() / ( isEnt and 2 or 4 ) ) and retreatLowHP:GetBool() then
-                    local targ = ( ( self:CanTarget( attacker ) and self:CanSee( attacker ) and random( 3 ) == 1 ) and attacker or nil )
+                elseif !self:InCombat() and LambdaRNG( 100 ) <= ( self:GetCowardlyChance() / ( isEnt and 2 or 4 ) ) and retreatLowHP:GetBool() then
+                    local targ = ( ( self:CanTarget( attacker ) and self:CanSee( attacker ) and LambdaRNG( 3 ) == 1 ) and attacker or nil )
                     self:DebugPrint( "I saw someone die. Retreating..." )
-                    self:LookTo( targ or victim:WorldSpaceCenter(), rand( 1, 3 ) )
+                    self:LookTo( targ or victim:WorldSpaceCenter(), LambdaRNG( 1, 3, true ) )
 
-                    self:RetreatFrom( targ or victim )
+                    self:RetreatFrom( targ )
                     self:CancelMovement()
                 end
             end
@@ -570,7 +570,7 @@ if SERVER then
         end,
         [ NAV_MESH_STOP ] = function( self, hasEntered )
             if !hasEntered then return end
-            self:WaitWhileMoving( rand( 0.66, 1.0 ) )
+            self:WaitWhileMoving( LambdaRNG( 0.66, 1.0, true ) )
         end,
         [ NAV_MESH_STAND ] = function( self )
             self:SetCrouch( false )
@@ -683,10 +683,10 @@ if SERVER then
         [ "customrandom" ] = function( ply, lambda ) -- Same thing as Custom except the values from Sliders are used in RNG
             local tbl = {}
             for k, v in ipairs( LambdaPersonalityConVars ) do
-                tbl[ v[ 1 ] ] = random( ply:GetInfoNum( "lambdaplayers_personality_" .. v[ 1 ] .. "chance", 30 ) )
+                tbl[ v[ 1 ] ] = LambdaRNG( ply:GetInfoNum( "lambdaplayers_personality_" .. v[ 1 ] .. "chance", 30 ) )
             end
-            lambda:SetVoiceChance( random( 0, ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) ) )
-            lambda:SetTextChance( random( 0, ply:GetInfoNum( "lambdaplayers_personality_textchance", 30 ) ) )
+            lambda:SetVoiceChance( LambdaRNG( 0, ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) ) )
+            lambda:SetTextChance( LambdaRNG( 0, ply:GetInfoNum( "lambdaplayers_personality_textchance", 30 ) ) )
             return  tbl
         end,
         [ "fighter" ] = function( ply, lambda ) -- Focused on Combat
@@ -704,7 +704,7 @@ if SERVER then
         [ "builder" ] = function( ply, lambda ) -- Focused on Building
             local tbl = {}
             for k, v in ipairs( LambdaPersonalityConVars ) do
-                tbl[ v[ 1 ] ] = random( 100 )
+                tbl[ v[ 1 ] ] = LambdaRNG( 100 )
             end
             tbl[ "Build" ] = 80
             tbl[ "Combat" ] = 5
@@ -786,7 +786,7 @@ if SERVER then
             end
         end
 
-        self:SimpleTimer( rand( 0, 1 ), function()
+        self:SimpleTimer( LambdaRNG( 0, 1, true ), function()
             if !self:IsSpeaking( "fall" ) or self:IsPanicking() or self:Health() <= 1 then return end
             self:StopCurrentVoiceLine()
         end )
@@ -1050,9 +1050,9 @@ function ENT:InitializeMiniHooks()
             if self.l_preventdefaultspeak or ply == self or !self:CanType() or aidisabled:GetBool() or self:InCombat() or self:IsPanicking() then return end
 
             local replyChan = ( string_match( text, self:Nick() ) and 100 or 200 )
-            if random( replyChan ) > self:GetTextChance() then return end
+            if LambdaRNG( replyChan ) > self:GetTextChance() then return end
 
-            local replyTime = ( random( 5, 20 ) / 10 )
+            local replyTime = ( LambdaRNG( 5, 20 ) / 10 )
             self:SimpleTimer( replyTime, function()
                 if !IsValid( ply ) or self:GetIsTyping() or self:IsSpeaking() then return end
                 self.l_keyentity = ply
@@ -1063,16 +1063,16 @@ function ENT:InitializeMiniHooks()
         self:Hook( "PlayerSay", "lambdarespondtoplayertextchat", function( ply, text )
             if self.l_preventdefaultspeak or self:GetIsTyping() or self:IsSpeaking() or aidisabled:GetBool() then return end
 
-            if random( 100 ) <= self:GetVoiceChance() and self:IsInRange( ply, 300 ) then
+            if LambdaRNG( 100 ) <= self:GetVoiceChance() and self:IsInRange( ply, 300 ) then
                 self:PlaySoundFile( "idle" )
                 return
             end
             if !self:CanType() or self:InCombat() or self:IsPanicking() then return end
 
             local replyChan = ( string_match( text, self:Nick() ) and 100 or 200 )
-            if random( replyChan ) > self:GetTextChance() then return end
+            if LambdaRNG( replyChan ) > self:GetTextChance() then return end
 
-            local replyTime = ( random( 5, 20 ) / 10 )
+            local replyTime = ( LambdaRNG( 5, 20 ) / 10 )
             self:SimpleTimer( replyTime, function()
                 if !IsValid( ply ) or self:GetIsTyping() or self:IsSpeaking() then return end
                 self.l_keyentity = ply
@@ -1083,10 +1083,10 @@ function ENT:InitializeMiniHooks()
         self:Hook( "LambdaOnRealPlayerEndVoice", "lambdarespondtoplayervoicechat", function( ply )
             if self.l_preventdefaultspeak or self:GetIsTyping() or self:IsSpeaking() or aidisabled:GetBool() or !self:IsInRange( ply, 300 ) then return end
 
-            if random( 100 ) <= self:GetVoiceChance() then
+            if LambdaRNG( 100 ) <= self:GetVoiceChance() then
                 self:PlaySoundFile( "idle" )
-            elseif random( 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
-                self:SimpleTimer( rand( 0.2, 1.5 ), function()
+            elseif LambdaRNG( 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
+                self:SimpleTimer( LambdaRNG( 0.2, 1.5, true ), function()
                     if !IsValid( ply ) or self:GetIsTyping() or self:IsSpeaking() then return end
                     self.l_keyentity = ply
                     self:TypeMessage( GetNameResponseLine( self, ply ) )

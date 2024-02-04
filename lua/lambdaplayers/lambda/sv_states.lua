@@ -4,8 +4,8 @@
 -- Definitely a lot more cleaner this way
 
 local CurTime = CurTime
-local random = math.random
-local Rand = math.Rand
+
+
 local ceil = math.ceil
 local IsValid = IsValid
 local bit_band = bit.band
@@ -18,19 +18,19 @@ local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 
 local wandertbl = { autorun = true }
 function ENT:Idle()
-    if random( 100 ) < 70 then
+    if LambdaRNG( 100 ) < 70 then
         self:ComputeChance()
         return
     end
 
     local pos
-    if random( 3 ) == 1 then
+    if LambdaRNG( 3 ) == 1 then
         local triggers = self:FindInSphere( nil, 2000, function( ent )
             return ( ent:GetClass() == "trigger_teleport" and !ent:GetInternalVariable( "StartDisabled" ) and bit_band( ent:GetInternalVariable( "spawnflags" ), 2 ) == 2 and self:CanSee( ent ) )
         end )
 
         if #triggers == 0 then return end
-        pos = triggers[ random( #triggers ) ]:WorldSpaceCenter()
+        pos = triggers[ LambdaRNG( #triggers ) ]:WorldSpaceCenter()
     end
 
     self:MoveToPos( ( pos or self:GetRandomPosition( nil, unlimiteddistance:GetBool() ) ), wandertbl )
@@ -53,17 +53,17 @@ function ENT:HealUp( failState )
         return
     end
 
-    local rndVec = ( self:GetForward() * random( -16, 16 ) + self:GetRight() * random( -16, 16 ) + self:GetUp() * random( -16, -4 ) )
+    local rndVec = ( self:GetForward() * LambdaRNG( -16, 16 ) + self:GetRight() * LambdaRNG( -16, 16 ) + self:GetUp() * LambdaRNG( -16, -4 ) )
     if !self:Trace( ( self:GetPos() + rndVec ), self:EyePos() ).Hit then
         self:MoveToPos( self:GetRandomPosition( nil, 100 ) )
         if !self:GetState( "HealUp" ) then return true end
     end
 
-    local spawnRate = Rand( 0.15, 0.4 )
+    local spawnRate = LambdaRNG( 0.15, 0.4, true )
     coroutine_wait( spawnRate )
 
     local spawnCount = ceil( ( self:GetMaxHealth() - self:Health() ) / 25 )
-    for i = 1, random( ( spawnCount / 2 ), spawnCount ) do
+    for i = 1, LambdaRNG( ( spawnCount / 2 ), spawnCount ) do
         if self:InCombat() or self:IsPanicking() or !self:IsUnderLimit( "Entity" ) then break end
         if self:Health() >= self:GetMaxHealth() then break end
 
@@ -93,18 +93,18 @@ function ENT:ArmorUp( failState )
         return
     end
 
-    local rndVec = ( self:GetForward() * random( -16, 16 ) + self:GetRight() * random( -16, 16 ) + self:GetUp() * random( -16, -4 ) )
+    local rndVec = ( self:GetForward() * LambdaRNG( -16, 16 ) + self:GetRight() * LambdaRNG( -16, 16 ) + self:GetUp() * LambdaRNG( -16, -4 ) )
     if !self:Trace( ( self:GetPos() + rndVec ), self:EyePos() ).Hit then
         self.l_noclipheight = 0
         self:MoveToPos( self:GetRandomPosition( nil, 100 ) )
         if !self:GetState( "ArmorUp" ) then return true end
     end
 
-    local spawnRate = Rand( 0.15, 0.4 )
+    local spawnRate = LambdaRNG( 0.15, 0.4, true )
     coroutine_wait( spawnRate )
 
     local spawnCount = ceil( ( self:GetMaxArmor() - self:Armor() ) / 15 )
-    for i = 1, random( ( spawnCount / 3 ), spawnCount ) do
+    for i = 1, LambdaRNG( ( spawnCount / 3 ), spawnCount ) do
         if self:InCombat() or self:IsPanicking() or !self:IsUnderLimit( "Entity" ) then break end
         if self:Armor() >= self:GetMaxArmor() then break end
 
@@ -125,7 +125,7 @@ function ENT:ArmorUp( failState )
 end
 
 function ENT:CombatSpawnBehavior( target )
-    if random( 3 ) == 1 then self:ArmorUp() end
+    if LambdaRNG( 3 ) == 1 then self:ArmorUp() end
     if !IsValid( target ) or !self:CanTarget( target ) then return true end
     self:AttackTarget( target )
 end
@@ -142,13 +142,13 @@ local ft_options = { cbTime = 0.5, callback = function( lambda )
     lambda:SetEnemy( NULL )
 
     local dontRDMLambdas = ignoreLambdas:GetBool()
-    local findTargets = lambda:FindInSphere( nil, 1500, function( ent )
+    local findTargets = lambda:FindInSphere( nil, 2000, function( ent )
         if ent.IsLambdaPlayer and dontRDMLambdas then return false end
         return ( lambda:CanTarget( ent ) and lambda:CanSee( ent ) )
     end )
     if #findTargets != 0 then
-        local rndTarget = findTargets[ random( #findTargets ) ]
-        if rndTarget.IsLambdaPlayer and rndTarget:IsPanicking() and random( 3 ) == 1 and random( 100 ) <= lambda:GetCombatChance() and LambdaIsValid( rndTarget:GetEnemy() ) then
+        local rndTarget = findTargets[ LambdaRNG( #findTargets ) ]
+        if rndTarget.IsLambdaPlayer and rndTarget:IsPanicking() and LambdaRNG( 3 ) == 1 and LambdaRNG( 100 ) <= lambda:GetCombatChance() and LambdaIsValid( rndTarget:GetEnemy() ) then
             rndTarget = rndTarget:GetEnemy()
         end
 
@@ -158,9 +158,9 @@ local ft_options = { cbTime = 0.5, callback = function( lambda )
 end }
 function ENT:FindTarget()
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
-    ft_options.walk = ( random( 8 ) == 1 )
+    ft_options.walk = ( LambdaRNG( 8 ) == 1 )
     self:MoveToPos( self:GetRandomPosition( nil, 2000 ), ft_options )
-    return ( random( 100 ) > self:GetCombatChance() )
+    return ( LambdaRNG( 100 ) > self:GetCombatChance() )
 end
 
 -- We look for a button and press it
@@ -203,11 +203,11 @@ function ENT:Laughing( args )
     end
     self:LookTo( target, 1 )
 
-    local laughDelay = ( random( 1, 6 ) * 0.1 )
+    local laughDelay = ( LambdaRNG( 1, 6 ) * 0.1 )
     self:PlaySoundFile( "laugh", laughDelay )
 
     local movePos = args[ 2 ]
-    local actTime = ( laughDelay * Rand( 0.8, 1.2 ) )
+    local actTime = ( laughDelay * LambdaRNG( 0.8, 1.2, true ) )
     if !movePos then
         coroutine_wait( actTime )
     else
@@ -222,7 +222,7 @@ end
 
 local acts = { ACT_GMOD_TAUNT_DANCE, ACT_GMOD_TAUNT_ROBOT, ACT_GMOD_TAUNT_MUSCLE, ACT_GMOD_TAUNT_CHEER }
 function ENT:UsingAct()
-    self:PlayGestureAndWait( acts[ random( #acts ) ] )
+    self:PlayGestureAndWait( acts[ LambdaRNG( #acts ) ] )
     return true
 end
 
@@ -233,7 +233,7 @@ end }
 function ENT:TBaggingPosition( pos )
     self:MoveToPos( pos, t_options )
 
-    for i = 1, random( 3, 10 ) do
+    for i = 1, LambdaRNG( 3, 10 ) do
         if !self:GetState( "TBaggingPosition" ) then return end
 
         self:SetCrouch( true )

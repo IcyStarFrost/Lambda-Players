@@ -6,7 +6,7 @@ local ipairs = ipairs
 local pairs = pairs
 local SortedPairs = SortedPairs
 local GetAllValidModel = player_manager.AllValidModels
-local Rand = math.Rand
+
 local Round = math.Round
 local table_Empty = table.Empty
 local table_remove = table.remove
@@ -15,7 +15,7 @@ local match = string.match
 
 local mdlChangeTime = 0
 local mdlAng = Angle()
-local mdlColor = Vector( Rand( 0, 1 ), Rand( 0, 1 ), Rand( 0, 1 ) )
+local mdlColor = Vector( LambdaRNG( 0, 1, true ), LambdaRNG( 0, 1, true ), LambdaRNG( 0, 1, true ) )
 local function GetPlayerColor() return mdlColor end
 
 local Explode = string.Explode
@@ -218,9 +218,9 @@ local function OpenPMBodyGroupSetsPanel( ply )
             UpdateSBSliders()
             mdlChangeTime = RealTime()
 
-            mdlColor[ 1 ] = Rand( 0, 1 )
-            mdlColor[ 2 ] = Rand( 0, 1 )
-            mdlColor[ 3 ] = Rand( 0, 1 )
+            mdlColor[ 1 ] = LambdaRNG( 0, 1, true )
+            mdlColor[ 2 ] = LambdaRNG( 0, 1, true )
+            mdlColor[ 3 ] = LambdaRNG( 0, 1, true )
 
             local ent = mdlPreview:GetEntity()
             ent.GetPlayerColor = GetPlayerColor

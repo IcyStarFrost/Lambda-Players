@@ -1,7 +1,7 @@
 local table_insert = table.insert
 local ents_GetAll = ents.GetAll
 local ipairs = ipairs
-local random = math.random
+
 local IsValid = IsValid
 
 -- The reason this lua file has a d_ in its filename is because of the order on how lua files are loaded.

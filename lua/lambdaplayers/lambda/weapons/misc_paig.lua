@@ -4,9 +4,9 @@ local Effect = util.Effect
 local BlastDamage = util.BlastDamage
 local EffectData = EffectData
 local DamageInfo = DamageInfo
-local random = math.random
+
 local CreateSound = CreateSound
-local Rand = math.Rand
+
 local ipairs = ipairs
 local ScreenShake = util.ScreenShake
 local ParticleEffect = ParticleEffect
@@ -77,15 +77,15 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if busterMode then
                 wepent:EmitSound( "lambdaplayers/weapons/paig/sb_spin.mp3", 80 )
 
-                if random( 100 ) <= self:GetVoiceChance() then
-                    local rndLine = random( 3 )
+                if LambdaRNG( 100 ) <= self:GetVoiceChance() then
+                    local rndLine = LambdaRNG( 3 )
                     self:PlaySoundFile( rndLine == 1 and "taunt" or ( rndLine == 2 and "kill" or "fall" ) )
                 end
             end
 
             for _, lambda in ipairs( GetLambdaPlayers() ) do
                 if lambda == self or !LambdaIsValid( lambda ) or !lambda:IsInRange( self, ( !busterMode and 400 or 750 ) ) or !self:CanTarget( lambda ) or !busterMode and !lambda:CanSee( self ) then continue end
-                lambda:SimpleTimer( Rand( 0.0, 0.25 ), function() lambda:RetreatFrom( self, 1.0 + detonateTime ) end )
+                lambda:SimpleTimer( LambdaRNG( 0.0, 0.25, true ), function() lambda:RetreatFrom( self, 1.0 + detonateTime ) end )
             end
 
             self:SimpleWeaponTimer( ( detonateTime - 0.3 ), function()

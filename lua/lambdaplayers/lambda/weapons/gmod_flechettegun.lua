@@ -3,7 +3,7 @@ if !IsMounted( "ep2" ) then return end
 local IsValid = IsValid
 local CurTime = CurTime
 local CreateEntity = ents.Create
-local random = math.random
+
 
 local ShellOffPos = Vector( 3, 5, 5 )
 local ShellOffAng = Angle( -180, 0, 0 )
@@ -43,7 +43,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             ent:Activate()
             
             ent.l_UseLambdaDmgModifier = true
-            ent:SetVelocity( targetAng:Forward() * 2000 + targetAng:Right() * random( -100, 100 ) + targetAng:Up() * random( -100, 100 ) )
+            ent:SetVelocity( targetAng:Forward() * 2000 + targetAng:Right() * LambdaRNG( -100, 100 ) + targetAng:Up() * LambdaRNG( -100, 100 ) )
 
             return true
         end,

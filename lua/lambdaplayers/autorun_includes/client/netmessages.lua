@@ -7,7 +7,7 @@ local IsValid = IsValid
 local CurTime = CurTime
 local FrameTime = FrameTime
 local math_Clamp = math.Clamp
-local random = math.random
+
 local sub = string.sub
 local Start3D2D = cam.Start3D2D
 local End3D2D = cam.End3D2D
@@ -515,7 +515,7 @@ local function Spray( spraypath, tracehitpos, tracehitnormal, attemptedfallback 
     -- If we failed to load the Server's spray, try one of our own sprays and hope it works. If it does not work, give up and don't spray anything.
     if !material or material:IsError() then
         if !attemptedfallback then
-            Spray( LambdaPlayerSprays[ random( #LambdaPlayerSprays ) ], tracehitpos, tracehitnormal, true )
+            Spray( LambdaPlayerSprays[ LambdaRNG( #LambdaPlayerSprays ) ], tracehitpos, tracehitnormal, true )
         end
         return
     end
@@ -650,7 +650,7 @@ net.Receive( "lambdaplayers_takeviewshot", function()
         local format = ( saveAsPng:GetBool() and "png" or "jpg" )
         captureTbl.format = format
 
-        local rndMiliSec = random( 1, 99 )
+        local rndMiliSec = LambdaRNG( 1, 99 )
         if rndMiliSec < 10 then rndMiliSec = "0" .. rndMiliSec end
 
         local fileName = game_GetMap() .. "_" .. lambda:GetLambdaName() .. "_" .. os_date( "%Y-%m-%d_%H-%M-%S" ) .. "-" .. rndMiliSec .. "." .. format
