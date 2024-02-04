@@ -275,6 +275,7 @@ if SERVER then
         local attacker = info:GetAttacker()
         local inflictor = info:GetInflictor()
 
+        self:SetIsDead( true )
         if !silent then
             self:DebugPrint( "I was killed by", attacker )
 
@@ -311,7 +312,6 @@ if SERVER then
         end
 
         self:SetHealth( -1 ) -- SNPCs will think that we are still alive without doing this.
-        self:SetIsDead( true )
         self:SetNoClip( false )
         self:SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE )
 
@@ -786,9 +786,10 @@ if SERVER then
             end
         end
 
-        if self:IsSpeaking( "fall" ) and !self:IsPanicking() then
+        self:SimpleTimer( rand( 0, 1 ), function()
+            if !self:IsSpeaking( "fall" ) or self:IsPanicking() or self:Health() <= 1 then return end
             self:StopCurrentVoiceLine()
-        end
+        end )
 
         local moveOpt = self.l_moveoptions
         if moveOpt and !moveOpt.update then

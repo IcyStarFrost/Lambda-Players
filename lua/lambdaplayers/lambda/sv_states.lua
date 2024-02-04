@@ -148,9 +148,8 @@ local ft_options = { cbTime = 0.5, callback = function( lambda )
     end )
     if #findTargets != 0 then
         local rndTarget = findTargets[ random( #findTargets ) ]
-        if ( rndTarget:IsPlayer() or rndTarget.IsLambdaPlayer ) and random( 200 ) <= lambda:GetTextChance() and lambda:CanType() then
-            lambda.l_keyentity = rndTarget
-            lambda:TypeMessage( lambda:GetTextLine( "announceattack" ) )
+        if rndTarget.IsLambdaPlayer and rndTarget:IsPanicking() and random( 3 ) == 1 and random( 100 ) <= lambda:GetCombatChance() and LambdaIsValid( rndTarget:GetEnemy() ) then
+            rndTarget = rndTarget:GetEnemy()
         end
 
         lambda:AttackTarget( rndTarget )
@@ -159,7 +158,7 @@ local ft_options = { cbTime = 0.5, callback = function( lambda )
 end }
 function ENT:FindTarget()
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
-    ft_options.walk = ( random( 6 ) == 1 )
+    ft_options.walk = ( random( 8 ) == 1 )
     self:MoveToPos( self:GetRandomPosition( nil, 2000 ), ft_options )
     return ( random( 100 ) > self:GetCombatChance() )
 end

@@ -912,9 +912,14 @@ function ENT:Think()
                 end
 
                 if !self.l_preventdefaultspeak and !self:IsSpeaking( "fall" ) then
-                    local fallDmg = self:GetFallDamage( fallSpeed, true )
+                    local horizSpeed = ( locoVel:Length2D() / 4 )
+                    if fallSpeed < 0 then fallSpeed = ( -fallSpeed / 2 ) end
+
+                    local fallDmg = self:GetFallDamage( fallSpeed + horizSpeed, true )
                     if ( fallDmg >= 10 or fallDmg >= self:Health() ) and !self:Trace( ( selfPos + locoVel ), selfPos ).HitPos:IsUnderwater() then
                         self:PlaySoundFile( "fall", false )
+                        self:SetRun( true )
+                        self:SetCrouch( false )
                     end
                 end
             end

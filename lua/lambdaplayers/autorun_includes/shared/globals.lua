@@ -7,7 +7,12 @@ local PlaySound = ( CLIENT and surface.PlaySound )
 local AddNotification = ( CLIENT and notification.AddLegacy )
 local ipairs = ipairs
 local SortedPairs = SortedPairs
+local os_time = os.time
+local SysTime = SysTime
 local max = math.max
+local random = math.random
+local Rand = math.Rand
+local randomseed = math.randomseed
 
 _LAMBDAPLAYERSWEAPONS = {}
 
@@ -521,4 +526,11 @@ function LambdaCreateThread( func )
             hook.Remove( "Think", "lambdaplayersThread_" .. tostring( func ) )
         end
     end )
+end
+
+local rngCalled = 0
+function LambdaRNG( min, max, float )
+    rngCalled = ( rngCalled + 1 )
+    randomseed( os_time() + SysTime() + rngCalled )
+    return ( float and Rand( min, max ) or random( min, max ) )
 end
