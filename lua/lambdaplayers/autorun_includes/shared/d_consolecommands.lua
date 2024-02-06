@@ -62,6 +62,7 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_updatedata", function( ply )
     LambdaModelVoiceProfiles = LAMBDAFS:GetModelVoiceProfiles()
     LambdaPlayermodelBodySkinSets = LAMBDAFS:GetPlayermodelBodySkinSets()
     LambdaQuickNades = LAMBDAFS:GetQuickNadeWeapons()
+    LambdaEntsToFearFrom = LAMBDAFS:GetEntsToFearFrom()
 
     LambdaUpdatePlayerModels()
     LambdaPlayers_Notify( ply, "Updated Lambda Data", 3, "buttons/button15.wav" )

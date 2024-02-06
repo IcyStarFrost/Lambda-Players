@@ -193,6 +193,10 @@ CreateLambdaConvar( "lambdaplayers_combat_spawnbehavior", 0, true, false, false,
 CreateLambdaConvar( "lambdaplayers_combat_spawnbehavior_initialspawnonly", 1, true, false, false, "If the Spawn Behavior Modifier should only apply on Lambda Player's initial spawn", 0, 1, { type = "Bool", name = "Apply Spawn Behavior On Initial Spawn Only", category = "Combat" } )
 CreateLambdaConvar( "lambdaplayers_combat_spawnbehavior_usedistance", 0, true, false, false, "If the Spawn Behavior Modifier should pick the closest target instead of random ones", 0, 1, { type = "Bool", name = "Spawn Behavior Uses Distance", category = "Combat" } )
 
+CreateLambdaConvar( "lambdaplayers_fear_allowsanics", 1, true, false, false, "If Lambda Players should run away from Sanic-based Nextbots?\nNote that some will require manual addition via a panel due to how they're coded", 0, 1, { type = "Bool", name = "Fear Sanic Nextbots", category = "Combat" } )
+CreateLambdaConvar( "lambdaplayers_fear_alldrgnextbots", 0, true, false, false, "If Lambda Players should run away from any DRGBase Nextbots", 0, 1, { type = "Bool", name = "Fear All DRGBase Nextbots", category = "Combat" } )
+CreateLambdaConvar( "lambdaplayers_fear_detectrange", 2000, true, false, false, "How close should the target be to be detectable by Lambda Players", 0, 10000, { type = "Slider", decimals = 0, name = "Fear Spot Distance", category = "Combat" } )
+
 -- Weapon Convars
 CreateLambdaConvar( "lambdaplayers_combat_weapondmgmultiplier_players", 1, true, false, false, "Multiplies the damage that Lambda Player deals with its weapon to real players", 0, 100, { type = "Slider", decimals = 2, name = "Weapon Damage Scale - Players", category = "Lambda Weapons" } )
 CreateLambdaConvar( "lambdaplayers_combat_weapondmgmultiplier_lambdas", 1, true, false, false, "Multiplies the damage that Lambda Player deals with its weapon to other Lambda Players", 0, 100, { type = "Slider", decimals = 2, name = "Weapon Damage Scale - Lambda Players", category = "Lambda Weapons" } )

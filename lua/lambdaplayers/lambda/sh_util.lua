@@ -637,8 +637,8 @@ if SERVER then
         local retreatTime = ( CurTime() + ( timeout or LambdaRNG( 15, 30 ) ) )
         if retreatTime > self.l_retreatendtime then self.l_retreatendtime = retreatTime end
 
-        local target = self:GetEnemy()
-        if !alreadyPanic or LambdaIsValid( target ) then self:SetEnemy( target ) end
+        local ene = self:GetEnemy()
+        if !alreadyPanic or LambdaIsValid( ene ) then self:SetEnemy( target ) end
     end
 
     -- PlaySequenceAndWait but without t-posing

@@ -131,6 +131,9 @@ end
     local nadeUsage = GetConVar( "lambdaplayers_combat_allownadeusage" )
     local allowMdlVPs = GetConVar( "lambdaplayers_lambda_enablemdlspecificvps" )
     local allowMdlBgSets = GetConVar( "lambdaplayers_lambda_enablemdlbodygroupsets" )
+    local fearSanics = GetConVar( "lambdaplayers_fear_allowsanics" )
+    local fearDrgNbs = GetConVar( "lambdaplayers_fear_alldrgnextbots" )
+    local fearRange = GetConVar( "lambdaplayers_fear_detectrange" )
 --
 
 if CLIENT then
@@ -694,7 +697,15 @@ function ENT:Think()
 
         -- Attack nearby NPCs
         if curTime >= self.l_nextnpccheck then
-            if !self:InCombat() or self:IsPanicking() and !LambdaIsValid( self:GetEnemy() ) then
+            local sanics, drgs = fearSanics:GetBool(), fearDrgNbs:GetBool()
+            local nearNextbot = self:GetClosestEntity( nil, fearRange:GetInt(), function( ent )
+                if !LambdaEntsToFearFrom[ ent:GetClass() ] and ( !ent:IsNextBot() or ( !ent.LastPathingInfraction or !sanics ) and ( !ent.IsDrGNextbot or !drgs ) ) then return false end
+                return ( ( !self:IsValidTarget( ent ) or self:CanTarget( ent ) ) and self:CanSee( ent ) )
+            end )
+
+            if nearNextbot then
+                self:RetreatFrom( nearNextbot )
+            elseif !self:InCombat() or self:IsPanicking() and !LambdaIsValid( self:GetEnemy() ) then
                 local npcs = self:FindInSphere( nil, 2000, function( ent )
                     return ( IsValid( ent ) and ( ent:IsNPC() or ent:IsNextBot() and !self:ShouldTreatAsLPlayer( ent ) ) and self:CanTarget( ent ) and self:CanSee( ent ) )
                 end )
@@ -724,11 +735,14 @@ function ENT:Think()
             local behavState = self:GetBehaviorState()
             local isPanicking = ( behavState == "Retreat" )
 
+            print( 1, isPanicking, target )
+
             if LambdaIsValid( target ) and ( isPanicking or behavState == "Combat" ) then
                 local endTime = self.l_combatendtime
                 if !isPanicking and endTime > 0 and CurTime() >= endTime then
                     self:DebugPrint( "Reached our combat end time" )
                     self.l_combatendtime = 0
+                    print( 3, isPanicking )
 
                     self:SetEnemy( NULL )
                     self:CancelMovement()
@@ -780,6 +794,7 @@ function ENT:Think()
                         end
                     end
 
+                    print( 2, isPanicking )
                     if !isCrouched and jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.8 ) and LambdaRNG( isPanicking and 25 or 35 ) == 1 then
                         combatjumptbl.start = self:GetPos()
                         combatjumptbl.endpos = ( combatjumptbl.start + locoVel )

@@ -358,15 +358,19 @@ function LAMBDAFS:GetTextProfiles()
 end
 
 function LAMBDAFS:GetModelVoiceProfiles()
-    return LAMBDAFS:ReadFile( "lambdaplayers/modelvoiceprofiles.json", "json" ) or {}
+    return LAMBDAFS:ReadFile( "lambdaplayers/modelvoiceprofiles.json", "json" )
 end
 
 function LAMBDAFS:GetPlayermodelBodySkinSets()
-    return LAMBDAFS:ReadFile( "lambdaplayers/pmbodygroupsets.json", "json" ) or {}
+    return LAMBDAFS:ReadFile( "lambdaplayers/pmbodygroupsets.json", "json" )
 end
 
 function LAMBDAFS:GetQuickNadeWeapons()
     return LAMBDAFS:ReadFile( "lambdaplayers/quicknades.json", "json" )
+end
+
+function LAMBDAFS:GetEntsToFearFrom()
+    return LAMBDAFS:ReadFile( "lambdaplayers/npcstofear.json", "json" )
 end
 
 if ( SERVER ) then
@@ -381,6 +385,18 @@ if ( SERVER ) then
 
     if !file_Exists( "lambdaplayers/proplist.json", "DATA" ) then
         LAMBDAFS:WriteFile( "lambdaplayers/proplist.json", LAMBDAFS:ReadFile( "materials/lambdaplayers/data/props.vmt", nil, "GAME", false ) )
+    end
+
+    if !file_Exists( "lambdaplayers/modelvoiceprofiles.json", "DATA" ) then
+        LAMBDAFS:WriteFile( "lambdaplayers/modelvoiceprofiles.json", {} )
+    end
+
+    if !file_Exists( "lambdaplayers/pmbodygroupsets.json", "DATA" ) then
+        LAMBDAFS:WriteFile( "lambdaplayers/pmbodygroupsets.json", {} )
+    end
+
+    if !file_Exists( "lambdaplayers/npcstofear.json", "DATA" ) then
+        LAMBDAFS:WriteFile( "lambdaplayers/npcstofear.json", {} )
     end
 
     if !file_Exists( "lambdaplayers/quicknades.json", "DATA" ) then

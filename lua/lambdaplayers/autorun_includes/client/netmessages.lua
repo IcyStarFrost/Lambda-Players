@@ -365,6 +365,7 @@ net.Receive( "lambdaplayers_updatedata", function()
     LambdaModelVoiceProfiles = LAMBDAFS:GetModelVoiceProfiles()
     LambdaPlayermodelBodySkinSets = LAMBDAFS:GetPlayermodelBodySkinSets()
     LambdaQuickNades = LAMBDAFS:GetQuickNadeWeapons()
+    LambdaEntsToFearFrom = LAMBDAFS:GetEntsToFearFrom()
 
     chat.AddText( "Lambda Data was updated by the Server" )
 end )
