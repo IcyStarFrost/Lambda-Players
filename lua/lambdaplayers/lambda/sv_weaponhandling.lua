@@ -17,8 +17,8 @@ end
 
 -- Switch to a weapon with the provided name.
 -- See the lambda/weapons folder for weapons. Check out the holster.lua file to see the current valid weapon settings
-function ENT:SwitchWeapon( weaponname, forceswitch )
-    if !forceswitch and ( self.l_NoWeaponSwitch or !self:CanEquipWeapon( weaponname ) ) then return end
+function ENT:SwitchWeapon( weaponname, forceswitch, fromFuncs )
+    if !forceswitch and ( self.l_NoWeaponSwitch or !fromFuncs and !self:CanEquipWeapon( weaponname ) ) then return end
     if !self:WeaponDataExists( weaponname ) then return end
     local wepent = self:GetWeaponENT()
 
@@ -361,7 +361,7 @@ function ENT:CanEquipWeapon( weaponname, data )
 
     -- I sure hope this won't break shit
     if LambdaRunHook( "LambdaCanSwitchWeapon", self, weaponname, data ) then return false end
-    
+
     return true
 end
 
@@ -389,7 +389,7 @@ function ENT:SwitchToRandomWeapon( returnOnly )
     end
 
     local rndWeapon = ( ( hasFavWep and LambdaRNG( #wepList * 2 ) >= #wepList ) and favWep or wepList[ LambdaRNG( #wepList ) ] )
-    if !returnOnly then self:SwitchWeapon( returnOnly, true ) end
+    if !returnOnly then self:SwitchWeapon( rndWeapon, true, true ) end
     return rndWeapon
 end
 
@@ -410,7 +410,7 @@ function ENT:SwitchToLethalWeapon()
         wepList[ #wepList + 1 ] = name
     end
 
-    self:SwitchWeapon( ( hasFavWep and LambdaRNG( #wepList * 2 ) >= #wepList ) and favWep or wepList[ LambdaRNG( #wepList ) ] )
+    self:SwitchWeapon( ( hasFavWep and LambdaRNG( #wepList * 2 ) >= #wepList ) and favWep or wepList[ LambdaRNG( #wepList ) ], false, true )
 end
 
 -- Switches our weapon to the one we first spawned with
@@ -423,5 +423,5 @@ function ENT:SwitchToSpawnWeapon()
         self.l_SpawnWeapon = weapon
     end
 
-    self:SwitchWeapon( weapon )
+    self:SwitchWeapon( weapon, false, true )
 end
