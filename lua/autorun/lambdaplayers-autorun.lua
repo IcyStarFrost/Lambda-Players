@@ -21,7 +21,11 @@ function LambdaReloadAddon( ply )
         local serversidefiles = file.Find( "lambdaplayers/autorun_includes/server/*", "LUA", "nameasc" )
 
         for k, luafile in ipairs( serversidefiles ) do
-            if redundantFiles[ luafile ] then continue end
+            if redundantFiles[ luafile ] then
+                print( "Lambda Players: Ignored The Following Lua File: " .. luafile )
+                continue
+            end
+
             include( "lambdaplayers/autorun_includes/server/" .. luafile )
             print( "Lambda Players: Included Server Side Lua File [ " .. luafile .. " ]" )
         end
@@ -33,7 +37,11 @@ function LambdaReloadAddon( ply )
     local sharedfiles = file.Find( "lambdaplayers/autorun_includes/shared/*", "LUA", "nameasc" )
 
     for k, luafile in ipairs( sharedfiles ) do
-        if redundantFiles[ luafile ] then continue end
+        if redundantFiles[ luafile ] then
+            print( "Lambda Players: Ignored The Following Lua File: " .. luafile )
+            continue
+        end
+
         if SERVER then
             AddCSLuaFile( "lambdaplayers/autorun_includes/shared/" .. luafile )
         end
@@ -47,7 +55,11 @@ function LambdaReloadAddon( ply )
     local clientsidefiles = file.Find( "lambdaplayers/autorun_includes/client/*", "LUA", "nameasc" )
 
     for k, luafile in ipairs( clientsidefiles ) do
-        if redundantFiles[ luafile ] then continue end
+        if redundantFiles[ luafile ] then
+            print( "Lambda Players: Ignored The Following Lua File: " .. luafile )
+            continue
+        end
+
         if SERVER then
             AddCSLuaFile( "lambdaplayers/autorun_includes/client/" .. luafile )
         elseif CLIENT then
@@ -65,7 +77,11 @@ function LambdaReloadAddon( ply )
         local serversidefiles = file.Find( "lambdaplayers/extaddon/server/*", "LUA", "nameasc" )
 
         for k, luafile in ipairs( serversidefiles ) do
-            if redundantFiles[ luafile ] then continue end
+            if redundantFiles[ luafile ] then
+                print( "Lambda Players: Ignored The Following Lua File: " .. luafile )
+                continue
+            end
+
             include( "lambdaplayers/extaddon/server/" .. luafile )
             print( "Lambda Players: Included Server Side External Lua File [ " .. luafile .. " ]" )
         end
@@ -77,7 +93,11 @@ function LambdaReloadAddon( ply )
     local sharedfiles = file.Find( "lambdaplayers/extaddon/shared/*", "LUA", "nameasc" )
 
     for k, luafile in ipairs( sharedfiles ) do
-        if redundantFiles[ luafile ] then continue end
+        if redundantFiles[ luafile ] then
+            print( "Lambda Players: Ignored The Following Lua File: " .. luafile )
+            continue
+        end
+
         if SERVER then
             AddCSLuaFile( "lambdaplayers/extaddon/shared/" .. luafile )
         end
@@ -91,7 +111,11 @@ function LambdaReloadAddon( ply )
     local clientsidefiles = file.Find( "lambdaplayers/extaddon/client/*", "LUA", "nameasc" )
 
     for k, luafile in ipairs( clientsidefiles ) do
-        if redundantFiles[ luafile ] then continue end
+        if redundantFiles[ luafile ] then
+            print( "Lambda Players: Ignored The Following Lua File: " .. luafile )
+            continue
+        end
+
         if SERVER then
             AddCSLuaFile( "lambdaplayers/extaddon/client/" .. luafile )
         elseif CLIENT then

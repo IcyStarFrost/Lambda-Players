@@ -735,14 +735,11 @@ function ENT:Think()
             local behavState = self:GetBehaviorState()
             local isPanicking = ( behavState == "Retreat" )
 
-            print( 1, isPanicking, target )
-
             if LambdaIsValid( target ) and ( isPanicking or behavState == "Combat" ) then
                 local endTime = self.l_combatendtime
                 if !isPanicking and endTime > 0 and CurTime() >= endTime then
                     self:DebugPrint( "Reached our combat end time" )
                     self.l_combatendtime = 0
-                    print( 3, isPanicking )
 
                     self:SetEnemy( NULL )
                     self:CancelMovement()
@@ -794,7 +791,6 @@ function ENT:Think()
                         end
                     end
 
-                    print( 2, isPanicking )
                     if !isCrouched and jumpInCombat:GetBool() and ( isPanicking or canSee and attackRange and self:IsInRange( target, attackRange * ( self.l_HasMelee and 10 or 2 ) ) ) and onGround and locoVel:Length() >= ( self:GetRunSpeed() * 0.8 ) and LambdaRNG( isPanicking and 25 or 35 ) == 1 then
                         combatjumptbl.start = self:GetPos()
                         combatjumptbl.endpos = ( combatjumptbl.start + locoVel )
