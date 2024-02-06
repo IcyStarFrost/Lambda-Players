@@ -388,22 +388,22 @@ if ( SERVER ) then
     end
 
     if !file_Exists( "lambdaplayers/modelvoiceprofiles.json", "DATA" ) then
-        LAMBDAFS:WriteFile( "lambdaplayers/modelvoiceprofiles.json", {} )
+        LAMBDAFS:WriteFile( "lambdaplayers/modelvoiceprofiles.json", {}, "json" )
     end
 
     if !file_Exists( "lambdaplayers/pmbodygroupsets.json", "DATA" ) then
-        LAMBDAFS:WriteFile( "lambdaplayers/pmbodygroupsets.json", {} )
+        LAMBDAFS:WriteFile( "lambdaplayers/pmbodygroupsets.json", {}, "json" )
     end
 
     if !file_Exists( "lambdaplayers/npcstofear.json", "DATA" ) then
-        LAMBDAFS:WriteFile( "lambdaplayers/npcstofear.json", {} )
+        LAMBDAFS:WriteFile( "lambdaplayers/npcstofear.json", {}, "json" )
     end
 
     if !file_Exists( "lambdaplayers/quicknades.json", "DATA" ) then
         LAMBDAFS:WriteFile( "lambdaplayers/quicknades.json", {
             "grenade",
             "slam"
-        }, "json", false )
+        }, "json" )
     end
 
 end
