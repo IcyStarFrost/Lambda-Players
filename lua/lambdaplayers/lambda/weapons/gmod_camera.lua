@@ -17,7 +17,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
 
         OnThink = function( self, wepent, dead )
-            if !dead and LambdaRNG( 3 ) != 1 then 
+            if !dead and LambdaRNG( 3 ) != 1 then
                 self:LookTo( self:EyePos() + VectorRand( -400, 400 ), 1.25 )
                 self:SimpleWeaponTimer( 0.8, function() self:UseWeapon() end )
             end
@@ -29,11 +29,13 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent:EmitSound( "NPC_CScanner.TakePhoto" )
             self.l_WeaponUseCooldown = ( CurTime() + 0.5 )
 
+            local attach = wepent:GetAttachment( 1 )
+            if takeViewShots:GetBool() then self:TakeViewShot( attach.Pos ) end
+
             local effectData = EffectData()
-            effectData:SetOrigin( wepent:GetAttachment( 1 ).Pos )
+            effectData:SetOrigin( attach.Pos )
             util_Effect( "camera_flash", effectData, true )
-            
-            if takeViewShots:GetBool() then self:TakeViewShot() end
+
             return true
         end
     }

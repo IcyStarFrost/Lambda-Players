@@ -21,10 +21,10 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     if !forceswitch and ( self.l_NoWeaponSwitch or !self:CanEquipWeapon( weaponname ) ) then return end
     if !self:WeaponDataExists( weaponname ) then return end
     local wepent = self:GetWeaponENT()
-    
+
     local oldweaponname = self.l_Weapon
     local oldwepdata = _LAMBDAPLAYERSWEAPONS[ oldweaponname ]
-    if oldwepdata then 
+    if oldwepdata then
         local onHolsterFunc = ( oldwepdata.OnHolster or oldwepdata.OnUnequip )
         if onHolsterFunc and onHolsterFunc( self, wepent, oldweaponname, weaponname ) == true then return end
     end
@@ -37,7 +37,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     self:SetNW2String( "lambda_weaponprettyname", weapondata.notagprettyname )
     self.l_WeaponPrettyName = weapondata.notagprettyname
     self.l_HasLethal = weapondata.islethal
-    self.l_HasMelee = weapondata.ismelee 
+    self.l_HasMelee = weapondata.ismelee
     self.l_HoldType = weapondata.holdtype or "normal"
     self.l_CombatKeepDistance = weapondata.keepdistance
     self.l_CombatAttackRange = weapondata.attackrange
@@ -66,7 +66,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     end
 
     self:ClientSideNoDraw( self.WeaponEnt, weapondata.nodraw )
-    
+
     local drawFunc = ( weapondata.OnDraw or weapondata.Draw )
     self:SetHasCustomDrawFunction( isfunction( drawFunc ) )
 
@@ -80,10 +80,10 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     wepent:SetModel( weapondata.model )
     wepent:SetModelScale( ( weapondata.weaponscale or 1 ), 0 )
 
-    if weapondata.bonemerge then 
-        wepent:AddEffects( EF_BONEMERGE ) 
-    else 
-        wepent:RemoveEffects( EF_BONEMERGE ) 
+    if weapondata.bonemerge then
+        wepent:AddEffects( EF_BONEMERGE )
+    else
+        wepent:RemoveEffects( EF_BONEMERGE )
     end
 
     self.l_WeaponThinkFunction = weapondata.OnThink
@@ -105,6 +105,18 @@ function ENT:SwitchWeapon( weaponname, forceswitch )
     end
 
     self:SetIsReloading( false )
+
+    if self.l_HasExtendedAnims and weaponname != "none" and ( self.l_initialized or weaponname != "physgun" ) then
+        local holdType = self.l_HoldType
+        if weaponname == "gmod_camera" then
+            holdType = "melee"
+        elseif weaponname == "toolgun" then
+            holdType = "pistol"
+        end
+
+        local drcAnims = DRC.HoldTypes[ holdType ]
+        if drcAnims then self:SetLayerPlaybackRate( self:AddGesture( drcAnims.deploy ), 1.5 ) end
+    end
 
     LambdaRunHook( "LambdaOnSwitchWeapon", self, wepent, weapondata )
 end
@@ -130,36 +142,36 @@ local bullettbl = {
     Spread = Vector()
 }
 
--- I like this way more than before 
+-- I like this way more than before
 local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabletbl )
     if self.l_Clip == 0 then self:ReloadWeapon() return end
-    
+
     disabletbl = disabletbl or {}
 
-    local fireRate = ( disabletbl.cooldown or weapondata.rateoffire ) 
+    local fireRate = ( disabletbl.cooldown or weapondata.rateoffire )
     if !fireRate then
         local randMin = weapondata.rateoffiremin
         local randMax = weapondata.rateoffiremax
-        if randMin and randMax then fireRate = LambdaRNG( randMin, randMax, true ) end    
+        if randMin and randMax then fireRate = LambdaRNG( randMin, randMax, true ) end
     end
-    if fireRate and fireRate != true then 
+    if fireRate and fireRate != true then
         local cooldown = weapondata.rateoffire or LambdaRNG( weapondata.rateoffiremin, weapondata.rateoffiremax, true )
         self.l_WeaponUseCooldown = CurTime() + cooldown
     end
 
     local fireSnd = ( disabletbl.sound or weapondata.attacksnd )
-    if fireSnd and fireSnd != true then 
-        wepent:EmitSound( TranslateRandomization( fireSnd ), 80, LambdaRNG( 98, 102 ), 1, CHAN_WEAPON ) 
+    if fireSnd and fireSnd != true then
+        wepent:EmitSound( TranslateRandomization( fireSnd ), 80, LambdaRNG( 98, 102 ), 1, CHAN_WEAPON )
     end
-    
+
     local muzzleFlash = ( disabletbl.muzzleflash or weapondata.muzzleflash )
-    if muzzleFlash and muzzleFlash != true then 
-        self:HandleMuzzleFlash( muzzleFlash, weapondata.muzzleoffpos, weapondata.muzzleoffang ) 
+    if muzzleFlash and muzzleFlash != true then
+        self:HandleMuzzleFlash( muzzleFlash, weapondata.muzzleoffpos, weapondata.muzzleoffang )
     end
 
     local shellEject = ( disabletbl.shell or weapondata.shelleject )
-    if shellEject and shellEject != true then 
-        self:HandleShellEject( shellEject, weapondata.shelloffpos, weapondata.shelloffang ) 
+    if shellEject and shellEject != true then
+        self:HandleShellEject( shellEject, weapondata.shelloffpos, weapondata.shelloffang )
     end
 
     local fireAnim = ( disabletbl.anim or weapondata.attackanim )
@@ -188,26 +200,26 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
         bullettbl.Spread.y = spread
 
         wepent:FireBullets( bullettbl )
-    end    
+    end
 end
 
 local function DefaultMeleeWeaponUse( self, wepent, target, weapondata, disabletbl )
     disabletbl = disabletbl or {}
 
     local fireRate = ( disabletbl.cooldown or weapondata.rateoffire or LambdaRNG( weapondata.rateoffiremin, weapondata.rateoffiremax, true ) )
-    if fireRate and fireRate != true then 
+    if fireRate and fireRate != true then
         local cooldown = weapondata.rateoffire or LambdaRNG( weapondata.rateoffiremin, weapondata.rateoffiremax, true )
         self.l_WeaponUseCooldown = CurTime() + cooldown
     end
 
     local attackSnd = ( disabletbl.sound or weapondata.attacksnd )
-    if attackSnd and attackSnd != true then 
-        wepent:EmitSound( TranslateRandomization( attackSnd ), 75, LambdaRNG( 98, 102 ), 1, CHAN_WEAPON ) 
+    if attackSnd and attackSnd != true then
+        wepent:EmitSound( TranslateRandomization( attackSnd ), 75, LambdaRNG( 98, 102 ), 1, CHAN_WEAPON )
     end
 
     local hitSnd = ( disabletbl.hitsound or weapondata.hitsnd )
-    if hitSnd and hitSnd != true then 
-        target:EmitSound( TranslateRandomization( hitSnd ), 70 ) 
+    if hitSnd and hitSnd != true then
+        target:EmitSound( TranslateRandomization( hitSnd ), 70 )
     end
 
     local attackAnim = ( disabletbl.anim or weapondata.attackanim )
@@ -218,7 +230,7 @@ local function DefaultMeleeWeaponUse( self, wepent, target, weapondata, disablet
 
     local dmgData = ( disabletbl.damage or {} )
     if dmgData != true then
-        local dmg = DamageInfo() 
+        local dmg = DamageInfo()
         dmg:SetDamage( dmgData.Damage or weapondata.damage )
         dmg:SetAttacker( dmgData.Attacker or self )
         dmg:SetInflictor( dmgData.Inflictor or wepent )
@@ -234,10 +246,10 @@ function ENT:UseWeapon( target )
     local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
 
     local wepent = self:GetWeaponENT()
-    if !IsValid( wepent ) then return end 
-    
+    if !IsValid( wepent ) then return end
+
     local callback = ( weapondata.OnAttack or weapondata.callback )
-    
+
     local result
     if callback then result = callback( self, wepent, target ) end
 
@@ -253,14 +265,14 @@ function ENT:ReloadWeapon()
 
     local wep = self:GetWeaponENT()
     if !IsValid( wep ) then return end
- 
+
     local weapondata = _LAMBDAPLAYERSWEAPONS[ self.l_Weapon ]
-    
+
     local onReloadFunc = weapondata.OnReload
     if onReloadFunc and onReloadFunc( self, wep, weapondata ) == true then return end
 
     local snds = weapondata.reloadsounds
-    if snds then 
+    if snds then
         if istable( snds ) and #snds > 0 then
             for k, tbl in ipairs( snds ) do
                 self:SimpleWeaponTimer( tbl[ 1 ], function()
@@ -298,10 +310,10 @@ function ENT:HandleMuzzleFlash( type, offpos, offang, attachIndex )
 
     local attach = wepent:GetAttachment( attachIndex or 1 )
     if !attach then
-        if offpos and offang then 
+        if offpos and offang then
             attach = { Pos = offpos, Ang = offang }
         else
-            return 
+            return
         end
     end
 
@@ -319,7 +331,7 @@ function ENT:HandleShellEject( name, offpos, offang )
 
     local wepent = self:GetWeaponENT()
     if !IsValid( wepent ) then return end
-    
+
     offpos = offpos or vector_origin
     offang = offang or angle_zero
 
@@ -336,13 +348,21 @@ function ENT:IsWeaponMarkedNodraw()
 end
 
 -- If we can equip the specified weapon name
-function ENT:CanEquipWeapon( weaponname )
-    if weaponname != self.l_Weapon then
-        local allowTbl = _LAMBDAWEAPONALLOWCONVARS[ weaponname ]
-        return ( !allowTbl or allowTbl:GetBool() )
+function ENT:CanEquipWeapon( weaponname, data )
+    if weaponname == self.l_Weapon then return false end
+
+    local allowTbl = _LAMBDAWEAPONALLOWCONVARS[ weaponname ]
+    if allowTbl and !allowTbl:GetBool() then return false end
+
+    if !data then
+        data = _LAMBDAPLAYERSWEAPONS[ weaponname ]
+        if !data then return false end
     end
 
-    return false
+    -- I sure hope this won't break shit
+    if LambdaRunHook( "LambdaCanSwitchWeapon", self, weaponname, data ) then return false end
+    
+    return true
 end
 
 local freeRestrictWeps = {
@@ -361,9 +381,8 @@ function ENT:SwitchToRandomWeapon( returnOnly )
 
     local wepRestricts = self.l_WeaponRestrictions
     for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
-        if name == curWep or data.cantbeselected or !self:CanEquipWeapon( name ) then continue end
         if wepRestricts and !wepRestricts[ name ] and !freeRestrictWeps[ name ] then continue end
-        if LambdaRunHook( "LambdaCanSwitchWeapon", self, name, data ) then continue end
+        if name == curWep or data.cantbeselected or !self:CanEquipWeapon( name, data ) then continue end
 
         if !hasFavWep then hasFavWep = ( name == favWep ) end
         wepList[ #wepList + 1 ] = name
@@ -384,9 +403,8 @@ function ENT:SwitchToLethalWeapon()
 
     local wepRestricts = self.l_WeaponRestrictions
     for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
-        if name == curWep or !data.islethal or data.cantbeselected or !self:CanEquipWeapon( name ) then continue end
         if wepRestricts and !wepRestricts[ name ] and !freeRestrictWeps[ name ] then continue end
-        if LambdaRunHook( "LambdaCanSwitchWeapon", self, name, data ) then continue end
+        if name == curWep or !data.islethal or data.cantbeselected or !self:CanEquipWeapon( name, data ) then continue end
 
         if !hasFavWep then hasFavWep = ( name == favWep ) end
         wepList[ #wepList + 1 ] = name
@@ -398,12 +416,12 @@ end
 -- Switches our weapon to the one we first spawned with
 function ENT:SwitchToSpawnWeapon()
     local weapon = self.l_SpawnWeapon
-    if weapon == "random" then 
-        weapon = self:SwitchToRandomWeapon( true ) 
+    if weapon == "random" then
+        weapon = self:SwitchToRandomWeapon( true )
     elseif !self:WeaponDataExists( weapon ) then
         weapon = "physgun"
         self.l_SpawnWeapon = weapon
     end
-    
-    self:SwitchWeapon( weapon ) 
+
+    self:SwitchWeapon( weapon )
 end

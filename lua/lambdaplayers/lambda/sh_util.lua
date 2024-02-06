@@ -487,7 +487,7 @@ if SERVER then
 
             local model = ( info.model or self:GetModel() )
             if !IsValidModel( model ) then model = "models/player/kleiner.mdl" end
-            self:SetModel( model )
+            self:SetPlayerModel( model, true )
             self:SetSkin( info.mdlSkin or 0 )
 
             local bodygroups = info.bodygroups
@@ -727,10 +727,12 @@ if SERVER then
 
     -- Makes the Lambda face the position or a entity if provided
     -- if poseonly is true, then the Lambda will not change its angles and will only change it's pose params
-    function ENT:LookTo( pos, time, poseonly )
+    function ENT:LookTo( pos, time, priority, poseonly )
+        if priority and self.l_FacePriority and priority < self.l_FacePriority then return end
         self.Face = pos
         self.l_PoseOnly = poseonly or false
         self.l_Faceend = time and CurTime() + time or nil
+        self.l_FacePriority = ( priority or false )
     end
 
     -- Returns if the provided state exists
@@ -814,7 +816,7 @@ if SERVER then
         self:SetModel( mdl )
 
         if !noBodygroups and rndBodyGroups:GetBool() then
-            local mdlSets = LambdaPlayermodelBodySkinSets[ spawnMdl ]
+            local mdlSets = LambdaPlayermodelBodySkinSets[ mdl ]
             if mdlSets and #mdlSets != 0 and allowMdlBgSets:GetBool() then
                 local rndSet = mdlSets[ LambdaRNG( #mdlSets ) ]
                 self:SetSkin( rndSet.skin or 0 )
@@ -836,6 +838,10 @@ if SERVER then
 
         if StartsWith( self:GetProfilePicture(), "spawnicons/" ) then
             self:SetProfilePicture( "spawnicons/".. string_sub( mdl, 1, #mdl - 4 ).. ".png" )
+        end
+
+        if self.l_HasExtendedAnims != nil then
+            self.l_HasExtendedAnims = ( self:SelectWeightedSequence( ACT_GESTURE_BARNACLE_STRANGLE ) > 0 )
         end
     end
 
@@ -1565,7 +1571,7 @@ if SERVER then
     end
 
     -- Takes a view screenshot from Lambda's point of view
-    function ENT:TakeViewShot()
+    function ENT:TakeViewShot( pos, ang )
         if !allowShots:GetBool() then return end
 
         local pvsEnd = ( CurTime() + 0.1 )
@@ -1576,6 +1582,8 @@ if SERVER then
 
         net.Start( "lambdaplayers_takeviewshot" )
             net.WriteEntity( self )
+            net.WriteVector( pos or vector_origin )
+            net.WriteAngle( ang or angle_zero )
         net.Broadcast()
     end
 

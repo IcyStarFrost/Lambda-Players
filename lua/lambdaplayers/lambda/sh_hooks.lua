@@ -13,6 +13,9 @@ local coroutine_wait = coroutine.wait
 local max = math.max
 local Clamp = math.Clamp
 local floor = math.floor
+local abs = math.abs
+local Round = math.Round
+local NormalizeAngle = math.NormalizeAngle
 local string_match = string.match
 local string_sub = string.sub
 local lower = string.lower
@@ -513,7 +516,7 @@ if SERVER then
             end
         elseif victim == enemy and !self.l_preventdefaultspeak and LambdaRNG( 100 ) <= self:GetVoiceChance() and ( attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot() ) then
             if self:CanSee( attacker ) then
-                self:LookTo( attacker, 1 )
+                self:LookTo( attacker, 1, 2 )
             end
             self:PlaySoundFile( "assist", LambdaRNG( 0.1, 1.0, true ) )
         end
@@ -526,7 +529,7 @@ if SERVER then
                 self:DebugPrint( "I killed or saw someone die. Laugh at this man!" )
             elseif attacker != self and victim != enemy then
                 if witnessChance == 2 and !self.l_preventdefaultspeak then
-                    self:LookTo( victimPos, LambdaRNG( 3 ) )
+                    self:LookTo( victimPos, LambdaRNG( 3 ), 1 )
 
                     if LambdaRNG( 100 ) <= self:GetVoiceChance() then
                         self:PlaySoundFile( "witness", LambdaRNG( 0.1, 1.0, true ) )
@@ -537,7 +540,7 @@ if SERVER then
                 elseif !self:InCombat() and LambdaRNG( 100 ) <= ( self:GetCowardlyChance() / ( isEnt and 2 or 4 ) ) and retreatLowHP:GetBool() then
                     local targ = ( ( self:CanTarget( attacker ) and self:CanSee( attacker ) and LambdaRNG( 3 ) == 1 ) and attacker or nil )
                     self:DebugPrint( "I saw someone die. Retreating..." )
-                    self:LookTo( targ or victim:WorldSpaceCenter(), LambdaRNG( 1, 3, true ) )
+                    self:LookTo( targ or victim:WorldSpaceCenter(), LambdaRNG( 1, 3, true ), 1 )
 
                     self:RetreatFrom( targ )
                     self:CancelMovement()
@@ -579,6 +582,7 @@ if SERVER then
 
     -- Called when our current nav area is changed
     function ENT:OnNavAreaChanged( old, new )
+        if !IsValid( new ) then return end
         self.l_currentnavarea = new
 
         local movePos = self.l_CurrentPath
@@ -860,6 +864,11 @@ local function GetNameResponseLine( lambda, ply )
     return line
 end
 
+-- DRGBase Nextbot ConVars
+local drg_MultDmg_Ply
+local drg_MultDmg_NPC
+--
+
 -- MANDKIND IS DEAD. BLOOD IS FUEL. HELL IS FULL.
 local ukHeal_Enabled
 local ukHeal_MaxHeal
@@ -874,6 +883,11 @@ local ukHeal_HardDmg_Enforce
 -- A function for holding self:Hook() functions. Called in the ENT:Initialize() in npc_lambdaplayer
 function ENT:InitializeMiniHooks()
     if ( SERVER ) then
+        if DrGBase then
+            drg_MultDmg_Ply = ( drg_MultDmg_Ply or GetConVar( "drgbase_multiplier_damage_players" ) )
+            drg_MultDmg_NPC = ( drg_MultDmg_NPC or GetConVar( "drgbase_multiplier_damage_npc" ) )
+        end
+
         if UltrakillBase then
             ukHeal_Enabled = ( ukHeal_Enabled or GetConVar( "drg_ultrakill_healing" ) )
             ukHeal_MaxHeal = ( ukHeal_MaxHeal or GetConVar( "drg_ultrakill_healing_maxheal" ) )
@@ -904,7 +918,14 @@ function ENT:InitializeMiniHooks()
         end
 
         self:Hook( "PostEntityTakeDamage", "OnOtherInjured", function( target, info, tookdamage )
-            if target == self or ( !target:IsNPC() and !target:IsNextBot() and !target:IsPlayer() ) then return end
+            if target == self then
+                if self.l_HasExtendedAnims and info:IsExplosionDamage() then
+                    self:AddGesture( ACT_GESTURE_FLINCH_BLAST )
+                end
+                return
+            end
+
+            if ( !target:IsNPC() and !target:IsNextBot() and !target:IsPlayer() ) then return end
             LambdaRunHook( "LambdaOnOtherInjured", self, target, info, tookdamage )
 
             local attacker = info:GetAttacker()
@@ -960,6 +981,8 @@ function ENT:InitializeMiniHooks()
         -- Hoookay so interesting stuff here. When a nextbot actually dies by reaching 0 or below hp, no matter how high you set their health after the fact, they will no longer take damage.
         -- To get around that we basically predict if the Lambda is gonna die and completely block the damage so we don't actually die. This of course is exclusive to Respawning
         self:Hook( "LambdaTakeDamage", "DamageHandling", function( target, info )
+            -- if target == Entity( 1 ) then print( info:GetDamage() ) end
+
             if target != self then return end
             if self.l_godmode then return true end
 
@@ -990,10 +1013,23 @@ function ENT:InitializeMiniHooks()
 
             local attacker = info:GetAttacker()
             if IsValid( attacker ) then
-                -- ULTRAKILL SNPCs insta-kill moment
+                if attacker.IsDrGNextbot then
+                    info:SetDamage( ( info:GetDamage() / drg_MultDmg_NPC:GetFloat() ) * drg_MultDmg_Ply:GetFloat() )
+                end
+
+                -- ULTRAKILL SNPCs insta-kill moment (THIS WILL HURT/DIE)
                 local isUkNPC = attacker.IsUltrakillNextbot
                 if isUkNPC then
                     info:SetDamage( ( info:GetDamage() / UltrakillBase.ConVars.DmgMult:GetFloat() ) / 10 )
+                -- BOOTY PLS PLEY DEE EMM CEE TOO, ITS DA BEST GAEM!!!
+                elseif attacker.DevilTrigger then
+                    info:SetDamage( info:GetDamage() * 0.1 )
+                -- Hydrogen bomb(KLK Nextbot) VS Coughing baby(Lambda Player)
+                elseif attacker.KLK_OwnDMGMult then
+                    info:ScaleDamage( attacker.KLK_OwnDMGMult )
+                -- THE UNENLIGHTENED MASSES
+                elseif attacker.IsDrGNextbot and attacker:GetModel() == "models/resort/tf2_community/deadnaut.mdl" then
+                    info:ScaleDamage( 0.1 )
                 -- Fixes Lambda-launched Combine Balls not setting its damage's attacker properly
                 elseif attacker:GetClass() == "prop_combine_ball" then
                     local owner = attacker:GetOwner()

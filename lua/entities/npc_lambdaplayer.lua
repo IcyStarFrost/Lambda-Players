@@ -39,8 +39,8 @@ end
 
     local GetLightColor
 
-    
-    
+
+
     local max = math.max
     local min = math.min
     local abs = math.abs
@@ -424,6 +424,18 @@ function ENT:Initialize()
             self:ApplyCombatSpawnBehavior()
         end )
 
+        --
+
+        if DynSplatterFullyInitialized then
+            self:SetBloodColor( self:GetBloodColor() )
+            self:DisableEngineBlood()
+            self:SetNWBool( "DynSplatter", true )
+        end
+
+        if DRC and wOS and wOS.DynaBase.Registers[ "Vuthakral's Extended Player Animations" ] then
+            self.l_HasExtendedAnims = ( self:SelectWeightedSequence( ACT_GESTURE_BARNACLE_STRANGLE ) > 0 )
+        end
+
     elseif CLIENT then
 
         self.l_lastdraw = 0 -- The time since we were "last" drawn. Used with ENT:IsBeingDrawn() to test if we are in a client's PVS
@@ -729,8 +741,7 @@ function ENT:Think()
 
                         if canSee then
                             if self:IsInRange( target, attackRange * ( self.l_HasMelee and 3 or 1 ) ) then
-                                self.Face = target
-                                self.l_Faceend = ( CurTime() + LambdaRNG( 0.5, 2.0, true ) )
+                                self:LookTo( target, LambdaRNG( 0.5, 2.0, true ), 2 )
                             end
 
                             if self:IsInRange( target, attackRange ) then
@@ -1144,29 +1155,29 @@ function ENT:Think()
                 self.l_Faceend = nil
                 self.l_PoseOnly = nil
             else
-                local pos = faceTarg
+                local facePos = faceTarg
                 if isentity( faceTarg ) then
-                    pos = ( isfunction( faceTarg.EyePos ) and faceTarg:EyePos() )
-                    if !pos or !self:IsInRange( pos, 750 ) then pos = faceTarg:WorldSpaceCenter() end
+                    facePos = ( isfunction( faceTarg.EyePos ) and faceTarg:EyePos() )
+                    if !facePos or !self:IsInRange( facePos, 750 ) then facePos = faceTarg:WorldSpaceCenter() end
                 end
-                if !self.l_PoseOnly then loco:FaceTowards( pos ); loco:FaceTowards( pos ) end
+                if !self.l_PoseOnly then loco:FaceTowards( facePos ); loco:FaceTowards( facePos ) end
 
                 if !eyeAttach then eyeAttach = self:GetAttachmentPoint( "eyes" ) end
-                lookAng = self:WorldToLocalAngles( ( pos - eyeAttach.Pos ):Angle() )
-                self:SetNW2Vector( "lambda_facepos", pos )
+                lookAng = self:WorldToLocalAngles( ( facePos - eyeAttach.Pos ):Angle() )
+                self:SetNW2Vector( "lambda_facepos", facePos )
             end
         end
 
         local poseP = ( ( self:GetPoseParameter( "head_pitch" ) + self:GetPoseParameter( "aim_pitch" ) ) / 2 )
-        local poseY = ( ( self:GetPoseParameter( "head_yaw" ) + self:GetPoseParameter( "aim_yaw" ) ) / 2 )
-
         local approachP = Lerp( 4 * frameTime, poseP, lookAng.p )
-        local approachY = Lerp( 4 * frameTime, poseY, lookAng.y )
-
         self:SetPoseParameter( "head_pitch", approachP )
         self:SetPoseParameter( "aim_pitch", approachP )
+
+        local poseY = ( ( self:GetPoseParameter( "head_yaw" ) + self:GetPoseParameter( "aim_yaw" ) ) / 2 )
+        local approachY = Lerp( 4 * frameTime, poseY, lookAng.y )
         self:SetPoseParameter( "head_yaw", approachY )
         self:SetPoseParameter( "aim_yaw", approachY )
+
         --
 
         -- UNSTUCK --

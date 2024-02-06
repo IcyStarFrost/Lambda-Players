@@ -36,10 +36,24 @@ if SERVER then
             if lastDmg and ( lastDmg / 4 ) == dmginfo:GetDamage() then
                 dmginfo:ScaleDamage( 4 )
             end
-        elseif ent.IsUltrakillNextbot then
+        else
             local attacker = dmginfo:GetAttacker()
             if IsValid( attacker ) and attacker.IsLambdaPlayer then
-                dmginfo:SetDamage( ( ( dmginfo:GetDamage() / UltrakillBase.ConVars.TakeDmgMult:GetFloat() ) * UltrakillBase.ConVars.PlyDmgMult:GetFloat() ) * 10 )
+                if ent.IsUltrakillNextbot then
+                    dmginfo:SetDamage( ( ( dmginfo:GetDamage() / UltrakillBase.ConVars.TakeDmgMult:GetFloat() ) * UltrakillBase.ConVars.PlyDmgMult:GetFloat() ) * 10 )
+                else
+                    local class = ent:GetClass()
+                    if class == "nb_klk_ryuko" or class == "nb_klk_satsuki" or class == "nb_klk_nui" then
+                        local valBonus = ent.KLK_ValorDamageBonus
+                        if class == "nb_klk_nui" then valBonus = ent.KLK_ValorResistanceBonus end
+
+                        if ent.KLK_OwnDMGMult == 0.05 then
+                            dmginfo:SetDamage( ( ( dmginfo:GetDamage() / ( 0.2 / valBonus ) ) * ( 1 / valBonus ) ) * ent.KLK_PlyDMGMult )
+                        else
+                            dmginfo:ScaleDamage( ent.KLK_PlyDMGMult )
+                        end
+                    end
+                end
             end
         end
 

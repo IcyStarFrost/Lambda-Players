@@ -372,9 +372,9 @@ end )
 net.Receive( "lambdaplayers_playsoundfile", function()
     local lambda = net.ReadEntity()
     if !IsValid( lambda ) then return end
-    
+
     local sendState = net.ReadBool()
-    if !lambda:GetIsDead() != sendState then return end
+    if !lambda.GetIsDead or !lambda:GetIsDead() != sendState then return end
 
     PlaySoundFile( lambda, net.ReadString(), net.ReadUInt( 32 ), net.ReadVector(), net.ReadFloat(), true )
 end )
@@ -611,26 +611,34 @@ net.Receive( "lambdaplayers_takeviewshot", function()
     local lambda = net.ReadEntity()
     if !IsValid( lambda ) then return end
 
+    local shotPos = net.ReadVector()
+    local shotAng = net.ReadAngle()
+    local noPos = ( shotPos == vector_origin )
+
     local headBone = lambda:LookupBone( "ValveBiped.Bip01_Head1" )
     if headBone then DrawEntityBones( lambda, headBone, false ) end
 
-    local lambdaCorpse
     _LambdaIsTakingViewShot = true
 
     lambda:Hook( "CalcView", "ViewShotCalcView", function()
+        local origin = ( !shotPos:IsZero() and shotPos )
+        local angles = ( !shotAng:IsZero() and shotAng )
+
         local ragdoll = lambda:GetRagdollEntity()
         if lambda:GetIsDead() and IsValid( ragdoll ) then
             local eyes = lambda:GetAttachmentPoint( "eyes", ragdoll )
-            viewshotTbl.origin = eyes.Pos
-            viewshotTbl.angles = eyes.Ang
+            origin = ( origin or eyes.Pos )
+            angles = ( angles or eyes.Ang )
 
             lambdaCorpse = ragdoll
             if headBone then DrawEntityBones( ragdoll, headBone, false ) end
         else
-            viewshotTbl.origin = lambda:EyePos()
-            viewshotTbl.angles = lambda:EyeAngles()
+            origin = ( origin or lambda:EyePos() )
+            angles = ( angles or lambda:EyeAngles() )
         end
 
+        viewshotTbl.origin = origin
+        viewshotTbl.angles = angles
         viewshotTbl.fov = viewFOV:GetInt()
         return viewshotTbl
     end, true )
@@ -653,7 +661,7 @@ net.Receive( "lambdaplayers_takeviewshot", function()
         local rndMiliSec = LambdaRNG( 1, 99 )
         if rndMiliSec < 10 then rndMiliSec = "0" .. rndMiliSec end
 
-        local fileName = game_GetMap() .. "_" .. lambda:GetLambdaName() .. "_" .. os_date( "%Y-%m-%d_%H-%M-%S" ) .. "-" .. rndMiliSec .. "." .. format
+        local fileName = game_GetMap() .. "_" .. os_date( "%Y-%m-%d_%H-%M-%S" ) .. "-" .. rndMiliSec .. "." .. format
         LAMBDAFS:WriteFile( "lambdaplayers/viewshots/" .. fileName, render_Capture( captureTbl ), "binary" )
 
         if headBone then

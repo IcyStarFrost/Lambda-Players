@@ -201,7 +201,7 @@ function ENT:Laughing( args )
         local ragdoll = target:GetRagdollEntity()
         if IsValid( ragdoll ) then target = ragdoll end
     end
-    self:LookTo( target, 1 )
+    self:LookTo( target, 1, 3 )
 
     local laughDelay = ( LambdaRNG( 1, 6 ) * 0.1 )
     self:PlaySoundFile( "laugh", laughDelay )
