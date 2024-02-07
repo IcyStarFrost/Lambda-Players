@@ -442,7 +442,7 @@ if SERVER then
                 local hpThreshold = LambdaRNG( ( chance / 4 ), chance )
                 local predHp = ( self:Health() - ( info:GetDamage() * LambdaRNG( 1.0, 1.5, true ) ) )
                 if predHp <= hpThreshold then
-                    self:RetreatFrom( attacker != self and attacker )
+                    self:RetreatFrom( attacker != self and attacker or nil )
                     return
                 end
             end

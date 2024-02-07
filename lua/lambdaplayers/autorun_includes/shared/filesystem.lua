@@ -358,19 +358,19 @@ function LAMBDAFS:GetTextProfiles()
 end
 
 function LAMBDAFS:GetModelVoiceProfiles()
-    return LAMBDAFS:ReadFile( "lambdaplayers/modelvoiceprofiles.json", "json" )
+    return LAMBDAFS:ReadFile( "lambdaplayers/modelvoiceprofiles.json", "json" ) or {}
 end
 
 function LAMBDAFS:GetPlayermodelBodySkinSets()
-    return LAMBDAFS:ReadFile( "lambdaplayers/pmbodygroupsets.json", "json" )
+    return LAMBDAFS:ReadFile( "lambdaplayers/pmbodygroupsets.json", "json" ) or {}
 end
 
 function LAMBDAFS:GetQuickNadeWeapons()
-    return LAMBDAFS:ReadFile( "lambdaplayers/quicknades.json", "json" )
+    return LAMBDAFS:ReadFile( "lambdaplayers/quicknades.json", "json" ) or {}
 end
 
 function LAMBDAFS:GetEntsToFearFrom()
-    return LAMBDAFS:ReadFile( "lambdaplayers/npcstofear.json", "json" )
+    return LAMBDAFS:ReadFile( "lambdaplayers/npcstofear.json", "json" ) or {}
 end
 
 if ( SERVER ) then
