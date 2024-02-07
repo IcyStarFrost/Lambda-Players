@@ -15,7 +15,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 500,
         attackrange = 1000,
         dropentity = "weapon_frag",
-        
+
         OnAttack = function( self, wepent, target )
             local grenade = ents_Create( "npc_grenade_frag" )
             if !IsValid( grenade ) then return end
@@ -30,7 +30,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             grenade:SetSaveValue( "m_hThrower", self )
             grenade:SetOwner( self )
             grenade:Spawn()
-            grenade:SetHealth( 99999 )
+            grenade:SetHealth( 30 )
 
             local throwForce = 1200
             local throwDir = self:GetForward()

@@ -229,6 +229,23 @@ function ENT:CanUseFlashlight()
     return self:GetAllowFlashlight()
 end
 
+function ENT:SetEyeAngles( ang )
+    self:SetAngles( ang )
+end
+
+function ENT:Freeze( freeze )
+    if ( CLIENT ) then return end
+    self.l_isfrozen = freeze
+end
+
+--
+
+local emptyFunc = function() end
+
+ENT.ScreenFade = emptyFunc
+
+--
+
 if SERVER then
     local TraceHull = util.TraceHull
     local tracehull = {}
@@ -257,10 +274,6 @@ if SERVER then
 
     function ENT:Give( weaponClassName )
         self:SwitchWeapon( weaponClassName )
-    end
-
-    function ENT:Freeze( freeze )
-        self.l_isfrozen = freeze
     end
 
     function ENT:GodDisable()

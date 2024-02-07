@@ -20,6 +20,7 @@ local string_match = string.match
 local string_sub = string.sub
 local lower = string.lower
 local SortTable = table.sort
+local table_Empty = table.Empty
 local IsSinglePlayer = game.SinglePlayer
 local SimpleTimer = timer.Simple
 local FrameTime = FrameTime
@@ -346,6 +347,7 @@ if SERVER then
         self.l_DrownStartTime = false
         self.l_DrownLostHealth = 0
         self.l_DrownActionTime = 0
+        table_Empty( self.l_cachedunreachableares )
 
         info:SetDamage( self.l_PreDeathDamage )
         LambdaRunHook( "LambdaOnKilled", self, info, silent )
@@ -492,10 +494,10 @@ if SERVER then
 
         if attacker == self then
             if victim == enemy then
-                if !self.l_preventdefaultspeak then
+                if !self.l_preventdefaultspeak and !self:IsSpeaking() then
                     if LambdaRNG( 100 ) <= self:GetVoiceChance() then
                         self:PlaySoundFile( "kill" )
-                    elseif LambdaRNG( 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
+                    elseif LambdaRNG( 100 ) <= self:GetTextChance() and self:CanType() then
                         self.l_keyentity = victim
                         self:TypeMessage( self:GetTextLine( "kill" ) )
                     end
@@ -989,25 +991,6 @@ function ENT:InitializeMiniHooks()
             local result = LambdaRunHook( "LambdaOnInjured", self, info )
             if result == true then return true end
 
-            -- Armor Damage Reduction
-            local curArmor = self:GetArmor()
-            if curArmor > 0 and !info:IsDamageType( bor( DMG_DROWN, DMG_POISON, DMG_FALL, DMG_RADIATION ) ) then
-                local flDmg = info:GetDamage()
-                local flNew = flDmg * 0.2
-                local flArmor = max( ( flDmg - flNew ), 1 )
-
-                if flArmor > curArmor then
-                    flArmor = curArmor
-                    flNew = ( flDmg - flArmor )
-                    self:SetArmor( 0 )
-                else
-                    self:SetArmor( curArmor - flArmor )
-                end
-
-                flDmg = flNew
-                info:SetDamage( flDmg )
-            end
-
             local onDmgFunc = self.l_OnDamagefunction
             if isfunction( onDmgFunc ) and onDmgFunc( self, self:GetWeaponENT(), info ) == true then return true end
 
@@ -1049,6 +1032,25 @@ function ENT:InitializeMiniHooks()
                         self:SetNW2Float( "UltrakillBase_HardDamage_Time", ( time + CurTime() ) )
                     end
                 end
+            end
+
+            -- Armor Damage Reduction
+            local curArmor = self:GetArmor()
+            if curArmor > 0 and !info:IsDamageType( bor( DMG_DROWN, DMG_POISON, DMG_FALL, DMG_RADIATION ) ) then
+                local flDmg = info:GetDamage()
+                local flNew = flDmg * 0.2
+                local flArmor = max( ( flDmg - flNew ), 1 )
+
+                if flArmor > curArmor then
+                    flArmor = curArmor
+                    flNew = ( flDmg - flArmor )
+                    self:SetArmor( 0 )
+                else
+                    self:SetArmor( curArmor - flArmor )
+                end
+
+                flDmg = flNew
+                info:SetDamage( flDmg )
             end
 
             local dmg = info:GetDamage()

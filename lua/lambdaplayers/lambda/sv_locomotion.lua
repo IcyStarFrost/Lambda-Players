@@ -91,6 +91,7 @@ function ENT:MoveToPos( pos, options )
     local callbackRunT = ( CurTime() + ( options.cbTime or 0 ) )
     local nearLadderCheckT = 0
     local nextNoclipCheckT = 0
+    local noclipDueUnreachable = false
 
     while ( IsValid( path ) ) do
         if self.AbortMovement then 
@@ -168,16 +169,27 @@ function ENT:MoveToPos( pos, options )
 
             local noclipping = self:IsInNoClip()
             if curGoal and !noclipping then
+                curArea = self.l_currentnavarea
+                local selfPos = self:GetPos()
+                
                 if CurTime() >= nextNoclipCheckT and canNoclip:GetBool() then
-                    nextNoclipCheckT = ( CurTime() + 15 )
+                    nextNoclipCheckT = ( CurTime() + LambdaRNG( 10, 20 ) )
 
-                    if !self:IsAreaTraversable( movePos, curGoal.area ) then
-                        LambdaUniversalActions[ "Noclip" ]( self )
-                        noclipping = self:IsInNoClip()
+                    if LambdaRNG( 3 ) != 1 then 
+                        local checkPos = movePos
+                        local nearArea = GetNearestNavArea( movePos, true, 200, false, true )
+                        if IsValid( nearArea ) then checkPos = nearArea end
+                        local canTraverse, cached = self:IsAreaTraversable( checkPos, curArea )
+                        
+                        if !canTraverse and !cached then
+                            debugoverlay.Line( movePos, selfPos, 5, self:GetPlyColor():ToColor(), true )
+                            self:NoClipState( true )
+                            noclipping = true
+                            noclipDueUnreachable = true
+                        end
                     end
                 end
                 if !noclipping then
-                    local selfPos = self:GetPos()
                     local lastGoal = path:LastSegment()
                     local destPos = ( ( lastGoal and curGoal.area == lastGoal.area ) and movePos or curGoal.pos )
                     
@@ -213,7 +225,6 @@ function ENT:MoveToPos( pos, options )
                         elseif movePos:DistToSqr( selfPos ) > 4096 then
                             -- Jumping over ledges and close up jumping
                             local stepAhead = ( selfPos + vector_up * stepH )
-                            curArea = self.l_currentnavarea
                             local grHeight, grNormal = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 60 )
                             if grHeight and grNormal.z > 0.9 and ( grHeight - selfPos.z ) > stepH then shouldJump = true end
 
@@ -268,6 +279,13 @@ function ENT:MoveToPos( pos, options )
     self.l_moveoptions = nil
     self.l_CurrentPath = nil
 
+    if noclipDueUnreachable then 
+        if !self:IsInWorld() then
+            self:MoveToPos( movePos or self:GetRandomPosition() )
+        end
+        self:NoClipState( false )
+    end
+    
     return returnMsg
 end
 
@@ -835,17 +853,17 @@ local GetNavAreaCount = navmesh.GetNavAreaCount
 -- The 'area' and 'startArea' variables can be either a vector or a navmesh area
 function ENT:IsAreaTraversable( area, startArea, pathGenerator )
     if self:IsInNoClip() then return true end
-    if isvector( area ) then area = GetNavArea( area, 100 ) end 
+    if isvector( area ) then area = GetNavArea( area, 120 ) end 
     if !IsValid( area ) then return false end
 
     local isCached = self.l_cachedunreachableares[ area ]
     if isCached then 
-        if CurTime() < isCached then return false end
+        if ( CurTime() - isCached ) <= 60 then return false, true end
         self.l_cachedunreachableares[ area ] = nil
     end
 
     local myArea = startArea or self.l_currentnavarea
-    if isvector( myArea ) then myArea = GetNavArea( myArea, 100 ) end 
+    if isvector( myArea ) then myArea = GetNavArea( myArea, 120 ) end 
     if !IsValid( myArea ) then return false end
 
     if area == myArea then return true end
@@ -948,6 +966,6 @@ function ENT:IsAreaTraversable( area, startArea, pathGenerator )
         CNavArea_AddToClosedList( curArea )
     end
 
-    self.l_cachedunreachableares[ area ] = ( CurTime() + 120 )
+    self.l_cachedunreachableares[ area ] = CurTime()
     return false
 end

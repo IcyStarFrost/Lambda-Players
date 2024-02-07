@@ -618,7 +618,7 @@ if SERVER then
         self:SetEnemy( ent )
         if !forceAttack and self:IsPanicking() then return end
 
-        if LambdaRNG( 100 ) <= self:GetVoiceChance() and !self:GetIsTyping() and !self:IsSpeaking( "taunt" ) then self:PlaySoundFile( "taunt" ) end
+        if LambdaRNG( 100 ) <= self:GetVoiceChance() and !self:GetIsTyping() and !self:IsSpeaking() then self:PlaySoundFile( "taunt" ) end
         self:SetState( "Combat" )
         self:CancelMovement()
         self.l_combatendtime = ( CurTime() + LambdaRNG( 180, 300 ) )

@@ -70,15 +70,20 @@ AddUActionToLambdaUA( function( self )
     end )
 end, "Crouch" )
 
-local noclip = GetConVar( "lambdaplayers_lambda_allownoclip" )
+local allowNoclip = GetConVar( "lambdaplayers_lambda_allownoclip" )
+local unreachOnly = GetConVar( "lambdaplayers_lambda_onlynoclipifcantreach" )
 -- NoClip
 AddUActionToLambdaUA( function( self )
-    if LambdaRNG( 3 ) != 1 or !noclip:GetBool() then return end
+    if unreachOnly:GetBool() then return end
+    if LambdaRNG( 3 ) != 1 or !allowNoclip:GetBool() then return end
+    
     self:NoClipState( true )
+    local noclipTime = ( CurTime() + LambdaRNG( 10, 120 ) )
 
-    local noclipTime = ( CurTime() + LambdaRNG( 1, 120, true ) )
     self:NamedTimer( "UnNoclip", 1, 0, function() 
-        if CurTime() < noclipTime and noclip:GetBool() then return end
+        if !self:IsInNoClip() then return true end
+        if CurTime() < noclipTime and allowNoclip:GetBool() then return end
+        
         self:NoClipState( false )
         return true
     end )

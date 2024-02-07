@@ -705,6 +705,9 @@ function ENT:Think()
 
             if nearNextbot then
                 self:RetreatFrom( nearNextbot )
+                if !self.l_preventdefaultspeak and !self:IsSpeaking( "panic" ) and self:IsInRange( nearNextbot, 384 ) and LambdaRNG( 100 ) <= self:GetVoiceChance() * 2 then 
+                    self:PlaySoundFile( "panic" ) 
+                end
             elseif !self:InCombat() or self:IsPanicking() and !LambdaIsValid( self:GetEnemy() ) then
                 local npcs = self:FindInSphere( nil, 2000, function( ent )
                     return ( IsValid( ent ) and ( ent:IsNPC() or ent:IsNextBot() and !self:ShouldTreatAsLPlayer( ent ) ) and self:CanTarget( ent ) and self:CanSee( ent ) )
@@ -923,7 +926,7 @@ function ENT:Think()
 
         -- How fast we are falling
         if !onGround then
-            if waterLvl == 3 or self:IsUsingLadder() then
+            if waterLvl == 3 or self:IsUsingLadder() or self:IsInNoClip() then
                 self.l_FallVelocity = 0
             else
                 local fallSpeed = -locoVel.z

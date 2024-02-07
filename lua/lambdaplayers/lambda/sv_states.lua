@@ -37,10 +37,11 @@ function ENT:Idle()
 end
 
 local combattbl = { update = 0.33, run = true, tol = 10 }
+local meleetbl = { update = 0.1, run = true, tol = 0 }
 function ENT:Combat()
     if !LambdaIsValid( self:GetEnemy() ) then self:SetEnemy( NULL ) return true end
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
-    self:MoveToPos( self:GetEnemy(), combattbl )
+    self:MoveToPos( self:GetEnemy(), ( self.l_HasMelee and meleetbl or combattbl ) )
 end
 
 local spawnMedkits = GetConVar( "lambdaplayers_combat_spawnmedkits" )

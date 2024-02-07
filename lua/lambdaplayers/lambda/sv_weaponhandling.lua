@@ -106,16 +106,20 @@ function ENT:SwitchWeapon( weaponname, forceswitch, fromFuncs )
 
     self:SetIsReloading( false )
 
-    if self.l_HasExtendedAnims and weaponname != "none" and ( self.l_initialized or weaponname != "physgun" ) then
-        local holdType = self.l_HoldType
-        if weaponname == "gmod_camera" then
-            holdType = "melee"
-        elseif weaponname == "toolgun" then
-            holdType = "pistol"
-        end
+    if weaponname != "none" and ( self.l_initialized or weaponname != "physgun" ) then
+        self:EmitSound( "Player.WeaponSelected" )
 
-        local drcAnims = DRC.HoldTypes[ holdType ]
-        if drcAnims then self:SetLayerPlaybackRate( self:AddGesture( drcAnims.deploy ), 1.5 ) end
+        if self.l_HasExtendedAnims then
+            local holdType = self.l_HoldType
+            if weaponname == "gmod_camera" then
+                holdType = "melee"
+            elseif weaponname == "toolgun" then
+                holdType = "pistol"
+            end
+
+            local drcAnims = DRC.HoldTypes[ holdType ]
+            if drcAnims then self:SetLayerPlaybackRate( self:AddGesture( drcAnims.deploy ), 1.5 ) end
+        end
     end
 
     LambdaRunHook( "LambdaOnSwitchWeapon", self, wepent, weapondata )

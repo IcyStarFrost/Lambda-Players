@@ -24,7 +24,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         killicon = "rpg_missile",
         bonemerge = true,
         dropentity = "weapon_rpg",
-        
+
         keepdistance = 800,
         attackrange = 5000,
         islethal = true,
@@ -43,7 +43,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if trDot.HitSky then return end
 
             SetMaterial( laserMat )
-            DrawSprite( ( trDot.HitPos + trDot.HitNormal * 3 - EyeVector() * 4 ), 16, 16, color_white ) 
+            DrawSprite( ( trDot.HitPos + trDot.HitNormal * 3 - EyeVector() * 4 ), 16, 16, color_white )
         end,
 
         OnDeploy = function( self, wepent )
@@ -64,7 +64,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             local rocket = wepent:GetNW2Entity( "lambdahl2_rpgrocket", NULL )
             if !IsValid( rocket ) then return end
-            
+
             local curTime = CurTime()
             if ( self.l_WeaponUseCooldown - curTime ) <= reloadTime then
                 self.l_WeaponUseCooldown = ( curTime + LambdaRNG( reloadTime, 2.5, true ) )
@@ -109,15 +109,15 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             trTbl.endpos = target:GetPos()
             if self:GetForward():Dot( ( trTbl.endpos - trTbl.start ):GetNormalized() ) < 0.66 then return true end
 
-            trTbl.filter = target          
+            trTbl.filter = target
             local tr = TraceLine( trTbl )
-            
+
             if tr.Entity == self then self.l_WeaponUseCooldown = CurTime() + 0.25 return true end
 
-            if tr.Fraction != 1.0 then 
+            if tr.Fraction != 1.0 then
                 trTbl.endpos = target:WorldSpaceCenter()
                 tr = TraceLine( trTbl )
-                
+
                 if tr.Fraction != 1.0 or tr.Entity == self then self.l_WeaponUseCooldown = CurTime() + 0.25 return true end
             end
 
