@@ -107,7 +107,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch, fromFuncs )
     self:SetIsReloading( false )
 
     if weaponname != "none" and ( self.l_initialized or weaponname != "physgun" ) then
-        self:EmitSound( "Player.WeaponSelected" )
+        self:EmitSound( "common/wpn_select.wav", 75, 100, 0.32, CHAN_ITEM )
 
         if self.l_HasExtendedAnims then
             local holdType = self.l_HoldType
