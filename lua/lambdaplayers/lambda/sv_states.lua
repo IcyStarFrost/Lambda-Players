@@ -198,11 +198,11 @@ function ENT:Laughing( args )
     local target = args[ 1 ]
     if isentity( target ) and !IsValid( target ) then return true end
 
-    if target:IsPlayer() then
+    if target.IsLambdaPlayer or target:IsPlayer() then
         local ragdoll = target:GetRagdollEntity()
         if IsValid( ragdoll ) then target = ragdoll end
     end
-    self:LookTo( target, 1, 3 )
+    self:LookTo( target, 1, false, 3 )
 
     local laughDelay = ( LambdaRNG( 1, 6 ) * 0.1 )
     self:PlaySoundFile( "laugh", laughDelay )
@@ -248,17 +248,16 @@ function ENT:TBaggingPosition( pos )
 end
 
 local retreatOptions = { run = true, callback = function( lambda )
-    if CurTime() >= lambda.l_retreatendtime then return false end
-
     local target = lambda:GetEnemy()
-    if IsValid( target ) and ( ( target.IsLambdaPlayer or target:IsPlayer() ) and !target:Alive() or !lambda:IsInRange( target, 3000 ) ) then
-        return false
+    if CurTime() >= lambda.l_retreatendtime or IsValid( target ) and ( ( target.IsLambdaPlayer or target:IsPlayer() ) and !target:Alive() or !lambda:IsInRange( target, 3000 ) ) then
+        lambda:SetRun( false )
+        lambda.l_retreatendtime = 0
     end
 end }
 function ENT:Retreat()
-    if retreatOptions.callback( self ) == false then return true end
+    if CurTime() >= self.l_retreatendtime then return true end
 
-    local rndPos = self:GetRandomPosition( nil, 4000, function( selfPos, area, rndPoint )
+    local rndPos = self:GetRandomPosition( nil, 2500, function( selfPos, area, rndPoint )
         if !IsValid( target ) then return end
 
         local targetPos = target:GetPos()

@@ -581,6 +581,8 @@ if SERVER then
 
     -- If the we can target the ent
     function ENT:CanTarget( ent )
+        if ent == self then return false end
+
         if ent.IsLambdaPlayer then
             if !ent:Alive() then return false end
             if ent:IsFlagSet( FL_NOTARGET ) then return false end
@@ -616,7 +618,7 @@ if SERVER then
 
         if IsValid( overrideTarget ) then ent = overrideTarget end
         self:SetEnemy( ent )
-        if !forceAttack and self:IsPanicking() then return end
+        if !forceAttack and self:IsPanicking() and CurTime() < self.l_retreatendtime then return end
 
         if LambdaRNG( 100 ) <= self:GetVoiceChance() and !self:GetIsTyping() and !self:IsSpeaking() then self:PlaySoundFile( "taunt" ) end
         self:SetState( "Combat" )
@@ -626,15 +628,18 @@ if SERVER then
 
     -- Retreats from entity target
     -- If the target is not specified, then Lambda will stop retreating only when time runs out
-    function ENT:RetreatFrom( target, timeout )
+    function ENT:RetreatFrom( target, timeout, speakLine )
         local alreadyPanic = self:IsPanicking()
         if !alreadyPanic then
             self:CancelMovement()
             self:SetState( "Retreat" )
-            if self:GetVoiceChance() > 0 then self:PlaySoundFile( "panic" ) end
+
+            if ( speakLine == nil or speakLine == true ) and self:GetVoiceChance() > 0 then 
+                self:PlaySoundFile( "panic" )
+            end
         end
 
-        local retreatTime = ( CurTime() + ( timeout or LambdaRNG( 15, 30 ) ) )
+        local retreatTime = ( CurTime() + ( timeout or LambdaRNG( 10, 20 ) ) )
         if retreatTime > self.l_retreatendtime then self.l_retreatendtime = retreatTime end
 
         local ene = self:GetEnemy()
@@ -727,7 +732,7 @@ if SERVER then
 
     -- Makes the Lambda face the position or a entity if provided
     -- if poseonly is true, then the Lambda will not change its angles and will only change it's pose params
-    function ENT:LookTo( pos, time, priority, poseonly )
+    function ENT:LookTo( pos, time, poseonly, priority )
         if priority and self.l_FacePriority and priority < self.l_FacePriority then return end
         self.Face = pos
         self.l_PoseOnly = poseonly or false
@@ -848,8 +853,8 @@ if SERVER then
     -- Respawns the Lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time
     function ENT:LambdaRespawn()
         self:DebugPrint( "Respawned" )
-
         self:SetSolidMask( MASK_SOLID_BRUSHONLY ) -- This should maybe help with the issue where the nextbot can't set pos because it's in something
+
         local spawnPos, spawnAng = self.l_SpawnPos, self.l_SpawnAngles
         if rasp:GetBool() then
             LambdaSpawnPoints = ( LambdaSpawnPoints or LambdaGetPossibleSpawns() )
@@ -862,14 +867,18 @@ if SERVER then
             end
         end
         self:SetPos( spawnPos )
-        self:SetSolidMask( MASK_PLAYERSOLID )
 
         self:SetAngles( spawnAng )
         self.loco:SetVelocity( vector_origin )
-        self:SetCollisionGroup( !collisionPly:GetBool() and COLLISION_GROUP_PLAYER or COLLISION_GROUP_PASSABLE_DOOR )
 
         local phys = self:GetPhysicsObject()
-        if IsValid( phys ) then phys:EnableCollisions( true ) end
+        if IsValid( phys ) then
+            phys:SetPos( spawnPos, true )
+            phys:EnableCollisions( true )
+        end
+
+        self:SetCollisionGroup( !collisionPly:GetBool() and COLLISION_GROUP_PLAYER or COLLISION_GROUP_PASSABLE_DOOR )
+        self:SetSolidMask( MASK_PLAYERSOLID )
 
         if !self.l_usingaprofile then
             local rndSwitchMdl = changePlyMdlChance:GetInt()
@@ -1398,6 +1407,7 @@ if SERVER then
             self:Say( self.l_typedtext )
         end
         self:SetIsTyping( true )
+        self:StopCurrentVoiceLine()
 
         self.l_starttypestate = self:GetState()
         self.l_typedtext = ""
@@ -1529,7 +1539,7 @@ if SERVER then
 
     -- Gets out weapon's holdtype we'll use for animations
     function ENT:GetWeaponHoldType()
-        if self:IsPanicking() and !self:GetIsFiring() and !self:GetIsReloading() and panicAnimations:GetBool() then
+        if !self.Face and self:IsPanicking() and !self:GetIsReloading() and CurTime() < self.l_retreatendtime and panicAnimations:GetBool() then
             return _LAMBDAPLAYERSHoldTypeAnimations[ "panic" ]
         end
 

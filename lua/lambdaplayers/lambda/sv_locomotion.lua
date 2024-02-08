@@ -626,7 +626,7 @@ function ENT:ObstacleCheck( pathDir )
 
     self:Hook( "Tick", "ShootAtObstacle", function()
         if CurTime() >= fireTime or !IsValid( ent ) or ent:Health() <= 0 then return "end" end
-        self:LookTo( ent, 1.0, 2 )
+        self:LookTo( ent, 1.0, false, 2 )
         self:UseWeapon( ent )
     end )
 end

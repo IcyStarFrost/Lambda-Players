@@ -444,7 +444,7 @@ if SERVER then
                 local hpThreshold = LambdaRNG( ( chance / 4 ), chance )
                 local predHp = ( self:Health() - ( info:GetDamage() * LambdaRNG( 1.0, 1.5, true ) ) )
                 if predHp <= hpThreshold then
-                    self:RetreatFrom( attacker != self and attacker or nil )
+                    self:RetreatFrom( self:CanTarget( attacker ) and attacker or nil )
                     return
                 end
             end
@@ -494,10 +494,10 @@ if SERVER then
 
         if attacker == self then
             if victim == enemy then
-                if !self.l_preventdefaultspeak and !self:IsSpeaking() then
-                    if LambdaRNG( 100 ) <= self:GetVoiceChance() then
+                if !self.l_preventdefaultspeak then
+                    if LambdaRNG( 100 ) <= self:GetVoiceChance() and LambdaRNG( 3 ) == 1 then
                         self:PlaySoundFile( "kill" )
-                    elseif LambdaRNG( 100 ) <= self:GetTextChance() and self:CanType() then
+                    elseif LambdaRNG( 100 ) <= self:GetTextChance() and !self:IsSpeaking() and self:CanType() then
                         self.l_keyentity = victim
                         self:TypeMessage( self:GetTextLine( "kill" ) )
                     end
@@ -512,13 +512,13 @@ if SERVER then
 
             if LambdaRNG( 100 ) <= ( self:GetCowardlyChance() / 1.5 ) and retreatLowHP:GetBool() then
                 self:DebugPrint( "I killed someone. Retreating..." )
-                self:RetreatFrom()
+                self:RetreatFrom( nil, nil, ( LambdaRNG( 100 ) <= self:GetVoiceChance() and LambdaRNG( 3 ) == 1 ) )
                 self:CancelMovement()
                 return
             end
         elseif victim == enemy and !self.l_preventdefaultspeak and LambdaRNG( 100 ) <= self:GetVoiceChance() and ( attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot() ) then
             if self:CanSee( attacker ) then
-                self:LookTo( attacker, 1, 2 )
+                self:LookTo( attacker, 1, false, 2 )
             end
             self:PlaySoundFile( "assist", LambdaRNG( 0.1, 1.0, true ) )
         end
@@ -531,7 +531,7 @@ if SERVER then
                 self:DebugPrint( "I killed or saw someone die. Laugh at this man!" )
             elseif attacker != self and victim != enemy then
                 if witnessChance == 2 and !self.l_preventdefaultspeak then
-                    self:LookTo( victimPos, LambdaRNG( 3 ), 1 )
+                    self:LookTo( victimPos, LambdaRNG( 3 ), false, 1 )
 
                     if LambdaRNG( 100 ) <= self:GetVoiceChance() then
                         self:PlaySoundFile( "witness", LambdaRNG( 0.1, 1.0, true ) )
@@ -539,12 +539,14 @@ if SERVER then
                         self.l_keyentity = victim
                         self:TypeMessage( self:GetTextLine( "witness" ) )
                     end
-                elseif !self:InCombat() and LambdaRNG( 100 ) <= ( self:GetCowardlyChance() / ( isEnt and 2 or 4 ) ) and retreatLowHP:GetBool() then
+                end
+
+                if witnessChance != 2 and !self:InCombat() and LambdaRNG( 100 ) <= ( self:GetCowardlyChance() / ( isEnt and 2 or 4 ) ) and retreatLowHP:GetBool() then
                     local targ = ( ( self:CanTarget( attacker ) and self:CanSee( attacker ) and LambdaRNG( 3 ) == 1 ) and attacker or nil )
                     self:DebugPrint( "I saw someone die. Retreating..." )
-                    self:LookTo( targ or victim:WorldSpaceCenter(), LambdaRNG( 1, 3, true ), 1 )
+                    self:LookTo( targ or victim:WorldSpaceCenter(), LambdaRNG( 1, 3, true ), false, 1 )
 
-                    self:RetreatFrom( targ )
+                    self:RetreatFrom( targ, nil, !self:IsSpeaking( "witness" ) )
                     self:CancelMovement()
                 end
             end

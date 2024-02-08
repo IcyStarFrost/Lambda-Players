@@ -686,7 +686,7 @@ function ENT:Think()
         if curTime >= self.l_nextidlesound then
             if !isDisabled and !self.l_preventdefaultspeak and !self:GetIsTyping() and !self:IsSpeaking() then
                 if LambdaRNG( 100 ) <= self:GetVoiceChance() then
-                    self:PlaySoundFile( self:IsPanicking() and "panic" or ( self:InCombat() and "taunt" or "idle" ) )
+                    self:PlaySoundFile( ( self:IsPanicking() and CurTime() < self.l_retreatendtime ) and "panic" or ( self:InCombat() and "taunt" or "idle" ) )
                 elseif LambdaRNG( 100 ) <= self:GetTextChance() and self:CanType() and !self:InCombat() and !self:IsPanicking() then
                     self:TypeMessage( self:GetTextLine( "idle" ) )
                 end
@@ -755,7 +755,7 @@ function ENT:Think()
 
                         if canSee then
                             if self:IsInRange( target, attackRange * ( self.l_HasMelee and 3 or 1 ) ) then
-                                self:LookTo( target, LambdaRNG( 0.5, 2.0, true ), 2 )
+                                self:LookTo( target, LambdaRNG( 0.5, 2.0, true ), false, 2 )
                             end
 
                             if self:IsInRange( target, attackRange ) then
