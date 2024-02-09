@@ -436,26 +436,25 @@ function ENT:Initialize()
 
         self:SimpleTimer( 0.2, function()
             self:ApplyCombatSpawnBehavior()
+
+            --
+
+            if DynSplatterFullyInitialized then
+                self:SetBloodColor( self:GetBloodColor() )
+                self:DisableEngineBlood()
+                self:SetNWBool( "DynSplatter", true )
+            end
+
+            if wOS then
+                if DRC and wOS.DynaBase.Registers[ "Vuthakral's Extended Player Animations" ] then
+                    self.l_HasExtendedAnims = ( self:SelectWeightedSequence( ACT_GESTURE_BARNACLE_STRANGLE ) > 0 )
+                end
+                if AnimatedImmersiveSprinting and wOS.DynaBase.Registers[ "Mixamo Movement Animations" ] then
+                    animSprint = ( animSprint or GetConVar( "AnimatedSprinting_enabled" ) )
+                    self.l_AnimatedSprint = ( self:LookupSequence( "wos_mma_sprint_all" ) > 0 )
+                end
+            end
         end )
-
-        --
-
-        if DynSplatterFullyInitialized then
-            self:SetBloodColor( self:GetBloodColor() )
-            self:DisableEngineBlood()
-            self:SetNWBool( "DynSplatter", true )
-        end
-
-        if wOS then
-            if DRC and wOS.DynaBase.Registers[ "Vuthakral's Extended Player Animations" ] then
-                self.l_HasExtendedAnims = ( self:SelectWeightedSequence( ACT_GESTURE_BARNACLE_STRANGLE ) > 0 )
-            end
-            if AnimatedImmersiveSprinting and wOS.DynaBase.Registers[ "Mixamo Movement Animations" ] then
-                animSprint = ( animSprint or GetConVar( "AnimatedSprinting_enabled" ) )
-                self.l_AnimatedSprint = ( self:LookupSequence("wos_mma_sprint_all") > 0 )
-            end
-        end
-
 
     elseif CLIENT then
 

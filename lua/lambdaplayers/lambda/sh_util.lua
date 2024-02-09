@@ -820,10 +820,6 @@ if SERVER then
         end
         self:SetModel( mdl )
 
-        local uniqueAnim = self.l_HasStandartAnim
-        local hasAnim = ( self:LookupSequence( "taunt_zombie" ) > 0 )
-        self.l_ChangedModelAnims = ( !uniqueAnim and hasAnim or !hasAnim and uniqueAnim )
-
         if !noBodygroups and rndBodyGroups:GetBool() then
             local mdlSets = LambdaPlayermodelBodySkinSets[ mdl ]
             if mdlSets and #mdlSets != 0 and allowMdlBgSets:GetBool() then
@@ -849,12 +845,18 @@ if SERVER then
             self:SetProfilePicture( "spawnicons/".. string_sub( mdl, 1, #mdl - 4 ).. ".png" )
         end
 
-        if self.l_HasExtendedAnims != nil then
-            self.l_HasExtendedAnims = ( self:SelectWeightedSequence( ACT_GESTURE_BARNACLE_STRANGLE ) > 0 )
-        end
-        if self.l_AnimatedSprint != nil then
-            self.l_AnimatedSprint = ( self:LookupSequence("wos_mma_sprint_all") > 0 )
-        end
+        self:SimpleTimer( 0.1, function()
+            local hasAnim = ( self:LookupSequence( "taunt_zombie" ) > 0 )
+            local uniqueAnim = self.l_HasStandartAnim
+            self.l_ChangedModelAnims = ( !uniqueAnim and hasAnim or !hasAnim and uniqueAnim )
+
+            if self.l_HasExtendedAnims != nil then
+                self.l_HasExtendedAnims = ( self:SelectWeightedSequence( ACT_GESTURE_BARNACLE_STRANGLE ) > 0 )
+            end
+            if self.l_AnimatedSprint != nil then
+                self.l_AnimatedSprint = ( self:LookupSequence( "wos_mma_sprint_all" ) > 0 )
+            end
+        end )
     end
 
     -- Respawns the Lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time
@@ -873,13 +875,12 @@ if SERVER then
                 end
             end
         end
-
         self:SetPos( spawnPos )
+        self:SetSolidMask( MASK_PLAYERSOLID )
+
         self:SetAngles( spawnAng )
         self.loco:SetVelocity( vector_origin )
-
         self:SetCollisionGroup( !collisionPly:GetBool() and COLLISION_GROUP_PLAYER or COLLISION_GROUP_PASSABLE_DOOR )
-        self:SetSolidMask( MASK_PLAYERSOLID )
 
         local phys = self:GetPhysicsObject()
         if IsValid( phys ) then phys:EnableCollisions( true ) end
