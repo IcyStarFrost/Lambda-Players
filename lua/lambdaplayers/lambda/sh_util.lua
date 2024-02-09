@@ -852,6 +852,9 @@ if SERVER then
         if self.l_HasExtendedAnims != nil then
             self.l_HasExtendedAnims = ( self:SelectWeightedSequence( ACT_GESTURE_BARNACLE_STRANGLE ) > 0 )
         end
+        if self.l_AnimatedSprint != nil then
+            self.l_AnimatedSprint = ( self:LookupSequence("wos_mma_sprint_all") > 0 )
+        end
     end
 
     -- Respawns the Lambda only if they have self:SetRespawn( true ) otherwise they are removed from run time
@@ -870,19 +873,16 @@ if SERVER then
                 end
             end
         end
-        self:SetPos( spawnPos )
 
+        self:SetPos( spawnPos )
         self:SetAngles( spawnAng )
         self.loco:SetVelocity( vector_origin )
 
-        local phys = self:GetPhysicsObject()
-        if IsValid( phys ) then
-            phys:SetPos( spawnPos, true )
-            phys:EnableCollisions( true )
-        end
-
         self:SetCollisionGroup( !collisionPly:GetBool() and COLLISION_GROUP_PLAYER or COLLISION_GROUP_PASSABLE_DOOR )
         self:SetSolidMask( MASK_PLAYERSOLID )
+
+        local phys = self:GetPhysicsObject()
+        if IsValid( phys ) then phys:EnableCollisions( true ) end
 
         if !self.l_usingaprofile then
             local rndSwitchMdl = changePlyMdlChance:GetInt()
@@ -970,9 +970,7 @@ if SERVER then
         self:SimpleTimer( 0.1, function() self:Remove() end, true )
         if !ignoreprehook and shouldblock == true then return end
 
-        if inPlace then inPlace = self:Alive() end
         local pos, ang = self.l_SpawnPos, self.l_SpawnAngles
-
         if inPlace then
             tracetable.start = self:GetPos()
             tracetable.endpos = tracetable.start
@@ -1545,7 +1543,7 @@ if SERVER then
     function ENT:GetWeaponHoldType()
         if !self.Face and self:IsPanicking() and !self:GetIsReloading() and CurTime() < self.l_retreatendtime and panicAnimations:GetBool() then
             local panicTbl = _LAMBDAPLAYERSHoldTypeAnimations[ "panic" ]
-            if self:SelectWeightedSequence( panicTbl.run ) > 0 then return panicTbl end
+            if self:SelectWeightedSequence( panicTbl.run ) > 0 then return panicTbl, true end
         end
 
         local hType = self.l_HoldType

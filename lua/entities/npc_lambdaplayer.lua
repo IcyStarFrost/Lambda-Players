@@ -98,6 +98,15 @@ end
         mins = collisionmins,
         maxs = standingcollisionmaxs
     }
+    local twoHandedHoldTypes = {
+        [ "ar2" ] = true,
+        [ "smg" ] = true,
+        [ "rpg" ] = true,
+        [ "physgun" ] = true,
+        [ "crossbow" ] = true,
+        [ "shotgun" ] = true,
+        [ "passive" ] = true
+    }
     local sub = string.sub
     local match = string.match
     local string_find = string.find
@@ -134,6 +143,7 @@ end
     local fearSanics = GetConVar( "lambdaplayers_fear_allowsanics" )
     local fearDrgNbs = GetConVar( "lambdaplayers_fear_alldrgnextbots" )
     local fearRange = GetConVar( "lambdaplayers_fear_detectrange" )
+    local animSprint = GetConVar( "AnimatedSprinting_enabled" )
 --
 
 if CLIENT then
@@ -436,9 +446,16 @@ function ENT:Initialize()
             self:SetNWBool( "DynSplatter", true )
         end
 
-        if DRC and wOS and wOS.DynaBase.Registers[ "Vuthakral's Extended Player Animations" ] then
-            self.l_HasExtendedAnims = ( self:SelectWeightedSequence( ACT_GESTURE_BARNACLE_STRANGLE ) > 0 )
+        if wOS then
+            if DRC and wOS.DynaBase.Registers[ "Vuthakral's Extended Player Animations" ] then
+                self.l_HasExtendedAnims = ( self:SelectWeightedSequence( ACT_GESTURE_BARNACLE_STRANGLE ) > 0 )
+            end
+            if AnimatedImmersiveSprinting and wOS.DynaBase.Registers[ "Mixamo Movement Animations" ] then
+                animSprint = ( animSprint or GetConVar( "AnimatedSprinting_enabled" ) )
+                self.l_AnimatedSprint = ( self:LookupSequence("wos_mma_sprint_all") > 0 )
+            end
         end
+
 
     elseif CLIENT then
 
@@ -1125,7 +1142,7 @@ function ENT:Think()
 
         -- Animations --
         if self.l_UpdateAnimations then
-            local anims = self:GetWeaponHoldType()
+            local anims, panicAnim = self:GetWeaponHoldType()
 
             if anims then
                 local anim = anims.idle
@@ -1142,7 +1159,12 @@ function ENT:Think()
                             anim = anims.jump
                         end
                     elseif !locoVel:IsZero() then
-                        anim = ( isCrouched and anims.crouchWalk or ( ( !self:GetSlowWalk() and locoVel:LengthSqr() > 22500 ) and anims.run or anims.walk ) )
+                        local moveAnim = ( isCrouched and anims.crouchWalk or ( ( !self:GetSlowWalk() and locoVel:LengthSqr() > 22500 ) and anims.run or anims.walk ) )
+                        if !panicAnim and self.l_AnimatedSprint and self.l_cansprint and self:GetRun() and !self:GetIsFiring() and moveAnim == anims.run and CurTime() >= self.l_WeaponUseCooldown and animSprint:GetBool() then
+                            moveAnim = ( twoHandedHoldTypes[ self.l_HoldType ] and "wos_mma_sprint_rifle_all" or "wos_mma_sprint_all" )
+                            moveAnim = self:GetSequenceActivity( self:LookupSequence( moveAnim ) )
+                        end
+                        anim = moveAnim
                     elseif isCrouched then
                         anim = anims.crouchIdle
                     end
