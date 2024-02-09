@@ -820,9 +820,9 @@ if SERVER then
         end
         self:SetModel( mdl )
 
-        local uniqueAnim = self.l_HasUniqueAnim
-        local hasAnim = self:LookupSequence( "taunt_zombie" )
-        self.l_ChangedModelAnims = ( uniqueAnim <= 0 and hasAnim > 0 or hasAnim <= 0 and uniqueAnim > 0 )
+        local uniqueAnim = self.l_HasStandartAnim
+        local hasAnim = ( self:LookupSequence( "taunt_zombie" ) > 0 )
+        self.l_ChangedModelAnims = ( !uniqueAnim and hasAnim or !hasAnim and uniqueAnim )
 
         if !noBodygroups and rndBodyGroups:GetBool() then
             local mdlSets = LambdaPlayermodelBodySkinSets[ mdl ]

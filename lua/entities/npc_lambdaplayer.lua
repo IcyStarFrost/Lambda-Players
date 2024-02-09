@@ -180,7 +180,7 @@ function ENT:Initialize()
             end
         end
         self:SetModel( spawnMdl )
-        self.l_HasUniqueAnim = self:LookupSequence( "taunt_zombie" )
+        self.l_HasStandartAnim = ( self:LookupSequence( "taunt_zombie" ) > 0 )
 
         self.l_SpawnedEntities = {} -- The table holding every entity we have spawned
         self.l_ExternalVars = {} -- The table holding any custom variables external addons want saved onto the Lambda so it can exported along with other Lambda Info
