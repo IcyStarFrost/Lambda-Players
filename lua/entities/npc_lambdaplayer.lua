@@ -787,7 +787,7 @@ function ENT:Think()
                         local lowOnAmmo = ( self.l_MaxClip > 0 and self.l_Clip <= ( self.l_MaxClip * 0.25 ) )
 
                         if curTime >= self.l_CombatPosUpdateTime then
-                            self.l_CombatPosUpdateTime = ( curTime + 0.1 )
+                            if !self.l_HasMelee then self.l_CombatPosUpdateTime = ( curTime + 0.1 ) end
 
                             local keepDist, myOrigin = self.l_CombatKeepDistance, self:GetPos()
                             local posCopy = target:GetPos(); posCopy.z = myOrigin.z
@@ -797,6 +797,10 @@ function ENT:Think()
                                 local runSpeed = self:GetRunSpeed()
                                 local potentialPos = ( myOrigin + moveAng:Forward() * LambdaRNG( -( runSpeed * 0.5 ), keepDist ) + moveAng:Right() * LambdaRNG( -runSpeed, runSpeed ) )
                                 self.l_combatpos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )
+                            elseif self.l_HasMelee then
+                                local vel = ( target:IsNextBot() and target.loco:GetVelocity() or target:GetVelocity() )
+                                local predPos = ( target:GetPos() + vel * 0.1 )
+                                self.l_combatpos = ( self:GetRangeSquaredTo( predPos ) > self:GetRangeSquaredTo( target ) and predPos or target )
                             else
                                 self.l_combatpos = target
                             end
@@ -1160,7 +1164,7 @@ function ENT:Think()
                     elseif !locoVel:IsZero() then
                         local moveAnim = ( isCrouched and anims.crouchWalk or ( ( !self:GetSlowWalk() and locoVel:LengthSqr() > 22500 ) and anims.run or anims.walk ) )
                         if !panicAnim and self.l_AnimatedSprint and self.l_cansprint and self:GetRun() and !self:GetIsFiring() and moveAnim == anims.run and CurTime() >= self.l_WeaponUseCooldown and animSprint:GetBool() then
-                            moveAnim = ( twoHandedHoldTypes[ self.l_HoldType ] and "wos_mma_sprint_rifle_all" or "wos_mma_sprint_all" )
+                            moveAnim = ( ( !istable( self.l_HoldType ) and twoHandedHoldTypes[ self.l_HoldType ] ) and "wos_mma_sprint_rifle_all" or "wos_mma_sprint_all" )
                             moveAnim = self:GetSequenceActivity( self:LookupSequence( moveAnim ) )
                         end
                         anim = moveAnim
@@ -1319,13 +1323,17 @@ end
 function ENT:BodyUpdate()
     local velocity = self.loco:GetVelocity()
     if !velocity:IsZero() then
-
-        local useCustomCode = self.l_ChangedModelAnims
+        local useCustomCode = ( self.l_ChangedModelAnims or self:GetWaterLevel() >= 2 )
         if !useCustomCode then
             local hType = self.l_HoldType
             local hAnims = ( istable( hType ) and hType or _LAMBDAPLAYERSHoldTypeAnimations[ hType ] )
             local curAct = self:GetActivity()
+
             useCustomCode = ( curAct == hAnims.swimIdle or curAct == hAnims.swimMove )
+            if !useCustomCode and self.l_AnimatedSprint then
+                local sprintAnim = ( ( !istable( hType ) and twoHandedHoldTypes[ hType ] ) and "wos_mma_sprint_rifle_all" or "wos_mma_sprint_all" )
+                useCustomCode = ( curAct == self:GetSequenceActivity( self:LookupSequence( sprintAnim ) ) )
+            end
         end
 
         if useCustomCode then
