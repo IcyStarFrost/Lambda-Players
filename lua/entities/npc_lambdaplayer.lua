@@ -170,6 +170,7 @@ function ENT:Initialize()
             end
         end
         self:SetModel( spawnMdl )
+        self.l_HasUniqueAnim = self:LookupSequence( "taunt_zombie" )
 
         self.l_SpawnedEntities = {} -- The table holding every entity we have spawned
         self.l_ExternalVars = {} -- The table holding any custom variables external addons want saved onto the Lambda so it can exported along with other Lambda Info
@@ -705,8 +706,8 @@ function ENT:Think()
 
             if nearNextbot then
                 self:RetreatFrom( nearNextbot )
-                if !self.l_preventdefaultspeak and !self:IsSpeaking( "panic" ) and self:IsInRange( nearNextbot, 384 ) and LambdaRNG( 100 ) <= self:GetVoiceChance() * 2 then 
-                    self:PlaySoundFile( "panic" ) 
+                if !self.l_preventdefaultspeak and !self:IsSpeaking( "panic" ) and self:IsInRange( nearNextbot, 384 ) and LambdaRNG( 100 ) <= self:GetVoiceChance() * 2 then
+                    self:PlaySoundFile( "panic" )
                 end
             elseif !self:InCombat() or self:IsPanicking() and !LambdaIsValid( self:GetEnemy() ) then
                 local npcs = self:FindInSphere( nil, 2000, function( ent )
@@ -832,10 +833,11 @@ function ENT:Think()
 
                                 if !hasNade then
                                     local rndNade = _LAMBDAPLAYERSWEAPONS[ nades[ LambdaRNG( #nades ) ] ]
-                                    if rndNade and !rndNade.attackrange or self:IsInRange( target, rndNade.attackrange ) then
+                                    if rndNade and ( !rndNade.attackrange or self:IsInRange( target, rndNade.attackrange ) ) then
                                         self:ClientSideNoDraw( wepent, true )
                                         wepent:SetNoDraw( true )
                                         wepent:DrawShadow( false )
+                                        self:PreventWeaponSwitch( true )
 
                                         local coolDown = self.l_WeaponUseCooldown
                                         local callback = ( rndNade.OnAttack or rndNade.callback )
@@ -850,6 +852,7 @@ function ENT:Think()
                                             self:ClientSideNoDraw( wepent, isMarked )
                                             wepent:SetNoDraw( isMarked )
                                             wepent:DrawShadow( isMarked )
+                                            self:PreventWeaponSwitch( false )
                                         end )
                                     end
                                 end
@@ -1128,18 +1131,20 @@ function ENT:Think()
                 local anim = anims.idle
 
                 if !self:IsInNoClip() then
-                    if self.l_isswimming then
-                        local moveVel = locoVel; moveVel.z = 0
-                        anim = ( !moveVel:IsZero() and anims.swimMove or anims.swimIdle )
-                    elseif !onGround or self:IsUsingLadder() then
+                    if self:IsUsingLadder() then
                         anim = anims.jump
-                    else
-                        local locoVel = locoVel
-                        if !locoVel:IsZero() then
-                            anim = ( isCrouched and anims.crouchWalk or ( ( !self:GetSlowWalk() and locoVel:LengthSqr() > 22500 ) and anims.run or anims.walk ) )
-                        elseif isCrouched then
-                            anim = anims.crouchIdle
+                    elseif !onGround then
+                        local moveVel = locoVel
+                        if self.l_isswimming or moveVel:Length() >= 1000 then
+                            moveVel.z = 0
+                            anim = ( !moveVel:IsZero() and anims.swimMove or anims.swimIdle )
+                        else
+                            anim = anims.jump
                         end
+                    elseif !locoVel:IsZero() then
+                        anim = ( isCrouched and anims.crouchWalk or ( ( !self:GetSlowWalk() and locoVel:LengthSqr() > 22500 ) and anims.run or anims.walk ) )
+                    elseif isCrouched then
+                        anim = anims.crouchIdle
                     end
                 end
 
@@ -1288,26 +1293,35 @@ function ENT:Think()
     end
 end
 
+-- Apparently NEXTBOT:BodyMoveXY() really don't likes swimming animations and sets their playback rate to crazy values, causing the game to crash
+-- So instead I tried to recreate what that function does, but with clamped set playback rate
 function ENT:BodyUpdate()
     local velocity = self.loco:GetVelocity()
     if !velocity:IsZero() then
-        -- Apparently NEXTBOT:BodyMoveXY() really don't likes swimming animations and sets their playback rate to crazy values, causing the game to crash
-        -- So instead I tried to recreate what that function does, but with clamped set playback rate
-        if self:GetWaterLevel() >= 2 then
+
+        local useCustomCode = self.l_ChangedModelAnims
+        if !useCustomCode then
+            local hType = self.l_HoldType
+            local hAnims = ( istable( hType ) and hType or _LAMBDAPLAYERSHoldTypeAnimations[ hType ] )
+            local curAct = self:GetActivity()
+            useCustomCode = ( curAct == hAnims.swimIdle or curAct == hAnims.swimMove )
+        end
+
+        if useCustomCode then
             local selfPos = self:GetPos()
 
             -- Setup pose parameters (model's legs movement)
             local moveDir = ( ( selfPos + velocity ) - selfPos ); moveDir.z = 0
             local moveXY = ( self:GetAngles() - moveDir:Angle() ):Forward()
+            self:SetPoseParameter( "move_x", moveXY.x )
+            self:SetPoseParameter( "move_y", moveXY.y )
 
-            local frameTime = FrameTime()
-            self:SetPoseParameter( "move_x", Lerp( 15 * frameTime, self:GetPoseParameter( "move_x" ), moveXY.x ) )
-            self:SetPoseParameter( "move_y", Lerp( 15 * frameTime, self:GetPoseParameter( "move_y" ), moveXY.y ) )
-
-            -- Setup swimming animation's clamped playback rate
+            -- Setup animation's clamped playback rate
             local length = velocity:Length()
             local groundSpeed = self:GetSequenceGroundSpeed( self:GetSequence() )
-            self:SetPlaybackRate( Clamp( ( length > 0.2 and ( length / groundSpeed ) or 1 ), 0.5, 2 ) )
+
+            local inAir = ( !self.l_isswimming and !self.loco:IsOnGround() and length >= 1000 )
+            self:SetPlaybackRate( inAir and 0.1 or Clamp( ( length > 0.2 and ( length / groundSpeed ) or 1 ), ( self.l_isswimming and 0.5 or 0 ), 2 ) )
         else
             self:BodyMoveXY()
             return

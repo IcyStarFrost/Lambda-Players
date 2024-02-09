@@ -634,7 +634,7 @@ if SERVER then
             self:CancelMovement()
             self:SetState( "Retreat" )
 
-            if ( speakLine == nil or speakLine == true ) and self:GetVoiceChance() > 0 then 
+            if ( speakLine == nil or speakLine == true ) and self:GetVoiceChance() > 0 then
                 self:PlaySoundFile( "panic" )
             end
         end
@@ -819,6 +819,10 @@ if SERVER then
             mdl = mdl[ LambdaRNG( #mdl ) ]
         end
         self:SetModel( mdl )
+
+        local uniqueAnim = self.l_HasUniqueAnim
+        local hasAnim = self:LookupSequence( "taunt_zombie" )
+        self.l_ChangedModelAnims = ( uniqueAnim <= 0 and hasAnim > 0 or hasAnim <= 0 and uniqueAnim > 0 )
 
         if !noBodygroups and rndBodyGroups:GetBool() then
             local mdlSets = LambdaPlayermodelBodySkinSets[ mdl ]
@@ -1540,7 +1544,8 @@ if SERVER then
     -- Gets out weapon's holdtype we'll use for animations
     function ENT:GetWeaponHoldType()
         if !self.Face and self:IsPanicking() and !self:GetIsReloading() and CurTime() < self.l_retreatendtime and panicAnimations:GetBool() then
-            return _LAMBDAPLAYERSHoldTypeAnimations[ "panic" ]
+            local panicTbl = _LAMBDAPLAYERSHoldTypeAnimations[ "panic" ]
+            if self:SelectWeightedSequence( panicTbl.run ) > 0 then return panicTbl end
         end
 
         local hType = self.l_HoldType
