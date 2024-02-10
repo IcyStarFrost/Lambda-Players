@@ -737,7 +737,7 @@ if SERVER then
         self.Face = pos
         self.l_PoseOnly = poseonly or false
         self.l_Faceend = time and CurTime() + time or nil
-        self.l_FacePriority = ( priority or false )
+        self.l_FacePriority = ( priority or nil )
     end
 
     -- Returns if the provided state exists

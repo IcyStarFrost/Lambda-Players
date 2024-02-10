@@ -1204,7 +1204,8 @@ function ENT:Think()
             if self.l_Faceend and curTime >= self.l_Faceend or isentity( faceTarg ) and !IsValid( faceTarg ) or self:IsPlayingTaunt() then
                 self.Face = nil
                 self.l_Faceend = nil
-                self.l_PoseOnly = nil
+                self.l_PoseOnly = false 
+                self.l_FacePriority = nil
             else
                 local facePos = faceTarg
                 if isentity( faceTarg ) then
