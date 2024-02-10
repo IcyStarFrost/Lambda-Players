@@ -307,10 +307,17 @@ function ENT:Initialize()
             local mdlSets = LambdaPlayermodelBodySkinSets[ spawnMdl ]
             if mdlSets and #mdlSets != 0 and allowMdlBgSets:GetBool() then
                 local rndSet = mdlSets[ LambdaRNG( #mdlSets ) ]
-                self:SetSkin( rndSet.skin or 0 )
 
-                for index, bg in pairs( rndSet.bodygroups ) do
-                    self:SetBodygroup( index, bg )
+                local skin = ( rndSet.skin or 0 )
+                self:SetSkin( skin != -1 and skin or LambdaRNG( 0, self:SkinCount() - 1 ) )
+
+                local groups = rndSet.bodygroups
+                for _, v in ipairs( self:GetBodyGroups() ) do
+                    local index = v.id
+                    local group = groups[ index ]
+
+                    if !group then continue end
+                    self:SetBodygroup( index, ( group != -1 and group or LambdaRNG( 0, #v.submodels ) ) )
                 end
             else
                 for _, v in ipairs( self:GetBodyGroups() ) do

@@ -13,7 +13,9 @@ local table_remove = table.remove
 local lower = string.lower
 local match = string.match
 
+local searchUpdateTime = 0
 local mdlChangeTime = 0
+local mdlRngBgTime = 0
 local mdlAng = Angle()
 local mdlColor = Vector( LambdaRNG( 0, 1, true ), LambdaRNG( 0, 1, true ), LambdaRNG( 0, 1, true ) )
 local function GetPlayerColor() return mdlColor end
@@ -43,6 +45,8 @@ local function OpenPMBodyGroupSetsPanel( ply )
     end
 
     local frame = LAMBDAPANELS:CreateFrame( "Playermodel Bodygroup Sets", 1200, 600 )
+    LAMBDAPANELS:CreateLabel( "Select the model from the browser on the right, adjust the skin and bodygroup sliders and save the set.", frame, TOP )
+    LAMBDAPANELS:CreateLabel( "Left click on a set in a row on the left to copy the values from it, or right click to remove it. Setting the slider to -1 will make the model use a random skin or bodygroup from it.", frame, TOP )
 
     local mdlSetList = {}
     LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/pmbodygroupsets.json", "json", function( data )
@@ -80,7 +84,7 @@ local function OpenPMBodyGroupSetsPanel( ply )
         local skinCount = ent:SkinCount()
         if skinCount > 1 then
             hasGroups = true
-            skinSlider = LAMBDAPANELS:CreateNumSlider( sbScroll, TOP, 0, "Skin", 0, ( skinCount - 1 ), 0 )
+            skinSlider = LAMBDAPANELS:CreateNumSlider( sbScroll, TOP, 0, "Skin", -1, ( skinCount - 1 ), 0 )
 
             function skinSlider:OnValueChanged( val )
                 ent:SetSkin( Round( val, 0 ) )
@@ -93,7 +97,7 @@ local function OpenPMBodyGroupSetsPanel( ply )
             if mdls == 0 then continue end
 
             local index = v.id
-            local bgSlider = LAMBDAPANELS:CreateNumSlider( sbScroll, TOP, 0, MakeNiceName( v.name ), 0, mdls, 0 )
+            local bgSlider = LAMBDAPANELS:CreateNumSlider( sbScroll, TOP, 0, MakeNiceName( v.name ), -1, mdls, 0 )
             function bgSlider:OnValueChanged( val )
                 ent:SetBodygroup( index, Round( val, 0 ) )
             end
@@ -104,7 +108,7 @@ local function OpenPMBodyGroupSetsPanel( ply )
 
         if !hasGroups then
             sbPanel:DockPadding( 55, -55, 0, 0 )
-            noBgLabel = LAMBDAPANELS:CreateLabel( "NO BODYGROUPS/SKINS FOUND FOR THIS MODEL.", sbPanel, FILL )
+            noBgLabel = LAMBDAPANELS:CreateLabel( "NO BODYGROUPS/SKINS FOUND FOR THIS MODEL", sbPanel, FILL )
             noBgLabel:SetFont( "Trebuchet18" )
         else
             sbPanel:DockPadding( 10, 0, 0, 0 )
@@ -120,28 +124,38 @@ local function OpenPMBodyGroupSetsPanel( ply )
             panel:SetValue( bgData[ index ] )
         end
 
+        mdlRngBgTime = RealTime()
         mdlChangeTime = RealTime()
         PlayClientSound( "buttons/button15.wav" )
     end
 
     local mdlIcons, showAllIcons = {}, true
     function setList:OnRowRightClick( id )
+        for index, _ in ipairs( setList:GetLines() ) do
+            setList:RemoveLine( index )
+        end
+        
         local pmMdl = mdlPreview:GetModel()
-        table_remove( mdlSetList[ pmMdl ], id )
-
-        if !showAllIcons and #mdlSetList[ pmMdl ] == 0 then
-            local icon = mdlIcons[ pmMdl ]
-            if icon then icon:Remove() end
-            mdlIcons[ pmMdl ] = nil
+        local mdlSets = mdlSetList[ pmMdl ]
+        table_remove( mdlSets, id )
+        
+        if #mdlSets > 0 then
+            local addCount = 1
+            for index, data in ipairs( mdlSets ) do
+                print( index, addCount )
+                local setLine = setList:AddLine( "Set #" .. addCount )
+                setLine:SetSortValue( 1, data )
+                addCount = ( addCount + 1 )
+            end
+        else
+            mdlSetList[ pmMdl ] = nil
+            
+            if !showAllIcons then
+                local icon = mdlIcons[ pmMdl ]
+                if icon then icon:Remove() end
+                mdlIcons[ pmMdl ] = nil
+            end
         end
-
-        local reCountNum = 1
-        for index, line in ipairs( setList:GetLines() ) do
-            if index == id then continue end
-            line:SetColumnText( 1, "Set #" .. reCountNum )
-            reCountNum = ( reCountNum + 1 )
-        end
-        setList:RemoveLine( id )
 
         PlayClientSound( "buttons/button15.wav" )
         LAMBDAFS:WriteFile( "lambdaplayers/pmbodygroupsets.json", mdlSetList, "json" )
@@ -204,6 +218,19 @@ local function OpenPMBodyGroupSetsPanel( ply )
         mdlAng.y = ( ( RealTime() - mdlChangeTime ) * 35 % 360 )
         ent:SetAngles( mdlAng )
 
+        if ( RealTime() - mdlRngBgTime ) > 1.5 then
+            mdlRngBgTime = RealTime()
+            
+            if IsValid( skinSlider ) and Round( skinSlider:GetValue() ) == -1 then
+                ent:SetSkin( LambdaRNG( 0, skinSlider:GetMax() ) )
+            end
+
+            for index, slider in pairs( bodygroupData ) do
+                if Round( slider:GetValue() ) != -1 then continue end
+                ent:SetBodygroup( index, LambdaRNG( 0, slider:GetMax() ) )
+            end
+        end
+
         ent:SetEyeTarget( ent:GetPos() + ent:GetForward() * 50 + vector_up * 50 )
     end
 
@@ -216,6 +243,8 @@ local function OpenPMBodyGroupSetsPanel( ply )
             local mdlName = lower( mdlButton:GetModelName() )
             mdlPreview:SetModel( mdlName )
             UpdateSBSliders()
+            
+            mdlRngBgTime = RealTime()
             mdlChangeTime = RealTime()
 
             mdlColor[ 1 ] = LambdaRNG( 0, 1, true )
@@ -230,7 +259,7 @@ local function OpenPMBodyGroupSetsPanel( ply )
             end
 
             local mdlSets = mdlSetList[ mdlName ]
-            if mdlSets then
+            if mdlSets and #mdlSets > 0 then
                 for id, data in ipairs( mdlSets ) do
                     local setLine = setList:AddLine( "Set #" .. id )
                     setLine:SetSortValue( 1, data )
@@ -264,13 +293,16 @@ local function OpenPMBodyGroupSetsPanel( ply )
 
     local searchBar = LAMBDAPANELS:CreateTextEntry( mdlPanel, TOP, "Search Bar" )
     function searchBar:OnChange()
+        if CurTime() <= searchUpdateTime then return end 
         local text = searchBar:GetText()
 
         RefreshPlayerIcons( function( mdl )
             if !showAllIcons and ( !mdlSetList[ mdl ] or #mdlSetList[ mdl ] == 0 ) then return true end
             if #text > 0 and !match( mdl, text ) then return true end
         end )
+        searchUpdateTime = ( CurTime() + 0.2 )
     end
+    searchBar.OnEnter = searchBar.OnChange
 
     LAMBDAPANELS:CreateButton( mdlPanel, BOTTOM, "Show Assigned Only", function()
         PlayClientSound( "buttons/button15.wav" )
