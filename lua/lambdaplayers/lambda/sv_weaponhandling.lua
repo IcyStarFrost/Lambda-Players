@@ -20,6 +20,7 @@ end
 function ENT:SwitchWeapon( weaponname, forceswitch, fromFuncs )
     if !forceswitch and ( self.l_NoWeaponSwitch or !fromFuncs and !self:CanEquipWeapon( weaponname ) ) then return end
     if !self:WeaponDataExists( weaponname ) then return end
+    if self.l_IsUsingTool and weaponname != "toolgun" then return end 
     local wepent = self:GetWeaponENT()
 
     local oldweaponname = self.l_Weapon

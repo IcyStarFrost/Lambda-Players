@@ -50,6 +50,7 @@ local function Chance_Tool( self )
     self:SwitchWeapon( "toolgun" )
     if self.l_Weapon != "toolgun" then return end
 
+    self.l_IsUsingTool = true
     self:PreventWeaponSwitch( true )
 
     local find = self:FindInSphere( nil, 400, function( ent ) if self:HasVPhysics( ent ) and self:CanSee( ent ) and self:HasPermissionToEdit( ent ) then return true end end )
@@ -69,6 +70,7 @@ local function Chance_Tool( self )
         if result then self:DebugPrint( "Used " .. name .. " Tool" ) break end
     end
 
+    self.l_IsUsingTool = false
     self:PreventWeaponSwitch( false )
 end
 

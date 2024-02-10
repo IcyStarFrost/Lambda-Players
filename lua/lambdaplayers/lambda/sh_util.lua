@@ -920,6 +920,7 @@ if SERVER then
 
         self:PreventDefaultComs( false )
         self:PreventWeaponSwitch( false )
+        self.l_IsUsingTool = false
 
         self.l_ladderarea = nil
         self.l_UpdateAnimations = true
