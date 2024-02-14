@@ -301,7 +301,7 @@ function LAMBDAFS:GetVoiceProfiles()
 
         for _, v in ipairs( LambdaValidVoiceTypes ) do
             local voicelines,_  = file_Find( "sound/lambdaplayers/voiceprofiles/" .. profile .. "/" .. v[ 1 ] .. "/*", "GAME", "nameasc" )
-            if !voicelines or #voicelines > 0 then continue end
+            if !voicelines or #voicelines == 0 then continue end
 
             LambdaVoiceProfiles[ profile ][ v[ 1 ] ] = {}
             for index, voiceline in ipairs( voicelines ) do
@@ -327,7 +327,7 @@ function LAMBDAFS:GetVoiceProfiles()
 
         for _, v in ipairs( LambdaValidVoiceTypes ) do
             local voicelines  = file_Find( "sound/zetaplayer/custom_vo/" .. profile .. "/" .. v[ 1 ] .. "/*", "GAME", "nameasc" )
-            if !voicelines or #voicelines > 0 then continue end
+            if !voicelines or #voicelines == 0 then continue end
 
             LambdaVoiceProfiles[ profile ][ v[ 1 ] ] = {}
             for index, voiceline in ipairs( voicelines ) do
