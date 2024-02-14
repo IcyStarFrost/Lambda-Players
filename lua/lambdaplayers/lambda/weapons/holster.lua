@@ -22,6 +22,8 @@
     weaponscale     | Number |          The multiplier on scaling the Lambda's weapon model size. NOTE! This will NOT work while bonemerge is set true!   | OPTIONAL
     cantbeselected  | Bool |            If the weapon is only equippable directly in code rather than randomly selected by Lambda Player | OPTIONAL
     dropentity      | String |          The entity Lambda Player will drop on death while holding this weapon. Will override the clientside prop | OPTIONAL
+    deploysound     | String |          The sound(s) that play(s) when a Lambda Player switches to this weapon
+    holstersound    | String |          The sound(s) that play(s) when a Lambda Player switches from this weapon
 
     deploydelay     | Number |          Time delay before Lambda starts using the weapon after equiping it
     speedmultiplier | Number |          Multiplies the Lambda's movement speed to this value while the weapon is held
@@ -66,8 +68,10 @@
     weaponscale     | Number |          The multiplier on scaling the Lambda's weapon model size. NOTE! This will NOT work while bonemerge is set true!   | OPTIONAL
     cantbeselected  | Bool |            If the weapon is only equippable directly in code rather than randomly selected by Lambda Player | OPTIONAL
     dropentity      | String |          The entity Lambda Player will drop on death while holding this weapon. Will override the clientside prop | OPTIONAL
-
     deploydelay     | Number |          Time delay before Lambda starts using the weapon after equiping it
+    deploysound     | String |          The sound(s) that play(s) when a Lambda Player switches to this weapon
+    holstersound    | String |          The sound(s) that play(s) when a Lambda Player switches from this weapon
+
     speedmultiplier | Number |          Multiplies the Lambda's movement speed to this value while the weapon is held
     keepdistance    | Number |          The distance the Lambda will keep from the target
     attackrange     | Number |          The range the Lambda can attack from
