@@ -752,19 +752,6 @@ function ENT:Think()
         if curTime >= self.l_nextsurroundcheck then
             self.l_nextsurroundcheck = ( curTime + 1 )
 
-            --[[
-            if !self.l_preventdefaultspeak and !self:GetIsTyping() and !self:IsSpeaking( "panic" ) and LambdaRNG( 10 ) <= self:GetVoiceChance() then
-                local dangerHint = ( sound.GetLoudestSoundHint( SOUND_DANGER, selfPos ) or sound.GetLoudestSoundHint( SOUND_PHYSICS_DANGER, selfPos ) or sound.GetLoudestSoundHint( SOUND_CONTEXT_DANGER_APPROACH, selfPos ) )
-                if dangerHint then
-                    local owner = dangerHint.owner
-                    print( dangerHint, owner )
-                    if IsValid( owner ) and owner != self and self:CanSee( owner ) or !IsValid( owner ) and !self:Trace( dangerHint.origin + vector_up * 10 ).Hit then
-                        self:PlaySoundFile( "panic" )
-                    end
-                end
-            end
-            ]]
-
             -- Attack/Retreat from nearby NPCs
             local sanics, drgs = fearSanics:GetBool(), fearDrgNbs:GetBool()
             local nearNextbot = self:GetClosestEntity( nil, fearRange:GetInt(), function( ent )
