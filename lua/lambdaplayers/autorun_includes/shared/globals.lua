@@ -13,6 +13,7 @@ local max = math.max
 local Rand = math.Rand
 local random = math.random
 local randomseed = math.randomseed
+local NormalizeAngle = math.NormalizeAngle
 
 _LAMBDAPLAYERSWEAPONS = {}
 
@@ -374,6 +375,7 @@ function EntMeta:EyeAngles()
             eyeAng.y = self:GetAngles().y
         end
 
+        eyeAng.x = NormalizeAngle( eyeAng.x )
         eyeAng.z = 0
         return eyeAng
     end
@@ -531,8 +533,9 @@ end
 local rngCalled = 0
 function LambdaRNG( min, max, float )
     rngCalled = ( rngCalled + 1 )
+    if rngCalled > 32768 then rngCalled = 0 end
     randomseed( os_time() + SysTime() + rngCalled )
-    
+
     if !min and !max then return random() end
     return ( float and Rand( min, max ) or ( max and random( min, max ) or random( min ) ) )
 end

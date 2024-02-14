@@ -79,16 +79,6 @@ if SERVER then
 
     --
 
-    local function LambdaMedkitCanHeal( swep, ent )
-        if ent.IsLambdaPlayer or ent:IsPlayer() or ent:IsNPC() then
-            local takedamage = ent:GetInternalVariable( "m_takedamage" )
-            return ( takedamage == nil or takedamage == 2 )
-        end
-        return false
-    end
-
-    --
-
     local SimpleTimer = timer.Simple
     local ai_ignoreplayers = GetConVar( "ai_ignoreplayers" )
     local GetConVar = GetConVar
@@ -223,6 +213,47 @@ if SERVER then
 
     --
 
+    local function LambdaMedkitCanHeal( swep, ent )
+        if ent.IsLambdaPlayer or ent:IsPlayer() or ent:IsNPC() then
+            local takedamage = ent:GetInternalVariable( "m_takedamage" )
+            return ( takedamage == nil or takedamage == 2 )
+        end
+        return false
+    end
+
+    --
+
+    local ukParryConVar
+    local Clamp = math.Clamp
+    local parryFlash = Color( 255, 255, 255, 40 )
+
+    function UltrakillCheckParry( self, Dmg )
+        if !self:GetParryable() then return end
+
+        ukParryConVar = ( ukParryConVar or GetConVar( "drg_ultrakill_parry" ) )
+        if !ukParryConVar:GetBool() then return end
+
+        local Ply = Dmg:GetAttacker()
+        if !IsValid( Ply ) or !Ply.IsLambdaPlayer and !Ply:IsPlayer() or !self:IsInRange( Ply, 200 ) then return end
+
+        if !Dmg:IsDamageType( DMG_CLUB + DMG_SLASH ) and ( !Dmg:IsDamageType( DMG_BUCKSHOT ) or !self:IsInRange( Ply, 50 ) ) then return end
+        self:OnParry( Ply, Dmg )
+    end
+
+    function UltrakillOnParryPlayer( Ply )
+        if !Ply.IsLambdaPlayer then
+            if UltrakillBase.UltrakillMechanicsInstalled then
+                RefreshStamina( Ply )
+            end
+            Ply:ScreenFade( SCREENFADE.IN, parryFlash, 0.1, 0.25 )
+        end
+
+        local health, mHealth = Ply:Health(), Ply:GetMaxHealth()
+        Ply:SetHealth( health > mHealth and health or Clamp( mHealth, 0, mHealth - Ply:GetNW2Int( "UltrakillBase_HardDamage" ) ) )    
+    end
+
+    --
+
     -- Fixes ReAgdoll throwing errors when a ragdoll doesn't have bones it need to use (like head)
     hook.Add( "OnEntityCreated", "LambdaOnEntityCreated", function( ent )
         if !IsValid( ent ) then return end
@@ -232,6 +263,14 @@ if SERVER then
             ent.GetNearestTarget = Sanic_GetNearestTarget
             ent.IsValidTarget = Sanic_IsValidTarget
             ent.AttackNearbyTargets = Sanic_AttackNearbyTargets
+            return
+        end
+
+        -- Feedbacker + "F" + Enemy = Parry
+        if ent.IsUltrakillNextbot then
+            UltrakillBase.OnParryPlayer = UltrakillOnParryPlayer
+            ent.CheckParry = UltrakillCheckParry
+            return
         end
 
         local class = ent:GetClass()

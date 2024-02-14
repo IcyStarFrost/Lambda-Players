@@ -408,6 +408,7 @@ if ( SERVER ) then
                 cleanup.ReplaceEntity( entity, ragdoll )
             end
 
+            --[[
             if RDragdollstats then
                 local pairs = pairs
                 local HasValue = table.HasValue
@@ -564,6 +565,7 @@ if ( SERVER ) then
                     }
                 end
             end
+            ]]
 
             _LambdaGamemodeHooksOverriden = true
         end

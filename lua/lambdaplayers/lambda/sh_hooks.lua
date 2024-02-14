@@ -1,4 +1,3 @@
-
 local tobool = tobool
 local ents_GetAll = ents.GetAll
 local ents_Create = ents.Create
@@ -6,7 +5,6 @@ local isfunction = isfunction
 local ipairs = ipairs
 local pairs = pairs
 local hook_Remove = hook.Remove
-local bor = bit.bor
 local CurTime = CurTime
 local coroutine_yield = coroutine.yield
 local coroutine_wait = coroutine.wait
@@ -27,6 +25,11 @@ local FrameTime = FrameTime
 local TickInterval = engine.TickInterval
 local ceil = math.ceil
 local band = bit.band
+local EmitSentence = EmitSentence
+local EffectData = EffectData
+local IsFirstTimePredicted = IsFirstTimePredicted
+local util_Effect = util.Effect
+local EmitSound = EmitSound
 
 local debugvar = GetConVar( "lambdaplayers_debug" )
 local obeynav = GetConVar( "lambdaplayers_lambda_obeynavmeshattributes" )
@@ -45,6 +48,8 @@ local faded = Color( 80, 80, 80, 80 )
 local serversideragdolls = GetConVar( "lambdaplayers_lambda_serversideragdolls" )
 local dropweaponents = GetConVar( "lambdaplayers_allowweaponentdrop" )
 local typeNameRespond = GetConVar( "lambdaplayers_text_typenameonrespond" )
+local armorFeedback = GetConVar( "lambdaplayers_lambda_armorfeedback" )
+local ablativeArmor = GetConVar( "lambdaplayers_lambda_ablativearmor" )
 
 if SERVER then
 
@@ -280,6 +285,8 @@ if SERVER then
         local inflictor = info:GetInflictor()
 
         self:SetIsDead( true )
+        self.l_LastDeathTime = CurTime()
+
         if !silent then
             self:DebugPrint( "I was killed by", attacker )
 
@@ -297,10 +304,16 @@ if SERVER then
             self:SetDeaths( self:GetDeaths() + 1 )
             if attacker == self then self:SetFrags( self:GetFrags() - 1 ) end
 
+            local beepTarg = self
             if !serversideragdolls:GetBool() and !info:IsDamageType( DMG_DISSOLVE ) then
                 self:CreateClientsideRagdoll( info )
             else
-                self:CreateServersideRagdoll( info )
+                beepTarg = self:CreateServersideRagdoll( info )
+            end
+
+            if LambdaRNG( 2 ) == 1 then
+                local pitch = ( LambdaRNG( 2 ) == 1 and 100 or ( LambdaRNG( 0, 6 ) + 98 ) )
+                EmitSentence( "HEV_DEAD" .. LambdaRNG( 0, 1 ), self:GetPos(), beepTarg:EntIndex(), CHAN_VOICE, 0.25, 75, 0, pitch )
             end
 
             self:DropWeapon()
@@ -487,7 +500,7 @@ if SERVER then
             self:SetEnemy( NULL )
             self:CancelMovement()
 
-            self.l_nextnpccheck = 0 -- Search for the next enemy NPC immediately
+            self.l_nextsurroundcheck = 0 -- Search for the next enemy NPC immediately
         end
 
         if preventDefActs == true then return end
@@ -510,7 +523,7 @@ if SERVER then
                 end
             end
 
-            if LambdaRNG( 100 ) <= ( self:GetCowardlyChance() / 1.5 ) and retreatLowHP:GetBool() then
+            if LambdaRNG( 150 ) <= self:GetCowardlyChance() and retreatLowHP:GetBool() then
                 self:DebugPrint( "I killed someone. Retreating..." )
                 self:RetreatFrom( nil, nil, ( LambdaRNG( 100 ) <= self:GetVoiceChance() and LambdaRNG( 3 ) == 1 ) )
                 self:CancelMovement()
@@ -525,7 +538,7 @@ if SERVER then
 
         if self:IsInRange( victim, 1500 ) and self:CanSee( victim ) then
             local witnessChance = LambdaRNG( 10 )
-            if witnessChance == 1 or ( attacker == victim or attacker:IsWorld() ) and witnessChance >= 6 then
+            if witnessChance == 1 or ( attacker == victim or attacker:IsWorld() ) and witnessChance > 6 then
                 self:SetState( "Laughing", { victim, self:GetDestination() } )
                 self:CancelMovement()
                 self:DebugPrint( "I killed or saw someone die. Laugh at this man!" )
@@ -541,7 +554,7 @@ if SERVER then
                     end
                 end
 
-                if witnessChance != 2 and !self:InCombat() and LambdaRNG( 100 ) <= ( self:GetCowardlyChance() / ( isEnt and 2 or 4 ) ) and retreatLowHP:GetBool() then
+                if witnessChance != 2 and !self:InCombat() and LambdaRNG( 100 * ( isEnt and 1.5 or 2.5 ) ) <= self:GetCowardlyChance() and retreatLowHP:GetBool() then
                     local targ = ( ( self:CanTarget( attacker ) and self:CanSee( attacker ) and LambdaRNG( 3 ) == 1 ) and attacker or nil )
                     self:DebugPrint( "I saw someone die. Retreating..." )
                     self:LookTo( targ or victim:WorldSpaceCenter(), LambdaRNG( 1, 3, true ), false, 1 )
@@ -769,15 +782,64 @@ if SERVER then
             local fallSpeed = self.l_FallVelocity
             if !self:GetPos():IsUnderwater() then
                 local damage = self:GetFallDamage( fallSpeed )
+                
                 if damage > 0 then
-                    local info = DamageInfo()
-                    info:SetDamage( damage )
-                    info:SetAttacker( Entity( 0 ) )
-                    info:SetDamageType( DMG_FALL )
-                    self:TakeDamageInfo( info )
+                    local hardLand = self.l_HardLandingRolls
+                    if hardLand and hardLand.HasAnims and hardLand.Enabled:GetBool() then
+                        self:EmitSound( "npc/combine_soldier/zipline_hitground" .. LambdaRNG( 2 ) .. ".wav", 75, 100, 1, CHAN_STATIC )
+                        
+                        local rolled = ( !self.loco:GetVelocity():IsZero() and LambdaRNG( 3 ) != 1 and fallSpeed <= hardLand.MaxFallSpeed:GetInt() )
+                        local landSeq = self:LookupSequence( "wos_mma_" .. ( !rolled and "hardlanding" or "roll" ) )
+                        local animLayer = self:AddGestureSequence( landSeq )
 
-                    self:EmitSound( "Player.FallDamage" )
-                    --hook.Run( "GetFallDamage", self, self.l_FallVelocity )
+                        self:SetLayerCycle( animLayer, 0.1 )
+                        self:SetLayerBlendIn( animLayer, 0.2 )
+                        
+                        local landDur = ( !rolled and hardLand.FailDuration or hardLand.RollDuration ):GetFloat()
+                        self:SetLayerDuration( animLayer, landDur )
+                        
+                        self.loco:SetVelocity( vector_origin )
+                        if !rolled then
+                            self:Freeze( true )
+                        else
+                            self:ForceMoveSpeed( 0, landDur, true )
+                            damage = 0
+                            
+                            local wepDelay = self.l_WeaponUseCooldown
+                            self.l_WeaponUseCooldown = ( ( CurTime() >= wepDelay and CurTime() or wepDelay ) + landDur )
+
+                            local rollDir = self:GetForward()
+                            self:LookTo( ( self:GetPos() + rollDir * 32768 ), landDur, false, 4 )
+    
+                            local startTime = CurTime()
+                            self:Hook( "Tick", "Hardlanding_RollVelocity", function()
+                                local timePast = ( CurTime() - startTime )
+                                if timePast >= landDur then return "end" end
+                                local speed = Lerp( math.ease.InSine( timePast / landDur ), 300, 0 )
+    
+                                local rollVel = ( rollDir * speed )
+                                rollVel.z = self.loco:GetVelocity().z
+                                self.loco:SetVelocity( rollVel )
+                            end )
+                        end
+    
+                        self:SimpleTimer( ( landDur - 0.5 ), function()
+                            self:SetLayerBlendOut( animLayer, 0.25 )
+                        end )
+                        self:SimpleTimer( landDur, function()
+                            if !rolled then self:Freeze( false ) end
+                        end, true )
+                    end
+
+                    if damage > 0 then
+                        local info = DamageInfo()
+                        info:SetDamage( damage )
+                        info:SetAttacker( Entity( 0 ) )
+                        info:SetDamageType( DMG_FALL )
+                        
+                        self:TakeDamageInfo( info )
+                        self:EmitSound( "Player.FallDamage" )
+                    end
                 end
             end
 
@@ -921,6 +983,120 @@ function ENT:InitializeMiniHooks()
             end )
         end
 
+        -- Hoookay so interesting stuff here. When a nextbot actually dies by reaching 0 or below hp, no matter how high you set their health after the fact, they will no longer take damage.
+        -- To get around that we basically predict if the Lambda is gonna die and completely block the damage so we don't actually die. This of course is exclusive to Respawning
+        self:Hook( "LambdaTakeDamage", "DamageHandling", function( target, info )
+            if target != self then return end
+            if self.l_godmode then return true end
+
+            local result = LambdaRunHook( "LambdaOnInjured", self, info )
+            if result == true then return true end
+
+            local onDmgFunc = self.l_OnDamagefunction
+            if isfunction( onDmgFunc ) and onDmgFunc( self, self:GetWeaponENT(), info ) == true then return true end
+
+            local attacker = info:GetAttacker()
+            if IsValid( attacker ) then
+                if attacker.IsDrGNextbot then
+                    info:SetDamage( ( info:GetDamage() / drg_MultDmg_NPC:GetFloat() ) * drg_MultDmg_Ply:GetFloat() )
+                end
+
+                -- ULTRAKILL SNPCs insta-kill moment (THIS WILL HURT/DIE)
+                local isUkNPC = attacker.IsUltrakillNextbot
+                if isUkNPC then
+                    info:SetDamage( ( info:GetDamage() / UltrakillBase.ConVars.DmgMult:GetFloat() ) / 10 )
+                -- BOOTY PLS PLEY DEE EMM CEE TOO, ITS DA BEST GAEM!!!
+                elseif attacker.DevilTrigger then
+                    info:SetDamage( info:GetDamage() * 0.1 )
+                -- Hydrogen bomb(KLK Nextbot) VS Coughing baby(Lambda Player)
+                elseif attacker.KLK_OwnDMGMult then
+                    info:ScaleDamage( attacker.KLK_OwnDMGMult )
+                -- THE UNENLIGHTENED MASSES
+                elseif attacker.IsDrGNextbot and attacker:GetModel() == "models/resort/tf2_community/deadnaut.mdl" then
+                    info:ScaleDamage( 0.1 )
+                -- Fixes Lambda-launched Combine Balls not setting its damage's attacker properly
+                elseif attacker:GetClass() == "prop_combine_ball" then
+                    local owner = attacker:GetOwner()
+                    if IsValid( owner ) and owner.IsLambdaPlayer then info:SetAttacker( owner ) end
+                end
+
+                if UltrakillBase and attacker != self and ukHeal_HardDmg_Enabled:GetBool() and ( !ukHeal_NPCOnly:GetBool() or isUkNPC or attacker.IsUltrakillProjectile ) then
+                    local tookDmg = info:GetDamage()
+                    local maxHp = self:GetMaxHealth()
+                    if tookDmg > 0 and floor( ( self:Health() - ceil( tookDmg ) ) + tookDmg ) <= maxHp then
+                        local diffInfo = UltrakillBase.DifficultyGetInformation( "Healing" )
+                        local perc = diffInfo.Percentage
+                        local hardDmg = ( tookDmg * perc * ukHeal_HardDmg_Mult:GetFloat() )
+                        local time = ( Clamp( ( tookDmg / 20 ) + diffInfo.Delay, 0, 5 ) / ukHeal_HardDmg_RecoveryMult:GetFloat() )
+
+                        self:SetNW2Int( "UltrakillBase_HardDamage", Clamp( ( self:GetNW2Int( "UltrakillBase_HardDamage", 0 ) + hardDmg ), 0, ( maxHp - 1 ) ) )
+                        self:SetNW2Float( "UltrakillBase_HardDamage_Time", ( time + CurTime() ) )
+                    end
+                end
+            end
+
+            -- Armor Damage Reduction
+            local curArmor = self:GetArmor()
+            if curArmor > 0 then
+                local isPhysicalDmg = !info:IsDamageType( DMG_DROWN + DMG_POISON + DMG_FALL + DMG_RADIATION )
+
+                if armorFeedback:GetBool() and isPhysicalDmg and IsFirstTimePredicted() then
+                    local dmgPos = self:NearestPoint( info:GetDamagePosition() )
+                    EmitSound( "physics/metal/metal_solid_impact_bullet" .. LambdaRNG( 4 ) .. ".wav", dmgPos, self:EntIndex(), nil, 0.6, 80, nil, LambdaRNG( 90, 110 ) )
+
+                    local sparks = EffectData()
+                    sparks:SetOrigin( dmgPos )
+                    sparks:SetMagnitude( 1 )
+                    sparks:SetScale( 1 )
+                    sparks:SetRadius( 1 )
+                    sparks:SetNormal( self:GetForward() )
+                    util_Effect( "Sparks", sparks, true, true )
+                end
+
+                --
+
+                local flDmg = info:GetDamage()
+                if !ablativeArmor:GetBool() then
+                    if isPhysicalDmg then
+                        local flNew = flDmg * 0.2
+                        local flArmor = max( ( flDmg - flNew ), 1 )
+
+                        if flArmor > curArmor then
+                            flArmor = curArmor
+                            flNew = ( flDmg - flArmor )
+                            self:SetArmor( 0 )
+                        else
+                            self:SetArmor( curArmor - flArmor )
+                        end
+
+                        flDmg = flNew
+                        info:SetDamage( flDmg )
+                    end
+                elseif curArmor >= flDmg then
+                    self:SetArmor( curArmor - flDmg )
+                    return true
+                elseif curArmor > 0 then
+                    info:SetDamage( flDmg - curArmor )
+                    self:SetArmor( 0 )
+                end
+            end
+
+            local dmg = info:GetDamage()
+            local potentialdeath = ( self:Health() - ceil( dmg ) ) <= 0
+            if potentialdeath then
+                info:SetDamageBonus( 0 )
+                info:SetBaseDamage( 0 )
+
+                self.l_PreDeathDamage = dmg
+                info:SetDamage( 0 ) -- We need this because apparently the nextbot would think it is dead and do some wacky health issues without it
+
+                self:LambdaOnKilled( info )
+                return true
+            end
+
+            self:SimpleTimer( 0, function() self:UpdateHealthDisplay() end, true )
+        end, true )
+
         self:Hook( "PostEntityTakeDamage", "OnOtherInjured", function( target, info, tookdamage )
             if target == self then
                 if self.l_HasExtendedAnims and info:IsExplosionDamage() then
@@ -980,95 +1156,6 @@ function ENT:InitializeMiniHooks()
                 local killed = ( tookdamage and ( ( target.IsLambdaPlayer or target:IsPlayer() ) and !target:Alive() or target:Health() <= 0 ) )
                 dealDmgFunc( self, wepent, target, info, tookdamage, killed )
             end
-        end, true )
-
-        -- Hoookay so interesting stuff here. When a nextbot actually dies by reaching 0 or below hp, no matter how high you set their health after the fact, they will no longer take damage.
-        -- To get around that we basically predict if the Lambda is gonna die and completely block the damage so we don't actually die. This of course is exclusive to Respawning
-        self:Hook( "LambdaTakeDamage", "DamageHandling", function( target, info )
-            -- if target == Entity( 1 ) then print( info:GetDamage() ) end
-
-            if target != self then return end
-            if self.l_godmode then return true end
-
-            local result = LambdaRunHook( "LambdaOnInjured", self, info )
-            if result == true then return true end
-
-            local onDmgFunc = self.l_OnDamagefunction
-            if isfunction( onDmgFunc ) and onDmgFunc( self, self:GetWeaponENT(), info ) == true then return true end
-
-            local attacker = info:GetAttacker()
-            if IsValid( attacker ) then
-                if attacker.IsDrGNextbot then
-                    info:SetDamage( ( info:GetDamage() / drg_MultDmg_NPC:GetFloat() ) * drg_MultDmg_Ply:GetFloat() )
-                end
-
-                -- ULTRAKILL SNPCs insta-kill moment (THIS WILL HURT/DIE)
-                local isUkNPC = attacker.IsUltrakillNextbot
-                if isUkNPC then
-                    info:SetDamage( ( info:GetDamage() / UltrakillBase.ConVars.DmgMult:GetFloat() ) / 10 )
-                -- BOOTY PLS PLEY DEE EMM CEE TOO, ITS DA BEST GAEM!!!
-                elseif attacker.DevilTrigger then
-                    info:SetDamage( info:GetDamage() * 0.1 )
-                -- Hydrogen bomb(KLK Nextbot) VS Coughing baby(Lambda Player)
-                elseif attacker.KLK_OwnDMGMult then
-                    info:ScaleDamage( attacker.KLK_OwnDMGMult )
-                -- THE UNENLIGHTENED MASSES
-                elseif attacker.IsDrGNextbot and attacker:GetModel() == "models/resort/tf2_community/deadnaut.mdl" then
-                    info:ScaleDamage( 0.1 )
-                -- Fixes Lambda-launched Combine Balls not setting its damage's attacker properly
-                elseif attacker:GetClass() == "prop_combine_ball" then
-                    local owner = attacker:GetOwner()
-                    if IsValid( owner ) and owner.IsLambdaPlayer then info:SetAttacker( owner ) end
-                end
-
-                if UltrakillBase and attacker != self and ukHeal_HardDmg_Enabled:GetBool() and ( !ukHeal_NPCOnly:GetBool() or isUkNPC or attacker.IsUltrakillProjectile ) then
-                    local tookDmg = info:GetDamage()
-                    local maxHp = self:GetMaxHealth()
-                    if tookDmg > 0 and floor( ( self:Health() - ceil( tookDmg ) ) + tookDmg ) <= maxHp then
-                        local diffInfo = UltrakillBase.DifficultyGetInformation( "Healing" )
-                        local perc = diffInfo.Percentage
-                        local hardDmg = ( tookDmg * perc * ukHeal_HardDmg_Mult:GetFloat() )
-                        local time = ( Clamp( ( tookDmg / 20 ) + diffInfo.Delay, 0, 5 ) / ukHeal_HardDmg_RecoveryMult:GetFloat() )
-
-                        self:SetNW2Int( "UltrakillBase_HardDamage", Clamp( ( self:GetNW2Int( "UltrakillBase_HardDamage", 0 ) + hardDmg ), 0, ( maxHp - 1 ) ) )
-                        self:SetNW2Float( "UltrakillBase_HardDamage_Time", ( time + CurTime() ) )
-                    end
-                end
-            end
-
-            -- Armor Damage Reduction
-            local curArmor = self:GetArmor()
-            if curArmor > 0 and !info:IsDamageType( bor( DMG_DROWN, DMG_POISON, DMG_FALL, DMG_RADIATION ) ) then
-                local flDmg = info:GetDamage()
-                local flNew = flDmg * 0.2
-                local flArmor = max( ( flDmg - flNew ), 1 )
-
-                if flArmor > curArmor then
-                    flArmor = curArmor
-                    flNew = ( flDmg - flArmor )
-                    self:SetArmor( 0 )
-                else
-                    self:SetArmor( curArmor - flArmor )
-                end
-
-                flDmg = flNew
-                info:SetDamage( flDmg )
-            end
-
-            local dmg = info:GetDamage()
-            local potentialdeath = ( self:Health() - ceil( dmg ) ) <= 0
-            if potentialdeath then
-                info:SetDamageBonus( 0 )
-                info:SetBaseDamage( 0 )
-
-                self.l_PreDeathDamage = dmg
-                info:SetDamage( 0 ) -- We need this because apparently the nextbot would think it is dead and do some wacky health issues without it
-
-                self:LambdaOnKilled( info )
-                return true
-            end
-
-            self:SimpleTimer( 0, function() self:UpdateHealthDisplay() end, true )
         end, true )
 
         self:Hook( "OnEntityCreated", "NPCRelationshipHandle", function( ent )
@@ -1149,9 +1236,11 @@ function ENT:InitializeMiniHooks()
         self:Hook( "PreDrawEffects", "flashlighteffects", function()
             if !self.l_flashlighton or self:GetIsDead() or self:IsDormant() then return end
 
+            local flashlight = self.l_flashlight
+            if !IsValid( flashlight ) then return end
+
             local handPos = self:GetAttachmentPoint( "hand" ).Pos
-            local finPos = self:GetEyeTrace().HitPos
-            local eyeFwd = ( finPos - handPos ):GetNormalized()
+            local eyeFwd = flashlight:GetAngles():Forward()
 
             local start = ( handPos + eyeFwd * 3 )
             SetMaterial( flashlightsprite )

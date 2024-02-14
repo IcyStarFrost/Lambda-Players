@@ -7,7 +7,11 @@ local bulletData = {
     Force = 5,
     HullSize = 5,
     TracerName = "Tracer",
-    Spread = Vector( 0.1, 0.1, 0 )
+    Spread = Vector( 0.1, 0.1, 0 ),
+    Callback = function( attacker, trace, dmginfo )
+        if dmginfo:IsDamageType( DMG_BUCKSHOT ) then return end
+        dmginfo:SetDamageType( dmginfo:GetDamageType() + DMG_BUCKSHOT )
+    end
 }
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {

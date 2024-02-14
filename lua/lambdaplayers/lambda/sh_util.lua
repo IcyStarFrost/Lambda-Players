@@ -69,7 +69,7 @@ local serversidecleanupeffect = GetConVar( "lambdaplayers_lambda_serversideragdo
 local usemarkovgenerator = GetConVar( "lambdaplayers_text_markovgenerate" )
 local allowlinks = GetConVar( "lambdaplayers_text_allowimglinks" )
 local player_GetAll = player.GetAll
-
+local vpFallback = GetConVar( "lambdaplayers_voice_voiceprofilefallback" )
 local isnumber = isnumber
 local ismatrix = ismatrix
 local IsValidModel = util.IsValidModel
@@ -162,28 +162,22 @@ end
 -- Creates a simple timer that won't run if we are invalid or dead. ignoredead var will run the timer even if self:GetIsDead() is true
 function ENT:SimpleTimer( delay, func, ignoredead )
     local id = tostring( func ) .. LambdaRNG( 100000 )
+    local lastDeathT = self.l_LastDeathTime
     self.l_SimpleTimers[ id ] = !ignoredead
     timer_simple( delay, function()
-        if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) or !ignoredead and !self.l_SimpleTimers[ id ] then return end
-        func()
+        if !IsValid( self ) or !ignoredead and ( lastDeathT != self.l_LastDeathTime or !self.l_SimpleTimers[ id ] or !self:Alive() ) then return end
+        func( self )
         self.l_SimpleTimers[ id ] = nil
     end )
 end
 
--- Same as ENT:SimpleTimer(), but also checks if our weapon is valid and weapon name is the same one we created this timer with
+-- Same as ENT:SimpleTimer(), but also checks if our weapon is valid and is the same one we created this timer with
 function ENT:SimpleWeaponTimer( delay, func, ignoredead, ignorewepname )
-    local id = tostring( func ) .. LambdaRNG( 100000 )
-    self.l_SimpleTimers[ id ] = !ignoredead
-
-    local wepent = self:GetWeaponENT()
-    local curWep = self:GetWeaponName()
-
-    timer_simple( delay, function()
-        if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) or !ignoredead and !self.l_SimpleTimers[ id ] then return end
-        if !IsValid( wepent ) or !ignorewepname and self:GetWeaponName() != curWep then return end
-        func()
-        self.l_SimpleTimers[ id ] = nil
-    end )
+    local lastSwitchT = self.l_LastWeaponSwitchTime
+    self:SimpleTimer( delay, function()
+        if !IsValid( self:GetWeaponENT() ) or !ignorewepname and lastSwitchT != self.l_LastWeaponSwitchTime then return end
+        func( self )
+    end, ignoredead )
 end
 
 -- Prevents every simple timer that does not have ignoredead from running
@@ -191,38 +185,31 @@ function ENT:TerminateNonIgnoredDeadTimers()
     table_Empty( self.l_SimpleTimers )
 end
 
--- Creates a named timer that can be stopped. ignore dead var will run the time even if we die
+-- Creates a named timer that can be stopped. ignoredead var will run the time even if we are dead
 -- Return true in the function to remove the timer
 function ENT:NamedTimer( name, delay, repeattimes, func, ignoredead )
     local id = self:EntIndex()
     local intname = "lambdaplayers_" .. name .. id
     self:DebugPrint( "Created a Timer: " .. name )
+
+    local lastDeathT = self.l_LastDeathTime
     timer_create( intname, delay, repeattimes, function()
-        if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) then return end
+        if !IsValid( self ) or !ignoredead and !self:Alive() then return end
         local result = func( self )
-        if result == true then timer_Remove( intname ) self:DebugPrint( "Removed a Timer: " .. name ) end
+        if result == true then timer_Remove( intname ); self:DebugPrint( "Removed a Timer: " .. name ) end
     end )
 
     table_insert( self.l_Timers, intname )
 end
 
--- Same as ENT:NamedTimer(), but also checks if our weapon is valid and weapon name is the same one we created this timer with
+-- Same as ENT:NamedTimer(), but also checks if our weapon is valid and is the same one we created this timer with
 function ENT:NamedWeaponTimer( name, delay, repeattimes, func, ignoredead, ignorewepname )
-    local id = self:EntIndex()
-    local intname = "lambdaplayers_" .. name .. id
-    self:DebugPrint( "Created a Weapon Timer: " .. name )
-
-    local wepent = self:GetWeaponENT()
-    local curWep = self:GetWeaponName()
-
-    timer_create( intname, delay, repeattimes, function()
-        if ignoredead and !IsValid( self ) or !ignoredead and !LambdaIsValid( self ) then return end
-        if !IsValid( wepent ) or !ignorewepname and self:GetWeaponName() != curWep then return end
-        local result = func()
-        if result == true then timer_Remove( intname ) self:DebugPrint( "Removed a Timer: " .. name ) end
-    end )
-
-    table_insert( self.l_Timers, intname )
+    local lastSwitchT = self.l_LastWeaponSwitchTime
+    self:NamedTimer( name, delay, repeattimes, function()
+        if !IsValid( self:GetWeaponENT() ) then return true end 
+        if !ignorewepname and lastSwitchT != self.l_LastWeaponSwitchTime then return end
+        return func( self )
+    end, ignoredead )
 end
 
 -- Removes the named timer
@@ -863,6 +850,9 @@ if SERVER then
             if self.l_AnimatedSprint != nil then
                 self.l_AnimatedSprint = ( self:LookupSequence( "wos_mma_sprint_all" ) > 0 )
             end
+            if self.l_HardLandingRolls then
+                self.l_HardLandingRolls.HasAnims = ( self:LookupSequence( "wos_mma_roll" ) > 0 )
+            end
         end )
     end
 
@@ -1094,6 +1084,8 @@ if SERVER then
             local vptable = LambdaVoiceProfiles[ self.l_VoiceProfile ][ voicetype ]
             if vptable and #vptable > 0 then
                 return vptable[ LambdaRNG( #vptable ) ]
+            elseif !vpFallback:GetBool() then
+                return false
             end
         end
 
@@ -1314,15 +1306,16 @@ if SERVER then
     function ENT:PlaySoundFile( filepath, delay )
         if !filepath then return end
 
-        if !isnumber( delay ) then
-            delay = ( ( delay == nil and slightDelay:GetBool() ) and LambdaRNG( 0.1, 0.75, true ) or 0 )
-        end
-
         local voiceType = filepath
         local isVoiceType = self:GetVoiceLine( filepath )
         if isVoiceType then
+            if isVoiceType == false then return end
             self.l_lastspokenvoicetype = filepath
             filepath = isVoiceType
+        end
+
+        if !isnumber( delay ) then
+            delay = ( ( delay == nil and slightDelay:GetBool() ) and LambdaRNG( 0.1, 0.75, true ) or 0 )
         end
 
         if LambdaRunHook( "LambdaOnPlaySound", self, filepath, voiceType ) == true then return end

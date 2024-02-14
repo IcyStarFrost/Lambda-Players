@@ -175,7 +175,7 @@ function ENT:MoveToPos( pos, options )
                 if CurTime() >= nextNoclipCheckT and canNoclip:GetBool() then
                     nextNoclipCheckT = ( CurTime() + LambdaRNG( 10, 20 ) )
 
-                    if LambdaRNG( 3 ) != 1 then
+                    if LambdaRNG( 3 ) != 1 and loco:IsOnGround() then
                         local checkPos = movePos
                         local nearArea = GetNearestNavArea( movePos, true, 200, false, true )
                         if IsValid( nearArea ) then checkPos = nearArea end
@@ -509,7 +509,6 @@ end
 
 -- Makes lambda wait and stop while moving for a given amount of time
 function ENT:WaitWhileMoving( time )
-    if !self.l_issmoving then return end
     if CurTime() >= self.l_moveWaitTime then
         self.loco:SetVelocity( vector_origin )
     end

@@ -35,6 +35,7 @@ local function OpenModelVoiceProfilePanel( ply )
     mdlpreview:SetSize( 375, 200 )
     mdlpreview:Dock( RIGHT )
     mdlpreview:SetModel( "" )
+    mdlpreview:SetFOV( 45 )
     
     function mdlpreview:LayoutEntity( Entity )
         Entity:SetAngles( Angle( 0, RealTime() * 20 % 360, 0 ) )

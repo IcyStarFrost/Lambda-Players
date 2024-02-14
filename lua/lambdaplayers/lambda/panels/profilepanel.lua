@@ -523,6 +523,7 @@ local function OpenProfilePanel( ply )
     playermodelpreview:SetSize( 300, 400)
     playermodelpreview:Dock( TOP )
     playermodelpreview:SetModel( "models/error.mdl" )
+    playermodelpreview:SetFOV( 45 )
 
     local mdlPreviewAng = Angle()
     function playermodelpreview:LayoutEntity( Entity )

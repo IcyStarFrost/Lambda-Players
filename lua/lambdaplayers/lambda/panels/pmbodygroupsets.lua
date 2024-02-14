@@ -161,7 +161,7 @@ local function OpenPMBodyGroupSetsPanel( ply )
         LAMBDAFS:WriteFile( "lambdaplayers/pmbodygroupsets.json", mdlSetList, "json" )
     end
 
-    local validMdls, pmList, CreateModelButton = GetAllValidModel()
+    local pmList, CreateModelButton
     LAMBDAPANELS:CreateButton( setList, BOTTOM, "Create Set", function()
         if !IsValid( mdlPreview:GetEntity() ) then
             AddNotification( "You haven't selected any playermodel from the list!", 1, 4 )
@@ -173,19 +173,19 @@ local function OpenPMBodyGroupSetsPanel( ply )
             PlayClientSound( "buttons/button10.wav" )
             return
         end
-
+        
         local mdlSkin = ( IsValid( skinSlider ) and Round( skinSlider:GetValue(), 0 ) or 0 )
         local mdlBgData = {}
         for index, panel in pairs( bodygroupData ) do
             mdlBgData[ index ] = Round( panel:GetValue(), 0 )
         end
-
+        
         local pmMdl = mdlPreview:GetModel()
         local mdlSet, setData = mdlSetList[ pmMdl ], {
             [ "skin" ] = mdlSkin,
             [ "bodygroups" ] = mdlBgData
         }
-
+        
         local setNum = 1
         if !mdlSet then
             mdlSetList[ pmMdl ] = { setData }
@@ -194,51 +194,51 @@ local function OpenPMBodyGroupSetsPanel( ply )
             setNum = ( #mdlSetList[ pmMdl ] + 1 )
             mdlSetList[ pmMdl ][ setNum ] = setData
         end
-
+        
         local setLine = setList:AddLine( "Set #" .. setNum, setNum )
         setLine:SetSortValue( 1, setData )
         LAMBDAFS:UpdateKeyValueFile( "lambdaplayers/pmbodygroupsets.json", mdlSetList, "json" )
-
+        
         PlayClientSound( "buttons/button15.wav" )
         AddNotification( "Created new set #" .. setNum .. " for " .. pmMdl .. "!", 0, 4 )
     end )
-
+    
     local mdlPanel = LAMBDAPANELS:CreateBasicPanel( frame, RIGHT )
     mdlPanel:SetSize( 390, 600 )
-
+    
     local mdlScroll = LAMBDAPANELS:CreateScrollPanel( mdlPanel, false, FILL )
-
+    
     mdlPreview = CreateVGUI( "DModelPanel", frame )
     mdlPreview:SetSize( 350, 600 )
     mdlPreview:Dock( RIGHT )
     mdlPreview:SetModel( "" )
     mdlPreview:SetFOV( 45 )
-
+    
     function mdlPreview:LayoutEntity( ent )
         mdlAng.y = ( ( RealTime() - mdlChangeTime ) * 35 % 360 )
         ent:SetAngles( mdlAng )
-
+        
         if ( RealTime() - mdlRngBgTime ) > 1.5 then
             mdlRngBgTime = RealTime()
             
             if IsValid( skinSlider ) and Round( skinSlider:GetValue() ) == -1 then
                 ent:SetSkin( LambdaRNG( 0, skinSlider:GetMax() ) )
             end
-
+            
             for index, slider in pairs( bodygroupData ) do
                 if Round( slider:GetValue() ) != -1 then continue end
                 ent:SetBodygroup( index, LambdaRNG( 0, slider:GetMax() ) )
             end
         end
-
+        
         ent:SetEyeTarget( ent:GetPos() + ent:GetForward() * 50 + vector_up * 50 )
     end
-
+    
     CreateModelButton = function( mdl )
         local mdlButton = pmList:Add( "SpawnIcon" )
         mdlButton:SetModel( mdl )
         mdlIcons[ mdl ] = mdlButton
-
+        
         function mdlButton:DoClick()
             local mdlName = lower( mdlButton:GetModelName() )
             mdlPreview:SetModel( mdlName )
@@ -246,18 +246,18 @@ local function OpenPMBodyGroupSetsPanel( ply )
             
             mdlRngBgTime = RealTime()
             mdlChangeTime = RealTime()
-
+            
             mdlColor[ 1 ] = LambdaRNG( 0, 1, true )
             mdlColor[ 2 ] = LambdaRNG( 0, 1, true )
             mdlColor[ 3 ] = LambdaRNG( 0, 1, true )
-
+            
             local ent = mdlPreview:GetEntity()
             ent.GetPlayerColor = GetPlayerColor
-
+            
             for id, line in ipairs( setList:GetLines() ) do
                 setList:RemoveLine( id )
             end
-
+            
             local mdlSets = mdlSetList[ mdlName ]
             if mdlSets and #mdlSets > 0 then
                 for id, data in ipairs( mdlSets ) do
@@ -265,24 +265,26 @@ local function OpenPMBodyGroupSetsPanel( ply )
                     setLine:SetSortValue( 1, data )
                 end
             end
-
+            
             PlayClientSound( "buttons/lightswitch2.wav" )
         end
     end
+    
+    local validMdls = GetAllValidModel()
     local function RefreshPlayerIcons( filter )
         if pmList then pmList:Remove() end
         pmList = CreateVGUI( "DIconLayout", mdlScroll )
-
+        
         pmList:Dock( FILL )
         pmList:SetSpaceY( 12 )
         pmList:SetSpaceX( 12 )
-
+        
         table_Empty( mdlIcons )
         for _, mdl in SortedPairs( validMdls ) do
             if filter and filter( mdl ) == true then continue end
             CreateModelButton( mdl )
         end
-
+        
         mdlScroll:InvalidateLayout()
     end
     local function ShowAllPlayerModels()
@@ -290,7 +292,7 @@ local function OpenPMBodyGroupSetsPanel( ply )
         showAllIcons = true
         RefreshPlayerIcons()
     end
-
+    
     local searchBar = LAMBDAPANELS:CreateTextEntry( mdlPanel, TOP, "Search Bar" )
     function searchBar:OnChange()
         if CurTime() <= searchUpdateTime then return end 

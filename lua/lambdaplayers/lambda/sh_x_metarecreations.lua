@@ -79,6 +79,7 @@ function ENT:GetEyeTrace()
     eyetracetable.filter = self
     return util.TraceLine( eyetracetable )
 end
+ENT.GetEyeTraceNoCursor = ENT.GetEyeTrace
 
 -- Return random fake steam ids
 function ENT:SteamID64()
@@ -233,16 +234,43 @@ function ENT:SetEyeAngles( ang )
     self:SetAngles( ang )
 end
 
-function ENT:Freeze( freeze )
+local entMeta = FindMetaTable( "Entity" )
+local freezeFun = entMeta.Freeze
+if freezeFun then
+    _LambdaBaseENTFreeze = ( _LambdaBaseENTFreeze or freezeFun )
+
+    function entMeta:Freeze( freeze )
+        if self.IsLambdaPlayer and SERVER then
+            self.l_isfrozen = freeze
+        end
+        _LambdaBaseENTFreeze( self, freeze )
+    end
+else
+    function ENT:Freeze( freeze )
+        if ( CLIENT ) then return end
+        self.l_isfrozen = freeze
+    end
+end
+
+function ENT:DoAnimationEvent( data )
     if ( CLIENT ) then return end
-    self.l_isfrozen = freeze
+    self:RemoveGesture( data )
+    self:AddGesture( data )
+end
+
+function ENT:GetHull()
+    return self:GetCollisionBounds()
 end
 
 --
 
 local emptyFunc = function() end
+local falseFunc = function() return false end
 
 ENT.ScreenFade = emptyFunc
+ENT.InVehicle = falseFunc
+ENT.LagCompensation = emptyFunc
+ENT.ViewPunch = emptyFunc
 
 --
 

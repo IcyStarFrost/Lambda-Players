@@ -15,6 +15,26 @@ function ENT:WeaponDataExists( weaponname )
     return _LAMBDAPLAYERSWEAPONS[ weaponname ] != nil
 end
 
+local function PlaySoundTable( lambda, ent, tbl, sndLvl, pitch, vol, chan )
+    if !tbl then return end
+
+    sndLvl = ( sndLvl or 65 )
+    pitch = ( pitch or 100 )
+    vol = ( vol or 1.0 ) 
+    chan = ( chan or CHAN_WEAPON )
+
+    if !istable( tbl ) then
+        ent:EmitSound( tbl, sndLvl, pitch, vol, chan )
+        return 
+    end
+    
+    for _, snd in ipairs( tbl ) do
+        lambda:SimpleWeaponTimer( snd[ 1 ], function()
+            ent:EmitSound( snd[ 2 ], sndLvl, pitch, vol, chan )
+        end, false, true )
+    end
+end
+
 -- Switch to a weapon with the provided name.
 -- See the lambda/weapons folder for weapons. Check out the holster.lua file to see the current valid weapon settings
 function ENT:SwitchWeapon( weaponname, forceswitch, fromFuncs )
@@ -28,6 +48,7 @@ function ENT:SwitchWeapon( weaponname, forceswitch, fromFuncs )
     if oldwepdata then
         local onHolsterFunc = ( oldwepdata.OnHolster or oldwepdata.OnUnequip )
         if onHolsterFunc and onHolsterFunc( self, wepent, oldweaponname, weaponname ) == true then return end
+        PlaySoundTable( self, wepent, oldwepdata.holstersound )
     end
 
     local weapondata = _LAMBDAPLAYERSWEAPONS[ weaponname ]
@@ -91,21 +112,10 @@ function ENT:SwitchWeapon( weaponname, forceswitch, fromFuncs )
 
     local onDeployFunc = ( weapondata.OnDeploy or weapondata.OnEquip )
     if onDeployFunc then onDeployFunc( self, wepent, oldweaponname ) end
-
-    local deploySnd = weapondata.deploysound
-    if deploySnd then
-        if istable( deploySnd ) then
-            for _, tbl in ipairs( snds ) do
-                self:SimpleWeaponTimer( tbl[ 1 ], function()
-                    wepent:EmitSound( tbl[ 2 ], 65, 100, 1, CHAN_WEAPON )
-                end )
-            end
-        else
-            wepent:EmitSound( deploySnd, 65, 100, 1, CHAN_WEAPON )
-        end
-    end
-
+    
+    PlaySoundTable( self, wepent, weapondata.deploysound )
     self:SetIsReloading( false )
+    self.l_LastWeaponSwitchTime = CurTime()
 
     if weaponname != "none" and ( self.l_initialized or weaponname != "physgun" ) then
         self:EmitSound( "common/wpn_select.wav", 75, 100, 0.32, CHAN_ITEM )
@@ -276,18 +286,7 @@ function ENT:ReloadWeapon()
     local onReloadFunc = weapondata.OnReload
     if onReloadFunc and onReloadFunc( self, wep, weapondata ) == true then return end
 
-    local snds = weapondata.reloadsounds
-    if snds then
-        if istable( snds ) and #snds > 0 then
-            for k, tbl in ipairs( snds ) do
-                self:SimpleWeaponTimer( tbl[ 1 ], function()
-                    wep:EmitSound( tbl[ 2 ], 65, 100, 1, CHAN_WEAPON )
-                end )
-            end
-        else
-            wep:EmitSound( tbl[ 2 ], 65, 100, 1, CHAN_WEAPON )
-        end
-    end
+    PlaySoundTable( self, wep, weapondata.reloadsounds )
 
     local anim = weapondata.reloadanim
     if anim then

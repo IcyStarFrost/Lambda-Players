@@ -75,8 +75,8 @@ function LambdaInternalSpawnNPC( lambda, Position, Normal, Class, SpawnFlagsSave
 	--
 	-- Spawn Flags
 	--
-	local SpawnFlags = bit.bor( SF_NPC_FADE_CORPSE, SF_NPC_ALWAYSTHINK )
-	if NPCData.SpawnFlags then SpawnFlags = bit.bor( SpawnFlags, NPCData.SpawnFlags ) end
+	local SpawnFlags = ( SF_NPC_FADE_CORPSE + SF_NPC_ALWAYSTHINK )
+	if NPCData.SpawnFlags then SpawnFlags = ( SpawnFlags + NPCData.SpawnFlags ) end
 	if NPCData.TotalSpawnFlags then SpawnFlags = NPCData.TotalSpawnFlags end
 	if SpawnFlagsSaved then SpawnFlags = SpawnFlagsSaved end
 	NPC:SetKeyValue( "spawnflags", SpawnFlags )

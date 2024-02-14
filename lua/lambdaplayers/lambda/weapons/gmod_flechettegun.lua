@@ -33,7 +33,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:HandleMuzzleFlash( 1 )
             self:HandleShellEject( "ShellEject", ShellOffPos, ShellOffAng )
 
-            local spawnPos = self:GetAttachmentPoint( "eyes" ).Pos
+            local spawnPos = self:EyePos()
             local targetAng = ( target:WorldSpaceCenter() - spawnPos ):Angle()
 
             ent:SetPos( spawnPos + targetAng:Forward() * 32 )

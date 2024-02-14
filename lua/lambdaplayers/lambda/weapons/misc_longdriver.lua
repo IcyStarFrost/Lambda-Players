@@ -34,7 +34,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 dmginfo:SetDamage( dmg )
                 dmginfo:SetAttacker( self )
                 dmginfo:SetInflictor( wepent )
-                dmginfo:SetDamageType( bit.bor( DMG_CLUB, DMG_CRUSH ) )
+                dmginfo:SetDamageType( DMG_CLUB + DMG_CRUSH )
                 
                 -- Doesn't send them flying if not done like this
                 if target.IsLambdaPlayer then

@@ -1,9 +1,6 @@
 local IsValid = IsValid
-
 local math_min = math.min
 local CurTime = CurTime
-
-local bor = bit.bor
 
 local useReworkedVariant = CreateLambdaConvar( "lambdaplayers_weapons_fistsreworked", 0, true, false, true, "If Lambda Player's fists should use their reworked stats instead of default Gmod ones.", 0, 1, { type = "Bool", name = "Fists - Use Reworked Stats", category = "Weapon Utilities" } )
 local useAltSounds = CreateLambdaConvar( "lambdaplayers_weapons_fistsaltsounds", 0, true, false, true, "If Lambda Player's fists should use alternate sounds instead of Half-Life 2 sounds.", 0, 1, { type = "Bool", name = "Fists - Use Alternate Sounds", category = "Weapon Utilities" } )
