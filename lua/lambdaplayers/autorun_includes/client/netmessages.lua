@@ -615,6 +615,7 @@ net.Receive( "lambdaplayers_takeviewshot", function()
     local shotPos = net.ReadVector()
     local shotAng = net.ReadAngle()
     local noPos = ( shotPos == vector_origin )
+    local lambdaCorpse = nil
 
     local headBone = lambda:LookupBone( "ValveBiped.Bip01_Head1" )
     if headBone then DrawEntityBones( lambda, headBone, false ) end
@@ -634,6 +635,7 @@ net.Receive( "lambdaplayers_takeviewshot", function()
             lambdaCorpse = ragdoll
             if headBone then DrawEntityBones( ragdoll, headBone, false ) end
         else
+            lambdaCorpse = nil
             origin = ( origin or lambda:EyePos() )
             angles = ( angles or lambda:EyeAngles() )
         end
@@ -667,7 +669,7 @@ net.Receive( "lambdaplayers_takeviewshot", function()
 
         if headBone then
             DrawEntityBones( lambda, headBone, true )
-            if lambdaCorpse then DrawEntityBones( lambdaCorpse, headBone, true ) end
+            if IsValid( lambdaCorpse ) then DrawEntityBones( lambdaCorpse, headBone, true ) end
         end
         return EndViewShotting()
     end, true )

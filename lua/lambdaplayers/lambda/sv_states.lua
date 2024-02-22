@@ -54,7 +54,7 @@ function ENT:HealUp( failState )
         return
     end
 
-    local rndVec = ( self:GetForward() * LambdaRNG( 16, 24 ) + self:GetRight() * LambdaRNG( -24, 24 ) )
+    local rndVec = ( self:GetForward() * LambdaRNG( 16, 24 ) + self:GetRight() * LambdaRNG( -24, 24 ) - vector_up * 8 )
     if !self:Trace( ( self:GetPos() + rndVec ), self:EyePos() ).Hit then
         self:MoveToPos( self:GetRandomPosition( nil, 100 ) )
         if !self:GetState( "HealUp" ) then return true end
@@ -94,7 +94,7 @@ function ENT:ArmorUp( failState )
         return
     end
 
-    local rndVec = ( self:GetForward() * LambdaRNG( 16, 24 ) + self:GetRight() * LambdaRNG( -24, 24 ) )
+    local rndVec = ( self:GetForward() * LambdaRNG( 16, 24 ) + self:GetRight() * LambdaRNG( -24, 24 ) - vector_up * 8 )
     if !self:Trace( ( self:GetPos() + rndVec ), self:EyePos() ).Hit then
         self.l_noclipheight = 0
         self:MoveToPos( self:GetRandomPosition( nil, 100 ) )

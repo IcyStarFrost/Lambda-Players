@@ -544,7 +544,7 @@ if SERVER then
                 self:DebugPrint( "I killed or saw someone die. Laugh at this man!" )
             elseif attacker != self and victim != enemy then
                 if witnessChance == 2 and !self.l_preventdefaultspeak then
-                    self:LookTo( victimPos, LambdaRNG( 3 ), false, 1 )
+                    self:LookTo( victim:GetPos(), LambdaRNG( 3 ), false, 1 )
 
                     if LambdaRNG( 100 ) <= self:GetVoiceChance() then
                         self:PlaySoundFile( "witness", LambdaRNG( 0.1, 1.0, true ) )
