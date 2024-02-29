@@ -320,14 +320,14 @@ function LAMBDAFS:GetVoiceProfiles()
     end
 
     -- Zeta vp support I guess
-    local _, zetavp  = file_Find( "sound/zetaplayer/custom_vo/vp_*", "GAME", "nameasc" )
+    local _, zetavp = file_Find( "sound/zetaplayer/custom_vo/vp_*", "GAME", "nameasc" )
     for _, profile in ipairs( zetavp ) do
         LambdaVoiceProfiles[ profile ] = {}
         local noFall, noPanic = true, true
 
         for _, v in ipairs( LambdaValidVoiceTypes ) do
             local typeName = v[ 1 ]
-            local voicelines  = file_Find( "sound/zetaplayer/custom_vo/" .. profile .. "/" .. typeName .. "/*", "GAME", "nameasc" )
+            local voicelines = file_Find( "sound/zetaplayer/custom_vo/" .. profile .. "/" .. typeName .. "/*", "GAME", "nameasc" )
             if !voicelines or #voicelines == 0 then continue end
 
             LambdaVoiceProfiles[ profile ][ typeName ] = {}
