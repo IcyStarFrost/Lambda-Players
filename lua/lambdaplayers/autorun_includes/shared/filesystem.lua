@@ -308,8 +308,11 @@ function LAMBDAFS:GetVoiceProfiles()
                 table_insert( LambdaVoiceProfiles[ profile ][ typeName ], "lambdaplayers/voiceprofiles/" .. profile .. "/" .. typeName .. "/" .. voiceline )
             end
 
-            if typeName == "fall" then noFall = false end
-            if typeName == "panic" then noPanic = false end
+            if typeName == "fall" then 
+                noFall = false 
+            elseif typeName == "panic" then 
+                noPanic = false 
+            end
         end
 
         if noFall and !noPanic then
