@@ -299,21 +299,22 @@ function LAMBDAFS:GetVoiceProfiles()
         local noFall, noPanic = true, true
 
         for _, v in ipairs( LambdaValidVoiceTypes ) do
-            local voicelines,_  = file_Find( "sound/lambdaplayers/voiceprofiles/" .. profile .. "/" .. v[ 1 ] .. "/*", "GAME", "nameasc" )
+            local typeName = v[ 1 ]
+            local voicelines = file_Find( "sound/lambdaplayers/voiceprofiles/" .. profile .. "/" .. typeName .. "/*", "GAME", "nameasc" )
             if !voicelines or #voicelines == 0 then continue end
 
-            LambdaVoiceProfiles[ profile ][ v[ 1 ] ] = {}
+            LambdaVoiceProfiles[ profile ][ typeName ] = {}
             for index, voiceline in ipairs( voicelines ) do
-                table_insert( LambdaVoiceProfiles[ profile ][ v[ 1 ] ], "lambdaplayers/voiceprofiles/" .. profile .. "/" .. v[ 1 ] .. "/" .. voiceline )
+                table_insert( LambdaVoiceProfiles[ profile ][ typeName ], "lambdaplayers/voiceprofiles/" .. profile .. "/" .. typeName .. "/" .. voiceline )
             end
 
-            if v == "fall" then noFall = false end
-            if v == "panic" then noFall = false end
+            if typeName == "fall" then noFall = false end
+            if typeName == "panic" then noPanic = false end
         end
 
-        if noFall and !noRetreat then
+        if noFall and !noPanic then
             LambdaVoiceProfiles[ profile ][ "fall" ] = LambdaVoiceProfiles[ profile ][ "panic" ]
-        elseif noRetreat and !noFall then
+        elseif noPanic and !noFall then
             LambdaVoiceProfiles[ profile ][ "panic" ] = LambdaVoiceProfiles[ profile ][ "fall" ]
         end
     end
@@ -325,21 +326,22 @@ function LAMBDAFS:GetVoiceProfiles()
         local noFall, noPanic = true, true
 
         for _, v in ipairs( LambdaValidVoiceTypes ) do
-            local voicelines  = file_Find( "sound/zetaplayer/custom_vo/" .. profile .. "/" .. v[ 1 ] .. "/*", "GAME", "nameasc" )
+            local typeName = v[ 1 ]
+            local voicelines  = file_Find( "sound/zetaplayer/custom_vo/" .. profile .. "/" .. typeName .. "/*", "GAME", "nameasc" )
             if !voicelines or #voicelines == 0 then continue end
 
-            LambdaVoiceProfiles[ profile ][ v[ 1 ] ] = {}
+            LambdaVoiceProfiles[ profile ][ typeName ] = {}
             for index, voiceline in ipairs( voicelines ) do
-                table_insert( LambdaVoiceProfiles[ profile ][ v[ 1 ] ], "zetaplayer/custom_vo/" .. profile .. "/" .. v[ 1 ] .. "/" .. voiceline )
+                table_insert( LambdaVoiceProfiles[ profile ][ typeName ], "zetaplayer/custom_vo/" .. profile .. "/" .. typeName .. "/" .. voiceline )
             end
 
-            if v == "fall" then noFall = false end
-            if v == "panic" then noFall = false end
+            if typeName == "fall" then noFall = false end
+            if typeName == "panic" then noPanic = false end
         end
 
-        if noFall and !noRetreat then
+        if noFall and !noPanic then
             LambdaVoiceProfiles[ profile ][ "fall" ] = LambdaVoiceProfiles[ profile ][ "panic" ]
-        elseif noRetreat and !noFall then
+        elseif noPanic and !noFall then
             LambdaVoiceProfiles[ profile ][ "panic" ] = LambdaVoiceProfiles[ profile ][ "fall" ]
         end
     end
