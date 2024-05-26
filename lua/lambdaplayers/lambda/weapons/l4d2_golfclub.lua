@@ -40,7 +40,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 dmginfo:SetDamageForce( dmgAng:Forward() * ( dmg * 150 ) + dmgAng:Up() * ( dmg * 125 ) )
 
                 target:TakeDamageInfo( dmginfo )
-                target:EmitSound( "lambdaplayers/weapons/left4dead2/golf_club/wpn_golf_club_melee_0" .. random( 1, 2 ) .. ".mp3" )
+                target:EmitSound( "lambdaplayers/weapons/left4dead2/golf_club/wpn_golf_club_melee_0" .. LambdaRNG( 2 ) .. ".mp3" )
             end)
 
             return true
