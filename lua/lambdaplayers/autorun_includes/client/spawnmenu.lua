@@ -3,7 +3,6 @@ local pairs = pairs
 local ipairs = ipairs
 local tostring = tostring
 local GetConVar = GetConVar
-local table_insert = table.insert
 local clientcolor = Color( 255, 145, 0 )
 local servercolor = Color( 0, 174, 255 )
 local net = net
@@ -19,8 +18,13 @@ Special thanks to the following Contributors
 :- CombineSlayer24
 :- Fluffiest Floofers
 :- YerMash
+:- Aaron
+:- The Annoying Guide
 
 Your contributions are appreciated!
+
+Greater appreciation is especially directed toward YerMash and Aaron for continuing to maintain and update the Lambda Players after my (StarFrost) burn out.
+With a grateful heart, I thank you both for sacrificing your time to continue to contribute to potentially the most memorable addon out there. Your dedication inspires me.
 ]]
 
 local function CreateUrlLabel( text, url, parent, dock )
