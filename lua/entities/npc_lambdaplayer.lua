@@ -127,7 +127,6 @@ end
     local noclipSpeed = GetConVar( "lambdaplayers_lambda_noclipspeed" )
     local jumpHeight = GetConVar( "lambdaplayers_lambda_jumpheight" )
     local silentStepsSpeed = GetConVar( "lambdaplayers_lambda_nostepsndspeed" )
-    local ignorePlys = GetConVar( "ai_ignoreplayers" )
     local sv_gravity = GetConVar( "sv_gravity" )
     local physUpdateTime = GetConVar( "lambdaplayers_lambda_physupdatetime" )
     local lethalWaters = GetConVar( "lambdaplayers_lambda_lethalwaters" )
@@ -686,7 +685,7 @@ function ENT:Think()
         self:SetPingUpdateTime( curTime + 1 )
         
         if ( SERVER or self:IsDormant() ) and LambdaRNG( 3 ) == 1 then
-            local curPing, avgPing = self:GetPing(), self:GetAvgPing()
+            local avgPing = self:GetAvgPing()
             local newPing = Clamp( LambdaRNG( avgPing - ( avgPing / 2 ), avgPing + ( avgPing / ( LambdaRNG( 15, 20 ) * 0.1 ) ) ), 0, 999 )
             self:SetPing( newPing )
         end
@@ -1004,7 +1003,7 @@ function ENT:Think()
         -- UA, Universal Actions
         -- See sv_x_universalactions.lua
         if !isDisabled and curTime >= self.l_nextUA then
-            local UAfunc, UAname = table_Random( LambdaUniversalActions )
+            local UAfunc = table_Random( LambdaUniversalActions )
             UAfunc( self )
             self.l_nextUA = ( curTime + LambdaRNG( 1, 15 ) )
         end
