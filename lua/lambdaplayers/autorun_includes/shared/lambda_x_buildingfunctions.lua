@@ -107,7 +107,118 @@ local function Spray( self )
     return true
 end
 
+-- Makes the Lambda create a doodad.
+-- Similar in function to the Zeta's "Build onto props" feature.
+local function CreateDoohickey( self )
+    if !self:IsUnderLimit( "Prop" ) or !self:CanEquipWeapon( "physgun" ) or !GetConVar( "lambdaplayers_building_allowprop" ):GetBool() then return end
+    self:PreventWeaponSwitch( false )
 
+    local unfrozen = LambdaRNG( 1, 2 ) == 1
+
+    -- Find a target
+    self:SwitchWeapon( "physgun" )
+    local find = self:FindInSphere( nil, 400, function( ent ) if self:HasVPhysics( ent ) and self:CanSee( ent ) and self:HasPermissionToEdit( ent ) then return true end end )
+    local target = find[ LambdaRNG( #find ) ]
+
+    if !IsValid( target ) and self:IsUnderLimit( "Prop" ) then 
+        self:LookTo( self:GetPos() + Vector( LambdaRNG( -100, 100 ), LambdaRNG( -100, 100 ), LambdaRNG( -30, 30 ) ), 2 )
+        coroutine.wait( LambdaRNG( 0.2, 1, true ) )
+
+        target = self:SpawnProp()
+
+        target:GetPhysicsObject():EnableMotion( unfrozen )
+    elseif !self:IsUnderLimit( "Prop" ) then 
+        return 
+    end
+
+    coroutine.wait( 1 )
+
+    -- Place and weld 1-10 props on the target
+    for i = 1, LambdaRNG( 1, 10 ) do
+        if !IsValid( target ) then continue end
+
+        -- Walk around the target sometimes to get better angles
+        if LambdaRNG( 1, 2 ) == 1 then
+            local radius = target:GetModelRadius()
+            self:MoveToPos( target:GetPos() + Vector( LambdaRNG( -100 - radius, 100 + radius), LambdaRNG( -100 - radius, 100 + radius ), 0 ) )
+        end
+
+        self:SwitchWeapon( "physgun" )
+        self:LookTo( self:GetPos() + Vector( LambdaRNG( -200, 200 ), LambdaRNG( -200, 200 ), LambdaRNG( -30, 30 ) ), 2 )
+        coroutine.wait( LambdaRNG( 0.2, 1, true ) )
+
+        local prop = self:SpawnProp()
+
+        coroutine.wait( 1 )
+        if !IsValid( prop ) or !IsValid( target ) then continue end
+        
+        self:UseWeapon( prop )
+
+        coroutine.wait( 0.2 )
+        if !IsValid( prop ) or !IsValid( target ) then continue end
+        local look = true
+
+        -- Keep the prop on the target for a little while
+        self.l_physholdang = AngleRand( -360, 360 )
+        LambdaCreateThread( function()
+            while look do 
+                if !IsValid( self ) then return end
+                if !IsValid( target ) then
+                    self.l_physholdpos = nil
+                    self.l_physholdang = nil
+                    return
+                end
+                local pos = util.TraceLine( { start = self:EyePos(), endpos = target:GetPos(), filter = self } ).HitPos
+                self:LookTo( pos, 2 )
+                self.l_physholdpos = pos
+                coroutine.yield()
+            end
+        end )
+
+        coroutine.wait( 1 )
+        if !IsValid( prop ) or !IsValid( target ) then continue end
+        look = false
+        self.l_physholdpos = nil
+        self.l_physholdang = nil
+
+        self:UseWeapon()
+        prop:GetPhysicsObject():EnableMotion( false )
+
+        coroutine.wait( 0.5 )
+        if !IsValid( prop ) or !IsValid( target ) then continue end
+        self:SwitchWeapon( "toolgun" )
+        
+        self:LookTo( prop, 2 )
+
+        coroutine.wait( LambdaRNG( 0.5, 1, true ) )
+        if !IsValid( prop ) or !IsValid( target ) then continue end
+
+        self:UseWeapon( prop )
+        self:LookTo( target, 2 )
+
+        coroutine.wait( LambdaRNG( 0.5, 1, true ) )
+        if !IsValid( prop ) or !IsValid( target ) then continue end
+        
+        self:UseWeapon( target )
+
+        constraint.Weld( target, prop, 0, 0, 0, true )
+        prop:GetPhysicsObject():EnableMotion( unfrozen )
+
+        coroutine.wait( 0.5 )
+        if !IsValid( prop ) or !IsValid( target ) then continue end
+
+        -- Sometimes use random toolgun tools on the props
+        if LambdaRNG( 1, 2 ) == 1 then
+            for i = 1, LambdaRNG( 1, 4 ) do
+                self:UseRandomToolOn( LambdaRNG( 1, 2 ) == 1 and target or prop )
+            end
+        end
+
+    end
+
+end
+
+AddBuildFunctionToLambdaBuildingFunctions( "doohickey", "Allow Building onto Props", "If Lambda Players are allowed to add and weld props onto existing props. Or in other words, create doohickeys.\n\nRequires Allow Prop Spawning to be on!", CreateDoohickey )
 AddBuildFunctionToLambdaBuildingFunctions( "prop", "Allow Prop Spawning", "If Lambda Players are allowed to spawn props", SpawnAProp )
 AddBuildFunctionToLambdaBuildingFunctions( "npc", "Allow NPC Spawning", "If Lambda Players are allowed to spawn NPCs", SpawnNPC )
 AddBuildFunctionToLambdaBuildingFunctions( "entity", "Allow Entity Spawning", "If Lambda Players are allowed to spawn Entities", SpawnEntity )
