@@ -1,7 +1,5 @@
 local IsValid = IsValid
 local table_insert = table.insert
-
-
 local VectorRand = VectorRand
 local coroutine = coroutine
 local Trace = util.TraceLine

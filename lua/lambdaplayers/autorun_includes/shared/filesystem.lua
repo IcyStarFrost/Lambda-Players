@@ -18,7 +18,6 @@ local GetConVar = GetConVar
 local mergevoicelines = GetConVar( "lambdaplayers_voice_mergeaddonvoicelines" )
 local mergedefaulttextlines = GetConVar( "lambdaplayers_text_usedefaultlines" )
 local mergeaddontextlines = GetConVar( "lambdaplayers_text_useaddonlines" )
-local cachevoiceprofiles = GetConVar( "lambdaplayers_voice_cachevoiceprofiles" )
 
 file.CreateDir( "lambdaplayers" )
 -- Lambda File System

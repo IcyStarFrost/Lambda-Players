@@ -1,7 +1,6 @@
 local string = string
 local table = table
 local math = math
-local hook_GetTable = hook.GetTable
 local hook_Add = hook.Add
 local hook_Remove = hook.Remove
 local RandomPairs = RandomPairs
@@ -13,7 +12,6 @@ local CurTime = CurTime
 local RealTime = RealTime
 local IsValid = IsValid
 local file_Find = file.Find
-
 local abs = math.abs
 local max = math.max
 local Clamp = math.Clamp
@@ -21,7 +19,6 @@ local FindInSphere = ents.FindInSphere
 local file_Find = file.Find
 local table_Empty = table.Empty
 local table_IsEmpty = table.IsEmpty
-local table_remove = table.remove
 local table_RemoveByValue = table.RemoveByValue
 local table_Copy = table.Copy
 local table_Add = table.Add
@@ -42,7 +39,6 @@ local string_sub = string.sub
 local next = next
 local floor = math.floor
 local table_concat = table.concat
-local string_Replace = string.Replace
 local string_Explode = string.Explode
 local string_match = string.match
 local table_insert = table.insert
@@ -192,7 +188,6 @@ function ENT:NamedTimer( name, delay, repeattimes, func, ignoredead )
     local intname = "lambdaplayers_" .. name .. id
     self:DebugPrint( "Created a Timer: " .. name )
 
-    local lastDeathT = self.l_LastDeathTime
     timer_create( intname, delay, repeattimes, function()
         if !IsValid( self ) or !ignoredead and !self:Alive() then return end
         local result = func( self )
@@ -505,8 +500,6 @@ if SERVER then
             self:SetNW2String( "lambda_tp", self.l_TextProfile )
             -- Non Personal Data --
             self:SetRespawn( info.respawn or self:GetRespawn() )
-
-            local spawnwep = self:WeaponDataExists( info.spawnwep ) and info.spawnwep or self.l_SpawnWeapon
             self:SwitchToSpawnWeapon()
             self:SetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon )
 

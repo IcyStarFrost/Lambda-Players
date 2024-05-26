@@ -3,7 +3,6 @@ local navmesh_GetAllNavAreas = ( SERVER and navmesh.GetAllNavAreas )
 
 local ents_Create = ents.Create
 local RandomPairs = RandomPairs
-local ents_FindInSphere = ents.FindInSphere
 local abs = math.abs
 local undo = undo
 local IsValid = IsValid

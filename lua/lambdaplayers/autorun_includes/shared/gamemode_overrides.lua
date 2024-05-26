@@ -12,7 +12,6 @@ if ( CLIENT ) then
     local Color = Color
     local Clamp = math.Clamp
     local ceil = math.ceil
-    local sub = string.sub
     local RoundedBox = draw.RoundedBox
     local SimpleText = draw.SimpleText
     local player_GetAll = player.GetAll

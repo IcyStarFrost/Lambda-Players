@@ -1,19 +1,12 @@
-local CurTime = CurTime
 local IsValid = IsValid
 local ipairs = ipairs
-local table_remove = table.remove
 local RealTime = RealTime
-local isnumber = isnumber
 local isfunction = isfunction
 local LambdaScreenScale = LambdaScreenScale
-local Left = string.Left
-local match = string.match
 local gmatch = string.gmatch
 local RunString = RunString
 local ScrW = ScrW
 local ScrH = ScrH
-local IsValidRagdoll = util.IsValidRagdoll
-local invisClr = Color( 0, 0, 0, 0 )
 
 if SERVER then
 
@@ -79,7 +72,6 @@ if SERVER then
 
     --
 
-    local SimpleTimer = timer.Simple
     local ai_ignoreplayers = GetConVar( "ai_ignoreplayers" )
     local GetConVar = GetConVar
     local FindInSphere = ents.FindInSphere
@@ -298,7 +290,7 @@ if SERVER then
                 ACTIVATOR = activator
                 CALLER = caller
 
-                if IsValid( activator ) && ( activator.IsLambdaPlayer or activator:IsPlayer() ) then
+                if IsValid( activator ) and ( activator.IsLambdaPlayer or activator:IsPlayer() ) then
                     TRIGGER_PLAYER = activator
                 end
             end
@@ -450,7 +442,6 @@ elseif CLIENT then
 
             local sndVol = 0
             local snd = vcData.Sound
-            local lastPlayTime = vcData.LastPlayTime
             if IsValid( snd ) and snd:GetState() == GMOD_CHANNEL_PLAYING then
                 local leftChan, rightChan = snd:GetLevel()
                 sndVol = ( ( leftChan + rightChan ) * 0.5 )

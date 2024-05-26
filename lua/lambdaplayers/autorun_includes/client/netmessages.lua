@@ -1,14 +1,10 @@
 
-local LambdaIsValid = LambdaIsValid
 local table_insert = table.insert
 local table_Count = table.Count
 local RealTime = RealTime
 local IsValid = IsValid
 local CurTime = CurTime
-local FrameTime = FrameTime
 local math_Clamp = math.Clamp
-
-local sub = string.sub
 local Start3D2D = cam.Start3D2D
 local End3D2D = cam.End3D2D
 local surface_SetDrawColor = surface.SetDrawColor
@@ -17,19 +13,14 @@ local surface_DrawTexturedRect = surface.DrawTexturedRect
 local surface_PlaySound = surface.PlaySound
 local notification_AddLegacy = notification.AddLegacy
 local net = net
-local hook_Run = hook.Run
-local LocalPlayer = LocalPlayer
 local pairs = pairs
 local ipairs = ipairs
 local CreateClientProp = ents.CreateClientProp
-local ClientsideRagdoll = ClientsideRagdoll
 local EyeAngles = EyeAngles
 local EyePos = EyePos
 local istable = istable
-local tobool = tobool
 local sound_PlayFile = sound.PlayFile
 local coroutine_yield = coroutine.yield
-local origin = Vector()
 local cleanuptime = GetConVar( "lambdaplayers_corpsecleanuptime" )
 local cleaneffect = GetConVar( "lambdaplayers_corpsecleanupeffect" )
 local speaklimit = GetConVar( "lambdaplayers_voice_talklimit" )
@@ -375,7 +366,7 @@ net.Receive( "lambdaplayers_playsoundfile", function()
     if !IsValid( lambda ) then return end
 
     local sendState = net.ReadBool()
-    if !lambda.GetIsDead or !lambda:GetIsDead() != sendState then return end
+    if !lambda.GetIsDead or lambda:GetIsDead() != sendState then return end
 
     PlaySoundFile( lambda, net.ReadString(), net.ReadUInt( 32 ), net.ReadVector(), net.ReadFloat(), true )
 end )
@@ -614,7 +605,6 @@ net.Receive( "lambdaplayers_takeviewshot", function()
 
     local shotPos = net.ReadVector()
     local shotAng = net.ReadAngle()
-    local noPos = ( shotPos == vector_origin )
     local lambdaCorpse = nil
 
     local headBone = lambda:LookupBone( "ValveBiped.Bip01_Head1" )

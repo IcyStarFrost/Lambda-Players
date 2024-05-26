@@ -1,6 +1,3 @@
-local table_insert = table.insert
-
-
 local CurTime = CurTime
 
 -- Adds a function to Lambda's Universal Actions
