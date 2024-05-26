@@ -110,7 +110,7 @@ end
 -- Makes the Lambda create a doodad.
 -- Similar in function to the Zeta's "Build onto props" feature.
 local function CreateDoohickey( self )
-    if !self:IsUnderLimit( "Prop" ) or !self:CanEquipWeapon( "physgun" ) or !GetConVar( "lambdaplayers_building_allowprop" ):GetBool() then return end
+    if !self:IsUnderLimit( "Prop" ) or !self:CanEquipWeapon( "physgun" ) or !self:CanEquipWeapon( "toolgun" ) or !GetConVar( "lambdaplayers_building_allowprop" ):GetBool() then return end
     self:PreventWeaponSwitch( false )
 
     local unfrozen = LambdaRNG( 1, 2 ) == 1
@@ -229,7 +229,7 @@ local function CreateDoohickey( self )
     return true
 end
 
-AddBuildFunctionToLambdaBuildingFunctions( "doohickey", "Allow Building onto Props", "If Lambda Players are allowed to add and weld props onto existing props. Or in other words, create doohickeys.\n\nRequires Allow Prop Spawning to be on!", CreateDoohickey )
+AddBuildFunctionToLambdaBuildingFunctions( "doohickey", "Allow Building onto Props", "If Lambda Players are allowed to add and weld props onto existing props. Or in other words, create doohickeys.\n\nRequires Allow Prop Spawning to be on and Lambdas should be allowed to have the Physgun and the Toolgun!", CreateDoohickey )
 AddBuildFunctionToLambdaBuildingFunctions( "prop", "Allow Prop Spawning", "If Lambda Players are allowed to spawn props", SpawnAProp )
 AddBuildFunctionToLambdaBuildingFunctions( "npc", "Allow NPC Spawning", "If Lambda Players are allowed to spawn NPCs", SpawnNPC )
 AddBuildFunctionToLambdaBuildingFunctions( "entity", "Allow Entity Spawning", "If Lambda Players are allowed to spawn Entities", SpawnEntity )
