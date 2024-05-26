@@ -55,7 +55,7 @@ function EntMeta:LambdaDisintegrate()
     if self.l_IsDisintegrating then return end
     if #disintegratingents > 8 then if self.isclientside then self:Remove() end return end -- The effect is limitted so we don't overload the emitters
 
-    local id = LambdaRNG( 10000000 )
+    local id = random( 1, 10000000 )
     local curpos
     local pos
     local nextparticle = 0
@@ -64,7 +64,7 @@ function EntMeta:LambdaDisintegrate()
 
     self.l_IsDisintegrating = true
     self:SetRenderClipPlaneEnabled( true )
-    self:EmitSound( "lambdaplayers/misc/disintegrate" .. LambdaRNG( 3 ) .. ".mp3", 65, LambdaRNG( 80, 100 ) )
+    self:EmitSound( "lambdaplayers/misc/disintegrate" .. random( 1, 3 ) .. ".mp3", 65, random( 80, 100 ) )
 
     table_insert( disintegratingents, self )
     
@@ -92,7 +92,7 @@ function EntMeta:LambdaDisintegrate()
                     part:SetStartSize( 3 )
                     part:SetEndSize( 0 )
                     part:SetCollide( true )
-                    part:SetGravity( LambdaRNG( 10 ) == 1 and upvector or downvector )
+                    part:SetGravity( random( 1, 10 ) == 1 and upvector or downvector )
                     part:SetVelocity( VectorRand() * 40 )
                     part:SetAngleVelocity( AngleRand( -10, 10 ) )
                     part:SetColor( 255, 174, 0 )
