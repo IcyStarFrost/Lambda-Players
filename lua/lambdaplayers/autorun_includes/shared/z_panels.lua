@@ -705,9 +705,9 @@ elseif SERVER then
 end
 
 
-function RegisterLambdaPanel( name, desc, func )
+function RegisterLambdaPanel( name, desc, func, cat )
     local cmdName = ( string_lower( string_Replace( name, " ", "" ) ) )
-    CreateLambdaConsoleCommand( "lambdaplayers_panels_open" .. cmdName .. "panel", func, true, desc, { name = "Open " .. name .. " Panel", category = "Panels" } )
+    CreateLambdaConsoleCommand( "lambdaplayers_panels_open" .. cmdName .. "panel", func, true, desc, { name = "Open " .. name .. " Panel", category = ( cat or "Panels" ) } )
 end
 
 local panels = file.Find( "lambdaplayers/lambda/panels/*", "LUA", "nameasc" )

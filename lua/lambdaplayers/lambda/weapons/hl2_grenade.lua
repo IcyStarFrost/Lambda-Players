@@ -1,6 +1,6 @@
 local IsValid = IsValid
 local CurTime = CurTime
-local random = math.random
+
 local ents_Create = ents.Create
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
@@ -14,7 +14,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 500,
         attackrange = 1000,
-        
+        dropentity = "weapon_frag",
+
         OnAttack = function( self, wepent, target )
             local grenade = ents_Create( "npc_grenade_frag" )
             if !IsValid( grenade ) then return end
@@ -29,7 +30,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             grenade:SetSaveValue( "m_hThrower", self )
             grenade:SetOwner( self )
             grenade:Spawn()
-            grenade:SetHealth( 99999 )
+            grenade:SetHealth( 30 )
 
             local throwForce = 1200
             local throwDir = self:GetForward()
@@ -46,7 +47,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local phys = grenade:GetPhysicsObject()
             if IsValid( phys ) then
                 phys:ApplyForceCenter( throwDir * throwForce )
-                phys:AddAngleVelocity( Vector( 600, random(-1200, 1200) ) )
+                phys:AddAngleVelocity( Vector( 600, LambdaRNG( -1200, 1200) ) )
             end
 
             return true

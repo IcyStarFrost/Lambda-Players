@@ -1,17 +1,15 @@
-local IsValid = IsValid
 local CurTime = CurTime
-local VectorRand = VectorRand
-local EmitEffect = util.Effect
-local EmitExplosion = util.BlastDamage
-local SimpleTimer = timer.Simple
-local RandomInt = math.random
-local RandomFloat = math.Rand
-local EntityCreate = ents.Create
-local hook_Add = hook.Add
-local hook_Remove = hook.Remove
-local FindInSphere = ents.FindInSphere
 local ipairs = ipairs
+local isentity = isentity
+local IsValid = IsValid
+local FindInSphere = ents.FindInSphere
+
+
 local EffectData = EffectData
+local ents_Create = ents.Create
+local util_Effect = util.Effect
+local BlastDamage = util.BlastDamage
+local angVel = Angle( 0, 400, 0 )
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
     slam = {
@@ -21,88 +19,78 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         holdtype = "slam",
         killicon = "npc_satchel",
         bonemerge = true,
-        keepdistance = 300,
-        attackrange = 400,
+        keepdistance = 400,
+        attackrange = 500,
+        dropentity = "weapon_slam",
 
         OnThink = function( self, wepent, dead )
-            if !dead and CurTime() > self.l_WeaponUseCooldown and self:GetState() != "Combat" and RandomInt( 1, 6 ) == 1 then
-                local randPos = self:GetRandomPosition( nil, 400 )
+            if !dead and CurTime() >= self.l_WeaponUseCooldown and ( self:GetState( "FindTarget" ) or self:IsPanicking() ) and LambdaRNG( 50 ) == 1 then
+                local randPos = self:GetRandomPosition( nil, 500 )
                 self:LookTo( randPos, 1.5 )
                 self:SimpleWeaponTimer( 1, function() self:UseWeapon( randPos ) end )
+                return 1.0
             end
 
-            return 1.0
+            return 0.1
         end,
 
         OnAttack = function( self, wepent, target )
-            local satchel = EntityCreate( "npc_satchel" )
-            if !IsValid( satchel ) then return end
+            local slam = ents_Create( "npc_satchel" )
+            if !IsValid( slam ) then return end
 
-            local throwPos = ( ( IsEntity( target ) and IsValid( target ) ) and target:GetPos() or target )
-            local faceDir = ( !throwPos and self:GetForward() or ( throwPos - ( self:WorldSpaceCenter() + self:GetUp() * 24 ) ):GetNormalized() )
+            local throwPos = ( ( isentity( target ) and IsValid( target ) ) and target:GetPos() or target )
+            local faceDir = ( !throwPos and self:GetForward() or ( throwPos - ( self:WorldSpaceCenter() + vector_up * 24 ) ):GetNormalized() )
 
-            satchel:SetPos( self:WorldSpaceCenter() + faceDir * 18 + self:GetUp() * 24 )
-            satchel:SetSaveValue( "m_hThrower", self )
-            satchel:SetSaveValue( "m_bIsLive", true )
-            satchel:Spawn()
-            satchel:SetOwner( self )
-            satchel:SetLocalAngularVelocity( Angle( 0, 400, 0 ) )
+            slam:SetPos( self:WorldSpaceCenter() + faceDir * 18 + self:GetUp() * 24 )
+            slam:SetSaveValue( "m_hThrower", self )
+            slam:SetSaveValue( "m_bIsLive", true )
+            slam:Spawn()
+            slam:SetOwner( self )
+            slam:SetLocalAngularVelocity( angVel )
 
-            local phys = satchel:GetPhysicsObject()
+            local phys = slam:GetPhysicsObject()
             if IsValid( phys ) then phys:ApplyForceCenter( self.loco:GetVelocity() + faceDir * 500 ) end
 
-            local hookID = "LambdaSLAM_SearchForTargets_" .. satchel:EntIndex()
-            local thinkTime = CurTime() + 0.1
-            hook_Add( "Think", hookID, function()
-                if CurTime() < thinkTime then return end
-                if !IsValid( satchel ) then hook_Remove( "Think", hookID ) return end
-                
-                if !LambdaIsValid( self ) then 
-                    satchel:EmitSound( "Weapon_SLAM.TripMineMode" )
-                    SimpleTimer( RandomFloat( 0.25, 0.5 ), function() 
-                        if !IsValid( satchel ) then return end
+            slam.l_UseLambdaDmgModifier = true
+            slam:SetColor( self:GetPlyColor():ToColor() )
+            wepent:EmitSound( "Weapon_SLAM.SatchelThrow" )
 
-                        local effData = EffectData()
-                        effData:SetOrigin( satchel:GetPos() )
-                        EmitEffect( "Explosion", effData, true, true )
-
-                        satchel:Remove()
-                        EmitExplosion( satchel, ( IsValid( self ) and self or satchel ), satchel:WorldSpaceCenter(), 200, 150 )
-                    end )
-
-                    hook_Remove( "Think", hookID ) 
-                    return 
-                end
-
-                for _, v in ipairs( FindInSphere( satchel:GetPos() - ( satchel:GetVelocity() * 0.25 ), RandomInt( 125, 175 ) ) ) do
-                    if v == self or v == satchel or !LambdaIsValid( v ) or !self:CanTarget( v ) or !satchel:Visible( v ) then continue end
-
-                    wepent:EmitSound( "Weapon_SLAM.SatchelDetonate" )
-                    satchel:EmitSound( "Weapon_SLAM.TripMineMode" )
-                    SimpleTimer( RandomFloat( 0.25, 0.5 ), function() 
-                        if !IsValid( satchel ) then return end
-
-                        local effData = EffectData()
-                        effData:SetOrigin( satchel:GetPos() )
-                        EmitEffect( "Explosion", effData, true, true )
-
-                        satchel:Remove()
-                        EmitExplosion( satchel, ( IsValid( self ) and self or satchel ), satchel:WorldSpaceCenter(), 200, 150 )
-                    end )
-
-                    hook_Remove( "Think", hookID ) 
-                    return
-                end
-
-                thinkTime = CurTime() + 0.1
-            end )
-
-            self.l_WeaponUseCooldown = CurTime() + 2.5
-
+            self:DeleteOnRemove( slam )
+            self.l_WeaponUseCooldown = ( CurTime() + 2.5 )
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM )
 
-            wepent:EmitSound( "Weapon_SLAM.SatchelThrow" )
+            local nextThink = 0
+            slam:LambdaHookTick( "LambdaSLAM_OnThink", function()
+                if CurTime() < nextThink then return end
+                nextThink = ( CurTime() + 0.1 )
+
+                local shouldExplode = !self:Alive()
+                if !shouldExplode then
+                    for _, ent in ipairs( FindInSphere( slam:GetPos() - ( slam:GetVelocity() * 0.25 ), LambdaRNG( 125, 175 ) ) ) do
+                        shouldExplode = ( ent != self and ent != slam and IsValid( ent ) and self:CanTarget( ent ) and slam:Visible( ent ) )
+                        if shouldExplode then break end
+                    end
+                end
+
+                if shouldExplode then
+                    if self:Alive() then wepent:EmitSound( "Weapon_SLAM.SatchelDetonate" ) end
+                    slam:EmitSound( "Weapon_SLAM.TripMineMode" )
+
+                    self:SimpleTimer( LambdaRNG( 0.25, 0.5, true ), function() 
+                        if !IsValid( slam ) then return end
+
+                        local effData = EffectData()
+                        effData:SetOrigin( slam:GetPos() )
+                        util_Effect( "Explosion", effData )
+
+                        BlastDamage( slam, self, slam:WorldSpaceCenter(), 200, 150 )
+                        slam:Remove()
+                    end, true )
+
+                    return true
+                end
+            end )
 
             return true
         end,

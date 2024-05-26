@@ -1,7 +1,7 @@
-local random = math.random
+
 local math_min = math.min
 local CurTime = CurTime
-local Rand = math.Rand
+
 local IsValid = IsValid
 local math_sqrt = math.sqrt
 local PlaySound = sound.Play
@@ -59,8 +59,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         OnAttack = function( self, wepent, target )
-            self.l_WeaponUseCooldown = CurTime() + Rand( 1.2, 1.66 )
-            self:EmitSound( "npc/zombie/zo_attack" .. random( 2 ) .. ".wav", 70, self:GetVoicePitch(), 1, CHAN_WEAPON )
+            self.l_WeaponUseCooldown = CurTime() + LambdaRNG( 1.2, 1.66, true )
+            self:EmitSound( "npc/zombie/zo_attack" .. LambdaRNG( 2 ) .. ".wav", 70, self:GetVoicePitch(), 1, CHAN_WEAPON )
 
             self:RemoveGesture( ACT_GMOD_GESTURE_RANGE_ZOMBIE )
             local attackAnim = self:AddGesture( ACT_GMOD_GESTURE_RANGE_ZOMBIE )
@@ -73,7 +73,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     return 
                 end
 
-                local dmg = random( 25, 40 )
+                local dmg = LambdaRNG( 25, 40 )
                 local dmginfo = DamageInfo()
                 dmginfo:SetDamage( dmg )
                 dmginfo:SetAttacker( self )
@@ -86,7 +86,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                 local maxHP = ( self:GetMaxHealth() * 2 )
                 if target:Health() < targetPrevHP and self:Health() < maxHP then -- Steal chunk of target's HP on successful hit
-                    local chunk = ( ( targetPrevHP - target:Health() ) * Rand( 0.5, 0.75 ) )
+                    local chunk = ( ( targetPrevHP - target:Health() ) * LambdaRNG( 0.5, 0.75, true ) )
                     self:SetHealth( math.Round( math_min( self:Health() + chunk, maxHP ), 0 ) )
                 end
 

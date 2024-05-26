@@ -1,12 +1,11 @@
-local random = math.random
+
 local CurTime = CurTime
 local IsValid = IsValid
 local util_Effect = util.Effect
 local util_ScreenShake = util.ScreenShake
 local bulletData = {
-    Damage = 1000,
-    Force = 1000,
-    HullSize = 5,
+    Damage = 100000,
+    Force = 80000000,
     Num = 1,
     TracerName = "GunshipTracer",
     Spread = Vector( 0.05, 0.05, 0 )
@@ -30,9 +29,9 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent:EmitSound( "weapons/pistol/pistol_empty.wav", 70, 100, 1, CHAN_WEAPON )
 
             self:SimpleWeaponTimer( 1, function()
-                wepent:EmitSound( "weapons/357/357_fire2.wav", 70, random( 70, 75 ), 1, CHAN_WEAPON )
+                wepent:EmitSound( "weapons/357/357_fire2.wav", 70, LambdaRNG( 70, 75 ), 1, CHAN_WEAPON )
                 self:EmitSound( "ambient/explosions/explode_4.wav", 70, 100, 1, CHAN_WEAPON )
-                self:EmitSound( "physics/body/body_medium_break" .. random( 2, 4 ) .. ".wav", 90 )
+                self:EmitSound( "physics/body/body_medium_break" .. LambdaRNG( 2, 4 ) .. ".wav", 90 )
 
                 self:HandleMuzzleFlash( 7 )
 

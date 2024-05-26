@@ -1,7 +1,7 @@
-local random = math.random
+
 local CurTime = CurTime
 local IsValid = IsValid
-local Rand = math.Rand
+
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
@@ -17,8 +17,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 175,
 
         OnAttack = function( self, wepent, target )
-            self.l_WeaponUseCooldown = CurTime() + Rand(1.33, 1.8)
-            wepent:EmitSound( "lambdaplayers/weapons/glongclub/wpn_golf_club_swing_miss" .. random( 2 ) .. ".mp3", 85, random( 95, 110 ), 1, CHAN_WEAPON )
+            self.l_WeaponUseCooldown = CurTime() + LambdaRNG( 1.33, 1.8, true )
+            wepent:EmitSound( "lambdaplayers/weapons/glongclub/wpn_golf_club_swing_miss" .. LambdaRNG( 2 ) .. ".mp3", 85, LambdaRNG( 95, 110 ), 1, CHAN_WEAPON )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
             local gestAttack = self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
@@ -27,14 +27,14 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:SimpleWeaponTimer( 0.45, function()
                 if !IsValid( target ) or !self:IsInRange( target, 200 ) then return end
 
-                local dmg = random( 500, 750 )
+                local dmg = LambdaRNG( 500, 750 )
                 local attackAng = ( target:WorldSpaceCenter() - self:EyePos() ):Angle()
                 local attackForce = ( attackAng:Forward() * ( dmg * 200 ) + attackAng:Up() * ( dmg * 200 ) )
                 local dmginfo = DamageInfo()
                 dmginfo:SetDamage( dmg )
                 dmginfo:SetAttacker( self )
                 dmginfo:SetInflictor( wepent )
-                dmginfo:SetDamageType( bit.bor( DMG_CLUB, DMG_CRUSH ) )
+                dmginfo:SetDamageType( DMG_CLUB + DMG_CRUSH )
                 
                 -- Doesn't send them flying if not done like this
                 if target.IsLambdaPlayer then
@@ -49,7 +49,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     target:TakeDamageInfo( dmginfo )
                 end
 
-                wepent:EmitSound( "lambdaplayers/weapons/glongclub/wpn_golf_club_melee_0" .. random( 2 ) .. ".mp3", 90 )
+                wepent:EmitSound( "lambdaplayers/weapons/glongclub/wpn_golf_club_melee_0" .. LambdaRNG( 2 ) .. ".mp3", 90 )
             end )
 
             return true

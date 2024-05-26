@@ -50,6 +50,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_PISTOL,
         crouchWalk = ACT_HL2MP_WALK_CROUCH_PISTOL,
         reload = ACT_HL2MP_GESTURE_RELOAD_PISTOL,
+        attack = ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL,
         swimIdle = ACT_HL2MP_SWIM_IDLE_PISTOL,
         swimMove = ACT_HL2MP_SWIM_PISTOL
     },
@@ -61,6 +62,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_SMG1,
         crouchWalk = ACT_HL2MP_WALK_CROUCH_SMG1,
         reload = ACT_HL2MP_GESTURE_RELOAD_SMG1,
+        attack = ACT_HL2MP_GESTURE_RANGE_ATTACK_SMG1,
         swimIdle = ACT_HL2MP_SWIM_IDLE_SMG1,
         swimMove = ACT_HL2MP_SWIM_SMG1
     },
@@ -72,6 +74,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_AR2,
         crouchWalk = ACT_HL2MP_WALK_CROUCH_AR2,
         reload = ACT_HL2MP_GESTURE_RELOAD_AR2,
+        attack = ACT_HL2MP_GESTURE_RANGE_ATTACK_AR2,
         swimIdle = ACT_HL2MP_SWIM_IDLE_AR2,
         swimMove = ACT_HL2MP_SWIM_AR2
     },
@@ -83,6 +86,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_SHOTGUN,
         crouchWalk = ACT_HL2MP_WALK_CROUCH_SHOTGUN,
         reload = ACT_HL2MP_GESTURE_RELOAD_SHOTGUN,
+        attack = ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN,
         swimIdle = ACT_HL2MP_SWIM_IDLE_SHOTGUN,
         swimMove = ACT_HL2MP_SWIM_SHOTGUN
     },
@@ -94,6 +98,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_REVOLVER,
         crouchWalk = ACT_HL2MP_WALK_CROUCH_REVOLVER,
         reload = ACT_HL2MP_GESTURE_RELOAD_REVOLVER,
+        attack = ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER,
         swimIdle = ACT_HL2MP_SWIM_IDLE_REVOLVER,
         swimMove = ACT_HL2MP_SWIM_REVOLVER
     },
@@ -185,6 +190,7 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_DUEL,
         crouchWalk = ACT_HL2MP_WALK_CROUCH_DUEL,
         reload = ACT_HL2MP_GESTURE_RELOAD_DUEL,
+        attack = ACT_HL2MP_GESTURE_RANGE_ATTACK_DUEL,
         swimIdle = ACT_HL2MP_SWIM_IDLE_DUEL,
         swimMove = ACT_HL2MP_SWIM_DUEL
     },
@@ -236,69 +242,93 @@ _LAMBDAPLAYERSHoldTypeAnimations = {
         crouchIdle = ACT_HL2MP_IDLE_CROUCH_CROSSBOW,
         crouchWalk = ACT_HL2MP_WALK_CROUCH_CROSSBOW,
         reload = ACT_HL2MP_GESTURE_RELOAD_CROSSBOW,
+        attack = ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW,
         swimIdle = ACT_HL2MP_SWIM_IDLE_CROSSBOW,
         swimMove = ACT_HL2MP_SWIM_CROSSBOW
     },
     ["panic"] = {
         idle = ACT_HL2MP_IDLE_SCARED,
         run = ACT_HL2MP_RUN_PANICKED,
-        walk = ACT_HL2MP_RUN_PANICKED,
+        walk = ACT_HL2MP_WALK,
         jump = ACT_HL2MP_JUMP_SLAM,
-        crouchIdle = ACT_HL2MP_IDLE_SCARED,
-        crouchWalk = ACT_HL2MP_RUN_PANICKED,
+        crouchIdle = ACT_HL2MP_IDLE_CROUCH,
+        crouchWalk = ACT_HL2MP_WALK_CROUCH,
         swimIdle = ACT_HL2MP_SWIM_IDLE,
         swimMove = ACT_HL2MP_SWIM
+    },
+    ["sniperrifle"] = {
+        idle = ACT_HL2MP_IDLE_RPG,
+        run = ACT_HL2MP_RUN_RPG,
+        walk = ACT_HL2MP_WALK_RPG,
+        jump = ACT_HL2MP_JUMP_AR2,
+        crouchIdle = ACT_HL2MP_IDLE_CROUCH_AR2,
+        crouchWalk = ACT_HL2MP_WALK_CROUCH_AR2,
+        swimIdle = ACT_HL2MP_SWIM_IDLE_RPG,
+        swimMove = ACT_HL2MP_SWIM_RPG
     }
 }
 
 
-_LAMBDAPLAYERSEnemyRelations = {
+_LAMBDAPLAYERSEntityRelations = {
     -- Half-Life 2
-    [ "npc_combine_s" ] = true,
-    [ "npc_metropolice" ] = true,
-    [ "npc_zombie" ] = true,
-    [ "npc_fastzombie" ] = true,
-    [ "npc_fastzombie_torso" ] = true,
-    [ "npc_headcrab_fast" ] = true,
-    [ "npc_zombie_torso" ] = true,
-    [ "npc_poisonzombie" ] = true,
-    [ "npc_headcrab_black" ] = true,
-    [ "npc_headcrab" ] = true,
-    [ "npc_zombine" ] = true,
-    [ "npc_antlion" ] = true,
-    [ "npc_antlionguard" ] = true,
-    [ "npc_antlionguardian" ] = true,
-    [ "npc_antlion_worker" ] = true,
-    [ "npc_manhack" ] = true,
-    [ "npc_rollermine" ] = true,
-    [ "npc_turret_floor" ] = true,
-    [ "npc_turret_ceiling" ] = true,
-    [ "npc_combine_camera" ] = true,
-    [ "npc_combinegunship" ] = true,
-    [ "npc_helicopter" ] = true,
-    [ "npc_cscanner" ] = true,
-    [ "npc_clawscanner" ] = true,
-    [ "npc_hunter" ] = true,
-    [ "npc_strider" ] = true,
+    [ "npc_alyx" ]                  = D_LI,
+    [ "npc_barney" ]                = D_LI,
+    [ "npc_citizen" ]               = D_LI,
+    [ "npc_dog" ]                   = D_LI,
+    [ "npc_kleiner" ]               = D_LI,
+    [ "npc_mossman" ]               = D_LI,
+    [ "npc_eli" ]                   = D_LI,
+    [ "npc_vortigaunt" ]            = D_LI,
+    [ "npc_monk" ]                  = D_LI,
+
+    [ "npc_combine_s" ]             = D_HT,
+    [ "npc_metropolice" ]           = D_HT,
+    [ "npc_zombie" ]                = D_HT,
+    [ "npc_fastzombie" ]            = D_HT,
+    [ "npc_fastzombie_torso" ]      = D_HT,
+    [ "npc_headcrab_fast" ]         = D_HT,
+    [ "npc_zombie_torso" ]          = D_HT,
+    [ "npc_poisonzombie" ]          = D_HT,
+    [ "npc_headcrab_black" ]        = D_HT,
+    [ "npc_headcrab" ]              = D_HT,
+    [ "npc_zombine" ]               = D_HT,
+    [ "npc_antlion" ]               = D_HT,
+    [ "npc_antlionguard" ]          = D_HT,
+    [ "npc_antlionguardian" ]       = D_HT,
+    [ "npc_antlion_worker" ]        = D_HT,
+    [ "npc_manhack" ]               = D_HT,
+    [ "npc_rollermine" ]            = D_HT,
+    [ "npc_turret_floor" ]          = D_HT,
+    [ "npc_turret_ceiling" ]        = D_HT,
+    [ "npc_combine_camera" ]        = D_HT,
+    [ "npc_combinegunship" ]        = D_HT,
+    [ "npc_helicopter" ]            = D_HT,
+    [ "npc_cscanner" ]              = D_HT,
+    [ "npc_clawscanner" ]           = D_HT,
+    [ "npc_hunter" ]                = D_HT,
+    [ "npc_strider" ]               = D_HT,
 
     -- Half-Life: Source
-    [ "monster_alien_grunt" ] = true,
-    [ "monster_alien_slave" ] = true,
-    [ "monster_human_assassin" ] = true,
-    [ "monster_bullchicken" ] = true,
-    [ "monster_alien_controller" ] = true,
-    [ "monster_gargantua" ] = true,
-    [ "monster_bigmomma" ] = true,
-    [ "monster_human_grunt" ] = true,
-    [ "monster_headcrab" ] = true,
-    [ "monster_turret" ] = true,
-    [ "monster_houndeye" ] = true,
-    [ "monster_miniturret" ] = true,
-    [ "monster_nihilanth" ] = true,
-    [ "monster_sentry" ] = true,
-    [ "monster_snark" ] = true,
-    [ "monster_tentacle" ] = true,
-    [ "monster_zombie" ] = true,
+    [ "monster_scientist" ]         = D_LI,
+    [ "monster_barney" ]            = D_LI,
+
+    [ "monster_alien_grunt" ]       = D_HT,
+    [ "monster_alien_slave" ]       = D_HT,
+    [ "monster_human_assassin" ]    = D_HT,
+    [ "monster_bullchicken" ]       = D_HT,
+    [ "monster_alien_controller" ]  = D_HT,
+    [ "monster_gargantua" ]         = D_HT,
+    [ "monster_bigmomma" ]          = D_HT,
+    [ "monster_human_grunt" ]       = D_HT,
+    [ "monster_headcrab" ]          = D_HT,
+    [ "monster_turret" ]            = D_HT,
+    [ "monster_houndeye" ]          = D_HT,
+    [ "monster_miniturret" ]        = D_HT,
+    [ "monster_nihilanth" ]         = D_HT,
+    [ "monster_sentry" ]            = D_HT,
+    [ "monster_snark" ]             = D_HT,
+    [ "monster_tentacle" ]          = D_HT,
+    [ "monster_zombie" ]            = D_HT,
 }
 
 
@@ -383,9 +413,9 @@ function LambdaGetPossibleSpawns()
     local info_player_rebel = FindByClass( "info_player_rebel" )
     local info_player_allies = FindByClass( "info_player_allies" )
     local info_player_axis = FindByClass( "info_player_axis" )
+    local info_player_deathmatch = FindByClass( "info_player_deathmatch" )
     local info_coop_spawn = FindByClass( "info_coop_spawn" )
     local info_survivor_position = FindByClass( "info_survivor_position" )
-
 
     table_Add( info_player_starts, info_player_teamspawns )
     table_Add( info_player_starts, info_player_terrorist )
@@ -394,6 +424,7 @@ function LambdaGetPossibleSpawns()
     table_Add( info_player_starts, info_player_rebel )
     table_Add( info_player_starts, info_player_allies )
     table_Add( info_player_starts, info_player_axis )
+    table_Add( info_player_starts, info_player_deathmatch )
     table_Add( info_player_starts, info_coop_spawn )
     table_Add( info_player_starts, info_survivor_position )
 
@@ -403,19 +434,42 @@ end
 
 hook.Add( "InitPostEntity", "lambdaplayersgetspawns", function() LambdaSpawnPoints = LambdaGetPossibleSpawns() end )
 
+local function GetDeathNoticeEntityName( ent )
+	if ent:GetClass() == "npc_citizen" then
+		if ent:GetModel() == "models/odessa.mdl" then return "Odessa Cubbage" end
+
+        local name = ent:GetName()
+		if name == "griggs" then return "Griggs" end
+		if name == "sheckley" then return "Sheckley" end
+		if name == "tobias" then return "Laszlo" end
+		if name == "stanley" then return "Sandy" end
+	end
+
+	if ent:IsVehicle() and ent.VehicleTable and ent.VehicleTable.Name then
+		return ent.VehicleTable.Name
+	end
+	if ent:IsNPC() and ent.NPCTable and ent.NPCTable.Name then
+		return ent.NPCTable.Name
+	end
+
+	return "#" .. ent:GetClass()
+end
+
 -- Adds to the default killfeed
 function LambdaKillFeedAdd( victim, attacker, inflictor )
     if !attacker:IsWorld() and !IsValid( attacker ) then return end 
         
-    local victimname = ( ( victim.IsLambdaPlayer or victim:IsPlayer() ) and victim:Nick() or ( victim.IsZetaPlayer and victim.zetaname or "#" .. victim:GetClass() ) )
-    local attackername = ( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and attacker:Nick() or ( attacker.IsZetaPlayer and attacker.zetaname or "#" .. attacker:GetClass() ) )
+    local victimname = ( ( victim.IsLambdaPlayer or victim:IsPlayer() ) and victim:Nick() or ( victim.IsZetaPlayer and victim.zetaname or GetDeathNoticeEntityName( victim ) ) )
+    
+    local attackerclass = attacker:GetClass()
+    local attackername = ( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and attacker:Nick() or ( attacker.IsZetaPlayer and attacker.zetaname or GetDeathNoticeEntityName( attacker ) ) )
 
     local victimteam = ( ( victim.IsLambdaPlayer or victim:IsPlayer() ) and victim:Team() or -1 )
     local attackerteam = ( ( attacker.IsLambdaPlayer or attacker:IsPlayer() ) and attacker:Team() or -1 )
 
     local attackerWep = attacker.GetActiveWeapon
-    local inflictorname = ( !IsValid( inflictor ) and "suicide" or ( inflictor.IsLambdaWeapon and inflictor.l_killiconname or ( ( inflictor == attacker and attackerWep and IsValid( attackerWep( attacker ) ) ) and attackerWep( attacker ):GetClass() or inflictor:GetClass() ) ) )    
-
+    local inflictorname = ( victim == attacker and "suicide" or ( IsValid( inflictor ) and ( inflictor.l_killiconname or ( ( inflictor == attacker and attackerWep and IsValid( attackerWep( attacker ) ) ) and attackerWep( attacker ):GetClass() or inflictor:GetClass() ) ) or attackerclass ) )
+    
     net.Start( "lambdaplayers_addtokillfeed" )
         net.WriteString( attackername )
         net.WriteInt( attackerteam, 8 )
@@ -426,12 +480,11 @@ function LambdaKillFeedAdd( victim, attacker, inflictor )
 end
 
 -- Sprays the path relative to the materials folder to the position.
-function LambdaPlayers_Spray( path, tracehitpos, tracehitnormal, index )
+function LambdaPlayers_Spray( path, tracehitpos, tracehitnormal )
     net.Start( "lambdaplayers_spray" )
         net.WriteString( path )
         net.WriteVector( tracehitpos )
         net.WriteNormal( tracehitnormal )
-        net.WriteUInt( index, 32 )
     net.Broadcast()
 end
 
@@ -450,11 +503,4 @@ function LambdaGetPlayerBirthday( ply, callback )
         print( "Lambda Players: Successfully received " .. ply:Name() .. "'s birthday!")
         callback( ply, month, day )
     end )
-end
-
--- Called when Lambda's state is changed.
-function LambdaPlayers_OnStateChanged( lambda, name, oldState, newState )
-    if newState == oldState then return end
-    lambda:DebugPrint( "Changed state from " .. oldState .. " to " .. newState )
-    lambda:SetLastState( oldState )
 end

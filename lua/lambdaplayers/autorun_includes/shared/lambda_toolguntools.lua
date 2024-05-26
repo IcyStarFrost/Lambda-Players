@@ -1,6 +1,6 @@
 local table_insert = table.insert
-local random = math.random
-local rand = math.Rand
+
+
 local RandomPairs = RandomPairs
 local ColorRand = ColorRand
 local VectorRand = VectorRand
@@ -101,7 +101,7 @@ end
 local balloonnames = { "normal", "normal_skin1", "normal_skin2", "normal_skin3", "gman", "mossman", "dog", "heart", "star" }
 local function UseBalloonTool( self, target )
     if !self:IsUnderLimit( "Balloon" ) then return end -- We check if the Lambda Players hasn't reached it's personal limit of Balloons
-    local world = tobool( random( 0, 1 ) )
+    local world = tobool( LambdaRNG( 0, 1 ) )
 
     -- If we choose target but the target isn't valid, we don't do anything.
     if !world and ( !IsValid( target ) or target:GetClass() == "gmod_balloon" ) then return end -- Returning nothing is equivalent to returning false
@@ -123,7 +123,7 @@ local function UseBalloonTool( self, target )
     self:UseWeapon( hitpos ) -- Use the toolgun on the hit position of the trace to fake using a tool
 
     -- We randomly select a model for the Lambda to spawn. This is a special case since certain balloons have skins.
-    local balloonModel = list.Get( "BalloonModels" )[balloonnames[ random( #balloonnames ) ]]
+    local balloonModel = list.Get( "BalloonModels" )[balloonnames[ LambdaRNG( #balloonnames ) ]]
 
     -- We create the balloon entity "gmod_balloon" with the random model, at the HitPos of the trace, with Angles of nil and the Lambda as the owner
     local ent = CreateGmodEntity( "gmod_balloon", balloonModel.model, hitpos, nil, self )
@@ -152,7 +152,7 @@ local function UseBalloonTool( self, target )
 
     end
 
-    local constr, rope = constraint.Rope( ent, entity, 0, physbone, Vector( 0, 0, 0 ), LPos, 0, random( 5, 1000 ), 0, 0.5, "cable/rope" )
+    local constr, rope = constraint.Rope( ent, entity, 0, physbone, Vector( 0, 0, 0 ), LPos, 0, LambdaRNG( 5, 1000 ), 0, 0.5, "cable/rope" )
     table_insert( self.l_SpawnedEntities, 1, rope )
     table_insert( self.l_SpawnedEntities, 1, ent ) -- Insert the balloon last so if the Lambda decide to undo, it will meet the balloon first
 
@@ -160,7 +160,7 @@ local function UseBalloonTool( self, target )
     ent:SetPlayer( self ) -- We can safely set it to ourself since we 'hijacked' it
     if ( balloonModel.skin ) then ent:SetSkin( balloonModel.skin ) end
     if ( balloonModel.nocolor ) then ent:SetColor( Color(255, 255, 255, 255) ) else ent:SetColor( ColorRand( ) ) end -- We randomize the color of the balloon except if it tells us that it can't accept color.
-    ent:SetForce( random( 50, 2000 ) ) -- While players can use negative force for balloons, we limit the Lambda to positive forces to be more fun
+    ent:SetForce( LambdaRNG( 50, 2000 ) ) -- While players can use negative force for balloons, we limit the Lambda to positive forces to be more fun
 
     return true -- Return true to let the for loop in Chance_Tool know we actually got to use the tool so it can break. All tools must do this!
 end
@@ -173,9 +173,9 @@ AddToolFunctionToLambdaTools( "Balloon", UseBalloonTool )
 local function UseBallsocketTool( self, target )
     if !IsValid( target ) then return end
 
-    local world = tobool( random( 0, 1 ) )
+    local world = tobool( LambdaRNG( 0, 1 ) )
     local find = self:FindInSphere( nil, 800, function( ent ) if ent != target and !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
-    local target2 = find[ random( #find ) ]
+    local target2 = find[ LambdaRNG( #find ) ]
 
     if !IsValid( target2 ) and !world then return end
     target2 = !world and target2 or Entity( 0 )
@@ -239,7 +239,7 @@ local function UseCreatorTool( self, target )
     local allowpropCvar = GetConVar( "lambdaplayers_building_allowprop" ):GetBool()
     if !self:IsUnderLimit( "Prop" ) or !allowpropCvar then return end
 
-    local mdl = LambdaPlayerProps[ random( #LambdaPlayerProps ) ]
+    local mdl = LambdaPlayerProps[ LambdaRNG( #LambdaPlayerProps ) ]
 
     if !mdl then return end
 
@@ -291,16 +291,16 @@ local function UseDynamiteTool( self, target )
     coroutine.wait( 1 )
 
     self:UseWeapon( hitpos )
-    local ent = CreateGmodEntity( "gmod_dynamite", dynamitemodels[ random( #dynamitemodels ) ], hitpos + trace.HitNormal * 10, nil, self )
+    local ent = CreateGmodEntity( "gmod_dynamite", dynamitemodels[ LambdaRNG( #dynamitemodels ) ], hitpos + trace.HitNormal * 10, nil, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Dynamite" )
     table_insert( self.l_SpawnedEntities, 1, ent )
 
     ent:SetPlayer( self )
-    ent:SetDamage( random( 1, 500 ) )
-    ent:SetShouldRemove( tobool( random( 0, 1 ) ) )
-    ent:SetDelay( random( 1, 60 ) )
+    ent:SetDamage( LambdaRNG( 500 ) )
+    ent:SetShouldRemove( tobool( LambdaRNG( 0, 1 ) ) )
+    ent:SetDelay( LambdaRNG( 60 ) )
     
     function ent:Explode( delay, ply ) -- Override the old Explode function with our own. Although we don't change much we just make the explosion repeat it self if it isn't set for removal
 
@@ -345,9 +345,9 @@ local function UseElasticTool( self, target )
     if !self:IsUnderLimit( "Rope" ) then return end -- It's technically a special rope
     if !IsValid( target ) then return end
 
-    local world = tobool( random( 0, 1 ) )
+    local world = tobool( LambdaRNG( 0, 1 ) )
     local find = self:FindInSphere( nil, 800, function( ent ) if ent != target and !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
-    local target2 = find[ random( #find ) ]
+    local target2 = find[ LambdaRNG( #find ) ]
 
     if !IsValid( target2 ) and !world then return end
     target2 = !world and target2 or Entity( 0 )
@@ -373,7 +373,7 @@ local function UseElasticTool( self, target )
 
     self:UseWeapon( ( !world and target2:WorldSpaceCenter() or lpos2 ) )
 
-    local cons, rope = constraint.Elastic( target, target2, 0, 0, lpos1, lpos2, random( 0, 4000 ), random( 0, 50 ), rand( 0 , 1 ), ropematerials[ random( #ropematerials ) ], rand( 0, 20 ), random( 0, 1 ), ColorRand() )
+    local cons, rope = constraint.Elastic( target, target2, 0, 0, lpos1, lpos2, LambdaRNG( 0, 4000 ), LambdaRNG( 0, 50 ), LambdaRNG( 0 , 1, true ), ropematerials[ LambdaRNG( #ropematerials ) ], LambdaRNG( 0, 20, true ), LambdaRNG( 0, 1 ), ColorRand() )
 
     if IsValid( cons ) then
         cons.LambdaOwner = self
@@ -398,7 +398,7 @@ AddToolFunctionToLambdaTools( "Elastic", UseElasticTool )
 local effectlist = { "manhacksparks", "glassimpact", "striderblood", "shells", "cball_explode", "ar2impact", "bloodimpact", "sparks", "dirtywatersplash", "watersplash", "stunstickimpact", "thumperdust", "muzzleeffect", "bloodspray", "helicoptermegabomb", "rifleshells", "ar2explosion", "explosion", "cball_bounce", "shotgunshells", "underwaterexplosion", "smoke" }
 local function UseEmitterTool( self, target )
     if !self:IsUnderLimit( "Emitter" ) then return end
-    local world = tobool( random( 0, 1 ) )
+    local world = tobool( LambdaRNG( 0, 1 ) )
 
     if !world and ( !IsValid( target ) or target:GetClass()=="gmod_emitter" ) then return end
 
@@ -432,9 +432,9 @@ local function UseEmitterTool( self, target )
 
     ent:SetPlayer( self )
     ent:SetOn( true )
-    ent:SetDelay( rand( 0.1, 2 ) )
-    ent:SetScale( rand( 0, 6 ) )
-    ent:SetEffect( effectlist[ random( #effectlist ) ] )
+    ent:SetDelay( LambdaRNG( 0.1, 2, true ) )
+    ent:SetScale( LambdaRNG( 0, 6, true ) )
+    ent:SetEffect( effectlist[ LambdaRNG( #effectlist ) ] )
 
     return true
 end
@@ -458,8 +458,8 @@ local function UseFaceposerTool( self, target )
     self:UseWeapon( target:WorldSpaceCenter() )
 
     for i = 0, target:GetFlexNum()-1 do
-        if random( 4 ) > 1 then -- 25% chance to not edit a flex, to add a bit of randomness to that
-            target:SetFlexWeight(i, math.random()*math.random(5))
+        if LambdaRNG( 4 ) > 1 then -- 25% chance to not edit a flex, to add a bit of randomness to that
+            target:SetFlexWeight(i, LambdaRNG()*LambdaRNG( 5 ))
         end
     end
 
@@ -474,7 +474,7 @@ AddToolFunctionToLambdaTools( "Faceposer", UseFaceposerTool )
 local hoverballmodels = { "models/dav0r/hoverball.mdl", "models/maxofs2d/hover_basic.mdl", "models/maxofs2d/hover_classic.mdl", "models/maxofs2d/hover_plate.mdl", "models/maxofs2d/hover_propeller.mdl", "models/maxofs2d/hover_rings.mdl" }
 local function UseHoverballTool( self, target )
     if !self:IsUnderLimit( "Hoverball" ) then return end
-    local world = tobool( random( 0, 1 ) )
+    local world = tobool( LambdaRNG( 0, 1 ) )
 
     if !world and ( !IsValid( target ) or target:GetClass()=="gmod_hoverball" ) then return end
 
@@ -492,7 +492,7 @@ local function UseHoverballTool( self, target )
     ang.pitch = ang.pitch + 90
 
     self:UseWeapon( hitpos )
-    local ent = CreateGmodEntity( "gmod_hoverball", hoverballmodels[ random( #hoverballmodels ) ], hitpos, ang, self )
+    local ent = CreateGmodEntity( "gmod_hoverball", hoverballmodels[ LambdaRNG( #hoverballmodels ) ], hitpos, ang, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Hoverball" )
@@ -511,17 +511,17 @@ local function UseHoverballTool( self, target )
     
     ent:SetPlayer( self )
     ent:SetEnabled( true )
-    ent:SetSpeed( random( 1, 10 ) )
-    ent:SetAirResistance( Round( rand( 0, 10 ), 2 ) )
-    ent:SetStrength( random( 1, 10 ) )
+    ent:SetSpeed( LambdaRNG( 10 ) )
+    ent:SetAirResistance( Round( LambdaRNG( 0, 10, true ), 2 ) )
+    ent:SetStrength( LambdaRNG( 10 ) )
 
-    local rndtime = CurTime() + rand( 1, 10 )
+    local rndtime = CurTime() + LambdaRNG( 1, 10, true )
     ent:LambdaHookTick( "Hoverballrandommovement", function( hoverball )
         if CurTime() > rndtime then
-            if !IsValid( hoverball ) then return true end
-            hoverball:SetZVelocity( random( -1, 1 ) )
+            if !IsValid( hoverball ) or !IsValid( hoverball:GetPhysicsObject() ) then return true end
+            hoverball:SetZVelocity( LambdaRNG( -1, 1 ) )
 
-            rndtime = CurTime() + rand( 1, 10 )
+            rndtime = CurTime() + LambdaRNG( 1, 10, true )
         end
     end )
 
@@ -592,7 +592,7 @@ local function UseLampTool( self, target )
     coroutine.wait( 1 )
 
     self:UseWeapon( trace.HitPos )
-    local ent = CreateGmodEntity( "gmod_lamp", lampmodels[ random( 1, 3 ) ], trace.HitPos, angle_zero, self )
+    local ent = CreateGmodEntity( "gmod_lamp", lampmodels[ LambdaRNG( 3 ) ], trace.HitPos, angle_zero, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Lamp" )
@@ -605,12 +605,12 @@ local function UseLampTool( self, target )
 	ent:SetPos( trace.HitPos + Offset ) -- Fix to avoid lamps from being placed into things
 
     ent:SetColor( ColorRand( false ) )
-    ent:SetFlashlightTexture( lamptextures[ random( #lamptextures) ] )
+    ent:SetFlashlightTexture( lamptextures[ LambdaRNG( #lamptextures ) ] )
     ent:SetPlayer( self )
     ent:SetOn( true )
-    ent:SetLightFOV( random( 10, 170 ) )
-    ent:SetDistance( random( 64, 2048 ) )
-    ent:SetBrightness( rand( 0.5, 8 ) )
+    ent:SetLightFOV( LambdaRNG( 10, 170 ) )
+    ent:SetDistance( LambdaRNG( 64, 2048 ) )
+    ent:SetBrightness( LambdaRNG( 0.5, 8, true ) )
     ent.flashlight:SetKeyValue( "enableshadows", 0 )
 
     return true
@@ -623,7 +623,7 @@ AddToolFunctionToLambdaTools( "Lamp", UseLampTool )
 
 local function UseLightTool( self, target )
     if !self:IsUnderLimit( "Light" ) then return end -- Can't create any more lights
-    local world = tobool( random( 0, 1 ) )
+    local world = tobool( LambdaRNG( 0, 1 ) )
 
     if !world and ( !IsValid( target ) or target:GetClass()=="gmod_light" ) then return end
 
@@ -644,7 +644,7 @@ local function UseLightTool( self, target )
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Light" )
 
-    if random( 0, 1 ) == 1 then
+    if LambdaRNG( 0, 1 ) == 1 then
         local LPos = !IsNil( entity ) and entity:WorldToLocal( hitpos ) or hitpos
         entity = !IsNil( entity ) and entity or Entity( 0 ) -- world
 
@@ -657,7 +657,7 @@ local function UseLightTool( self, target )
 
         end
 
-        local constr, rope = constraint.Rope( ent, entity, 0, physbone, Vector( 0, 0, 6.5 ), LPos, 0, random( 256 ), 0, 1, "cable/rope" )
+        local constr, rope = constraint.Rope( ent, entity, 0, physbone, Vector( 0, 0, 6.5 ), LPos, 0, LambdaRNG( 256 ), 0, 1, "cable/rope" )
         table_insert( self.l_SpawnedEntities, 1, rope )
     end
     table_insert( self.l_SpawnedEntities, 1, ent )
@@ -666,8 +666,8 @@ local function UseLightTool( self, target )
     ent:SetPlayer( self ) -- We can safely set this to ourselves since it was "hijacked"
     ent:SetOn( true )
     ent:SetColor( ColorRand( false ) )
-    ent:SetBrightness( rand( 1, 6 ) )
-    ent:SetLightSize( rand( 100, 1024 ) )
+    ent:SetBrightness( LambdaRNG( 1, 6, true ) )
+    ent:SetLightSize( LambdaRNG( 100, 1024, true ) )
 
     return true
 end
@@ -686,7 +686,7 @@ local function UseMaterialTool( self, target )
     if !IsValid( target ) then return end
 
     self:UseWeapon( target:WorldSpaceCenter() )
-    target:SetMaterial( LambdaPlayerMaterials[ random( #LambdaPlayerMaterials ) ] )
+    target:SetMaterial( LambdaPlayerMaterials[ LambdaRNG( #LambdaPlayerMaterials ) ] )
 
     return true
 end
@@ -698,7 +698,7 @@ AddToolFunctionToLambdaTools( "Material", UseMaterialTool )
 
 local decallist = { "Eye", "Dark", "Smile", "Cross", "Nought", "Noughtsncrosses", "Light", "Blood", "YellowBlood", "Impact.Metal", "Scorch", "BeerSplash", "ExplosiveGunshot", "BirdPoop", "PaintSplatPink", "PaintSplatGreen", "PaintSplatBlue", "ManhackCut", "FadingScorch", "Antlion.Splat", "Splash.Large", "BulletProof", "GlassBreak", "Impact.Sand", "Impact.BloodyFlesh", "Impact.Antlion", "Impact.Glass", "Impact.Wood", "Impact.Concrete" }
 local function UsePaintTool( self, target )
-    local world = tobool( random( 0, 1 ) )
+    local world = tobool( LambdaRNG( 0, 1 ) )
     if !world and !IsValid( target ) then return end
 
     local trace = world and self:Trace( self:WorldSpaceCenter() + VectorRand( -12600, 12600 ) ) or self:Trace( target:WorldSpaceCenter() )
@@ -728,7 +728,7 @@ local function UsePaintTool( self, target )
 
     self:UseWeapon( hitpos )
 
-    PlaceDecal( self:GetOwner(), entity, { Pos1 = Pos1, Pos2 = Pos2, bone = physbone, decal = decallist[ random( #decallist ) ] } )
+    PlaceDecal( self:GetOwner(), entity, { Pos1 = Pos1, Pos2 = Pos2, bone = physbone, decal = decallist[ LambdaRNG( #decallist ) ] } )
 
     --self:EmitSound( "SprayCan.Paint" )
 
@@ -754,7 +754,7 @@ local function UsePhysPropTool( self, target )
 
     self:UseWeapon( target:WorldSpaceCenter() )
 
-    construct.SetPhysProp( target:GetOwner(), entity, physbone, nil, { GravityToggle = tobool( random( 0, 1 ) ), Material = physproperties[ random( #physproperties ) ] } ) -- Set the properties
+    construct.SetPhysProp( target:GetOwner(), entity, physbone, nil, { GravityToggle = tobool( LambdaRNG( 0, 1 ) ), Material = physproperties[ LambdaRNG( #physproperties ) ] } ) -- Set the properties
 
     return true
 end
@@ -801,8 +801,8 @@ local function UseRopeTool( self, target )
     local firstent
     local secondent
     local world = Entity( 0 )
-    local firstuseworld = tobool( random( 0, 1 ) ) -- Choose if we want to rope the world or not
-    local seconduseworld = tobool( random( 0, 1 ) )
+    local firstuseworld = tobool( LambdaRNG( 0, 1 ) ) -- Choose if we want to rope the world or not
+    local seconduseworld = tobool( LambdaRNG( 0, 1 ) )
     local find = self:FindInSphere( nil, 800, function( ent ) if !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
 
     for k, v in RandomPairs( find ) do
@@ -841,7 +841,7 @@ local function UseRopeTool( self, target )
 
     local dist = ( firstent == world and lpos1 or firstent:GetPos() ):Distance( ( secondent == world and lpos2 or secondent:GetPos() ) )
 
-    local cons, rope = constraint.Rope( firstent, secondent, 0, 0, lpos1, lpos2, 0, random( 0, 500 ), dist, rand( 0.5, 10 ), ropematerials[ random( #ropematerials ) ], false, ColorRand( false ) )
+    local cons, rope = constraint.Rope( firstent, secondent, 0, 0, lpos1, lpos2, 0, LambdaRNG( 0, 500 ), dist, LambdaRNG( 0.5, 10, true ), ropematerials[ LambdaRNG( #ropematerials ) ], false, ColorRand( false ) )
     
     -- Weird situation here but we'll do this just to make sure something gets in the tables
     if IsValid( cons ) then
@@ -868,9 +868,9 @@ local function UseSliderTool( self, target )
     if !self:IsUnderLimit( "Rope" ) then return end -- It's technically a special rope
     if !IsValid( target ) then return end
 
-    local world = tobool( random( 0, 1 ) )
+    local world = tobool( LambdaRNG( 0, 1 ) )
     local find = self:FindInSphere( nil, 800, function( ent ) if ent != target and !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
-    local target2 = find[ random( #find ) ]
+    local target2 = find[ LambdaRNG( #find ) ]
 
     if !IsValid( target2 ) and !world then return end
     target2 = !world and target2 or Entity( 0 )
@@ -896,7 +896,7 @@ local function UseSliderTool( self, target )
 
     self:UseWeapon( ( !world and target2:WorldSpaceCenter() or lpos2 ) )
 
-    local cons, rope = constraint.Slider( target, target2, 0, 0, lpos1, lpos2, random( 0, 10 ), ropematerials[ random( #ropematerials ) ], ColorRand() )
+    local cons, rope = constraint.Slider( target, target2, 0, 0, lpos1, lpos2, LambdaRNG( 0, 10 ), ropematerials[ LambdaRNG( #ropematerials ) ], ColorRand() )
 
     if IsValid( cons ) then
         cons.LambdaOwner = self
@@ -923,7 +923,7 @@ local thrustersounds = { "", "PhysicsCannister.ThrusterLoop", "WeaponDissolve.Ch
 local thrustereffects = { "none", "fire", "plasma", "magic", "rings", "smoke" }
 local function UseThrusterTool( self, target )
     if !self:IsUnderLimit( "Thruster" ) then return end
-    local world = tobool( random( 0, 1 ) )
+    local world = tobool( LambdaRNG( 0, 1 ) )
 
     if !world and ( !IsValid( target ) or target:GetClass()=="gmod_thruster" ) then return end
 
@@ -940,7 +940,7 @@ local function UseThrusterTool( self, target )
     ang.pitch = ang.pitch + 90
 
     self:UseWeapon( hitpos )
-    local ent = CreateGmodEntity( "gmod_thruster", thrustermodels[ random( #thrustermodels ) ], hitpos, ang, self )
+    local ent = CreateGmodEntity( "gmod_thruster", thrustermodels[ LambdaRNG( #thrustermodels ) ], hitpos, ang, self )
     ent.LambdaOwner = self
     ent.IsLambdaSpawned = true
     self:ContributeEntToLimit( ent, "Thruster" )
@@ -952,25 +952,25 @@ local function UseThrusterTool( self, target )
     if entity != NULL and !entity:IsWorld() then -- Thruster spawned on world are not welded
         constraint.Weld( ent, entity, 0, trace.PhysicsBone, 0, 0, true )
         if ( IsValid( ent:GetPhysicsObject() ) ) then ent:GetPhysicsObject():EnableCollisions( false ) end
-        if random( 0 , 1 ) == 1 then -- Randomly can be nocollided or not to the attached prop
+        if LambdaRNG( 0 , 1 ) == 1 then -- Randomly can be nocollided or not to the attached prop
             ent:SetCollisionGroup( COLLISION_GROUP_WORLD )
             ent:GetPhysicsObject():SetMass( Clamp( ent:GetPhysicsObject():GetMass(), 1, 20 ) ) -- Let's avoid them being too heavy
         end
     end
 
     ent:SetPlayer( self )
-    ent:SetEffect( thrustereffects[ random( #thrustereffects ) ] )
-    ent:SetForce( random( 10000 ) )
+    ent:SetEffect( thrustereffects[ LambdaRNG( #thrustereffects ) ] )
+    ent:SetForce( LambdaRNG( 10000 ) )
     ent:SetToggle( true )
-    ent:SetSound( thrustersounds[ random( #thrustersounds ) ] )
+    ent:SetSound( thrustersounds[ LambdaRNG( #thrustersounds ) ] )
 
-    local rndtime = CurTime() + rand( 1, 10 )
+    local rndtime = CurTime() + LambdaRNG( 1, 10, true )
     ent:LambdaHookTick( "ThrusterRandomOnOff", function( thruster )
         if CurTime() > rndtime then
             if !IsValid( thruster ) then return true end
-            thruster:Switch( random( 0, 1 ) == 1 )-- Randomly switch it on or off
+            thruster:Switch( LambdaRNG( 0, 1 ) == 1 )-- Randomly switch it on or off
 
-            rndtime = CurTime() + rand( 1, 10 )
+            rndtime = CurTime() + LambdaRNG( 1, 10, true )
         end
     end )
 
@@ -997,9 +997,9 @@ local function UseTrailTool( self, target )
         target.SToolTrail = nil
     end
 
-    local trailStartSize, trailEndSize = random(128), random(128)
+    local trailStartSize, trailEndSize = LambdaRNG( 128 ), LambdaRNG( 128 )
 
-    local trail_entity = util.SpriteTrail( target, 0, ColorRand(), false, trailStartSize, trailEndSize, random(10), 1 / ( ( trailStartSize + trailEndSize ) * 0.5 ), trailMats[ random( #trailMats ) ] .. ".vmt" )
+    local trail_entity = util.SpriteTrail( target, 0, ColorRand(), false, trailStartSize, trailEndSize, LambdaRNG( 10 ), 1 / ( ( trailStartSize + trailEndSize ) * 0.5 ), trailMats[ LambdaRNG( #trailMats ) ] .. ".vmt" )
     target.SToolTrail = trail_entity
 
     return true
@@ -1013,9 +1013,9 @@ AddToolFunctionToLambdaTools( "Trail", UseTrailTool )
 local function UseWeldTool( self, target )
     if !IsValid( target ) then return end
 
-    local world = random( 4 ) == 1 --To avoid welding to the world too much by default
+    local world = LambdaRNG( 4 ) == 1 --To avoid welding to the world too much by default
     local find = self:FindInSphere( nil, 800, function( ent ) if ent != target and !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() and self:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and self:HasPermissionToEdit( ent ) then return true end end )
-    local target2 = find[ random( #find ) ]
+    local target2 = find[ LambdaRNG( #find ) ]
 
     if !IsValid( target2 ) and !world then return end
     target2 = !world and target2 or Entity( 0 )
@@ -1059,7 +1059,7 @@ AddToolFunctionToLambdaTools( "Weld", UseWeldTool )
 local wheelmodels = { "models/props_vehicles/apc_tire001.mdl", "models/props_vehicles/tire001a_tractor.mdl", "models/props_vehicles/tire001b_truck.mdl", "models/props_vehicles/tire001c_car.mdl", "models/props_trainstation/trainstation_clock001.mdl", "models/props_c17/pulleywheels_large01.mdl", "models/props_junk/sawblade001a.mdl", "models/props_wasteland/controlroom_filecabinet002a.mdl", "models/props_borealis/bluebarrel001.mdl", "models/props_c17/oildrum001.mdl", "models/props_c17/playground_carousel01.mdl", "models/props_c17/chair_office01a.mdl", "models/props_c17/TrapPropeller_Blade.mdl", "models/props_junk/metal_paintcan001a.mdl", "models/props_vehicles/carparts_wheel01a.mdl", "models/props_wasteland/wheel01.mdl" }
 local function UseWheelTool( self, target )
     if !self:IsUnderLimit( "Wheel" ) then return end
-    local world = tobool( random( 0, 1 ) )
+    local world = tobool( LambdaRNG( 0, 1 ) )
 
     if !world and !IsValid( target ) then return end
 
@@ -1075,10 +1075,10 @@ local function UseWheelTool( self, target )
 
     if !util_IsValidPhysicsObject( entity, physbone ) then return end
 
-    local mdl = wheelmodels[ random( #wheelmodels ) ]
+    local mdl = wheelmodels[ LambdaRNG( #wheelmodels ) ]
     local wheelAngTab = list.Get( "WheelModels" )[mdl]
     local wheelAngle = Angle( NormalizeAngle( wheelAngTab.wheel_rx ), NormalizeAngle( wheelAngTab.wheel_ry ), NormalizeAngle( wheelAngTab.wheel_rz ) )
-    local torque = random( 10, 10000 )
+    local torque = LambdaRNG( 10, 10000 )
 
     self:UseWeapon( hitpos )
     local ent = CreateGmodEntity( "gmod_wheel", mdl, hitpos, norm:Angle() + wheelAngle, self )
@@ -1097,7 +1097,7 @@ local function UseWheelTool( self, target )
     local LPos2 = targetPhys:WorldToLocal( hitpos )
     ent:SetPos( hitpos + wheelOffset )
 
-    local const = constraint.Motor( ent, entity, 0, physbone, LPos1, LPos2, random( 0, 100 ), torque, 0, random( 0, 1 ), 1 )
+    local const = constraint.Motor( ent, entity, 0, physbone, LPos1, LPos2, LambdaRNG( 0, 100 ), torque, 0, LambdaRNG( 0, 1 ), 1 )
 
     ent:SetPlayer( self )
     ent:SetMotor( const )
@@ -1106,13 +1106,13 @@ local function UseWheelTool( self, target )
     ent:SetBaseTorque(torque)
     ent:DoDirectionEffect()
 
-    local rndtime = CurTime() + rand( 1, 10 )
+    local rndtime = CurTime() + LambdaRNG( 1, 10, true )
     ent:LambdaHookTick( "WheelRandomOnOff", function( wheel )
         if CurTime() > rndtime then
             if !IsValid( wheel ) then return true end
-            wheel:Forward( tobool( random( 0, 1 ) ) )-- Randomly switch it on or off
+            wheel:Forward( tobool( LambdaRNG( 0, 1 ) ) )-- Randomly switch it on or off
 
-            rndtime = CurTime() + rand( 1, 10 )
+            rndtime = CurTime() + LambdaRNG( 1, 10, true )
         end
     end )
 
