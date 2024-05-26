@@ -117,6 +117,7 @@ local function CreateDoohickey( self )
 
     -- Find a target
     self:SwitchWeapon( "physgun" )
+    self:PreventWeaponSwitch( true )
     local find = self:FindInSphere( nil, 400, function( ent ) if self:HasVPhysics( ent ) and self:CanSee( ent ) and self:HasPermissionToEdit( ent ) then return true end end )
     local target = find[ LambdaRNG( #find ) ]
 
@@ -143,7 +144,10 @@ local function CreateDoohickey( self )
             self:MoveToPos( target:GetPos() + Vector( LambdaRNG( -100 - radius, 100 + radius), LambdaRNG( -100 - radius, 100 + radius ), 0 ) )
         end
 
+        self:PreventWeaponSwitch( false )
         self:SwitchWeapon( "physgun" )
+        self:PreventWeaponSwitch( true )
+
         self:LookTo( self:GetPos() + Vector( LambdaRNG( -200, 200 ), LambdaRNG( -200, 200 ), LambdaRNG( -30, 30 ) ), 2 )
         coroutine.wait( LambdaRNG( 0.2, 1, true ) )
 
@@ -186,7 +190,10 @@ local function CreateDoohickey( self )
 
         coroutine.wait( 0.5 )
         if !IsValid( prop ) or !IsValid( target ) then continue end
+
+        self:PreventWeaponSwitch( false )
         self:SwitchWeapon( "toolgun" )
+        self:PreventWeaponSwitch( true )
         
         self:LookTo( prop, 2 )
 
@@ -215,7 +222,11 @@ local function CreateDoohickey( self )
         end
 
     end
-
+    
+    self:PreventWeaponSwitch( false )
+    self.l_physholdpos = nil
+    self.l_physholdang = nil
+    return true
 end
 
 AddBuildFunctionToLambdaBuildingFunctions( "doohickey", "Allow Building onto Props", "If Lambda Players are allowed to add and weld props onto existing props. Or in other words, create doohickeys.\n\nRequires Allow Prop Spawning to be on!", CreateDoohickey )
