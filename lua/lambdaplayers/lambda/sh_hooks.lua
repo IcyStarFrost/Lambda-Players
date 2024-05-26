@@ -11,9 +11,6 @@ local coroutine_wait = coroutine.wait
 local max = math.max
 local Clamp = math.Clamp
 local floor = math.floor
-local abs = math.abs
-local Round = math.Round
-local NormalizeAngle = math.NormalizeAngle
 local string_match = string.match
 local string_sub = string.sub
 local lower = string.lower
@@ -1127,7 +1124,7 @@ function ENT:InitializeMiniHooks()
                     if curAnger > target.BecomeEnemyToPlayerLevel then
                         if target:Disposition( self ) != D_HT then
                             target:CustomOnBecomeEnemyToPlayer( info, target:GetLastDamageHitGroup() )
-                            if target.IsFollowing && target.FollowData.Ent == self then
+                            if target.IsFollowing and target.FollowData.Ent == self then
                                 target:FollowReset()
                             end
 

@@ -3,9 +3,6 @@ local IsFirstTimePredicted = IsFirstTimePredicted
 local isfunction = isfunction
 local istable = istable
 local isstring = isstring
-
-local RandomPairs = RandomPairs
-
 local ipairs = ipairs
 local Effect = util.Effect
 local CurTime = CurTime
