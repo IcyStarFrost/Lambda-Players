@@ -111,11 +111,11 @@ end
 -- Similar in function to the Zeta's "Build onto props" feature.
 local function CreateDoohickey( self )
     if !self:IsUnderLimit( "Prop" ) or !self:CanEquipWeapon( "physgun" ) or !self:CanEquipWeapon( "toolgun" ) or !GetConVar( "lambdaplayers_building_allowprop" ):GetBool() then return end
-    self:PreventWeaponSwitch( false )
-
-    local unfrozen = LambdaRNG( 1, 2 ) == 1
+    
+    local unfrozen = LambdaRNG( 1, 2 ) == 1 -- Whether the props should be unfrozen
 
     -- Find a target
+    self:PreventWeaponSwitch( false )
     self:SwitchWeapon( "physgun" )
     self:PreventWeaponSwitch( true )
     local find = self:FindInSphere( nil, 400, function( ent ) if self:HasVPhysics( ent ) and self:CanSee( ent ) and self:HasPermissionToEdit( ent ) then return true end end )
