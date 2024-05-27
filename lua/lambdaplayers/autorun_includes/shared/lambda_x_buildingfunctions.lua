@@ -166,7 +166,7 @@ local function CreateDoohickey( self )
         self.l_physholdang = AngleRand( -360, 360 )
         LambdaCreateThread( function()
             while look do 
-                if !IsValid( self ) then return end
+                if !LambdaIsValid( self ) then return end
                 if !IsValid( target ) then
                     self.l_physholdpos = nil
                     self.l_physholdang = nil
