@@ -758,15 +758,8 @@ local function OpenProfilePanel( ply )
         ent:SetSkin( infotable.mdlSkin or 0 )
 
         if infotable.bodygroups then
-            print( "--- TABLE PRINT ---" )
-            PrintTable( infotable.bodygroups )
-            print( "Bodygroup data: ", bodygroupdata )
-            pcall( function()
-                print( "--- BODYGROUP TBL ---" )
-                PrintTable( bodygroupdata )
-            end )
             for k, v in pairs( infotable.bodygroups ) do
-                print( "Bodygroup ID: ", k, " Bodygroup value: ", v )
+                if !bodygroupdata[ k ] then continue end
                 bodygroupdata[ k ]:SetValue( v )
                 ent:SetBodygroup( k, v )
             end
