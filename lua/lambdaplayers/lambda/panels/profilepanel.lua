@@ -538,8 +538,7 @@ local function OpenProfilePanel( ply )
 
     function model:OnChange() 
         local mdlPath = model:GetText()
-        if !file_Exists( mdlPath, "GAME" ) then return end
-
+        if !file.Exists( mdlPath, "GAME" ) or mdlPath == "" then return end
         playermodelpreview:SetModel( mdlPath )
         if isfunction( UpdateSBSliders ) then UpdateSBSliders() end
     end
