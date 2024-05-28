@@ -29,7 +29,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SMG1 )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SMG1 )
 
-            self.l_WeaponUseCooldown = CurTime() + 0.1
+            self.l_WeaponUseCooldown = CurTime() + LambdaRNG( 0.1, 0.6, false )
             self:HandleMuzzleFlash( 1 )
             self:HandleShellEject( "ShellEject", ShellOffPos, ShellOffAng )
 

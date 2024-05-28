@@ -18,7 +18,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         dropentity = "weapon_stunstick",
 
         damage = 40,
-        rateoffire = 0.8,
+        rateoffiremin = 0.8,
+        rateoffiremax = 1.25,
         attackanim = ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE,
         attacksnd = "Weapon_StunStick.Swing",
         hitsnd = "Weapon_StunStick.Melee_Hit",

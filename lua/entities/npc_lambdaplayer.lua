@@ -112,7 +112,9 @@ end
     local lower = string.lower
     local gmatch = string.gmatch
     local string_Replace = string.Replace
+    local string_Explode = string.Explode
     local RealTime = RealTime
+    local table_remove = table.remove
     local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
     local maxHealth = GetConVar( "lambdaplayers_lambda_maxhealth" )
     local debugmode = GetConVar( "lambdaplayers_debug" )
@@ -143,6 +145,7 @@ end
     local fearRange = GetConVar( "lambdaplayers_fear_detectrange" )
     local animSprint = GetConVar( "AnimatedSprinting_enabled" )
     local mfeAllowed = GetConVar( "lambdaplayers_combat_mightyfootengaged" )
+    local profilesNoRepeat = GetConVar( "lambdaplayers_lambda_profilenorepeats" )
 --
 
 if CLIENT then
@@ -165,10 +168,18 @@ function ENT:Initialize()
     if SERVER then
 
         local spawnMdl = "models/player/kleiner.mdl"
+        local forceMdl = forcePlyMdl:GetString()
+        local cvarMdls = string_Explode( ',', forceMdl )
         if !self.l_NoRandomModel then
-            local forceMdl = forcePlyMdl:GetString()
-            if forceMdl != "" and IsValidModel( forceMdl ) then
-                spawnMdl = forceMdl
+
+            for i = #cvarMdls, 1, -1 do
+                if !IsValidModel( cvarMdls[ i ] ) then
+                    table_remove( cvarMdls, i )
+                end
+            end
+
+            if #cvarMdls > 0 then
+                spawnMdl = cvarMdls[ LambdaRNG( 1, #cvarMdls ) ]
             else
                 local mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels
                 if allowaddonmodels:GetBool() then
@@ -439,7 +450,7 @@ function ENT:Initialize()
 
         if LambdaPersonalProfiles and LambdaRNG( 0, 100 ) < profilechance:GetInt() then
             for k, v in RandomPairs( LambdaPersonalProfiles ) do
-                if self:IsNameOpen( k ) then
+                if !profilesNoRepeat:GetBool() or self:IsNameOpen( k ) then
                     self:SetLambdaName( k )
                 end
             end

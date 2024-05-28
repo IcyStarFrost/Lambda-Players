@@ -1,8 +1,9 @@
 local table_insert = table.insert
 local ents_GetAll = ents.GetAll
 local ipairs = ipairs
-
+local pairs = pairs
 local IsValid = IsValid
+local util_PrecacheModel = util.PrecacheModel
 
 -- The reason this lua file has a d_ in its filename is because of the order on how lua files are loaded.
 -- If we didn't do this, we wouldn't have _LAMBDAConVarSettings
@@ -99,12 +100,21 @@ end, false, "Removes all entities that were spawned by Lambda Players", { name =
 
 AddConsoleCommandToLambdaSettings( "r_cleardecals", true, "Removes all decals in the map for yourself. This does not remove decals premade in the map", { name = "Clean Decals", category = "Utilities" } )
 
-CreateLambdaConsoleCommand( "lambdaplayers_cmd_cacheplayermodels", function( ply )
+CreateLambdaConsoleCommand( "lambdaplayers_cmd_cacheassets", function( ply )
     if IsValid( ply ) and !ply:IsAdmin() then return end
 
-    for k,v in pairs(player_manager.AllValidModels()) do util.PrecacheModel(v) end
-    LambdaPlayers_Notify( ply, "Playermodels cached!", 0, "plats/elevbell1.wav" )
-end, false, "WARNING: Your game will freeze for a few seconds. This will vary on the amount of playermodels you have installed.", { name = "Cache Playermodels", category = "Utilities" } )
+    -- Cache player models
+    for k,v in pairs( player_manager.AllValidModels() ) do util_PrecacheModel( v ) end
+
+    -- Cache weapon assets
+    for k, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
+        if data.model then
+            util_PrecacheModel( data.model )
+        end
+    end
+
+    LambdaPlayers_Notify( ply, " Lambda assets cached!", 0, "plats/elevbell1.wav" )
+end, false, "WARNING: Your game will freeze for a few seconds. This will vary on the amount of assets you have installed.", { name = "Cache Assets", category = "Utilities" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_debugtogglegod", function( ply )
     if IsValid( ply ) and !ply:IsAdmin() then return end
