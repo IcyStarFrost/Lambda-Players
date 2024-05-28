@@ -34,6 +34,10 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         OnAttack = function( self, wepent, target )
+            if !self.l_AntlionCount then
+                self.l_AntlionCount = 0
+                return true
+            end
             if self.l_AntlionCount >= antLimit:GetInt() then return true end
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
