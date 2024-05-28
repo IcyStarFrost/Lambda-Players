@@ -760,7 +760,11 @@ local function OpenProfilePanel( ply )
         if infotable.bodygroups then
             print( "--- TABLE PRINT ---" )
             PrintTable( infotable.bodygroups )
-            print( "Bodygroupd data: ", bodygroupdata )
+            print( "Bodygroup data: ", bodygroupdata )
+            pcall( function()
+                print( "--- BODYGROUP TBL ---" )
+                PrintTable( bodygroupdata )
+            end )
             for k, v in pairs( infotable.bodygroups ) do
                 print( "Bodygroup ID: ", k, " Bodygroup value: ", v )
                 bodygroupdata[ k ]:SetValue( v )
