@@ -436,7 +436,7 @@ if CLIENT then
     end
 
     -- Requests data from the specified file from the server
-    function LAMBDAPANELS:RequestDataFromServer( filepath, type, callback )
+    function LAMBDAPANELS:RequestDataFromServer( filepath, type, callback, no_msg )
         net.Start( "lambdaplayers_requestdata" )
         net.WriteString( filepath )
         net.WriteString( type )
@@ -454,7 +454,9 @@ if CLIENT then
 
             if isdone then
                 callback( datastring != "!!NIL" and JSONToTable( datastring ) or nil )
-                chat.AddText( "Received all data from server! " .. NiceSize( bytes ) .. " of data was received" )
+                if !no_msg then
+                    chat.AddText( "Received all data from server! " .. NiceSize( bytes ) .. " of data was received" )
+                end
             end
 
         end )
@@ -462,7 +464,7 @@ if CLIENT then
     end
 
 
-    function LAMBDAPANELS:RequestVariableFromServer( var, callback )
+    function LAMBDAPANELS:RequestVariableFromServer( var, callback, no_msg )
         net.Start( "lambdaplayers_requestvariable" )
         net.WriteString( var )
         net.SendToServer()
@@ -479,7 +481,9 @@ if CLIENT then
 
             if isdone then
                 callback( datastring != "!!NIL" and JSONToTable( datastring ) or nil )
-                chat.AddText( "Received all data from server! " .. NiceSize( bytes ) .. " of data was received" )
+                if !no_msg then
+                    chat.AddText( "Received all data from server! " .. NiceSize( bytes ) .. " of data was received" )
+                end
             end
             
         end )
