@@ -103,10 +103,17 @@ if CLIENT then
         local combobox = vgui.Create( "DComboBox", parent )
         if dock then combobox:Dock( dock ) end
 
-        for k, v in pairs( options ) do 
-            local index = combobox:AddChoice( k, v )
-            choiceindexes.keys[ k ] = index
-            choiceindexes.values[ v ] = index
+        function combobox:SetOptions( options )
+            combobox:Clear()
+            for k, v in pairs( options ) do 
+                local index = combobox:AddChoice( k, v )
+                choiceindexes.keys[ k ] = index
+                choiceindexes.values[ v ] = index
+            end
+        end
+
+        if options then
+            combobox:SetOptions( options )
         end
 
         function combobox:SelectOptionByKey( key )
