@@ -1232,7 +1232,7 @@ if SERVER then
                 line = keyLine
             end
 
-            if textLinks[ line ] or ( string_match( line, "(https?://%S+)" ) != nil and LambdaRNG( 2 ) == 1 ) then
+            if textLinks[ line ] or ( string_match( line, "(https?://%S+)" ) != nil and LambdaRNG( 3 ) == 1 ) then
                 validLines[ #validLines + 1 ] = line
                 textLinks[ line ] = true
             else
