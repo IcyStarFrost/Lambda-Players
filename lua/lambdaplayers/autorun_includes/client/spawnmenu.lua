@@ -168,7 +168,11 @@ local function AddLambdaPlayersOptions()
         local vers = panel:Help( "--- Addon Version: " .. _LambdaAddonVersion .. " ---" )
         vers:SetFont( "CloseCaption_Bold" )
         vers:SetColor( Color( 255, 123, 0 ) )
-        panel:Help( _LambdaAddonNotes )
+
+        local esplit = string.Explode( "/e", _LambdaAddonNotes )
+        for i = 1, #esplit do
+            panel:Help( esplit[ i ] )
+        end
     end )
 
     for categoryname, _ in pairs( categories ) do
