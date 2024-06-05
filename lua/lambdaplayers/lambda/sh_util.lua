@@ -1232,7 +1232,7 @@ if SERVER then
                 line = keyLine
             end
 
-            if textLinks[ line ] or string_match( line, "(https?://%S+)" ) != nil then
+            if textLinks[ line ] or ( string_match( line, "(https?://%S+)" ) != nil and LambdaRNG( 2 ) == 1 ) then
                 validLines[ #validLines + 1 ] = line
                 textLinks[ line ] = true
             else
@@ -1242,7 +1242,7 @@ if SERVER then
 
         if #feedLines != 0 then
             local markovtable = generate_markov_table( table_concat( feedLines, "\n" ) )
-            local generated = generate_markov_text( 1000, markovtable )
+            local generated = generate_markov_text( 2000, markovtable )
             validLines = table_Add( validLines, string_Explode( "\n", generated ) )
         elseif #validLines == 0 then
             return tbl[ LambdaRNG( #tbl ) ]
