@@ -4,7 +4,6 @@ file.CreateDir( "lambdaplayers/exportedtexttypes")
 file.CreateDir( "lambdaplayers/importtexttypes")
 local function OpenTextPanel( ply )
     if !ply:IsSuperAdmin() then return end
-    local ishost = ply:GetNW2Bool( "lambda_serverhost", false )
 
     local frame = LAMBDAPANELS:CreateFrame( "Text Line Editor", 700, 300 )
 
@@ -112,7 +111,7 @@ local function OpenTextPanel( ply )
             textentry:SetText( line:GetSortValue( 1 ) )
         end
 
-        if !ishost then
+        if !LocalPlayer():IsListenServerHost() then
             chat.AddText( "Requesting Text Lines for " .. texttype .. " from the Server")
             LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/texttypes/" .. texttype .. ".json", "json", function( data )
                 isrequesting = false

@@ -51,7 +51,22 @@ local function OpenPlayermodelBlockPanel( ply )
         chat.AddText( "Remember to Update Lambda Data after any changes!" )
     end
 
-    LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/pmblockdata.json", "json", function( data )
+    if !LocalPlayer():IsListenServerHost() then
+        LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/pmblockdata.json", "json", function( data )
+            if !data then return end
+
+            for k, mdl in pairs( data ) do 
+                blockedlist:AddLine( mdl )
+
+                for _, icon in pairs( mdllayout:GetChildren() ) do
+                    if icon:GetModelName() == mdl then icon:Remove() break end
+                end
+
+            end
+
+        end )
+    else
+        local data = LAMBDAFS:ReadFile( "lambdaplayers/pmblockdata.json", "json" )
         if !data then return end
 
         for k, mdl in pairs( data ) do 
@@ -62,8 +77,7 @@ local function OpenPlayermodelBlockPanel( ply )
             end
 
         end
-
-    end )
+    end
 
 
 end

@@ -45,14 +45,25 @@ local function OpenModelVoiceProfilePanel( ply )
     local function GetPlayerColor() return mdlcolor end
 
     local mdllist = {}
-    LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/modelvoiceprofiles.json", "json", function( data ) 
+
+    if !LocalPlayer():IsListenServerHost() then
+        LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/modelvoiceprofiles.json", "json", function( data ) 
+            if !data then return end 
+            mdllist = data 
+            
+            for mdl, vp in SortedPairs( data ) do
+                mdlvplist:AddLine( mdl, vp )
+            end
+        end )
+    else
+        local data = LAMBDAFS:ReadFile( "lambdaplayers/modelvoiceprofiles.json", "json" )
         if !data then return end 
         mdllist = data 
         
         for mdl, vp in SortedPairs( data ) do
             mdlvplist:AddLine( mdl, vp )
         end
-    end )
+    end
 
     local mdlselected, vpselected, listId
 

@@ -81,7 +81,21 @@ local function OpenEntityPanel( ply )
         LAMBDAPANELS:WriteServerFile( "lambdaplayers/entitylist.json", classes, "json" ) 
     end
 
-    LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/entitylist.json", "json", function( data )
+    if !LocalPlayer():IsListenServerHost() then
+        LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/entitylist.json", "json", function( data )
+            if !data then return end
+
+            for k, class in ipairs( data ) do
+                entitylistpanel:AddLine( entitylist[ class ] and entitylist[ class ].PrintName or class, class )
+
+                for _, pnl in pairs( entitylayout:GetChildren() ) do
+                    if pnl:GetEntity() == class then pnl:Remove() break end 
+                end
+            end
+        
+        end )
+    else
+        local data = LAMBDAFS:ReadFile( "lambdaplayers/entitylist.json", "json" )
         if !data then return end
 
         for k, class in ipairs( data ) do
@@ -91,8 +105,7 @@ local function OpenEntityPanel( ply )
                 if pnl:GetEntity() == class then pnl:Remove() break end 
             end
         end
-    
-    end )
+    end
 
 end
 RegisterLambdaPanel( "Entity Spawnlist", "Opens a panel that allows you to choose what Entities Lambdas are allowed to spawn. You must be a Super Admin to use this Panel.", OpenEntityPanel )
