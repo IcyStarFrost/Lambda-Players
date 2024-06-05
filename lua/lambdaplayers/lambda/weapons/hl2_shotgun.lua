@@ -33,12 +33,12 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             -- Secondary double barrel attack
             if self.l_Clip >= 2 and LambdaRNG( 8 ) == 1 and self:IsInRange( target, 400 ) then
-                self.l_WeaponUseCooldown = CurTime() + LambdaRNG( 1.2, 1.8, true )
+                self.l_WeaponUseCooldown = CurTime() + LambdaRNG( 1.2, 1.8, false )
                 wepent:EmitSound( "Weapon_Shotgun.Double" )
                 bulletData.Num = 12
                 self.l_Clip = self.l_Clip - 2
             else
-                self.l_WeaponUseCooldown = CurTime() + LambdaRNG( 1, 1.5, true )
+                self.l_WeaponUseCooldown = CurTime() + LambdaRNG( 1, 1.5, false )
                 wepent:EmitSound( "Weapon_Shotgun.Single" )
                 bulletData.Num = 7
                 self.l_Clip = self.l_Clip - 1

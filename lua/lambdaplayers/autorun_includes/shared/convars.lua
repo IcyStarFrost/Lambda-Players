@@ -183,6 +183,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_nostepsndspeed", 125, true, false, fal
 CreateLambdaConvar( "lambdaplayers_lambda_overridegamemodehooks", 1, true, false, false, "If the addon is allowed to override the following GAMEMODE hooks to support Lambda Players: GM:PlayerDeath() GM:PlayerStartVoice() GM:PlayerEndVoice() GM:OnNPCKilled() GM:CreateEntityRagdoll() Default SandBox Scoreboard : Changing this requires you to restart the server/game for the changes to apply!", 0, 1, { type = "Bool", name = "Override Gamemode Hooks", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_callonnpckilledhook", 0, true, false, false, "If killed Lambda Players should call the OnNPCKilled hook. Best used with the Override Gamemode Hooks option!", 0, 1, { type = "Bool", name = "Call OnNPCKilled Hook On Death", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_overridedeathnoticehook", 1, true, false, false, "If the addon is allowed to override the death notice hooks to support Lambda Players. This get rid of duplicate death notice appearing after Lambda Player either dies or kills someone : Changing this requires the Override Gamemode Hooks option to be enabled and you to restart the server/game for the changes to apply!", 0, 1, { type = "Bool", name = "Override Death Notice Hooks", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_profilenorepeats", 1, true, false, false, "If Lambda Players should only have one profile active at once?", 0, 1, { type = "Bool", decimals = 0, name = "Profiles Don't Repeat", category = "Lambda Server Settings" } )
 --
 
 -- Combat Convars
@@ -208,6 +209,8 @@ CreateLambdaConvar( "lambdaplayers_combat_weapondmgmultiplier_players", 1, true,
 CreateLambdaConvar( "lambdaplayers_combat_weapondmgmultiplier_lambdas", 1, true, false, false, "Multiplies the damage that Lambda Player deals with its weapon to other Lambda Players", 0, 100, { type = "Slider", decimals = 2, name = "Weapon Damage Scale - Lambda Players", category = "Lambda Weapons" } )
 CreateLambdaConvar( "lambdaplayers_combat_weapondmgmultiplier_misc", 1, true, false, false, "Multiplies the damage that Lambda Player deals with its weapon to NPCs, Nextbots, and other types of entities", 0, 100, { type = "Slider", decimals = 2, name = "Weapon Damage Scale - Misc.", category = "Lambda Weapons" } )
 CreateLambdaConvar( "lambdaplayers_combat_allownadeusage", 0, true, false, false, "If Lambda Players are allowed to use and throw quick nades at their enemy.", 0, 1, { type = "Bool", name = "Allow Quick Nade Usage", category = "Lambda Weapons" } )
+CreateLambdaConvar( "lambdaplayers_combat_weaponmeleeonly", 0, true, false, false, "If Lambda Players should only use melee weapons.", 0, 1, { type = "Bool", name = "Only Use Melee Weapons", category = "Lambda Weapons" } )
+
 --
 
 -- Lambda Player Convars
@@ -261,6 +264,8 @@ CreateLambdaConvar( "lambdaplayers_text_typenameonrespond", 1, true, false, fals
 CreateLambdaConvar( "lambdaplayers_force_radius", 750, true, false, false, "The Distance for which Lambda Players are affected by Force Menu options.", 250, 25000, { type = "Slider", name = "Force Radius", decimals = 0, category = "Force Menu" } )
 CreateLambdaConvar( "lambdaplayers_force_spawnradiusply", 3000, true, false, false, "The Distance for which Lambda Players can spawn around the player. Set to 0 to disable.", 0, 25000, { type = "Slider", name = "Spawn Around Player Radius", decimals = 0, category = "Force Menu" } )
 CreateLambdaConvar( "lambdaplayers_lambda_spawnatplayerspawns", 0, true, false, false, "If spawned Lambda Players should spawn at player spawn points", 0, 1, { type = "Bool", name = "Spawn at Player Spawns", category = "Force Menu" } )
+CreateLambdaConvar( "lambdaplayers_lambda_spawnatplyheight", 0, true, false, false, "If spawned Lambda Players should spawn at the same height level as the player who triggered it?", 0, 1, { type = "Bool", name = "Spawn at Player Height", category = "Force Menu" } )
+CreateLambdaConvar( "lambdaplayers_lambda_spawnamount", 1, true, false, false, "How many Lambda Players should spawn when called?", 1, 12, { type = "Slider", decimals = 0, name = "Spawn Amount", category = "Force Menu" } )
 --
 
 -- DEBUGGING CONVARS. Server-side only

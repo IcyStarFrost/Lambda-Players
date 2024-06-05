@@ -56,7 +56,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent:EmitSound( "Weapon_SLAM.SatchelThrow" )
 
             self:DeleteOnRemove( slam )
-            self.l_WeaponUseCooldown = ( CurTime() + 2.5 )
+            self.l_WeaponUseCooldown = ( CurTime() + LambdaRNG( 2.25, 3.5, false ) )
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM )
 
