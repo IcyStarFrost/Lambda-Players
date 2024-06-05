@@ -87,6 +87,8 @@ local function OpenNamePanel( ply )
         if value == "" or !hasdata then return end
         addtextentry:SetText( "" )
 
+        addtextentry:RequestFocus()
+        
         -- Since we get a copy of the Server's name data, we can safely prevent duplicates from here
         if table.HasValue( names, value ) then chat.AddText( "Server already has this name!" ) return end
 

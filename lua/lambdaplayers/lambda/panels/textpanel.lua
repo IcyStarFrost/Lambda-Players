@@ -43,7 +43,6 @@ local function OpenTextPanel( ply )
         surface.PlaySound( "buttons/button15.wav" )
 
         textentry:RequestFocus()
-        textentry:FocusNext()
 
         local line = listview:AddLine( val )
         line:SetSortValue( 1, val )
