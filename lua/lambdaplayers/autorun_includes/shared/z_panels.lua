@@ -192,6 +192,7 @@ if CLIENT then
             Derma_Message( "Exported file to " .. "garrysmod/data/" .. exportpath, "Export", "Ok" )
         end
 
+        return button
     end
 
     -- Creates a button that will open a panel that will search for files to import. importfunction must be used to handle the importing
@@ -236,7 +237,7 @@ if CLIENT then
 
         end
 
-        return panel
+        return button
     end
 
     -- Creates a Text entry that acts as a search bar
