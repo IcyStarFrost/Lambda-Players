@@ -163,6 +163,14 @@ local function AddLambdaPlayersOptions()
         CreateUrlLabel( "Learn how to add Custom Content to Lambda Players and develop for Lambda Players", "https://github.com/IcyStarFrost/Lambda-Players/wiki", panel, TOP ) -- Wiki
     end )
 
+    -- Version and change notes. This will help with identifying outdated users
+    spawnmenu.AddToolMenuOption( "Lambda Player", "Lambda Player", "lambdaplayer_version" , "-- Version and Change Notes --", "", "", function( panel ) 
+        local vers = panel:Help( "--- Addon Version: " .. _LambdaAddonVersion .. " ---" )
+        vers:SetFont( "CloseCaption_Bold" )
+        vers:SetColor( Color( 255, 123, 0 ) )
+        panel:Help( _LambdaAddonNotes )
+    end )
+
     for categoryname, _ in pairs( categories ) do
         spawnmenu.AddToolMenuOption( "Lambda Player", "Lambda Player", "lambdaplayer_" .. categoryname , categoryname, "", "", function( panel ) 
             local clientList, foundCls = {}
