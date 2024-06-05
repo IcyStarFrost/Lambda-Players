@@ -9,6 +9,12 @@ _LambdaAddonNotes = [[
 -- Fixed the Toolgun not actually firing
 
 -- Added an option to see a lambda's profile picture along with their name display. Option located at Lambda Players > Misc > Display Profile Picture on Hover
+
+-- Redesigned Text Line Panel
+
+-- Markov chain generator no longer is biased toward links
+
+-- Bypass getting server data in panels if the local player is the local host of the server
 /e
 ---- (Pyri) Pull Request #125 ----
 
