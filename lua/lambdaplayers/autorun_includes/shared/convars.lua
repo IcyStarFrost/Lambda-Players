@@ -273,7 +273,6 @@ CreateLambdaConvar( "lambdaplayers_debug", 0, false, false, false, "Enables the 
 CreateLambdaConvar( "lambdaplayers_debughelper_drawscale", 0.1, true, true, false, "The Scale the Debug Helper should size at", 0, 1, { type = "Slider", decimals = 2, name = "Debug Helper Scale", category = "Debugging" } )
 CreateLambdaConvar( "lambdaplayers_debug_path", 0, false, false, false, "Draws Lambda Player's current path they're moving through.", 0, 1, { type = "Bool", name = "Enable Path Drawing", category = "Debugging" } )
 CreateLambdaConvar( "lambdaplayers_debug_eyetracing", 0, false, false, false, "Draws a line from Lambda Player's eye position to where they're looking at. Developer mode should be enabled.", 0, 1, { type = "Bool", name = "Enable Eyetracing Line", category = "Debugging" } )
-AddSourceConVarToSettings( "developer", "Enables Source's Developer mode", { type = "Bool", name = "Developer", category = "Debugging" } )
 --
 
 -- Note, Weapon allowing convars are located in the shared/globals.lua
