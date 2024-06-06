@@ -57,6 +57,8 @@ hook.Add( "PreDrawEffects", "lambdaplayers-debughelper", function()
                 end
 
                 -- Bools
+                
+                AddTextToQueue( queue, "LAMBDA IS PROFILE: " .. tostring( LambdaPersonalProfiles[ lambda:GetLambdaName() ] != nil ), boolcol )
                 AddTextToQueue( queue, "LAMBDA IS CROUCHING: " .. tostring( lambda:GetCrouch() ), boolcol )
                 AddTextToQueue( queue, "LAMBDA IS DEAD: " .. tostring( lambda:GetIsDead() ), boolcol )
                 AddTextToQueue( queue, "LAMBDA IS TYPING: " .. tostring( lambda:GetIsTyping() ), boolcol )
