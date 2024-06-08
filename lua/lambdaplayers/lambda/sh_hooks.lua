@@ -1017,7 +1017,7 @@ function ENT:InitializeMiniHooks()
                     if IsValid( owner ) and owner.IsLambdaPlayer then info:SetAttacker( owner ) end
                 end
 
-                if UltrakillBase and attacker != self and ukHeal_HardDmg_Enabled:GetBool() and ( !ukHeal_NPCOnly:GetBool() or isUkNPC or attacker.IsUltrakillProjectile ) then
+--[[                 if UltrakillBase and attacker != self and ukHeal_HardDmg_Enabled:GetBool() and ( !ukHeal_NPCOnly:GetBool() or isUkNPC or attacker.IsUltrakillProjectile ) then
                     local tookDmg = info:GetDamage()
                     local maxHp = self:GetMaxHealth()
                     if tookDmg > 0 and floor( ( self:Health() - ceil( tookDmg ) ) + tookDmg ) <= maxHp then
@@ -1029,7 +1029,7 @@ function ENT:InitializeMiniHooks()
                         self:SetNW2Int( "UltrakillBase_HardDamage", Clamp( ( self:GetNW2Int( "UltrakillBase_HardDamage", 0 ) + hardDmg ), 0, ( maxHp - 1 ) ) )
                         self:SetNW2Float( "UltrakillBase_HardDamage_Time", ( time + CurTime() ) )
                     end
-                end
+                end ]]
             end
 
             -- Armor Damage Reduction
