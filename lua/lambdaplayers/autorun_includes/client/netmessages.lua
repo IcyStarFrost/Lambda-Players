@@ -483,6 +483,10 @@ local framerateconvar = GetConVar( "lambdaplayers_animatedpfpsprayframerate" )
 _LambdaMaterialSprayIndexes = ( _LambdaMaterialSprayIndexes or 0 )
 
 local function Spray( spraypath, tracehitpos, tracehitnormal, attemptedfallback )
+    if !spraypath and !attemptedfallback then
+        Spray( LambdaPlayerSprays[ LambdaRNG( #LambdaPlayerSprays ) ], tracehitpos, tracehitnormal, true )
+        return
+    end
     local material
 
     -- The file is a Valve Texture Format ( VTF )
