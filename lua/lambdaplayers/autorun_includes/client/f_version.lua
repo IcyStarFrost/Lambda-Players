@@ -15,6 +15,8 @@ _LambdaAddonNotes = [[
 -- Markov chain generator no longer is biased toward links
 
 -- Bypass getting server data in panels if the local player is the local host of the server
+
+-- Added Experimental Asset Downloading to network voice lines and PFPs to players. Option located at Lambda Players > Utilities > Allow Downloading Assets
 /e
 ---- (Pyri) Pull Request #125 ----
 

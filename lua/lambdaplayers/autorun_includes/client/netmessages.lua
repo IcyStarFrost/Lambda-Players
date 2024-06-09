@@ -155,8 +155,15 @@ local baseTeams = {
 
 _LAMBDAPLAYERS_VoiceChannels = {}
 
-local function PlaySoundFile( ent, soundName, index, origin, delay, is3d )
+local function PlaySoundFile( ent, soundName, index, origin, delay, is3d, fallback )
     if !IsValid( ent ) then return end
+
+    if GetConVar( "lambdaplayers_lambda_downloadassets" ):GetBool() and !fallback and !file.Exists( soundName, "GAME" ) then
+        LambdaRequestFile( soundName, function( path )
+            PlaySoundFile( ent, "data/" .. path, index, origin, delay, is3d, true )
+        end )
+        return
+    end
 
     local talkLimit = speaklimit:GetInt()
     if talkLimit > 0 and table_Count( _LAMBDAPLAYERS_VoiceChannels ) >= talkLimit then return end
@@ -168,7 +175,7 @@ local function PlaySoundFile( ent, soundName, index, origin, delay, is3d )
     end
     if LambdaRunHook( "LambdaOnPlaySound", ent, soundName ) == true then return end
 
-    sound_PlayFile( "sound/" .. soundName, "noplay " .. ( is3d and "3d" or "" ), function( snd, errorId, errorName )
+    sound_PlayFile( soundName, "noplay " .. ( is3d and "3d" or "" ), function( snd, errorId, errorName )
         if errorId == 21 then
             if stereowarn:GetBool() then print( "Lambda Players Voice Chat Warning: Sound file " ..soundName .. " has a stereo track and won't be played in 3d. Sound will continue to play. You can disable these warnings in Lambda Player>Utilities" ) end
             PlaySoundFile( ent, soundName, index, origin, delay, false )

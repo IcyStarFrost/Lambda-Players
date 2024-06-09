@@ -1317,7 +1317,7 @@ if SERVER then
         net.Start( "lambdaplayers_playsoundfile" )
             net.WriteEntity( self )
             net.WriteBool( self:Alive() )
-            net.WriteString( filepath )
+            net.WriteString( "sound/" .. filepath )
             net.WriteUInt( self:GetCreationID(), 32 )
             net.WriteVector( self:GetPos() )
             net.WriteFloat( delay )
@@ -1619,6 +1619,43 @@ if ( CLIENT ) then
     -- Very expensive to run. Try to cache the result so this can only be ran once
     function ENT:GetPFPMat()
         local pfp = self:GetProfilePicture()
+        local replace = string.Replace( pfp, "/", "" )
+
+        if GetConVar( "lambdaplayers_lambda_downloadassets" ):GetBool() and !file.Exists( "materials/" .. replace, "GAME" ) and !file.Exists( "lambdaplayers/fileshare/" .. replace, "DATA" ) then
+            LambdaRequestFile( "materials/" .. pfp, function( path )
+                local isVTF = string.EndsWith( path, ".vtf" )
+                local profilepicturematerial
+        
+                -- VTF ( Valve Texture Format ) support. This allows animated Profile Pictures
+                if isVTF then
+                    _LambdaPfpIndex = _LambdaPfpIndex + 1
+                    profilepicturematerial = CreateMaterial( "lambdaprofilepicVTFmaterial" .. _LambdaPfpIndex, "UnlitGeneric", {
+                        [ "$basetexture" ] = "../data/" .. path,
+                        [ "$translucent" ] = 1,
+                        [ "Proxies" ] = {
+                            [ "AnimatedTexture" ] = {
+                                [ "animatedTextureVar" ] = "$basetexture",
+                                [ "animatedTextureFrameNumVar" ] = "$frame",
+                                [ "animatedTextureFrameRate" ] = framerateconvar:GetInt()
+                            }
+                        }
+                    })
+                else
+                    profilepicturematerial = Material( "../data/" .. path )
+                end
+
+                if profilepicturematerial:IsError() then
+                    local model = self:GetModel()
+                    profilepicturematerial = Material( "spawnicons/" .. string.sub( model, 1, #model - 4 ) .. ".png" )
+                end
+
+                self.l_name_display_mat_cache = profilepicturematerial
+            end )
+        end
+
+        if !file.Exists( "materials/" .. replace, "GAME" ) and file.Exists( "lambdaplayers/fileshare/" .. replace, "DATA" ) then
+            pfp = "../data/" .. "lambdaplayers/fileshare/" .. replace
+        end
 
         local isVTF = string.EndsWith( pfp, ".vtf" )
         local profilepicturematerial

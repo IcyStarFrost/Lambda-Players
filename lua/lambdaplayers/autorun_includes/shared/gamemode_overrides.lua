@@ -104,13 +104,13 @@ if ( CLIENT ) then
                     return
                 end
 
-                if ply.IsLambdaPlayer then
+--[[                 if ply.IsLambdaPlayer then
                     local pfpMat = ply:GetPFPMat()
                     if pfpMat != self.LastLambdaPfp then
                         self.LambdaAvatar:SetMaterial( pfpMat )
                         self.LastLambdaPfp = pfpMat
                     end
-                end
+                end ]]
 
                 if self.PName == nil or self.PName != ply:Nick() then
                     self.PName = ply:Nick()
