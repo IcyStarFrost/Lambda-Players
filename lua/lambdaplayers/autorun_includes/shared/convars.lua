@@ -48,7 +48,7 @@ function CreateLambdaConvar( name, val, shouldsave, isclient, userinfo, desc, mi
     return convar
 end
 
-local function AddSourceConVarToSettings( cvarname, desc, settingstbl )
+--[[ local function AddSourceConVarToSettings( cvarname, desc, settingstbl )
     if CLIENT and settingstbl and !_LAMBDAConVarNames[ cvarname ] then
         settingstbl.convar = cvarname
         settingstbl.isclient = false
@@ -57,7 +57,7 @@ local function AddSourceConVarToSettings( cvarname, desc, settingstbl )
         _LAMBDAConVarNames[ cvarname ] = true
         table_insert( _LAMBDAConVarSettings, settingstbl )
     end
-end
+end ]]
 
 function CreateLambdaColorConvar( name, defaultcolor, isclient, userinfo, desc, settingstbl )
     local nameR = name .. "_r"
