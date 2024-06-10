@@ -1660,9 +1660,7 @@ if ( CLIENT ) then
         if !file.Exists( "materials/" .. pfp, "GAME" ) and file.Exists( "lambdaplayers/fileshare/" .. replace, "DATA" ) then
             pfp = "../data/" .. "lambdaplayers/fileshare/" .. replace
         end
-
-        print( file.Exists( "materials/" .. pfp, "GAME" ), file.Exists( "lambdaplayers/fileshare/" .. replace, "DATA" ), "\n", pfp, "\n", "lambdaplayers/fileshare/" .. replace )
-
+        
         local isVTF = string.EndsWith( pfp, ".vtf" )
         local profilepicturematerial
 
