@@ -1649,6 +1649,9 @@ if ( CLIENT ) then
                     profilepicturematerial = Material( "spawnicons/" .. string.sub( model, 1, #model - 4 ) .. ".png" )
                 end
 
+                if self.ScoreEntry then
+                    self.ScoreEntry:Setup( self )
+                end
                 self.l_name_display_mat_cache = profilepicturematerial
             end )
         end
