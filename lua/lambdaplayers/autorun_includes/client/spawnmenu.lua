@@ -171,7 +171,25 @@ local function AddLambdaPlayersOptions()
 
         local esplit = string.Explode( "/e", _LambdaAddonNotes )
         for i = 1, #esplit do
-            panel:Help( esplit[ i ] )
+            local str = esplit[ i ]
+            local start = string.find( str, "Color(", nil, true )
+            local rgb
+            if start then
+                local end_ = string.find( str, ")", start, true )
+                local substring = string.sub( str, start, end_ )
+                local color_split = string.Explode( "Color(", str )
+                local rgb_isolate = string.Explode( ")", color_split[ 2 ] )
+                rgb = string.Explode( ",", rgb_isolate[ 1 ] )
+                str = string.Replace( str, substring, "" )
+
+            end
+
+            local lbl = panel:Help( str )
+
+            if start then
+                lbl:SetColor( Color( rgb[ 1 ], rgb[ 2 ], rgb[ 3 ]) )
+            end
+
         end
     end )
 

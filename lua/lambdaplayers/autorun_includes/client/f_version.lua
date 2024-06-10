@@ -1,7 +1,7 @@
 _LambdaAddonVersion = "V1.0"
 _LambdaAddonNotes = [[
 
-
+Color( 179, 107, 0)
 -- Changed external personality chances for Builder preset to be limited to 0-10 instead of 0-100. This helps make the builders focus on building
 
 -- Validity checks
@@ -20,6 +20,7 @@ _LambdaAddonNotes = [[
 
 -- Added Experimental Asset Downloading to network voice lines and PFPs to players. Option located at Lambda Players > Utilities > Allow Sharing Files
 /e
+Color( 0, 140, 255)
 ---- (Pyri) Pull Request #125 ----
 
 -- Added Profiles don't repeat. Lambda Players > Lambda Server Settings > Profiles Don't Repeat
@@ -36,6 +37,7 @@ _LambdaAddonNotes = [[
 
 -- Added Bully (PS2) SFX's to the fists.
 /e
+Color( 0, 97, 177)
 Command Changes:
 
     The ConVar lambdaplayers_cmd_cacheplayermodels has been renamed to lambdaplayers_cmd_cacheassets. It will now precache player models and lambda weapon models, for now.
@@ -48,4 +50,5 @@ Some changes to lambdaplayers_cmd_forcespawnlambda:
 
 ]]
 
+-- Color Note: "Color( r, g, b )" functions can be added within the change notes. ONLY one Color() function can exists within a /e block.
 -- Note: Remember to add /e to seperate the change notes to seperate Dlabels in the spawn menu. Apparently one Dlabel has a character limit until the text is cut off.
