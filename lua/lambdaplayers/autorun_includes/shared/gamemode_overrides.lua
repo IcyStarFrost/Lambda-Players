@@ -27,7 +27,7 @@ if ( CLIENT ) then
     local statusClr_Admin = Color( 230, 255, 230, 255 )
     local statusClr_Default = Color( 230, 230, 230, 255 )
 
-    --hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function() 
+    hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function() 
         local PLAYER_LINE = {
             Init = function( self )
                 self.AvatarButton = self:Add( "DButton" )
@@ -368,7 +368,7 @@ if ( CLIENT ) then
         end
         
         hook.Add( "InitPostEntity", "CreateVoiceVGUI", CreateVoiceVGUI )
-    --end )
+    end )
 
     hook.Add( "Initialize", "lambdaplayers_overridekillfeedhook", function()
         if !overridekillfeed:GetBool() then return end
