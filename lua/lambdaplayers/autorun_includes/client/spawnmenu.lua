@@ -169,6 +169,8 @@ local function AddLambdaPlayersOptions()
         vers:SetFont( "CloseCaption_Bold" )
         vers:SetColor( Color( 255, 123, 0 ) )
 
+        
+
         local esplit = string.Explode( "/e", _LambdaAddonNotes )
         for i = 1, #esplit do
             local str = esplit[ i ]
@@ -191,6 +193,8 @@ local function AddLambdaPlayersOptions()
             end
 
         end
+
+        CreateUrlLabel( "See individual code commits here", "https://github.com/IcyStarFrost/Lambda-Players/commits/side-main/", panel, TOP ):SetColor( Color( 100, 100, 100 ) )
     end )
 
     for categoryname, _ in pairs( categories ) do
