@@ -175,7 +175,7 @@ end
 
 function LAMBDAFS:GetPropTable()
     local content = LAMBDAFS:ReadFile( "lambdaplayers/proplist.json", "json" )
-    if #content == 0 then print( "LAMBDA PLAYERS WARNING: THERE ARE NO PROPS REGISTERED!" ) end
+    if !content or #content == 0 then print( "LAMBDA PLAYERS WARNING: THERE ARE NO PROPS REGISTERED!" ) end
     return content
 end
 
