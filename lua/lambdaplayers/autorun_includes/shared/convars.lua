@@ -123,7 +123,7 @@ CreateLambdaConvar( "lambdaplayers_viewshots_saveaspng", 0, true, true, false, "
 --
 
 -- Other Convars
-CreateLambdaConvar( "lambdaplayers_lambda_downloadassets", 0, true, false, false, "If the addon should automatically network voice lines, profile pictures, and sprays to clients that don't have them\n\nNOTE!! THIS MAY CAUSE MINOR LAG SPIKES WHEN SUCH FILES ARE NETWORKED! If you don't care about lag then this should not concern you.", 0, 1, { type = "Bool", name = "Allow Downloading Assets", category = "Utilities" } )
+CreateLambdaConvar( "lambdaplayers_lambda_allowfilesharing", 0, true, false, false, "If the addon should automatically network voice lines, profile pictures, and sprays to clients that don't have them\n\nNOTE!! THIS MAY CAUSE MINOR LAG SPIKES WHEN SUCH FILES ARE NETWORKED! If you don't care about lag then this should not concern you.", 0, 1, { type = "Bool", name = "Allow Sharing Files", category = "Utilities" } )
 
 CreateLambdaConvar( "lambdaplayers_uiscale", 0, true, true, false, "How much to scale UI such as Voice popups, name pop ups, ect.", ( CLIENT and -ScrW() or 1 ), ( CLIENT and ScrW() or 1 ), { type = "Slider", name = "UI Scale", decimals = 1, category = "Misc" } )
 CreateLambdaConvar( "lambdaplayers_useplayermodelcolorasdisplaycolor", 1, true, true, true, "If Lambda Player's Playermodel Color should be its Display Color. This has priority over the Display Color below", 0, 1, { type = "Bool", name = "Playermodel Color As Display Color", category = "Misc" } )

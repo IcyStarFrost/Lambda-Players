@@ -16,7 +16,9 @@ _LambdaAddonNotes = [[
 
 -- Bypass getting server data in panels if the local player is the local host of the server
 
--- Added Experimental Asset Downloading to network voice lines and PFPs to players. Option located at Lambda Players > Utilities > Allow Downloading Assets
+-- Fixed major performance problems when looking at the default scoreboard
+
+-- Added Experimental Asset Downloading to network voice lines and PFPs to players. Option located at Lambda Players > Utilities > Allow Sharing Files
 /e
 ---- (Pyri) Pull Request #125 ----
 
