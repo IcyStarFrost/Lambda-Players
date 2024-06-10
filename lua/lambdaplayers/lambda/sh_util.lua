@@ -1619,9 +1619,9 @@ if ( CLIENT ) then
     -- Very expensive to run. Try to cache the result so this can only be ran once
     function ENT:GetPFPMat()
         local pfp = self:GetProfilePicture()
-        local replace = string.Replace( pfp, "/", "" )
+        local replace = "materials" .. string.Replace( pfp, "/", "" ):lower()
 
-        if GetConVar( "lambdaplayers_lambda_downloadassets" ):GetBool() and !file.Exists( "materials/" .. replace, "GAME" ) and !file.Exists( "lambdaplayers/fileshare/" .. replace, "DATA" ) then
+        if !LocalPlayer():IsListenServerHost() and GetConVar( "lambdaplayers_lambda_downloadassets" ):GetBool() and !file.Exists( "materials/" .. pfp, "GAME" ) and !file.Exists( "lambdaplayers/fileshare/" .. replace, "DATA" ) then
             LambdaRequestFile( "materials/" .. pfp, function( path )
                 local isVTF = string.EndsWith( path, ".vtf" )
                 local profilepicturematerial
@@ -1653,9 +1653,12 @@ if ( CLIENT ) then
             end )
         end
 
-        if !file.Exists( "materials/" .. replace, "GAME" ) and file.Exists( "lambdaplayers/fileshare/" .. replace, "DATA" ) then
+        
+        if !file.Exists( "materials/" .. pfp, "GAME" ) and file.Exists( "lambdaplayers/fileshare/" .. replace, "DATA" ) then
             pfp = "../data/" .. "lambdaplayers/fileshare/" .. replace
         end
+
+        print( file.Exists( "materials/" .. pfp, "GAME" ), file.Exists( "lambdaplayers/fileshare/" .. replace, "DATA" ), "\n", pfp, "\n", "lambdaplayers/fileshare/" .. replace )
 
         local isVTF = string.EndsWith( pfp, ".vtf" )
         local profilepicturematerial

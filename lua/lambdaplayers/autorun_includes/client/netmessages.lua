@@ -158,7 +158,7 @@ _LAMBDAPLAYERS_VoiceChannels = {}
 local function PlaySoundFile( ent, soundName, index, origin, delay, is3d, fallback )
     if !IsValid( ent ) then return end
 
-    if GetConVar( "lambdaplayers_lambda_downloadassets" ):GetBool() and !fallback and !file.Exists( soundName, "GAME" ) then
+    if !LocalPlayer():IsListenServerHost() and GetConVar( "lambdaplayers_lambda_downloadassets" ):GetBool() and !fallback and !file.Exists( soundName, "GAME" ) then
         LambdaRequestFile( soundName, function( path )
             PlaySoundFile( ent, "data/" .. path, index, origin, delay, is3d, true )
         end )
