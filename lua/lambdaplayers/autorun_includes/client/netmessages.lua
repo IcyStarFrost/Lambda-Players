@@ -285,7 +285,6 @@ hook.Add( "Tick", "lambdavc_updatesounds", function()
         if !IsValid( ent ) or !IsValid( snd ) or !playTime and snd:GetState() == GMOD_CHANNEL_STOPPED then
             if IsValid( snd ) then snd:Stop() end
             if IsValid( lastSrcEnt ) then lastSrcEnt:LambdaMoveMouth( 0 ) end
-            if IsValid( ent ) then ent:SetVoiceLevel( 0 ) end
 
             _LAMBDAPLAYERS_VoiceChannels[ ent ] = nil
             continue
@@ -305,7 +304,6 @@ hook.Add( "Tick", "lambdavc_updatesounds", function()
 
         local leftC, rightC = snd:GetLevel()
         local voiceLvl = ( ( leftC + rightC ) / 2 )
-        ent:SetVoiceLevel( voiceLvl )
 
         local lastPos = sndData.LastSndPos
         if !srcEnt:IsDormant() then

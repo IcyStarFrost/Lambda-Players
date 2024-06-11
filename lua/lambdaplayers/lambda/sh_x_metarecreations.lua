@@ -82,11 +82,6 @@ end
 ENT.GetEyeTraceNoCursor = ENT.GetEyeTrace
 
 -- Return random fake steam ids
-function ENT:SteamID64()
-    return self:GetSteamID64()
-end
-
--- Return random fake steam ids
 function ENT:SteamID()
     return self:GetNW2String( "lambda_steamid", "STEAM_0:0:0" )
 end
@@ -415,10 +410,6 @@ if ( CLIENT ) then
 
     function ENT:IsMuted() 
         return self.l_ismuted
-    end
-
-    function ENT:VoiceVolume()
-        return self:GetVoiceLevel()
     end
 
     function ENT:SetMuted( bool )
