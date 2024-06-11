@@ -557,7 +557,6 @@ function ENT:SetupDataTables()
 
     self:NetworkVar( "Bool", 0, "IsDead" )
     self:NetworkVar( "Bool", 1, "HasCustomDrawFunction" )
-    self:NetworkVar( "Bool", 2, "FlashlightOn" )
     self:NetworkVar( "Bool", 3, "AllowFlashlight" )
     AccessorFunc( self, "l_noclip", "NoClip", FORCE_BOOL)
     AccessorFunc( self, "l_isreloading", "IsReloading", FORCE_BOOL)
@@ -1431,7 +1430,6 @@ function ENT:Think()
             elseif !isAtLight then
                 self.l_flashlighton = true
             end
-            self:SetFlashlightOn( self.l_flashlighton )
         end
 
         local flashlight = self.l_flashlight

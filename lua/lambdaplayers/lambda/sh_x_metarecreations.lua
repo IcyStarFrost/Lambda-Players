@@ -181,11 +181,6 @@ function ENT:GetPlayerColor()
     return self:GetPlyColor()
 end
 
--- Returns if our flashlight is currently on
-function ENT:FlashlightIsOn()
-    return self:GetFlashlightOn()
-end
-
 -- Returns our weapon (physgun) color
 function ENT:GetWeaponColor()
     return self:GetPhysColor()
@@ -403,6 +398,11 @@ if SERVER then
 end
 
 if ( CLIENT ) then
+    -- Returns if our flashlight is currently on
+    function ENT:FlashlightIsOn()
+        return self.l_flashlighton
+    end
+
     -- Returns whether our player model will be drawn at the time the function is called
     function ENT:ShouldDrawLocalPlayer()
         return self:IsBeingDrawn()
