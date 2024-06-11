@@ -20,6 +20,12 @@ Color( 179, 107, 0)
 
 -- Added Experimental Asset Downloading to network voice lines and PFPs to players. Option located at Lambda Players > Utilities > Allow Sharing Files
 /e
+Color( 179, 107, 0)
+-- Considerable performance improvement by the removal of several constantly networked variables
+
+-- Fixed a issue where profile chance at 100% would have a 1% chance to fail
+
+/e
 Color( 0, 140, 255)
 ---- (Pyri) Pull Request #125 ----
 
