@@ -232,6 +232,45 @@ if SERVER then
         self:OnParry( Ply, Dmg )
     end
 
+    local function RefreshStamina( Ply )
+
+        local MaxStamina = GetConVar( "ultrakill_max_stamina" ):GetInt()
+        local Stamina = Ply:GetNW2Int( "AbilityStamina" )
+    
+        if Stamina >= MaxStamina then return end
+    
+        Ply:SetNW2Int( "AbilityStamina", math.Min( Stamina + 3, MaxStamina ) ) -- Cap Stamina Parry Regen at 3!
+        Ply.StaminaRegenTime = nil
+    
+        net.Start( "ULTRAKILL_UpdateStaminaCount" )
+    
+            net.WriteUInt( Ply:GetNW2Int( "AbilityStamina", MaxStamina ), 31 )
+            net.WriteBool( false )
+    
+        net.Send( Ply )
+    
+    end
+
+    function UltrakillBase.OnParryPlayer( Ply )
+
+        if !Ply.IsLambdaPlayer then
+            if UltrakillBase.UltrakillMechanicsInstalled then
+                RefreshStamina( Ply )
+            end
+            Ply:ScreenFade( SCREENFADE.IN, parryFlash, 0.1, 0.25 )
+        end
+    
+        local HP, MaxHP = Ply:Health(), Ply:GetMaxHealth()
+        local HardDamage = UltrakillBase.GetHardDamage( Ply )
+        local Healing = HP < MaxHP and MaxHP - HardDamage or HP
+    
+        Ply:SetHealth( Healing )
+        util.ScreenShake( Ply:GetPos(), 50, 1, 0.3, 10, true )
+    
+        UltrakillBase.SoundScript( "Ultrakill_HP", Ply:GetPos(), Ply )
+    
+    end
+
     function UltrakillOnParryPlayer( Ply )
         if !Ply.IsLambdaPlayer then
             if UltrakillBase.UltrakillMechanicsInstalled then
