@@ -381,6 +381,7 @@ if ( CLIENT ) then
     end )
 end
 
+
 if ( SERVER ) then
     hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function() 
         -- This fixes the issues of Lambda's health reaching below 0 and actually dying in internally
