@@ -285,7 +285,7 @@ if SERVER then
 
         -- Feedbacker + "F" + Enemy = Parry
         if ent.IsUltrakillNextbot then
-            UltrakillBase.OnParryPlayer = UltrakillOnParryPlayer
+            UltrakillBase.OnParryPlayer = UltrakillBaseOnParryPlayer
             ent.CheckParry = UltrakillCheckParry
             return
         end

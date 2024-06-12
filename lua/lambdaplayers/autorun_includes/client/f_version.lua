@@ -1,4 +1,4 @@
-_LambdaAddonVersion = "V1.0.1"
+_LambdaAddonVersion = "V1.0.2"
 _LambdaAddonNotes = [[
 
 Color( 179, 107, 0)

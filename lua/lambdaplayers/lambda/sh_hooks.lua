@@ -1017,19 +1017,29 @@ function ENT:InitializeMiniHooks()
                     if IsValid( owner ) and owner.IsLambdaPlayer then info:SetAttacker( owner ) end
                 end
 
---[[                 if UltrakillBase and attacker != self and ukHeal_HardDmg_Enabled:GetBool() and ( !ukHeal_NPCOnly:GetBool() or isUkNPC or attacker.IsUltrakillProjectile ) then
+                if UltrakillBase and attacker != self and ukHeal_HardDmg_Enabled:GetBool() and ( !ukHeal_NPCOnly:GetBool() or isUkNPC or attacker.IsUltrakillProjectile ) then
                     local tookDmg = info:GetDamage()
                     local maxHp = self:GetMaxHealth()
                     if tookDmg > 0 and floor( ( self:Health() - ceil( tookDmg ) ) + tookDmg ) <= maxHp then
-                        local diffInfo = UltrakillBase.DifficultyGetInformation( "Healing" )
-                        local perc = diffInfo.Percentage
-                        local hardDmg = ( tookDmg * perc * ukHeal_HardDmg_Mult:GetFloat() )
-                        local time = ( Clamp( ( tookDmg / 20 ) + diffInfo.Delay, 0, 5 ) / ukHeal_HardDmg_RecoveryMult:GetFloat() )
+                        local diffInfo = UltrakillBase.GetDifficulty()
+                        local fDelay = 1
+
+                        if diffInfo <= 2 then
+                            fDelay = 1
+                        elseif diffInfo == 3 then
+                            fDelay = 2
+                        else
+                            fDelay = 2.5
+                        end
+
+                        
+                        local hardDmg = ( tookDmg * ukHeal_HardDmg_Mult:GetFloat() )
+                        local time = ( Clamp( ( tookDmg / 20 ) + fDelay, 0, 5 ) / ukHeal_HardDmg_RecoveryMult:GetFloat() )
 
                         self:SetNW2Int( "UltrakillBase_HardDamage", Clamp( ( self:GetNW2Int( "UltrakillBase_HardDamage", 0 ) + hardDmg ), 0, ( maxHp - 1 ) ) )
                         self:SetNW2Float( "UltrakillBase_HardDamage_Time", ( time + CurTime() ) )
                     end
-                end ]]
+                end
             end
 
             -- Armor Damage Reduction
