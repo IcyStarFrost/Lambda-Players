@@ -128,6 +128,7 @@ local player_GetAll = player.GetAll
 local ents_Create = ents.Create
 local GetAllNavAreas = navmesh.GetAllNavAreas
 local IsNavmeshLoaded = navmesh.IsLoaded
+local util_TraceHull = util.TraceHull
 
 local SpawnedLambdaPlayers = {}
 local shutdown = false
@@ -158,9 +159,25 @@ local function GetRandomSpawnPoint()
             end
             if outofreach then continue end
         end
-        return area:GetRandomPoint()
+
+        -- Attempt to find a spot that doesn't get them stuck
+        local rndPos = area:GetRandomPoint()
+        local tr = util_TraceHull({
+            start = rndPos + Vector( 0, 0, 1 ),
+            endpos = rndPos + Vector( 0, 0, 2 ),
+            mins = Vector( -16, -16, 0 ),
+            maxs = Vector( 16, 16, 72 ),
+            mask = MASK_PLAYERSOLID
+        })
+
+        if !tr.Hit then
+            return rndPos
+        end
     end
+
+    return false
 end
+
 
 hook.Add( "Tick", "lambdaplayers_MWS", function()
     if shutdown then return end
@@ -215,6 +232,10 @@ hook.Add( "Tick", "lambdaplayers_MWS", function()
             lambda:SetRespawn( respawn:GetBool() )
             lambda.l_SpawnWeapon = spawnWep:GetString() 
             lambda:SwitchToSpawnWeapon()
+
+            local effect = EffectData()
+            effect:SetEntity( lambda )
+            util.Effect( "propspawn", effect )
 
             table_insert( SpawnedLambdaPlayers, 1, lambda )
 
