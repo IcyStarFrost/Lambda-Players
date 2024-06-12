@@ -218,6 +218,7 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
 end
 
 local function DefaultMeleeWeaponUse( self, wepent, target, weapondata, disabletbl )
+    if !IsValid( target ) then return end
     disabletbl = disabletbl or {}
 
     local fireRate = ( disabletbl.cooldown or weapondata.rateoffire or LambdaRNG( weapondata.rateoffiremin, weapondata.rateoffiremax, false ) )

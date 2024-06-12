@@ -1001,7 +1001,7 @@ function ENT:InitializeMiniHooks()
                 -- ULTRAKILL SNPCs insta-kill moment (THIS WILL HURT/DIE)
                 local isUkNPC = attacker.IsUltrakillNextbot
                 if isUkNPC then
-                    info:SetDamage( ( info:GetDamage() / UltrakillBase.ConVars.DmgMult:GetFloat() ) / 10 )
+                    info:SetDamage( ( info:GetDamage() / UltrakillBase.ConVar_DmgMult:GetFloat() ) / 10 )
                 -- BOOTY PLS PLEY DEE EMM CEE TOO, ITS DA BEST GAEM!!!
                 elseif attacker.DevilTrigger then
                     info:SetDamage( info:GetDamage() * 0.1 )

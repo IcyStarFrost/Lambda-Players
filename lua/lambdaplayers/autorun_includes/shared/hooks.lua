@@ -33,7 +33,7 @@ if SERVER then
             local attacker = dmginfo:GetAttacker()
             if IsValid( attacker ) and attacker.IsLambdaPlayer then
                 if ent.IsUltrakillNextbot then
-                    dmginfo:SetDamage( ( ( dmginfo:GetDamage() / UltrakillBase.ConVars.TakeDmgMult:GetFloat() ) * UltrakillBase.ConVars.PlyDmgMult:GetFloat() ) * 10 )
+                    dmginfo:SetDamage( ( ( dmginfo:GetDamage() / UltrakillBase.ConVar_TakeDmgMult:GetFloat() ) * UltrakillBase.ConVar_PlyDmgMult:GetFloat() ) * 10 )
                 else
                     local class = ent:GetClass()
                     if class == "nb_klk_ryuko" or class == "nb_klk_satsuki" or class == "nb_klk_nui" then
