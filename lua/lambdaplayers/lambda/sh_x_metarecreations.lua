@@ -203,7 +203,22 @@ end
 
 -- Returns our fake account ID
 function ENT:AccountID()
-    return SharedRandom( "accountid", 1, 1000000, self:EntIndex() )
+    return SharedRandom( "accountid" .. self:Name(), 1, 1000000, self:EntIndex() )
+end
+
+-- Returns a fake UID
+function ENT:UniqueID()
+    return SharedRandom(  "uniqueid" .. self:Name(), 1, 10000000000, self:EntIndex() )
+end
+
+-- Returns a fake SteamID
+function ENT:SteamID()
+    return "STEAM_0:0:" .. SharedRandom(  "steamid" .. self:Name(), 1, 200000000, self:EntIndex() )
+end
+
+-- Returns a fake community ID
+function ENT:SteamID64()
+    return 90071996842377216 + SharedRandom(  "steamid64" .. self:Name(), 1, 10000000000, self:EntIndex() )
 end
 
 -- Returns our ragdoll entity
