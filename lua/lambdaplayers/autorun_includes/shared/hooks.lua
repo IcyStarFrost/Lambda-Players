@@ -216,7 +216,6 @@ if SERVER then
     --
 
     local ukParryConVar
-    local Clamp = math.Clamp
     local parryFlash = Color( 255, 255, 255, 40 )
 
     function UltrakillCheckParry( self, Dmg )
@@ -251,7 +250,7 @@ if SERVER then
     
     end
 
-    function UltrakillBase.OnParryPlayer( Ply )
+    function UltrakillBaseOnParryPlayer( Ply )
 
         if !Ply.IsLambdaPlayer then
             if UltrakillBase.UltrakillMechanicsInstalled then
@@ -270,19 +269,6 @@ if SERVER then
         UltrakillBase.SoundScript( "Ultrakill_HP", Ply:GetPos(), Ply )
     
     end
-
-    function UltrakillOnParryPlayer( Ply )
-        if !Ply.IsLambdaPlayer then
-            if UltrakillBase.UltrakillMechanicsInstalled then
-                RefreshStamina( Ply )
-            end
-            Ply:ScreenFade( SCREENFADE.IN, parryFlash, 0.1, 0.25 )
-        end
-
-        local health, mHealth = Ply:Health(), Ply:GetMaxHealth()
-        Ply:SetHealth( health > mHealth and health or Clamp( mHealth, 0, mHealth - Ply:GetNW2Int( "UltrakillBase_HardDamage" ) ) )    
-    end
-
     --
 
     -- Fixes ReAgdoll throwing errors when a ragdoll doesn't have bones it need to use (like head)
