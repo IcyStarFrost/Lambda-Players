@@ -4,38 +4,81 @@ file.CreateDir( "lambdaplayers/exportedtexttypes")
 file.CreateDir( "lambdaplayers/importtexttypes")
 local function OpenTextPanel( ply )
     if !ply:IsSuperAdmin() then return end
-    local ishost = ply:GetNW2Bool( "lambda_serverhost", false )
 
-    local frame = LAMBDAPANELS:CreateFrame( "Text Line Editor", 700, 300 )
+    local textdata = {}
+    local exportpnl    
+    local importpnl
+    local curtexttype = ""
+
+    local frame = LAMBDAPANELS:CreateFrame( "Text Line Editor", 700, 600 )
 
     function frame:OnClose()
         chat.AddText( "Remember to Update Lambda Data after any changes!" )
     end
 
     LAMBDAPANELS:CreateURLLabel( "Click here to learn about the default text types and keywords", "https://github.com/IcyStarFrost/Lambda-Players/wiki/Text-Chat", frame, TOP )
-    LAMBDAPANELS:CreateLabel( "Right Click a line to remove it", frame, TOP )
+    LAMBDAPANELS:CreateLabel( "Select a text type to edit with the box below. Right Click a line to remove it", frame, TOP )
 
-    local framescroll = LAMBDAPANELS:CreateScrollPanel( frame, true, FILL )
+    local textentry = LAMBDAPANELS:CreateTextEntry( frame, BOTTOM, "Enter text here" )
 
-    local function CreateTextEditingPanel( texttype )
-        if !IsValid( framescroll ) then return end
+    local listview = vgui.Create( "DListView", frame )
+    listview:Dock( FILL )
+    local column = listview:AddColumn( "Loading..", 1 )
 
-        local pnl = LAMBDAPANELS:CreateBasicPanel( framescroll, LEFT )
-        pnl:SetSize( 200, 200 )
-        pnl:DockMargin( 10, 0, 0, 0 )
-        pnl:Dock( LEFT )
-        framescroll:AddPanel( pnl )
-        local texttable = {}
+    local toppnl = LAMBDAPANELS:CreateBasicPanel( frame, TOP )
 
-        local listview = vgui.Create( "DListView", pnl )
-        listview:Dock( FILL )
-        listview:AddColumn( texttype .. " text lines", 1 )
+    local textypebox = LAMBDAPANELS:CreateComboBox( toppnl, LEFT )
+    local searchbar = LAMBDAPANELS:CreateSearchBar( listview, textdata, toppnl )
 
-        local isrequesting = true
+    searchbar:Dock( LEFT )
+    searchbar:SetSize( frame:GetWide() / 2, 100 )
+    textypebox:SetSize( frame:GetWide() / 2, 100 )
 
-        local textentry = LAMBDAPANELS:CreateTextEntry( pnl, BOTTOM, "Enter text here" )
+    function textentry:OnEnter( val )
+        if val == "" then return end
+        LAMBDAPANELS:UpdateSequentialFile( "lambdaplayers/texttypes/" .. curtexttype .. ".json", val, "json" ) 
+        textentry:SetText( "" )
+        textdata[ #textdata + 1 ] = val
+        chat.AddText( "Added " .. val .. " to " .. curtexttype .. " lines" )
+        surface.PlaySound( "buttons/button15.wav" )
 
-        LAMBDAPANELS:CreateExportPanel( "Text", pnl, BOTTOM, "Export " .. texttype .. " Lines", texttable, "json", "lambdaplayers/exportedtexttypes/" .. texttype .. ".vmt" )
+        textentry:RequestFocus()
+
+        local line = listview:AddLine( val )
+        line:SetSortValue( 1, val )
+    end
+
+    function listview:OnRowRightClick( id, line )
+        chat.AddText( "Removed " .. line:GetSortValue( 1 ) .. " from " .. curtexttype .. " lines" )
+        surface.PlaySound( "buttons/button15.wav" )
+        table.RemoveByValue( textdata, line:GetSortValue( 1 ) )
+        listview:RemoveLine( id )
+        LAMBDAPANELS:RemoveVarFromSQFile( "lambdaplayers/texttypes/" .. curtexttype .. ".json", line:GetSortValue( 1 ), "json" ) 
+    end
+
+    function listview:DoDoubleClick( id, line )
+        surface.PlaySound( "buttons/button16.wav" )
+        textentry:SetText( line:GetSortValue( 1 ) )
+    end
+
+    function textypebox:OnSelect( index, value, data )
+        frame:UpdateTextType( value, data )
+    end
+
+    function frame:UpdateTextType( texttype, tbl )
+        curtexttype = texttype
+        table.Empty( textdata )
+
+        if IsValid( exportpnl ) then
+            exportpnl:Remove()
+        end
+
+        if IsValid( importpnl ) then
+            importpnl:Remove()
+        end
+        
+
+        exportpnl = LAMBDAPANELS:CreateExportPanel( "Text", frame, BOTTOM, "Export " .. texttype .. " Lines", textdata, "json", "lambdaplayers/exportedtexttypes/" .. texttype .. ".vmt" )
 
         local labels = {
             "Place exported any texttype .vmt files or .txt files that are formatted like",
@@ -45,129 +88,90 @@ local function OpenTextPanel( ply )
             "In the garrysmod/data/lambdaplayers/importtexttypes folder to be able to import them"
         }
 
-        LAMBDAPANELS:CreateImportPanel( "Text", pnl, BOTTOM, "Import " .. texttype .. " Lines", labels, "lambdaplayers/importtexttypes/*", function( path )
+        importpnl = LAMBDAPANELS:CreateImportPanel( "Text", frame, BOTTOM, "Import " .. texttype .. " Lines", labels, "lambdaplayers/importtexttypes/*", function( path )
             local count = 0
 
             local jsoncontents = LAMBDAFS:ReadFile( path, "json" )
-    
+
             if jsoncontents then
                 
                 for k, v in ipairs( jsoncontents ) do
-                    if !table.HasValue( texttable, v ) then 
+                    if !table.HasValue( textdata, v ) then 
                         count = count + 1 
                         LAMBDAPANELS:UpdateSequentialFile( "lambdaplayers/texttypes/" .. texttype .. ".json", v, "json" )
-    
+
                         local line = listview:AddLine( v )
                         line:SetSortValue( 1, v )
                 
-                        table.insert( texttable, v )
+                        table.insert( textdata, v )
                     end
                 end
-    
+
                 chat.AddText( "Imported " .. count .. " text lines to " .. texttype )
             else
                 local txtcontents = LAMBDAFS:ReadFile( path ) 
-    
+
                 txtcontents = string.Explode( "\n", txtcontents )
-    
+
                 for k, v in ipairs( txtcontents ) do
-                    if !table.HasValue( texttable, v ) then 
+                    if !table.HasValue( textdata, v ) then 
                         count = count + 1 
                         LAMBDAPANELS:UpdateSequentialFile( "lambdaplayers/texttypes/" .. texttype .. ".json", v, "json" )
-    
+
                         local line = listview:AddLine( v )
                         line:SetSortValue( 1, v )
                 
-                        table.insert( texttable, v )
+                        table.insert( textdata, v )
                     end
                 end
-    
+
                 chat.AddText( "Imported " .. count .. " text lines to " .. texttype )
             end
         end )
 
-        local searchbar = LAMBDAPANELS:CreateSearchBar( listview, texttable, pnl )
-        searchbar:Dock( TOP )
-
-        function textentry:OnEnter( val )
-            if val == "" then return end
-            LAMBDAPANELS:UpdateSequentialFile( "lambdaplayers/texttypes/" .. texttype .. ".json", val, "json" ) 
-            textentry:SetText( "" )
-            chat.AddText( "Added " .. val .. " to " .. texttype .. " lines" )
-            surface.PlaySound( "buttons/button15.wav" )
-
-            local line = listview:AddLine( val )
-            line:SetSortValue( 1, val )
+        for k, v in ipairs( listview:GetLines() ) do
+            listview:RemoveLine( k )
         end
 
-        function listview:OnRowRightClick( id, line )
-            chat.AddText( "Removed " .. line:GetSortValue( 1 ) .. " from " .. texttype .. " lines" )
-            surface.PlaySound( "buttons/button15.wav" )
-            listview:RemoveLine( id )
-            LAMBDAPANELS:RemoveVarFromSQFile( "lambdaplayers/texttypes/" .. texttype .. ".json", line:GetSortValue( 1 ), "json" ) 
-        end
+        column:SetName( texttype .. " text lines" )
 
-        function listview:DoDoubleClick( id, line )
-            surface.PlaySound( "buttons/button16.wav" )
-            textentry:SetText( line:GetSortValue( 1 ) )
-        end
-
-        if !ishost then
-            chat.AddText( "Requesting Text Lines for " .. texttype .. " from the Server")
+        if !LocalPlayer():IsListenServerHost() then
             LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/texttypes/" .. texttype .. ".json", "json", function( data )
-                isrequesting = false
-
                 if !data then return end
 
-                table.Merge( texttable, data )
+                table.Merge( textdata, data )
 
-                for k, v in ipairs( texttable ) do
+                for k, v in ipairs( textdata ) do
                     local line = listview:AddLine( v )
                     line:SetSortValue( 1, v )
                 end
-
             end )
         else
             local data = LAMBDAFS:ReadFile( "lambdaplayers/texttypes/" .. texttype .. ".json", "json" )
-
             if !data then return end
 
-            table.Merge( texttable, data )
+            table.Merge( textdata, data )
 
-            for k, v in ipairs( texttable ) do
+            for k, v in ipairs( textdata ) do
                 local line = listview:AddLine( v )
                 line:SetSortValue( 1, v )
             end
-
-            isrequesting = false
         end
-
-
-        while isrequesting do coroutine.yield() end
-
-        coroutine.wait( 0.5 )
     end
 
     LAMBDAPANELS:RequestVariableFromServer( "LambdaTextTable", function( data )
         if !data then chat.AddText( "No text data was found by Server!" ) return end
         local tbl = data[ 1 ]
 
-        LambdaCreateThread( function()
-            for k, v in pairs( tbl ) do
-                CreateTextEditingPanel( k )
-            end
+        -- data key = text type
+        -- data value = sequential table
 
-            if !IsValid( framescroll ) then return end
+        if !IsValid( textypebox ) then return end
 
-            -- Adding this panel here fixes the strange cut off of the last panel made in the for loop above
-            local pnl = LAMBDAPANELS:CreateBasicPanel( framescroll, LEFT )
-            pnl:SetSize( 200, 200 )
-            pnl:DockMargin( 10, 0, 0, 0 )
-            pnl:Dock( LEFT )
-            framescroll:AddPanel( pnl )
-            
-            chat.AddText( "All text chat lines have been received!" )
-        end )
+        textypebox:SetOptions( tbl )
+        textypebox:SelectOptionByKey( "idle" )
+        
+        chat.AddText( "All text chat lines have been received!" )
 
     end )
 

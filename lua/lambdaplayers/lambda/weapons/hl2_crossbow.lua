@@ -2,6 +2,7 @@ local CurTime = CurTime
 local CreateEntity = ents.Create
 local IsValid = IsValid
 
+
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     crossbow = {
@@ -13,6 +14,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 400,
         attackrange = 3500,
+        dropentity = "weapon_crossbow",
 
         clip = 1,
 
@@ -28,7 +30,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if !IsValid( bolt ) then return end
 
             self.l_Clip = self.l_Clip - 1
-            self.l_WeaponUseCooldown = CurTime() + 0.4
+            self.l_WeaponUseCooldown = CurTime() + LambdaRNG( 0.4, 1.0, false )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
@@ -36,8 +38,10 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent:EmitSound( "Weapon_Crossbow.Single" )
 
             local fireDir = ( target:WorldSpaceCenter() - self:EyePos() ):Angle()
+            local firePos = ( self:EyePos() + fireDir:Forward() * 32 + fireDir:Up() * 32 )
+            fireDir = ( target:WorldSpaceCenter() - firePos ):Angle()
 
-            bolt:SetPos( self:EyePos() + fireDir:Forward() * 32 + fireDir:Up() * 32 ) 
+            bolt:SetPos( firePos ) 
             bolt:SetAngles( fireDir )
             bolt:Spawn()
             bolt:SetOwner( self )

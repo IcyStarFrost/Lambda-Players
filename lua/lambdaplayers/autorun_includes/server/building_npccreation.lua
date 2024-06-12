@@ -4,7 +4,7 @@
 -- Lot's of changes have been done to this function. I personally do not like ( && over and ) and ( || over or )
 
 local ents_Create = ents.Create
-local random = math.random
+
 local IsValid = IsValid
 
 function LambdaInternalSpawnNPC( lambda, Position, Normal, Class, SpawnFlagsSaved )
@@ -75,8 +75,8 @@ function LambdaInternalSpawnNPC( lambda, Position, Normal, Class, SpawnFlagsSave
 	--
 	-- Spawn Flags
 	--
-	local SpawnFlags = bit.bor( SF_NPC_FADE_CORPSE, SF_NPC_ALWAYSTHINK )
-	if NPCData.SpawnFlags then SpawnFlags = bit.bor( SpawnFlags, NPCData.SpawnFlags ) end
+	local SpawnFlags = ( SF_NPC_FADE_CORPSE + SF_NPC_ALWAYSTHINK )
+	if NPCData.SpawnFlags then SpawnFlags = ( SpawnFlags + NPCData.SpawnFlags ) end
 	if NPCData.TotalSpawnFlags then SpawnFlags = NPCData.TotalSpawnFlags end
 	if SpawnFlagsSaved then SpawnFlags = SpawnFlagsSaved end
 	NPC:SetKeyValue( "spawnflags", SpawnFlags )
@@ -104,7 +104,7 @@ function LambdaInternalSpawnNPC( lambda, Position, Normal, Class, SpawnFlagsSave
     
 
     local weaponlist = list.Get( "NPCUsableWeapons" )
-    local chosenweapon = weaponlist[ random( #weaponlist ) ].class
+    local chosenweapon = weaponlist[ LambdaRNG( #weaponlist ) ].class
 	NPC:SetKeyValue( "additionalequipment", chosenweapon )
 	NPC.Equipment = chosenweapon
 

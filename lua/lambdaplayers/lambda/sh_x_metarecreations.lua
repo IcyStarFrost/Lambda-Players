@@ -1,6 +1,4 @@
 -- Functions below are recreations of whatever gmod meta functions
-local random = math.random
-
 
 local eyetracetable = {}
 
@@ -9,21 +7,19 @@ function ENT:Nick()
     return self:GetLambdaName()
 end
 
--- Returns our eye position
-function ENT:EyePos2()
-    return self:GetAttachmentPoint( "eyes" ).Pos
+-- Our name #2
+function ENT:Name()
+    return self:GetLambdaName()
 end
 
--- Returns our eye angles
+-- Returns our eye position (DEPRECATED)
+function ENT:EyePos2()
+    return self:EyePos()
+end
+
+-- Returns our eye angles (DEPRECATED)
 function ENT:EyeAngles2()
-    local eyeAttach = self:GetAttachmentPoint( "eyes" )
-
-    local ene = self:GetEnemy()
-    if IsValid( ene ) and self:GetNW2String( "lambda_state", "Idle" ) == "Combat" then
-        return ( ( ene.IsLambdaPlayer and ene:GetAttachmentPoint( "eyes" ).Pos or ( isfunction( ene.EyePos ) and ene:EyePos() or ene:WorldSpaceCenter() ) ) - eyeAttach.Pos ):Angle()
-    end 
-
-    return eyeAttach.Ang
+    return self:EyeAngles()
 end
 
 -- If we are alive
@@ -33,7 +29,7 @@ end
 
 -- Returns the direction we are looking to
 function ENT:GetAimVector()
-    return self:EyeAngles2():Forward()
+    return self:EyeAngles():Forward()
 end
 
 -- Returns our current armor value
@@ -55,7 +51,6 @@ end
 function ENT:AddDeaths( count ) 
     self:AddDeaths( self:GetDeaths() + count )
 end
-
 
 -- Returns our kill count
 function ENT:Frags()
@@ -79,123 +74,195 @@ end
 
 -- Similar to Real Player's :GetEyeTrace()
 function ENT:GetEyeTrace()
-    local attach = self:GetAttachmentPoint( "eyes" )
-    eyetracetable.start = attach.Pos
-    eyetracetable.endpos = attach.Ang:Forward() * 32768
+    eyetracetable.start = self:EyePos()
+    eyetracetable.endpos = ( self:GetAimVector() * 32768 )
     eyetracetable.filter = self
-    local result = util.TraceLine( eyetracetable )
-    return result
+    return util.TraceLine( eyetracetable )
 end
-
--- Return random fake steam ids
-function ENT:SteamID64()
-    return self:GetSteamID64()
-end
+ENT.GetEyeTraceNoCursor = ENT.GetEyeTrace
 
 -- Return random fake steam ids
 function ENT:SteamID()
     return self:GetNW2String( "lambda_steamid", "STEAM_0:0:0" )
 end
 
+-- Returns if we are currently playing a taunt animation
 function ENT:IsPlayingTaunt()
-    return self:GetState() == "UsingAct"
+    return ( self:GetNW2Int( "lambda_curanimgesture" ) > 0 )
 end
 
+-- Returns if we are sprinting
 function ENT:IsSprinting()
     return self:GetRun()
 end
 
+-- Scales our crouched walk speed to the set value
 local clamp = math.Clamp
 function ENT:SetCrouchedWalkSpeed( speed )
-    self:SetCrouchSpeed( self:GetWalkSpeed() * clamp( speed, 0, 1 ))
+    self:SetCrouchSpeed( self:GetWalkSpeed() * clamp( speed, 0, 1 ) )
 end
 
-function ENT:ShouldDrawLocalPlayer()
-    return self:IsBeingDrawn()
-end
-
+-- Sets our player model color
 function ENT:SetPlayerColor( col )
     self:SetPlyColor( col )
 end
 
+-- Plays footstep sound at our position
 local QuickTrace = util.QuickTrace
 local _LAMBDAPLAYERSFootstepMaterials = _LAMBDAPLAYERSFootstepMaterials
 function ENT:PlayStepSound( volume )
-    local stepMat = QuickTrace( self:WorldSpaceCenter(), self:GetUp() * -32756, self ).MatType
-    if LambdaRunHook( "LambdaFootStep", self, self:GetPos(), stepMat ) == true then return end
+    local stepMat = QuickTrace( self:WorldSpaceCenter(), vector_up * -32756, self ).MatType
+    local selfPos = self:GetPos()
+    if LambdaRunHook( "LambdaFootStep", self, selfPos, stepMat ) == true then return end
 
+    local sndPitch, sndName = 100
     local waterLvl = self:GetWaterLevel()
     if waterLvl != 0 and waterLvl != 3 and self:IsOnGround() then
-        self:EmitSound( "player/footsteps/wade" .. random( 1, 8 ) .. ".wav", 75, random( 90, 110 ), volume or 0.65 )
+        sndName = "player/footsteps/wade" .. LambdaRNG( 8 ) .. ".wav"
+        sndPitch = LambdaRNG( 90, 110 )
+        if !volume then volume = 0.65 end
     else
         local stepSnds = ( _LAMBDAPLAYERSFootstepMaterials[ stepMat ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ] )
-        self:EmitSound( stepSnds[ random( #stepSnds ) ], 75, 100, volume or 0.5 )
+        sndName = stepSnds[ LambdaRNG( #stepSnds ) ]
+        if !volume then volume = 0.5 end
+    end
+
+    if DSteps then
+        if self.DStep_HitGround then return end
+        DSteps( self, selfPos, self.l_DStepsWhichFoot, sndName, volume )
+        self.l_DStepsWhichFoot = ( self.l_DStepsWhichFoot == 0 and 1 or 0 )
+    else
+        self:EmitSound( sndName, 75, sndPitch, volume )
     end
 end
 
-function ENT:Name()
-    return self:GetLambdaName()
-end
-
+-- Returns the last hitgroup we got damaged to
 function ENT:LastHitGroup()
     return self.l_lasthitgroup or 0
 end
 
+-- Returns if we are currently frozen
 function ENT:IsFrozen()
     return self.l_isfrozen
 end
 
+-- Same as ENT:EyeAngles()
 function ENT:LocalEyeAngles()
     return self:EyeAngles()
 end
 
+-- Returns if we have god mode on (invincible)
 function ENT:HasGodMode()
     return self.l_godmode
 end
 
+-- Returns the maximum height we can step onto while moving
 function ENT:GetStepSize()
     return self.loco:GetStepHeight()
 end
 
+-- Returns our speed when crouch walking
 function ENT:GetCrouchedWalkSpeed()
     return self:GetCrouchSpeed()
 end
 
+-- Returns our jump power
 function ENT:GetJumpPower()
     return self.loco:GetJumpHeight()
 end
 
+-- Returns our maximum movement speed
 function ENT:GetMaxSpeed()
     return self:GetRunSpeed()
 end
 
+-- Returns our player model color
 function ENT:GetPlayerColor()
     return self:GetPlyColor()
 end
 
-function ENT:FlashlightIsOn()
-    return self:GetFlashlightOn()
-end
-
+-- Returns our weapon (physgun) color
 function ENT:GetWeaponColor()
     return self:GetPhysColor()
 end
 
+-- Returns if we are currently crouched
 function ENT:Crouching()
     return self:GetCrouch()
 end
 
+-- Returns our team
 function ENT:Team()
     return self:GetTeam()
 end
 
+-- Returns our ammo
 function ENT:Armor()
     return self:GetArmor()
 end
 
+-- Returns our fake account ID
 function ENT:AccountID()
     return SharedRandom( "accountid", 1, 1000000, self:EntIndex() )
 end
+
+-- Returns our ragdoll entity
+function ENT:GetRagdollEntity()
+    local ragdoll = self.ragdoll
+    return ( IsValid( ragdoll ) and ragdoll or self:GetNW2Entity( "lambda_serversideragdoll", nil ) )
+end
+
+function ENT:AllowFlashlight( canFlashlight )
+    self:SetAllowFlashlight( canFlashlight )
+end
+
+function ENT:CanUseFlashlight()
+    return self:GetAllowFlashlight()
+end
+
+function ENT:SetEyeAngles( ang )
+    self:SetAngles( ang )
+end
+
+local entMeta = FindMetaTable( "Entity" )
+local freezeFun = entMeta.Freeze
+if freezeFun then
+    _LambdaBaseENTFreeze = ( _LambdaBaseENTFreeze or freezeFun )
+
+    function entMeta:Freeze( freeze )
+        if self.IsLambdaPlayer and SERVER then
+            self.l_isfrozen = freeze
+        end
+        _LambdaBaseENTFreeze( self, freeze )
+    end
+else
+    function ENT:Freeze( freeze )
+        if ( CLIENT ) then return end
+        self.l_isfrozen = freeze
+    end
+end
+
+function ENT:DoAnimationEvent( data )
+    if ( CLIENT ) then return end
+    self:RemoveGesture( data )
+    self:AddGesture( data )
+end
+
+function ENT:GetHull()
+    return self:GetCollisionBounds()
+end
+
+--
+
+local emptyFunc = function() end
+local falseFunc = function() return false end
+
+ENT.ScreenFade = emptyFunc
+ENT.InVehicle = falseFunc
+ENT.LagCompensation = emptyFunc
+ENT.ViewPunch = emptyFunc
+
+--
 
 if SERVER then
     local TraceHull = util.TraceHull
@@ -225,10 +292,6 @@ if SERVER then
 
     function ENT:Give( weaponClassName )
         self:SwitchWeapon( weaponClassName )
-    end
-
-    function ENT:Freeze( freeze )
-        self.l_isfrozen = freeze
     end
 
     function ENT:GodDisable()
@@ -290,11 +353,15 @@ if SERVER then
     end
 
     function ENT:SprintEnable()
-        self:SetRun( true )
+        self.l_cansprint = true
     end
 
     function ENT:SetNoTarget( visibility )
-        if visibility then self:AddFlags( FL_NOTARGET) else self:RemoveFlags( FL_NOTARGET ) end
+        if visibility then 
+            self:AddFlags( FL_NOTARGET )
+        else 
+            self:RemoveFlags( FL_NOTARGET )
+        end
     end
 
     local spraytbl = {}
@@ -305,12 +372,12 @@ if SERVER then
         spraytbl.collisiongroup = COLLISION_GROUP_WORLD
         local trace = Trace( spraytbl )
 
-        LambdaPlayers_Spray( LambdaPlayerSprays[ random( #LambdaPlayerSprays ) ], trace.HitPos, trace.HitNormal, self:GetCreationID() )
+        LambdaPlayers_Spray( LambdaPlayerSprays[ LambdaRNG( #LambdaPlayerSprays ) ], trace.HitPos, trace.HitNormal, self:GetCreationID() )
         self:EmitSound( "player/sprayer.wav", 65 )
     end
 
     function ENT:SprintDisable()
-        self:SetRun( false )
+        self.l_cansprint = false
     end
 
     function ENT:StripWeapons()
@@ -322,21 +389,30 @@ if SERVER then
     end
 
     function ENT:TimeConnected()
-        return SysTime() - self.debuginitstart
+        return ( SysTime() - self.debuginitstart )
     end
 
-elseif CLIENT then
+    -- For ReAgdoll compatibility
+    function ENT:SentenceStop()
+    end
+end
+
+if ( CLIENT ) then
+    -- Returns if our flashlight is currently on
+    function ENT:FlashlightIsOn()
+        return self.l_flashlighton
+    end
+
+    -- Returns whether our player model will be drawn at the time the function is called
+    function ENT:ShouldDrawLocalPlayer()
+        return self:IsBeingDrawn()
+    end
 
     function ENT:IsMuted() 
         return self.l_ismuted
     end
 
-    function ENT:VoiceVolume()
-        return self:GetVoiceLevel()
-    end
-
     function ENT:SetMuted( bool )
         self.l_ismuted = bool
     end
-
 end

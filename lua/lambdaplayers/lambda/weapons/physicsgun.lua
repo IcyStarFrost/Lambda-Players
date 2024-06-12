@@ -5,7 +5,7 @@ local physgunGlowMat2 = Material("sprites/physg_glow2")
 
 local physgunbeam = Material( "sprites/physbeama" )
 
-local random = math.random
+
 local IsValid = IsValid
 local TraceEntity = util.TraceEntity
 local LerpVector = LerpVector
@@ -58,6 +58,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         holdtype = "physgun",
         killicon = "weapon_physcannon",
+        dropentity = "weapon_physgun",
 
         OnDeploy = function( lambda, wepent )
             wepent:SetSkin( 1 )
@@ -89,12 +90,12 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 
                             if phys:IsValid() then
                                 phys:EnableMotion( true )
-                                local dist = ( !lambda.l_physholdpos and ( wepent:GetPos() + wepent:GetForward() * lambda.l_physdistance ) or lambda.l_physholdpos ) - lambda.l_physgungrabbedent:GetPos()
+                                local dist = ( !lambda.l_physholdpos and ( wepent:GetPos() + wepent:GetUp() * lambda.l_physdistance ) or lambda.l_physholdpos ) - lambda.l_physgungrabbedent:GetPos()
                                 local dir = dist:GetNormalized()
 
                                 local speed = min( 5000 / 2, dist:Dot( dir ) * 5 ) * dir + lambda.l_physgungrabbedent:GetVelocity() * 0.5
                                 speed = max( min( 5000, speed:Dot( dir ) ), -1000 )
-                                    
+
                                 phys:SetVelocity( ( speed ) * dir )
 
                                 if lambda.l_physholdang then
@@ -121,9 +122,9 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 lambda:Thread( function()
 
                     while true do 
-                        if lambda:GetState() == "Idle" and !lambda:IsDisabled() and !physgunactive and random( 1, 3 ) == 1 then
+                        if lambda:GetState() == "Idle" and !lambda:IsDisabled() and !physgunactive and LambdaRNG( 3 ) == 1 then
                             local possibleents = lambda:FindInSphere( nil, 1500, function( ent ) return !ignoreentclasses[ ent:GetClass() ] and lambda:HasVPhysics( ent ) and lambda:HasPermissionToEdit( ent ) and lambda:CanSee( ent ) end )
-                            local ent = possibleents[ random( #possibleents ) ]
+                            local ent = possibleents[ LambdaRNG( #possibleents ) ]
 
                             if IsValid( ent ) then
 
@@ -148,7 +149,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                             end
 
-                        elseif physgunactive and !lambda.l_allowdropphys and random( 1, 6 ) == 1 then
+                        elseif physgunactive and !lambda.l_allowdropphys and LambdaRNG( 6 ) == 1 then
                             lambda.l_physgungrabbedent = nil
                             wepent:SetNW2Bool( "lambda_physgundraw", false )
                         end
@@ -196,7 +197,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             if IsValid( wepent ) then
                 
-                local size = random( 30, 50 )
+                local size = LambdaRNG( 30, 50 )
                 local drawPos = ( wepent:GetPos() + wepent:GetUp() * 2 )
                 local color = lambda:GetPhysColor()
 
@@ -218,7 +219,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 local target = wepent:GetNW2Entity( "lambda_physgunent", nil )
                 local segments = 10
                 local color = lambda:GetPhysColor():ToColor()
-                local size = random( 10, 15 )
+                local size = LambdaRNG( 10, 15 )
         
                 -- Apparently this how we make the pointer and beam "Stick" to a certain spot of the target with a localized endpos to them
                 if IsValid( target ) then
@@ -229,18 +230,18 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         
                 render.StartBeam( segments + 2 )
         
-                    render.AddBeam( s, random( 1, 2 ), random( 1, 10 ), color )
+                    render.AddBeam( s, LambdaRNG( 2 ), LambdaRNG( 10 ), color )
         
                     for i=1, segments do
                         
                         -- This actually makes a pretty decent beam
                         local lerp = LerpVector( i / 15, s + forward * ( 2 + i * 10 ), e )
         
-                        render.AddBeam( lerp, random( 1, 2 ), random( 1, 10 ), color )
+                        render.AddBeam( lerp, LambdaRNG( 2 ), LambdaRNG( 10 ), color )
         
                     end
         
-                    render.AddBeam( e, random( 1, 2 ), random( 1, 10 ), color )
+                    render.AddBeam( e, LambdaRNG( 2 ), LambdaRNG( 10 ), color )
         
                 render.EndBeam()
         

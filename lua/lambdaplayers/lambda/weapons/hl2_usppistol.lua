@@ -1,5 +1,4 @@
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
-
     pistol = {
         model = "models/weapons/w_pistol.mdl",
         origin = "Half-Life 2",
@@ -9,13 +8,15 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 350,
         attackrange = 2000,
+        islethal = true,
+        dropentity = "weapon_pistol",
 
         clip = 18,
         tracername = "Tracer",
         damage = 5,
-        spread = 0.2,
-        rateoffiremin = 0.2,
-        rateoffiremax = 0.45,
+        spread = 0.133,
+        rateoffiremin = 0.175,
+        rateoffiremax = 0.3,
         muzzleflash = 1,
         shelleject = "ShellEject",
         shelloffpos = Vector(0,2,5),
@@ -24,10 +25,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         reloadtime = 1.8,
         reloadanim = ACT_HL2MP_GESTURE_RELOAD_PISTOL,
-        reloadanimspeed = 1,
-        reloadsounds = { { 0, "Weapon_Pistol.Reload" } },
-
-        islethal = true,
+        reloadsounds = { { 0, "Weapon_Pistol.Reload" } }
     }
-
-})
+} )

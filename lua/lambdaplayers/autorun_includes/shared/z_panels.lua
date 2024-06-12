@@ -103,10 +103,17 @@ if CLIENT then
         local combobox = vgui.Create( "DComboBox", parent )
         if dock then combobox:Dock( dock ) end
 
-        for k, v in pairs( options ) do 
-            local index = combobox:AddChoice( k, v )
-            choiceindexes.keys[ k ] = index
-            choiceindexes.values[ v ] = index
+        function combobox:SetOptions( options )
+            combobox:Clear()
+            for k, v in pairs( options ) do 
+                local index = combobox:AddChoice( k, v )
+                choiceindexes.keys[ k ] = index
+                choiceindexes.values[ v ] = index
+            end
+        end
+
+        if options then
+            combobox:SetOptions( options )
         end
 
         function combobox:SelectOptionByKey( key )
@@ -185,6 +192,7 @@ if CLIENT then
             Derma_Message( "Exported file to " .. "garrysmod/data/" .. exportpath, "Export", "Ok" )
         end
 
+        return button
     end
 
     -- Creates a button that will open a panel that will search for files to import. importfunction must be used to handle the importing
@@ -229,7 +237,7 @@ if CLIENT then
 
         end
 
-        return panel
+        return button
     end
 
     -- Creates a Text entry that acts as a search bar
@@ -436,7 +444,7 @@ if CLIENT then
     end
 
     -- Requests data from the specified file from the server
-    function LAMBDAPANELS:RequestDataFromServer( filepath, type, callback )
+    function LAMBDAPANELS:RequestDataFromServer( filepath, type, callback, no_msg )
         net.Start( "lambdaplayers_requestdata" )
         net.WriteString( filepath )
         net.WriteString( type )
@@ -454,7 +462,9 @@ if CLIENT then
 
             if isdone then
                 callback( datastring != "!!NIL" and JSONToTable( datastring ) or nil )
-                chat.AddText( "Received all data from server! " .. NiceSize( bytes ) .. " of data was received" )
+                if !no_msg then
+                    chat.AddText( "Received all data from server! " .. NiceSize( bytes ) .. " of data was received" )
+                end
             end
 
         end )
@@ -462,7 +472,7 @@ if CLIENT then
     end
 
 
-    function LAMBDAPANELS:RequestVariableFromServer( var, callback )
+    function LAMBDAPANELS:RequestVariableFromServer( var, callback, no_msg )
         net.Start( "lambdaplayers_requestvariable" )
         net.WriteString( var )
         net.SendToServer()
@@ -479,7 +489,9 @@ if CLIENT then
 
             if isdone then
                 callback( datastring != "!!NIL" and JSONToTable( datastring ) or nil )
-                chat.AddText( "Received all data from server! " .. NiceSize( bytes ) .. " of data was received" )
+                if !no_msg then
+                    chat.AddText( "Received all data from server! " .. NiceSize( bytes ) .. " of data was received" )
+                end
             end
             
         end )
@@ -705,9 +717,9 @@ elseif SERVER then
 end
 
 
-function RegisterLambdaPanel( name, desc, func )
+function RegisterLambdaPanel( name, desc, func, cat )
     local cmdName = ( string_lower( string_Replace( name, " ", "" ) ) )
-    CreateLambdaConsoleCommand( "lambdaplayers_panels_open" .. cmdName .. "panel", func, true, desc, { name = "Open " .. name .. " Panel", category = "Panels" } )
+    CreateLambdaConsoleCommand( "lambdaplayers_panels_open" .. cmdName .. "panel", func, true, desc, { name = "Open " .. name .. " Panel", category = ( cat or "Panels" ) } )
 end
 
 local panels = file.Find( "lambdaplayers/lambda/panels/*", "LUA", "nameasc" )

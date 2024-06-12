@@ -4,255 +4,300 @@
 -- Definitely a lot more cleaner this way
 
 local CurTime = CurTime
-local RandomPairs = RandomPairs
-local random = math.random
-local Rand = math.Rand
+
+
 local ceil = math.ceil
 local IsValid = IsValid
 local bit_band = bit.band
-local IsInWorld = util.IsInWorld
-local VectorRand = VectorRand
 local coroutine_wait = coroutine.wait
 local table_insert = table.insert
+local ignoreLambdas = GetConVar( "lambdaplayers_combat_dontrdmlambdas" )
+local spawnEntities = GetConVar( "lambdaplayers_building_allowentity" )
+local unlimiteddistance = GetConVar( "lambdaplayers_lambda_infwanderdistance" )
 
 local wandertbl = { autorun = true }
 function ENT:Idle()
-    if random( 1, 100 ) < 70 then
+    if LambdaRNG( 100 ) < 70 then
         self:ComputeChance()
-    else
-
-        local pos = self:GetRandomPosition()
-
-        if random( 1, 3 ) == 1 then
-            local triggers = self:FindInSphere( nil, 2000, function( ent ) return ent:GetClass() == "trigger_teleport" and !ent:GetInternalVariable( "StartDisabled" ) and bit_band( ent:GetInternalVariable( "spawnflags" ), 2 ) == 2 end )
-            for k, v in RandomPairs( triggers ) do
-                if self:Visible( v ) then
-                    pos = v:WorldSpaceCenter()
-                    break
-                end
-            end
-        end
-
-        self:MoveToPos( pos, wandertbl )
+        return
     end
-end
 
-local combattbl = { update = 0.2, run = true, tol = 0 }
-function ENT:Combat()
-    if !LambdaIsValid( self:GetEnemy() ) then self:SetEnemy( NULL ) self:SetState( "Idle" ) return end
-
-    if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
-
-    if !self:HookExists( "Tick", "CombatTick" ) then
-        self:Hook( "Tick", "CombatTick", function()
-            if self:IsDisabled() then return end
-            if self:GetState() != "Combat" then self:SetIsFiring( false ) return "end" end -- Returns and removes this hook because we returned "end". See sh_util.lua for source
-
-            local ene = self:GetEnemy()
-            if !LambdaIsValid( ene ) then self:SetEnemy( NULL ) return "end" end
-
-            local canSee = self:CanSee( ene )
-            local attackDist = self.l_CombatAttackRange
-            if attackDist and canSee and self:IsInRange( ene, attackDist ) then
-                self:SetIsFiring( true )
-                self.Face = ene
-                self.l_Faceend = CurTime() + 1
-                self:UseWeapon( ene )
-            else
-                self:SetIsFiring( false )
-            end
-
-            local myOrigin = self:GetPos()
-            local keepDist = self.l_CombatKeepDistance
-            local posCopy = ene:GetPos(); posCopy.z = myOrigin.z
-            if keepDist and canSee and self:IsInRange( posCopy, keepDist ) then
-                local potentialPos = ( myOrigin + ( myOrigin - posCopy ):GetNormalized() * 200 ) + VectorRand( -1000, 1000 )
-                self.l_movepos = ( IsInWorld( potentialPos ) and potentialPos or self:Trace( potentialPos ).HitPos )
-            else
-                self.l_movepos = ene
-            end
+    local pos
+    if LambdaRNG( 3 ) == 1 then
+        local triggers = self:FindInSphere( nil, 2000, function( ent )
+            return ( ent:GetClass() == "trigger_teleport" and !ent:GetInternalVariable( "StartDisabled" ) and bit_band( ent:GetInternalVariable( "spawnflags" ), 2 ) == 2 and self:CanSee( ent ) )
         end )
+
+        if #triggers == 0 then return end
+        pos = triggers[ LambdaRNG( #triggers ) ]:WorldSpaceCenter()
     end
 
-    self:MoveToPos( self:GetEnemy(), combattbl )
+    self:MoveToPos( ( pos or self:GetRandomPosition( nil, unlimiteddistance:GetBool() ) ), wandertbl )
 end
 
--- Heal ourselves when hurt
-function ENT:HealUp()
-    local spawnRate = Rand( 0.25, 0.4 )
-    local spawnCount = ceil( ( self:GetMaxHealth() - self:Health() ) / 25 )
-    local rndVec = VectorRand( -32, 32 )
+local combattbl = { update = 0.33, run = true, tol = 10 }
+local meleetbl = { update = 0.1, run = true, tol = 0 }
+function ENT:Combat()
+    if !LambdaIsValid( self:GetEnemy() ) then self:SetEnemy( NULL ) return true end
+    if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
+    self:MoveToPos( self:GetEnemy(), ( self.l_HasMelee and meleetbl or combattbl ) )
+end
 
+local spawnMedkits = GetConVar( "lambdaplayers_combat_spawnmedkits" )
+-- Heal ourselves when hurt
+function ENT:HealUp( failState )
+    if !spawnEntities:GetBool() or !spawnMedkits:GetBool() or self:Health() >= self:GetMaxHealth() then
+        return ( failState or true )
+    end
+    if !self.l_isswimming and !self:IsInNoClip() and !self.loco:IsOnGround() then
+        return
+    end
+
+    local rndVec = ( self:GetForward() * LambdaRNG( 16, 24 ) + self:GetRight() * LambdaRNG( -24, 24 ) - vector_up * 8 )
+    if !self:Trace( ( self:GetPos() + rndVec ), self:EyePos() ).Hit then
+        self:MoveToPos( self:GetRandomPosition( nil, 100 ) )
+        if !self:GetState( "HealUp" ) then return true end
+    end
+
+    local spawnRate = LambdaRNG( 0.15, 0.4, true )
     coroutine_wait( spawnRate )
-    for i = 1, random( ( spawnCount / 2 ), spawnCount ) do
-        if self:GetState() != "HealUp" or !self:IsUnderLimit( "Entity" ) then break end
+
+    local spawnCount = ceil( ( self:GetMaxHealth() - self:Health() ) / 25 )
+    for i = 1, LambdaRNG( ( spawnCount / 2 ), spawnCount ) do
+        if self:InCombat() or self:IsPanicking() or !self:IsUnderLimit( "Entity" ) then break end
+        if self:Health() >= self:GetMaxHealth() then break end
 
         local lookPos = ( self:GetPos() + rndVec )
-        self:LookTo( lookPos, spawnRate )
-        
-        local healthkit = LambdaSpawn_SENT( self, "item_healthkit", self:Trace( lookPos, self:GetAttachmentPoint( "eyes" ).Pos ) )
+        self:LookTo( lookPos, spawnRate * 2 )
+
+        local healthkit = LambdaSpawn_SENT( self, "item_healthkit", self:Trace( lookPos, self:EyePos() ) )
         if !IsValid( healthkit ) then break end
-        
-        self:DebugPrint( "spawned a Entity item_healthkit" )
+
+        self:DebugPrint( "spawned an entity item_healthkit" )
         self:ContributeEntToLimit( healthkit, "Entity" )
         table_insert( self.l_SpawnedEntities, 1, healthkit )
 
         coroutine_wait( spawnRate )
     end
 
-    if self:GetState() == "HealUp" then self:SetState( "Idle" ) end
+    return true
 end
 
+local spawnBatteries = GetConVar( "lambdaplayers_combat_spawnbatteries" )
 -- Armor ourselves for better chance at surviving in combat
-function ENT:ArmorUp()
-    local spawnRate = Rand( 0.25, 0.4 )
-    local spawnCount = ceil( ( self:GetMaxArmor() - self:Armor() ) / 15 )
-    local rndVec = VectorRand( -32, 32 )
+function ENT:ArmorUp( failState )
+    if !spawnEntities:GetBool() or !spawnBatteries:GetBool() or self:Armor() >= self:GetMaxArmor() then
+        return ( failState or true )
+    end
+    if !self.l_isswimming and !self:IsInNoClip() and !self.loco:IsOnGround() then
+        return
+    end
 
+    local rndVec = ( self:GetForward() * LambdaRNG( 16, 24 ) + self:GetRight() * LambdaRNG( -24, 24 ) - vector_up * 8 )
+    if !self:Trace( ( self:GetPos() + rndVec ), self:EyePos() ).Hit then
+        self.l_noclipheight = 0
+        self:MoveToPos( self:GetRandomPosition( nil, 100 ) )
+        if !self:GetState( "ArmorUp" ) then return true end
+    end
+
+    local spawnRate = LambdaRNG( 0.15, 0.4, true )
     coroutine_wait( spawnRate )
-    for i = 1, random( ( spawnCount / 3 ), spawnCount ) do
-        if self:GetState() != "ArmorUp" or !self:IsUnderLimit( "Entity" ) then break end
+
+    local spawnCount = ceil( ( self:GetMaxArmor() - self:Armor() ) / 15 )
+    for i = 1, LambdaRNG( ( spawnCount / 3 ), spawnCount ) do
+        if self:InCombat() or self:IsPanicking() or !self:IsUnderLimit( "Entity" ) then break end
+        if self:Armor() >= self:GetMaxArmor() then break end
 
         local lookPos = ( self:GetPos() + rndVec )
-        self:LookTo( lookPos, spawnRate )
-        
-        local battery = LambdaSpawn_SENT( self, "item_battery", self:Trace( lookPos, self:GetAttachmentPoint( "eyes" ).Pos ) )
+        self:LookTo( lookPos, spawnRate * 2 )
+
+        local battery = LambdaSpawn_SENT( self, "item_battery", self:Trace( lookPos, self:EyePos() ) )
         if !IsValid( battery ) then break end
-        
-        self:DebugPrint( "spawned a Entity item_battery" )
+
+        self:DebugPrint( "spawned an entity item_battery" )
         self:ContributeEntToLimit( battery, "Entity" )
         table_insert( self.l_SpawnedEntities, 1, battery )
 
         coroutine_wait( spawnRate )
     end
-    
-    if self:GetState() == "ArmorUp" then self:SetState( "Idle" ) end
+
+    return true
+end
+
+function ENT:CombatSpawnBehavior( target )
+    if LambdaRNG( 3 ) == 1 then self:ArmorUp() end
+    if !IsValid( target ) or !self:CanTarget( target ) then return true end
+    self:AttackTarget( target )
 end
 
 -- Wander around until we find someone to jump
-function ENT:FindTarget()
+local ft_options = { cbTime = 0.5, callback = function( lambda )
+    if lambda:InCombat() or !lambda:GetState( "FindTarget" ) then return false end
 
-    if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
+    local ene = lambda:GetEnemy()
+    if LambdaIsValid( ene ) and lambda:CanTarget( ene ) then
+        lambda:AttackTarget( ene )
+        return false
+    end
+    lambda:SetEnemy( NULL )
 
-    self:Hook( "Tick", "CombatTick", function()
-        if LambdaIsValid( self:GetEnemy() ) or self:GetState() != "FindTarget" then return "end" end
-        local find = self:FindInSphere( nil, 1500, function( ent ) return self:CanTarget( ent ) and self:CanSee( ent ) end )
-
-        for k, v in RandomPairs( find ) do
-            self:AttackTarget( v )
-            break
+    local dontRDMLambdas = ignoreLambdas:GetBool()
+    local findTargets = lambda:FindInSphere( nil, 2000, function( ent )
+        if ent.IsLambdaPlayer and dontRDMLambdas then return false end
+        return ( lambda:CanTarget( ent ) and lambda:CanSee( ent ) )
+    end )
+    if #findTargets != 0 then
+        local rndTarget = findTargets[ LambdaRNG( #findTargets ) ]
+        if rndTarget.IsLambdaPlayer and rndTarget:IsPanicking() and LambdaRNG( 3 ) == 1 and LambdaRNG( 100 ) <= lambda:GetCombatChance() and LambdaIsValid( rndTarget:GetEnemy() ) then
+            rndTarget = rndTarget:GetEnemy()
         end
 
-    end, nil, 0.5 )
-
-
-    self:MoveToPos( self:GetRandomPosition() )
+        lambda:AttackTarget( rndTarget )
+        return false
+    end
+end }
+function ENT:FindTarget()
+    if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
+    ft_options.walk = ( LambdaRNG( 8 ) == 1 )
+    self:MoveToPos( self:GetRandomPosition( nil, 2000 ), ft_options )
+    return ( LambdaRNG( 100 ) > self:GetCombatChance() )
 end
 
 -- We look for a button and press it
-function ENT:PushButton()
-    local button = self.l_buttonentity
+function ENT:PushButton( button )
+    if IsValid( button ) then
+        self:LookTo( button, 1 )
+        coroutine_wait( 1 )
 
-    if !IsValid( button ) then self:SetState( "Idle" ) return end
-    local pos = ( button:GetPos() + self:GetNormalTo( button:GetPos() ) * -60 )
+        if IsValid( button ) then
+            local pos = button:GetPos()
+            self:MoveToPos( pos + self:GetNormalTo( pos ) * -60 )
 
-    self:LookTo( button, 1 )
-    coroutine_wait( 1 )
-    if !IsValid( button ) then self:SetState( "Idle" ) return end
+            if IsValid( button ) then
+                local class = button:GetClass()
+                if class == "func_button" then
+                    button:Fire( "Press" )
+                elseif class == "gmod_button" then
+                    button:Toggle( !button:GetOn(), self )
+                elseif class == "gmod_wire_button" then
+                    button:Switch( !button:GetOn() )
+                end
 
-    self:MoveToPos( pos )
-    if !IsValid( button ) then self:SetState( "Idle" ) return end
-
-    if button:GetClass() == "func_button" then
-        button:Fire( "Press" )
-    elseif button:GetClass() == "gmod_button" then
-        button:Toggle( !button:GetOn(), self )
-    elseif button:GetClass() == "gmod_wire_button" then
-        button:Switch( !button:GetOn() )
+                button:EmitSound( "HL2Player.Use" )
+            end
+        end
     end
-    button:EmitSound( "HL2Player.Use", 80 )
 
-    self:SetState( "Idle" )
+    return true
 end
 
-function ENT:Laughing()
-    if !self.l_preventdefaultspeak then self:PlaySoundFile( self:GetVoiceLine( "laugh" ) ) end
-    
-    self:PlayGestureAndWait( ACT_GMOD_TAUNT_LAUGH )
-    self:SetState( "Idle" )
+function ENT:Laughing( args )
+    if !args or !istable( args ) then return true end
+
+    local target = args[ 1 ]
+    if isentity( target ) and !IsValid( target ) then return true end
+
+    if target.IsLambdaPlayer or target:IsPlayer() then
+        local ragdoll = target:GetRagdollEntity()
+        if IsValid( ragdoll ) then target = ragdoll end
+    end
+    self:LookTo( target, 1, false, 3 )
+
+    local laughDelay = ( LambdaRNG( 1, 6 ) * 0.1 )
+    self:PlaySoundFile( "laugh", laughDelay )
+
+    local movePos = args[ 2 ]
+    local actTime = ( laughDelay * LambdaRNG( 0.8, 1.2, true ) )
+    if !movePos then
+        coroutine_wait( actTime )
+    else
+        self:MoveToPos( movePos, { run = false, cbTime = actTime, callback = function( self ) return false end } )
+    end
+
+    if !self.l_preventdefaultspeak and !self:IsSpeaking( "laugh" ) then self:PlaySoundFile( "laugh", false ) end
+    if self:GetState( "Laughing" ) then self:PlayGestureAndWait( ACT_GMOD_TAUNT_LAUGH ) end
+
+    return self:GetLastState()
 end
 
 local acts = { ACT_GMOD_TAUNT_DANCE, ACT_GMOD_TAUNT_ROBOT, ACT_GMOD_TAUNT_MUSCLE, ACT_GMOD_TAUNT_CHEER }
 function ENT:UsingAct()
-    self:PlayGestureAndWait( acts[ random( #acts ) ] )
-    self:SetState( "Idle" )
+    self:PlayGestureAndWait( acts[ LambdaRNG( #acts ) ] )
+    return true
 end
 
-
 -- MW2/Halo lives in us forever
-local t_options = { run = true }
-function ENT:TBaggingPosition()
+local t_options = { run = true, callback = function( lambda )
+    if !lambda:GetState( "TBaggingPosition" ) then return false end
+end }
+function ENT:TBaggingPosition( pos )
+    self:MoveToPos( pos, t_options )
 
-    self:MoveToPos( self.l_tbagpos, t_options )
+    for i = 1, LambdaRNG( 3, 10 ) do
+        if !self:GetState( "TBaggingPosition" ) then return end
 
-    for i=1, random( 2, 8 ) do
-        if self:GetState() != "TBaggingPosition" then return end
         self:SetCrouch( true )
         coroutine_wait( 0.2 )
+
         self:SetCrouch( false )
         coroutine_wait( 0.2 )
     end
 
-    self:SetState( "Idle" )
+    return true
 end
 
-local retreatOptions = { run = true }
-function ENT:Retreat()
-    local target = self.l_RetreatTarget
-    if CurTime() > self.l_retreatendtime or target != nil and ( !LambdaIsValid( target ) or target.IsLambdaPlayer and ( target:GetState() != "Combat" or target:GetEnemy() != self ) or !self:IsInRange( target, 2000 ) or !self:CanSee( target ) and !self:IsInRange( target, 600 ) ) then 
-        self:SetState( "Idle" ) 
-        self.l_RetreatTarget = nil
-        return
+local retreatOptions = { run = true, callback = function( lambda )
+    local target = lambda:GetEnemy()
+    if CurTime() >= lambda.l_retreatendtime or IsValid( target ) and ( ( target.IsLambdaPlayer or target:IsPlayer() ) and !target:Alive() or !lambda:IsInRange( target, 3000 ) ) then
+        lambda:SetRun( false )
+        lambda.l_retreatendtime = 0
     end
+end }
+function ENT:Retreat()
+    if CurTime() >= self.l_retreatendtime then return true end
 
-    local rndPos = self:GetRandomPosition( nil, 4000 )
+    local rndPos = self:GetRandomPosition( nil, 2500, function( selfPos, area, rndPoint )
+        if !IsValid( target ) then return end
+
+        local targetPos = target:GetPos()
+        if rndPoint:DistToSqr( targetPos ) > 250000 and ( targetPos - selfPos ):GetNormalized():Dot( ( rndPoint - selfPos ):GetNormalized() ) <= 0.2 then return end
+
+        return true
+    end )
     self:MoveToPos( rndPos, retreatOptions )
 end
 
-local heal_options = { run = true, update = 0.33, tol = 48 }
-function ENT:HealSomeone()
-    if !LambdaIsValid( self.l_HealTarget ) or self.l_HealTarget:Health() >= self.l_HealTarget:GetMaxHealth() or self.l_HealTarget.IsLambdaPlayer and self.l_HealTarget:InCombat() and self.l_HealTarget:GetEnemy() == self then
-        self:SetState( "Idle" ) 
-        return 
+function ENT:HealSomeone( target )
+    if !LambdaIsValid( target ) or target:Health() >= target:GetMaxHealth() or target.GetEnemy and target:GetEnemy() == self then
+        return true
     end
 
-    if self.l_Weapon != "gmod_medkit" then 
-        self:SwitchWeapon( "gmod_medkit" ) 
+    if self.l_Weapon != "gmod_medkit" then
+        if !self:CanEquipWeapon( "gmod_medkit" ) then return true end
+        self:SwitchWeapon( "gmod_medkit" )
     end
 
-    if self:IsInRange( self.l_HealTarget, 64 ) then
-        self:LookTo( self.l_HealTarget, 1 )
-        self:UseWeapon( self.l_HealTarget )
+    if self:IsInRange( target, 64 ) then
+        self:LookTo( target, 1 )
+        self:UseWeapon( target )
 
-        if self.l_HealTarget.IsLambdaPlayer and self.l_HealTarget:Health() >= self.l_HealTarget:GetMaxHealth() then
-            self.l_HealTarget:LookTo( self, 1 )
-            if !self.l_preventdefaultspeak then self.l_HealTarget:PlaySoundFile( self.l_HealTarget:GetVoiceLine( "assist" ) ) end
+        if target.IsLambdaPlayer and !target.l_preventdefaultspeak and target:Health() >= target:GetMaxHealth() then
+            target:LookTo( self, 1 )
+            target:PlaySoundFile( "assist" )
         end
     else
         local cancelled = false
         self:PreventWeaponSwitch( true )
-        
-        heal_options.callback = function()
-            if self:GetState() != "HealSomeone" or self:Health() < self:GetMaxHealth() then self:CancelMovement(); cancelled = true return end
-            if !LambdaIsValid( self.l_HealTarget ) then self:CancelMovement(); cancelled = true return end
-            if self.l_HealTarget:Health() >= self.l_HealTarget:GetMaxHealth() then self:CancelMovement(); cancelled = true return end
-            if self.l_HealTarget.IsLambdaPlayer and self.l_HealTarget:InCombat() and self.l_HealTarget:GetEnemy() == self then self:CancelMovement(); cancelled = true return end
-            if self:IsInRange( self.l_HealTarget, 64 ) then self:CancelMovement() return end
-        end
 
-        self:MoveToPos( self.l_HealTarget, heal_options )
-        if cancelled and self:GetState() == "HealSomeone" then self:SetState( "Idle" ) end
+        self:MoveToPos( target, { run = true, update = 0.2, tol = 48, callback = function()
+            if !self:GetState( "HealSomeone" ) or self:Health() < self:GetMaxHealth() then cancelled = true return false end
+            if !LambdaIsValid( target ) then cancelled = true return false end
+            if target:Health() >= target:GetMaxHealth() then cancelled = true return false end
+            if target.IsLambdaPlayer and target:GetEnemy() == self then cancelled = true return false end
+            if self:IsInRange( target, 64 ) then return false end
+        end } )
 
-        self:PreventWeaponSwitch( false ) 
+        self:PreventWeaponSwitch( false )
+        if cancelled then return true end
     end
 end

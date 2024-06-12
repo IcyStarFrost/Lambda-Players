@@ -47,14 +47,22 @@ local function OpenPropPanel( ply )
         LAMBDAPANELS:WriteServerFile( "lambdaplayers/proplist.json", models, "json" ) 
     end
 
+    if !LocalPlayer():IsListenServerHost() then
+        LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/proplist.json", "json", function( data ) 
+            if !data then return end
 
-    LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/proplist.json", "json", function( data ) 
+            for k, mdl in ipairs( data ) do
+                proplist:AddLine( mdl )
+            end
+        end )
+    else
+        local data = LAMBDAFS:ReadFile( "lambdaplayers/proplist.json", "json" )
         if !data then return end
 
         for k, mdl in ipairs( data ) do
             proplist:AddLine( mdl )
         end
-    end )
+    end
 
     filebrowser:SetFileTypes( "*.mdl" )
     filebrowser:SetSize( 400, 1 )

@@ -1,6 +1,6 @@
 local IsValid = IsValid
 local util_Effect = util.Effect
-local random = math.random
+
 local stunstickGlow = Material("effects/blueflare1")
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
@@ -13,11 +13,13 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         killicon = "weapon_stunstick",
         ismelee = true,
         bonemerge = true,
-        keepdistance = 10,
+        keepdistance = 40,
         attackrange = 55,
+        dropentity = "weapon_stunstick",
 
         damage = 40,
-        rateoffire = 0.8,
+        rateoffiremin = 0.8,
+        rateoffiremax = 1.25,
         attackanim = ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE,
         attacksnd = "Weapon_StunStick.Swing",
         hitsnd = "Weapon_StunStick.Melee_Hit",
@@ -26,7 +28,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         OnDraw = function( lambda, wepent )
             if IsValid( wepent ) then
 
-                local size = random( 4, 6 )
+                local size = LambdaRNG( 4, 6 )
                 local drawPos = ( wepent:GetPos() - wepent:GetForward() * 12 - wepent:GetRight() + wepent:GetUp() )
                 local color = Color( 255, 255, 255 )
 
