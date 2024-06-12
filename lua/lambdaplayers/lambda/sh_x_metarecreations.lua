@@ -1,5 +1,5 @@
 -- Functions below are recreations of whatever gmod meta functions
-local random = math.random
+
 local eyetracetable = {}
 
 -- Our name
@@ -79,11 +79,7 @@ function ENT:GetEyeTrace()
     eyetracetable.filter = self
     return util.TraceLine( eyetracetable )
 end
-
--- Return random fake steam ids
-function ENT:SteamID64()
-    return self:GetSteamID64()
-end
+ENT.GetEyeTraceNoCursor = ENT.GetEyeTrace
 
 -- Return random fake steam ids
 function ENT:SteamID()
@@ -122,12 +118,12 @@ function ENT:PlayStepSound( volume )
     local sndPitch, sndName = 100
     local waterLvl = self:GetWaterLevel()
     if waterLvl != 0 and waterLvl != 3 and self:IsOnGround() then
-        sndName = "player/footsteps/wade" .. random( 8 ) .. ".wav"
-        sndPitch = random( 90, 110 )
+        sndName = "player/footsteps/wade" .. LambdaRNG( 8 ) .. ".wav"
+        sndPitch = LambdaRNG( 90, 110 )
         if !volume then volume = 0.65 end
     else
         local stepSnds = ( _LAMBDAPLAYERSFootstepMaterials[ stepMat ] or _LAMBDAPLAYERSFootstepMaterials[ MAT_DEFAULT ] )
-        sndName = stepSnds[ random( #stepSnds ) ]
+        sndName = stepSnds[ LambdaRNG( #stepSnds ) ]
         if !volume then volume = 0.5 end
     end
 
@@ -185,11 +181,6 @@ function ENT:GetPlayerColor()
     return self:GetPlyColor()
 end
 
--- Returns if our flashlight is currently on
-function ENT:FlashlightIsOn()
-    return self:GetFlashlightOn()
-end
-
 -- Returns our weapon (physgun) color
 function ENT:GetWeaponColor()
     return self:GetPhysColor()
@@ -229,6 +220,50 @@ function ENT:CanUseFlashlight()
     return self:GetAllowFlashlight()
 end
 
+function ENT:SetEyeAngles( ang )
+    self:SetAngles( ang )
+end
+
+local entMeta = FindMetaTable( "Entity" )
+local freezeFun = entMeta.Freeze
+if freezeFun then
+    _LambdaBaseENTFreeze = ( _LambdaBaseENTFreeze or freezeFun )
+
+    function entMeta:Freeze( freeze )
+        if self.IsLambdaPlayer and SERVER then
+            self.l_isfrozen = freeze
+        end
+        _LambdaBaseENTFreeze( self, freeze )
+    end
+else
+    function ENT:Freeze( freeze )
+        if ( CLIENT ) then return end
+        self.l_isfrozen = freeze
+    end
+end
+
+function ENT:DoAnimationEvent( data )
+    if ( CLIENT ) then return end
+    self:RemoveGesture( data )
+    self:AddGesture( data )
+end
+
+function ENT:GetHull()
+    return self:GetCollisionBounds()
+end
+
+--
+
+local emptyFunc = function() end
+local falseFunc = function() return false end
+
+ENT.ScreenFade = emptyFunc
+ENT.InVehicle = falseFunc
+ENT.LagCompensation = emptyFunc
+ENT.ViewPunch = emptyFunc
+
+--
+
 if SERVER then
     local TraceHull = util.TraceHull
     local tracehull = {}
@@ -257,10 +292,6 @@ if SERVER then
 
     function ENT:Give( weaponClassName )
         self:SwitchWeapon( weaponClassName )
-    end
-
-    function ENT:Freeze( freeze )
-        self.l_isfrozen = freeze
     end
 
     function ENT:GodDisable()
@@ -341,7 +372,7 @@ if SERVER then
         spraytbl.collisiongroup = COLLISION_GROUP_WORLD
         local trace = Trace( spraytbl )
 
-        LambdaPlayers_Spray( LambdaPlayerSprays[ random( #LambdaPlayerSprays ) ], trace.HitPos, trace.HitNormal, self:GetCreationID() )
+        LambdaPlayers_Spray( LambdaPlayerSprays[ LambdaRNG( #LambdaPlayerSprays ) ], trace.HitPos, trace.HitNormal, self:GetCreationID() )
         self:EmitSound( "player/sprayer.wav", 65 )
     end
 
@@ -367,6 +398,11 @@ if SERVER then
 end
 
 if ( CLIENT ) then
+    -- Returns if our flashlight is currently on
+    function ENT:FlashlightIsOn()
+        return self.l_flashlighton
+    end
+
     -- Returns whether our player model will be drawn at the time the function is called
     function ENT:ShouldDrawLocalPlayer()
         return self:IsBeingDrawn()
@@ -374,10 +410,6 @@ if ( CLIENT ) then
 
     function ENT:IsMuted() 
         return self.l_ismuted
-    end
-
-    function ENT:VoiceVolume()
-        return self:GetVoiceLevel()
     end
 
     function ENT:SetMuted( bool )

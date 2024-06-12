@@ -1,6 +1,5 @@
 if ( CLIENT ) then return end
 
-local LambdaIsValid = LambdaIsValid
 local dev = GetConVar( "lambdaplayers_debug_path" )
 local IsValid = IsValid
 local math_max = math.max
@@ -21,8 +20,8 @@ local GetGroundHeight = navmesh.GetGroundHeight
 local navmesh_IsLoaded = navmesh.IsLoaded
 local navmesh_Find = navmesh.Find
 local GetNearestNavArea = navmesh.GetNearestNavArea
-local random = math.random
-local Rand = math.Rand
+
+
 local ipairs = ipairs
 local coroutine_yield = coroutine.yield
 local isnumber = isnumber
@@ -32,6 +31,7 @@ local shouldavoid = GetConVar( "lambdaplayers_lambda_avoid" )
 local randomizepathfinding = GetConVar( "lambdaplayers_randomizepathingcost" )
 local mincostscale = GetConVar( "lambdaplayers_randomizepathingcost_min" )
 local maxcostscale = GetConVar( "lambdaplayers_randomizepathingcost_max" )
+local canNoclip = GetConVar( "lambdaplayers_lambda_allownoclip" )
 
 -- Finds "simple" ground height, treating the provided nav area as part of the floor
 local function GetSimpleGroundHeightWithFloor( navArea, pos )
@@ -46,8 +46,8 @@ end
 function ENT:MoveToPos( pos, options )
     -- If there is no nav mesh, try to go to the postion anyway
     local curArea = self.l_currentnavarea
-    if !IsValid( curArea ) or !navmesh_IsLoaded() then 
-        return self:MoveToPosOFFNAV( pos, options ) 
+    if !IsValid( curArea ) or !navmesh_IsLoaded() then
+        return self:MoveToPosOFFNAV( pos, options )
     end
 
     local movePos = ( isvector( pos ) and pos or ( IsValid( pos ) and pos:GetPos() or nil ) )
@@ -68,7 +68,7 @@ function ENT:MoveToPos( pos, options )
 
     path:SetGoalTolerance( options.tol or 20 )
     path:SetMinLookAheadDistance( self.l_LookAheadDistance )
-    
+
     self.l_movepos = movePos
     self.l_moveoptions = table_Copy( options )
     self.l_CurrentPath = path
@@ -89,35 +89,37 @@ function ENT:MoveToPos( pos, options )
     local returnMsg = "ok"
     local callbackRunT = ( CurTime() + ( options.cbTime or 0 ) )
     local nearLadderCheckT = 0
+    local nextNoclipCheckT = 0
+    local noclipDueUnreachable = false
 
     while ( IsValid( path ) ) do
-        if self.AbortMovement then 
-            self.AbortMovement = false 
-            returnMsg = "aborted"; break 
+        if self.AbortMovement then
+            self.AbortMovement = false
+            returnMsg = "aborted"; break
         end
-        if self:GetIsDead() then 
-            returnMsg = "dead" 
+        if self:GetIsDead() then
+            returnMsg = "dead"
             break
         end
 
         options = self.l_moveoptions or {}
 
         local timeout = options.timeout
-        if timeout and path:GetAge() > timeout then 
-            returnMsg = "timeout" 
-            break 
+        if timeout and path:GetAge() > timeout then
+            returnMsg = "timeout"
+            break
         end
 
         movePos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
-        if !movePos then 
-            returnMsg = "invalid" 
-            break 
+        if !movePos then
+            returnMsg = "invalid"
+            break
         end
 
         local recomputePath = self.l_recomputepath
         if recomputePath then
             self.l_recomputepath = nil
-            
+
             local recomputePos = ( isvector( recomputePath ) and recomputePath or ( IsValid( recomputePath ) and recomputePath:GetPos() or nil ) )
             if recomputePos then
                 movePos = recomputePos
@@ -128,7 +130,7 @@ function ENT:MoveToPos( pos, options )
             local update = options.update
             if update then
                 local updateTime = math_max( update, update * ( path:GetLength() / runSpeed ) )
-                if update > updateTime then 
+                if update > updateTime then
                     updateTime = update
                 elseif updateTime > 3.0 then
                     updateTime = 3.0
@@ -138,8 +140,8 @@ function ENT:MoveToPos( pos, options )
         end
 
         if loco:IsStuck() then
-            -- This prevents the stuck handling from running if we are right next to the entity we are going to            
-            if isvector( movePos ) or !self:IsInRange( movePos, 100 ) then 
+            -- This prevents the stuck handling from running if we are right next to the entity we are going to
+            if isvector( movePos ) or !self:IsInRange( movePos, 100 ) then
                 local result = self:HandleStuck()
                 if !result then returnMsg = "stuck"; break end
             else
@@ -155,7 +157,7 @@ function ENT:MoveToPos( pos, options )
 
         if !self:IsDisabled() and CurTime() >= self.l_moveWaitTime then
             local callback = options.callback
-            if callback and CurTime() >= callbackRunT then 
+            if callback and CurTime() >= callbackRunT then
                 local returnVal = callback( self, movePos, path, curGoal )
                 if returnVal == false then returnMsg = "callback" break end
 
@@ -164,83 +166,104 @@ function ENT:MoveToPos( pos, options )
             end
             path:Update( self )
 
-            if curGoal and !self:IsInNoClip() then
+            local noclipping = self:IsInNoClip()
+            if curGoal and !noclipping then
+                curArea = self.l_currentnavarea
                 local selfPos = self:GetPos()
-                local lastGoal = path:LastSegment()
-                local destPos = ( ( lastGoal and curGoal.area == lastGoal.area ) and movePos or curGoal.pos )
 
-                local goalAng = ( destPos - selfPos )
-                goalAng.z = 0; goalAng = goalAng:Angle()
+                if CurTime() >= nextNoclipCheckT and canNoclip:GetBool() then
+                    nextNoclipCheckT = ( CurTime() + LambdaRNG( 10, 20 ) )
 
-                local goalNormal = goalAng:Forward()
-                self:AvoidCheck( goalAng )
-                self:ObstacleCheck( goalNormal )
+                    if LambdaRNG( 3 ) != 1 and loco:IsOnGround() then
+                        local checkPos = movePos
+                        local nearArea = GetNearestNavArea( movePos, true, 200, false, true )
+                        if IsValid( nearArea ) then checkPos = nearArea end
+                        local canTraverse, cached = self:IsAreaTraversable( checkPos, curArea )
 
-                local moveType = curGoal.type
-                -- Ladder climbing ( 4 - Up, 5 - Down )
-                if ( moveType == 4 or moveType == 5 ) then 
-                    local ladder = curGoal.ladder
-                    if IsValid( ladder ) then
-                        local preClimbPos = destPos
-                        destPos = ( moveType == 5 and ladder:GetTop() or ladder:GetBottom() )
-
-                        if self:IsInRange( destPos, 70 ) then
-                            self:ClimbLadder( ladder, ( moveType == 5 ), preClimbPos )
-
-                            movePos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
-                            if movePos then path:Compute( self, movePos, costFunctor ) end
-                            destPos = preClimbPos
+                        if !canTraverse and !cached then
+                            debugoverlay.Line( movePos, selfPos, 5, self:GetPlyColor():ToColor(), true )
+                            self:NoClipState( true )
+                            noclipping = true
+                            noclipDueUnreachable = true
                         end
                     end
-                else
-                    local shouldJump = false
-                    if moveType == 2 and ( prevGoal.pos.z - selfPos.z ) <= 0 then
-                        shouldJump = true
-                    elseif moveType == 3 and destPos:DistToSqr( selfPos ) <= 2048 then
-                        shouldJump = true
-                    elseif movePos:DistToSqr( selfPos ) > 4096 then
-                        -- Jumping over ledges and close up jumping
-                        local stepAhead = ( selfPos + vector_up * stepH )
-                        curArea = self.l_currentnavarea
-                        local grHeight, grNormal = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 60 )
-                        if grHeight and grNormal.z > 0.9 and ( grHeight - selfPos.z ) > stepH then shouldJump = true end
+                end
+                if !noclipping then
+                    local lastGoal = path:LastSegment()
+                    local destPos = ( ( lastGoal and curGoal.area == lastGoal.area ) and movePos or curGoal.pos )
 
-                        if !shouldJump then
-                            grHeight = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 30 )
-                            if grHeight and ( grHeight - selfPos.z ) < -jumpH then shouldJump = true end
+                    local goalAng = ( destPos - selfPos )
+                    goalAng.z = 0; goalAng = goalAng:Angle()
+
+                    local goalNormal = goalAng:Forward()
+                    self:AvoidCheck( goalAng )
+                    self:ObstacleCheck( goalNormal )
+
+                    local moveType = curGoal.type
+                    -- Ladder climbing ( 4 - Up, 5 - Down )
+                    if ( moveType == 4 or moveType == 5 ) then
+                        local ladder = curGoal.ladder
+                        if IsValid( ladder ) then
+                            local preClimbPos = destPos
+                            destPos = ( moveType == 5 and ladder:GetTop() or ladder:GetBottom() )
+
+                            if self:IsInRange( destPos, 70 ) then
+                                self:ClimbLadder( ladder, ( moveType == 5 ), preClimbPos )
+
+                                movePos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
+                                if movePos then path:Compute( self, movePos, costFunctor ) end
+                                destPos = preClimbPos
+                            end
+                        end
+                    else
+                        local shouldJump = false
+                        if moveType == 2 and ( prevGoal.pos.z - selfPos.z ) <= 0 then
+                            shouldJump = true
+                        elseif moveType == 3 and destPos:DistToSqr( selfPos ) <= 2048 then
+                            shouldJump = true
+                        elseif movePos:DistToSqr( selfPos ) > 4096 then
+                            -- Jumping over ledges and close up jumping
+                            local stepAhead = ( selfPos + vector_up * stepH )
+                            local grHeight, grNormal = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 60 )
+                            if grHeight and grNormal.z > 0.9 and ( grHeight - selfPos.z ) > stepH then shouldJump = true end
+
+                            if !shouldJump then
+                                grHeight = GetSimpleGroundHeightWithFloor( curArea, stepAhead + goalNormal * 30 )
+                                if grHeight and ( grHeight - selfPos.z ) < -jumpH then shouldJump = true end
+                            end
+                        end
+
+                        if shouldJump and CurTime() >= nextJumpT and self:LambdaJump() then
+                            nextJumpT = CurTime() + 1.0
                         end
                     end
 
-                    if shouldJump and CurTime() >= nextJumpT and self:LambdaJump() then
-                        nextJumpT = CurTime() + 1.0
+                    local shouldSlow = ( ( moveType == 1 or moveType == 2 or moveType == 3 or moveType == 4 or moveType == 5 ) and !self:IsPanicking() and !self:GetCrouch() and destPos:DistToSqr( selfPos ) <= 22500 )
+                    local walkTime = 0.1
+                    if !shouldSlow and CurTime() >= nearLadderCheckT then
+                        nearLadderCheckT = ( CurTime() + 0.5 )
+
+                        for _, area in ipairs( navmesh_Find( selfPos, 150, 150, 150 ) ) do
+                            shouldSlow = ( IsValid( area ) and #area:GetLadders() != 0 and area:IsPartiallyVisible( self:WorldSpaceCenter(), self ) )
+                            if shouldSlow then walkTime = 0.5; break end
+                        end
                     end
-                end
+                    if shouldSlow then self:ForceMoveSpeed( self:GetSlowWalkSpeed(), walkTime ) end
 
-                local shouldSlow = ( ( moveType == 1 or moveType == 2 or moveType == 3 or moveType == 4 or moveType == 5 ) and !self:IsPanicking() and !self:GetCrouch() and destPos:DistToSqr( selfPos ) <= 22500 )
-                local walkTime = 0.1
-                if !shouldSlow and CurTime() >= nearLadderCheckT then
-                    nearLadderCheckT = ( CurTime() + 0.5 )
+                    -- Air movement
+                    if !self.l_isswimming and !self:IsOnGround() then
+                        local mins, maxs = self:GetCollisionBounds()
+                        local airVel = ( goalNormal * loco:GetDesiredSpeed() * FrameTime() )
 
-                    for _, area in ipairs( navmesh_Find( selfPos, 150, 150, 150 ) ) do
-                        shouldSlow = ( IsValid( area ) and #area:GetLadders() != 0 and area:IsPartiallyVisible( self:WorldSpaceCenter(), self ) )
-                        if shouldSlow then walkTime = 0.5; break end
-                    end
-                end
-                if shouldSlow then self:ForceMoveSpeed( self:GetSlowWalkSpeed(), walkTime ) end
+                        airtable.start = selfPos
+                        airtable.endpos = ( selfPos + airVel )
+                        airtable.filter = self
+                        airtable.mins = mins
+                        airtable.maxs = maxs
 
-                -- Air movement
-                if !self.l_isswimming and !self:IsOnGround() then
-                    local mins, maxs = self:GetCollisionBounds()
-                    local airVel = ( goalNormal * loco:GetDesiredSpeed() * FrameTime() )
-
-                    airtable.start = selfPos
-                    airtable.endpos = ( selfPos + airVel )
-                    airtable.filter = self
-                    airtable.mins = mins
-                    airtable.maxs = maxs
-
-                    if !TraceHull( airtable ).Hit then 
-                        loco:SetVelocity( loco:GetVelocity() + airVel ) 
+                        if !TraceHull( airtable ).Hit then
+                            loco:SetVelocity( loco:GetVelocity() + airVel )
+                        end
                     end
                 end
             end
@@ -250,10 +273,17 @@ function ENT:MoveToPos( pos, options )
         coroutine_yield()
     end
 
-    self.l_issmoving = false 
+    self.l_issmoving = false
     self.l_movepos = nil
     self.l_moveoptions = nil
     self.l_CurrentPath = nil
+
+    if noclipDueUnreachable then
+        if !self:IsInWorld() then
+            self:MoveToPos( movePos or self:GetRandomPosition() )
+        end
+        self:NoClipState( false )
+    end
 
     return returnMsg
 end
@@ -275,8 +305,8 @@ function ENT:MoveToPosOFFNAV( pos, options )
     self.l_CurrentPath = movePos
 
     local timeout = options.timeout
-    if timeout then 
-        options.timeout = ( CurTime() + timeout ) 
+    if timeout then
+        options.timeout = ( CurTime() + timeout )
     end
 
     self:SetSlowWalk( options.walk or false )
@@ -290,30 +320,30 @@ function ENT:MoveToPosOFFNAV( pos, options )
     local loco = self.loco
     local callbackRunT = ( CurTime() + ( options.cbTime or 0 ) )
 
-    while ( IsValid( self ) ) do 
-        if self:GetIsDead() then 
-            returnMsg = "dead" 
+    while ( IsValid( self ) ) do
+        if self:GetIsDead() then
+            returnMsg = "dead"
             break
         end
-        if self.AbortMovement then 
-            self.AbortMovement = false 
+        if self.AbortMovement then
+            self.AbortMovement = false
             returnMsg = "aborted"; break
         end
 
         options = self.l_moveoptions or {}
 
         local timeout = options.timeout
-        if timeout and CurTime() >= timeout then 
-            returnMsg = "timeout" 
-            break 
+        if timeout and CurTime() >= timeout then
+            returnMsg = "timeout"
+            break
         end
 
         movePos = ( isvector( self.l_movepos ) and self.l_movepos or ( IsValid( self.l_movepos ) and self.l_movepos:GetPos() or nil ) )
         if !movePos then returnMsg = "invalid" break end
 
         if loco:IsStuck() then
-            -- This prevents the stuck handling from running if we are right next to the entity we are going to            
-            if isvector( movePos ) or !self:IsInRange( movePos, 100 ) then 
+            -- This prevents the stuck handling from running if we are right next to the entity we are going to
+            if isvector( movePos ) or !self:IsInRange( movePos, 100 ) then
                 local result = self:HandleStuck()
                 if !result then returnMsg = "stuck" break end
             else
@@ -328,7 +358,7 @@ function ENT:MoveToPosOFFNAV( pos, options )
             break
         elseif !self:IsDisabled() and CurTime() >= self.l_moveWaitTime then
             local callback = options.callback
-            if callback and CurTime() >= callbackRunT then 
+            if callback and CurTime() >= callbackRunT then
                 local returnVal = callback( self, movePos )
                 if returnVal == false then returnMsg = "callback" break end
 
@@ -359,7 +389,7 @@ end
 
 -- Start climbing the provided ladder
 function ENT:ClimbLadder( ladder, isDown, movePos )
-    self.l_ladderarea = ladder 
+    self.l_ladderarea = ladder
 
     local startPos, goalPos, finishPos
     if isDown then
@@ -399,7 +429,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
     local climbEnd = ( startPos + ( ladder:GetNormal() * 20 ) )
     local climbNormal = ( climbEnd - climbStart ):GetNormalized()
     local climbDist = climbStart:Distance( climbEnd )
-    local stuckTime = ( CurTime() + random( 2, 5 ) )
+    local stuckTime = ( CurTime() + LambdaRNG( 2, 5 ) )
 
     while ( true ) do
         local climbPos = ( climbStart + climbNormal * climbFract )
@@ -429,7 +459,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
         if climbState != 2 or ( !self:IsDisabled() or self:GetIsTyping() ) and CurTime() >= self.l_moveWaitTime then
             if !IsValid( TraceHull( laddermovetable ).Entity ) then
                 climbFract = ( climbFract + ( 250 * FrameTime() ) )
-                stuckTime = ( CurTime() + random( 2, 5 ) )
+                stuckTime = ( CurTime() + LambdaRNG( 2, 5 ) )
 
                 if climbFract >= climbDist then
                     if climbState == 1 then
@@ -449,7 +479,7 @@ function ENT:ClimbLadder( ladder, isDown, movePos )
                 end
 
                 if climbState == 2 and CurTime() >= nextSndTime then
-                    self:EmitSound( "player/footsteps/ladder" .. random( 4 ) .. ".wav" )
+                    self:EmitSound( "player/footsteps/ladder" .. LambdaRNG( 4 ) .. ".wav" )
                     nextSndTime = CurTime() + 0.466
                 end
             end
@@ -478,7 +508,6 @@ end
 
 -- Makes lambda wait and stop while moving for a given amount of time
 function ENT:WaitWhileMoving( time )
-    if !self.l_issmoving then return end
     if CurTime() >= self.l_moveWaitTime then
         self.loco:SetVelocity( vector_origin )
     end
@@ -497,8 +526,8 @@ end
 -- Unless false, don't continue and stop
 function ENT:HandleStuck()
     if self:GetIsDead() then -- Who knows just in case
-        self.loco:ClearStuck() 
-        return false 
+        self.loco:ClearStuck()
+        return false
     end
 
     self.l_stucktimes = self.l_stucktimes + 1
@@ -506,18 +535,18 @@ function ENT:HandleStuck()
 
     -- Allow external addons to control our stuck process. We assume whoever made that hook and returns "stop" or "continue" will handle the unstuck behaviour
     local result = LambdaRunHook( "LambdaOnStuck", self, self.l_stucktimes )
-    if result == "stop" then 
-        return false 
-    elseif result == "continue" then 
-        return true 
+    if result == "stop" then
+        return false
+    elseif result == "continue" then
+        return true
     end
 
-    if self.l_stucktimes == 3 then 
-        self.l_unstuck = true 
-        return true 
-    elseif self.l_stucktimes == 4 then 
-        self.l_unstuck = true 
-        return false 
+    if self.l_stucktimes == 3 then
+        self.l_unstuck = true
+        return true
+    elseif self.l_stucktimes == 4 then
+        self.l_unstuck = true
+        return false
     end
 
     local selfPos = self:GetPos()
@@ -591,11 +620,11 @@ function ENT:ObstacleCheck( pathDir )
     if self:HookExists( "Tick", "ShootAtObstacle" ) then return end
 
     if !self:HasLethalWeapon() then self:SwitchToLethalWeapon() end
-    local fireTime = ( CurTime() + Rand( 0.5, 1.0 ) )
+    local fireTime = ( CurTime() + LambdaRNG( 0.5, 1.0, true ) )
 
     self:Hook( "Tick", "ShootAtObstacle", function()
         if CurTime() >= fireTime or !IsValid( ent ) or ent:Health() <= 0 then return "end" end
-        self:LookTo( ent, 1.0 )
+        self:LookTo( ent, 1.0, false, 2 )
         self:UseWeapon( ent )
     end )
 end
@@ -633,7 +662,7 @@ function ENT:AvoidCheck( goalAng )
     local selfForward = goalAng:Forward()
 
     avoidtracetable.start = ( selfPos + vector_up * ( self.loco:GetStepHeight() + 8 ) + selfForward * 30 + selfRight * 12.5 )
-    avoidtracetable.endpos = avoidtracetable.start 
+    avoidtracetable.endpos = avoidtracetable.start
     avoidtracetable.filter = self
 
     local rightresult = TraceHull( avoidtracetable )
@@ -642,7 +671,7 @@ function ENT:AvoidCheck( goalAng )
     end
 
     avoidtracetable.start = ( avoidtracetable.start - selfRight * 25 )
-    avoidtracetable.endpos = avoidtracetable.start 
+    avoidtracetable.endpos = avoidtracetable.start
 
     local leftresult = TraceHull( avoidtracetable )
     if dev:GetBool() then
@@ -651,7 +680,8 @@ function ENT:AvoidCheck( goalAng )
 
     if leftresult.Hit and rightresult.Hit then -- Back up
         local lent, rent = leftresult.Entity, rightresult.Entity
-        if IsValid( lent ) and doorClasses[ lent:GetClass() ] or IsValid( rent ) and doorClasses[ rent:GetClass() ] then return end
+        local ene = ( self.l_HasMelee and self:GetEnemy() )
+        if lent == ene or IsValid( lent ) and doorClasses[ lent:GetClass() ] or rent == ene or IsValid( rent ) and doorClasses[ rent:GetClass() ] then return end
 
         self:ApproachDir( -selfForward, 0.25 )
     end
@@ -681,7 +711,6 @@ local CNavArea_IsClosed                              = CNavAreaMeta.IsClosed
 local CNavArea_RemoveFromClosedList                  = CNavAreaMeta.RemoveFromClosedList
 local CNavArea_ComputeAdjacentConnectionHeightChange = CNavAreaMeta.ComputeAdjacentConnectionHeightChange
 local CNavArea_GetAttributes                         = CNavAreaMeta.GetAttributes
-local CNavArea_HasAttributes                         = CNavAreaMeta.HasAttributes
 --
 
 -- CNavLadder --
@@ -718,7 +747,7 @@ function ENT:PathGenerator( canUpdate, isLambdaCheck )
     local loco = self.loco
     local stepHeight = CLuaLocomotion_GetStepHeight( loco )
     local jumpHeight = CLuaLocomotion_GetJumpHeight( loco ) + 12
-    local thirdHealth = ( self:Health() * 0.75 )
+    local thirdHealth = ( self:Health() * 0.4 )
     local obeyNavmesh = obeynav:GetBool()
     local isInNoClip = self:IsInNoClip()
     local isAttacking = ( !self.l_HasMelee and self:InCombat() and self:GetIsFiring() )
@@ -732,7 +761,7 @@ function ENT:PathGenerator( canUpdate, isLambdaCheck )
     local randomizeCost = randomizepathfinding:GetBool()
     local minRandCost = mincostscale:GetFloat()
     local maxRandCost = maxcostscale:GetFloat()
-    local randCost = Rand( minRandCost, maxRandCost )
+    local randCost = LambdaRNG( minRandCost, maxRandCost, true )
 
     return function( area, fromArea, ladder, elevator, length )
         if !IsValid( fromArea ) then return 0 end
@@ -755,11 +784,11 @@ function ENT:PathGenerator( canUpdate, isLambdaCheck )
 
         local cost = ( CNavArea_GetCostSoFar( fromArea ) + dist )
         if randomizeCost then
-            if !canUpdate then randCost = Rand( minRandCost, maxRandCost ) end
-            cost = ( cost * randCost ) 
+            if !canUpdate then randCost = LambdaRNG( minRandCost, maxRandCost, true ) end
+            cost = ( cost * randCost )
         end
 
-        if !isInNoClip then 
+        if !isInNoClip then
             if !IsValid( ladder ) then
                 local deltaZ = CNavArea_ComputeAdjacentConnectionHeightChange( fromArea, area )
                 if !areaPos:IsUnderwater() then
@@ -771,7 +800,7 @@ function ENT:PathGenerator( canUpdate, isLambdaCheck )
                         end
                         cost = ( cost + dist * ( fallDamage * 2 ) )
                     end
-                    cost = ( cost + dist * random( height * 0.5, height ) )
+                    cost = ( cost + dist * LambdaRNG( height * 0.5, height ) )
                 end
 
                 if !fromPos:IsUnderwater() then
@@ -790,12 +819,12 @@ function ENT:PathGenerator( canUpdate, isLambdaCheck )
 
                 -- Simple, try to avoid going through this area unless there is no other way
                 if band( attributes, NAV_MESH_AVOID ) != 0 then
-                    cost = ( cost + dist * avoidPenalty ) 
+                    cost = ( cost + dist * avoidPenalty )
                 end
 
                 -- We slow down when slow-walking or crouching, so try avoid these areas if possible
                 if band( attributes, NAV_MESH_WALK ) != 0 or band( attributes, NAV_MESH_CROUCH ) != 0 then
-                    cost = ( cost + dist * crouchWalkPenalty ) 
+                    cost = ( cost + dist * crouchWalkPenalty )
                 end
             end
         end
@@ -820,17 +849,18 @@ local GetNavAreaCount = navmesh.GetNavAreaCount
 -- Not recommended to use in loops with large tables
 -- The 'area' and 'startArea' variables can be either a vector or a navmesh area
 function ENT:IsAreaTraversable( area, startArea, pathGenerator )
-    if isvector( area ) then area = GetNavArea( area, 100 ) end 
+    if self:IsInNoClip() then return true end
+    if isvector( area ) then area = GetNavArea( area, 120 ) end
     if !IsValid( area ) then return false end
 
     local isCached = self.l_cachedunreachableares[ area ]
-    if isCached then 
-        if CurTime() < isCached then return false end
+    if isCached then
+        if ( CurTime() - isCached ) <= 60 then return false, true end
         self.l_cachedunreachableares[ area ] = nil
     end
 
     local myArea = startArea or self.l_currentnavarea
-    if isvector( myArea ) then myArea = GetNavArea( myArea, 100 ) end 
+    if isvector( myArea ) then myArea = GetNavArea( myArea, 120 ) end
     if !IsValid( myArea ) then return false end
 
     if area == myArea then return true end
@@ -865,7 +895,7 @@ function ENT:IsAreaTraversable( area, startArea, pathGenerator )
                 if searchIndex > #floorList then
                     searchLadders = true
                     ladderList = CNavArea_GetLaddersAtSide( curArea, 0 )
-                    
+
                     searchIndex = 1
                     continue
                 end
@@ -906,9 +936,9 @@ function ENT:IsAreaTraversable( area, startArea, pathGenerator )
             if !IsValid( newArea ) or newArea == curArea then continue end
 
             local newCostSoFar = pathGenerator( newArea, curArea, ladder, nil, -1 )
-            if !isnumber( newCostSoFar ) then 
-                newCostSoFar = 1e30 
-            elseif newCostSoFar < 0 then 
+            if !isnumber( newCostSoFar ) then
+                newCostSoFar = 1e30
+            elseif newCostSoFar < 0 then
                 continue
             end
 
@@ -919,7 +949,7 @@ function ENT:IsAreaTraversable( area, startArea, pathGenerator )
             if CNavArea_IsClosed( newArea ) then
                 CNavArea_RemoveFromClosedList( newArea )
             end
-            
+
             if CNavArea_IsOpen( newArea ) then
                 CNavArea_UpdateOnOpenList( newArea )
             else
@@ -933,6 +963,6 @@ function ENT:IsAreaTraversable( area, startArea, pathGenerator )
         CNavArea_AddToClosedList( curArea )
     end
 
-    self.l_cachedunreachableares[ area ] = ( CurTime() + 120 )
+    self.l_cachedunreachableares[ area ] = CurTime()
     return false
 end

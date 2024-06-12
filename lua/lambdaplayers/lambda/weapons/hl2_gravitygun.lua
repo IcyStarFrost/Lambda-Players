@@ -1,5 +1,5 @@
 local IsValid = IsValid
-local random = math.random
+
 local math_min = math.min
 local util_Effect = util.Effect
 local tracetbl = {}
@@ -55,7 +55,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if !dead then
                 -- Pretty much will punt any prop they get close to
                 local find = lambda:FindInSphere( lambda:GetPos(), 150, function( ent ) if !ent:IsNPC() and ent:GetClass()=="prop_physics" and !ent:IsPlayer() and !ent:IsNextBot() and lambda:CanSee( ent ) and IsValid( ent:GetPhysicsObject() ) and lambda:HasPermissionToEdit( ent ) and ent:GetPhysicsObject():IsMoveable() then return true end end )
-                local prop = find[ random( #find ) ]
+                local prop = find[ LambdaRNG( #find ) ]
 
                 lambda:LookTo( prop, 3 )
 
@@ -75,7 +75,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             if IsValid( phys ) then
                 if !self:IsInRange( target, 175 ) then wepent:EmitSound( "weapons/physcannon/physcannon_dryfire.wav", 70 ) return end
-                wepent:EmitSound( "weapons/physcannon/superphys_launch"..random( 4 )..".wav", 70, random( 110, 120 ) )
+                wepent:EmitSound( "weapons/physcannon/superphys_launch"..LambdaRNG( 4 )..".wav", 70, LambdaRNG( 110, 120 ) )
 
                 --[[
                     for i = 0, target:GetPhysicsObjectCount() - 1 do

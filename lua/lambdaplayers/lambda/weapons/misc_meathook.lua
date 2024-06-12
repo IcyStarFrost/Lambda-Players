@@ -1,7 +1,7 @@
 local IsValid = IsValid
-local random = math.random
+
 local CurTime = CurTime
-local Rand = math.Rand
+
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
@@ -17,7 +17,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 55,
 
         OnAttack = function( self, wepent, target )
-            self.l_WeaponUseCooldown = CurTime() + Rand( 1.0, 1.2 )
+            self.l_WeaponUseCooldown = CurTime() + LambdaRNG( 1.0, 1.2, false )
             wepent:EmitSound( "Zombie.AttackMiss" )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
@@ -27,7 +27,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:SimpleWeaponTimer( 0.4, function()
                 if !IsValid( target ) or !self:IsInRange( target, 60 ) then return end
 
-                local dmg = random( 45, 55 )
+                local dmg = LambdaRNG( 45, 55 )
                 local dmginfo = DamageInfo()
                 dmginfo:SetDamage( dmg )
                 dmginfo:SetAttacker( self )
@@ -36,7 +36,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 dmginfo:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg )
                 target:TakeDamageInfo( dmginfo )
 
-                target:EmitSound( "lambdaplayers/weapons/meathook/hook-" .. random( 3 ) .. ".mp3", 70 )
+                target:EmitSound( "lambdaplayers/weapons/meathook/hook-" .. LambdaRNG( 3 ) .. ".mp3", 70 )
             end )
             
             return true

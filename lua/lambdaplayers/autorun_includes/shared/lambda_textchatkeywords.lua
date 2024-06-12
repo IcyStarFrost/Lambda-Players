@@ -87,7 +87,7 @@ end
 -- Returns a random map name
 local function RandomMap( self )
     local maps = file.Find( "maps/gm_*", "GAME", "namedesc" )
-    return string.StripExtension( maps[ math.random( #maps ) ] )
+    return string.StripExtension( maps[ LambdaRNG( #maps ) ] )
 end
 
 -- Return the Server's name
@@ -173,8 +173,20 @@ end
 local function keyentWeapon( self )
     local keyent = self.l_keyentity
     if !IsValid( keyent ) then return "weapon" end
-    local wep = keyent:GetActiveWeapon()
-    return IsValid( wep ) and wep.GetPrintName and wep:GetPrintName() or keyent.IsLambdaPlayer and keyent.l_WeaponPrettyName or "weapon"
+
+    -- Return the lambda's weapon name
+    if keyent.IsLambdaPlayer then
+        return keyent.IsLambdaPlayer and keyent.l_WeaponPrettyName or "weapon"
+    end
+
+    -- Return the entity's weapon name
+    if isfunction( keyent.GetActiveWeapon ) then
+        local wep = keyent:GetActiveWeapon()
+        return IsValid( wep ) and wep.GetPrintName and wep:GetPrintName()
+    end
+
+    -- If all goes wrong
+    return "weapon"
 end 
 
 -- Returns a Player that currently has a Birthday. SHOULD BE USED WITH CONDITION KEY WORD |birthday|

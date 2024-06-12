@@ -4,7 +4,7 @@ if ( CLIENT ) then
     killicon.AddFont( "lambdakillicons_css_knife", cssFontName, "j", Color( 255, 80, 0, 255 ) )
 end
 
-local random = math.random
+
 local DamageInfo = DamageInfo
 local CurTime = CurTime
 local backstabCvar = CreateLambdaConvar( "lambdaplayers_weapons_knifebackstab", 1, true, false, true, "If Lambda Players should be allowed to use the backstab feature of the Knife.", 0, 1, { type = "Bool", name = "Knife - Enable Backstab", category = "Weapon Utilities" } )

@@ -143,12 +143,12 @@ for index, swep in ipairs( weapons.GetList() ) do
                 PrintTable( weapons.GetList()[ index ] )
 
                 vmEnt.AutomaticFrameAdvance = true
-                vmEnt.l_attackanim = vmEnt:SelectWeightedSequence( ACT_VM_PRIMARYATTACK )
+                wepent.l_tfa_attackanim = vmEnt:SelectWeightedSequence( ACT_VM_PRIMARYATTACK )
 
                 local reloadTime = 1.5
                 if !loopedReload then
-                    vmEnt.l_reloadanim = vmEnt:SelectWeightedSequence( ACT_VM_RELOAD )
-                    if vmEnt.l_reloadanim > 0 then reloadTime = vmEnt:SequenceDuration( vmEnt.l_reloadanim ) end
+                    wepent.l_tfa_reloadanim = vmEnt:SelectWeightedSequence( ACT_VM_RELOAD )
+                    if wepent.l_tfa_reloadanim > 0 then reloadTime = vmEnt:SequenceDuration( wepent.l_tfa_reloadanim ) end
                 else
                     reloadTime = {}
     
@@ -174,14 +174,17 @@ for index, swep in ipairs( weapons.GetList() ) do
                         } 
                     end
                 end
-                vmEnt.l_reloadtime = reloadTime
+                wepent.l_tfa_reloadtime = reloadTime
 
                 function vmEnt:Think()
                     vmEnt:NextThink( CurTime() )
                     return true
                 end
 
-                function vmEnt:PlayAnim( seq )
+                function wepent:PlayViewMdlAnim( seq )
+                    local vmEnt = wepent:GetNW2Entity( "lambdaswep_vmmdl" )
+                    if !IsValid( vmEnt ) then return end
+
                     seq = ( seq or vmEnt:SelectWeightedSequence( ACT_VM_IDLE ) )
                     vmEnt:SetSequence( seq )
                     vmEnt:ResetSequenceInfo()
@@ -202,49 +205,43 @@ for index, swep in ipairs( weapons.GetList() ) do
         end,
 
         OnHolster = function( lambda, wepent )
-            local vmEnt = wepent:GetNW2Entity( "lambdaswep_vmmdl" )
-            if IsValid( vmEnt ) then vmEnt:PlayAnim() end
+            wepent:PlayViewMdlAnim()
         end,
         
         OnDeath = function( lambda, wepent )
-            local vmEnt = wepent:GetNW2Entity( "lambdaswep_vmmdl" )
-            if IsValid( vmEnt ) then vmEnt:PlayAnim() end
+            wepent:PlayViewMdlAnim()
         end,
 
         OnAttack = function( lambda, wepent )
-            local vmEnt = wepent:GetNW2Entity( "lambdaswep_vmmdl" )
-            if IsValid( vmEnt ) then 
-                vmEnt:PlayAnim( vmEnt.l_attackanim ) 
-            end
+            wepent:PlayViewMdlAnim( wepent.l_tfa_attackanim ) 
             return bulletTbl
         end,
 
         OnReload = function( lambda, wepent )
-            local vmEnt = wepent:GetNW2Entity( "lambdaswep_vmmdl" )
             lambda:SetIsReloading( true )
 
-            local reloadTime = vmEnt.l_reloadtime
+            local reloadTime = wepent.l_tfa_reloadtime
             if istable( reloadTime ) then
                 lambda:AddGesture( reloadAnim )
                 
                 lambda:Thread( function()
-                    vmEnt:PlayAnim( reloadTime[ 1 ][ 1 ] )
+                    wepent:PlayViewMdlAnim( reloadTime[ 1 ][ 1 ] )
                     coroutine.wait( reloadTime[ 1 ][ 2 ] )
     
                     while ( lambda.l_Clip < lambda.l_MaxClip ) do
                         local ene = lambda:GetEnemy()
-                        if lambda.l_Clip > 0 and math.random( 2 ) == 1 and lambda:InCombat() and lambda:IsInRange( ene, 512 ) and lambda:CanSee( ene ) then break end
+                        if lambda.l_Clip > 0 and LambdaRNG( 2 ) == 1 and lambda:InCombat() and lambda:IsInRange( ene, 512 ) and lambda:CanSee( ene ) then break end
 
                         lambda.l_Clip = ( lambda.l_Clip + 1 )
-                        vmEnt:PlayAnim( reloadTime[ 2 ][ 1 ] )
+                        wepent:PlayViewMdlAnim( reloadTime[ 2 ][ 1 ] )
                         coroutine.wait( reloadTime[ 2 ][ 2 ] )
                     end
     
                     local ene = lambda:GetEnemy()
-                    if lambda.l_Clip > 0 and math.random( 2 ) == 1 and lambda:InCombat() and lambda:IsInRange( ene, 512 ) and lambda:CanSee( ene ) then 
+                    if lambda.l_Clip > 0 and LambdaRNG( 2 ) == 1 and lambda:InCombat() and lambda:IsInRange( ene, 512 ) and lambda:CanSee( ene ) then 
                         wepent:EmitSound( "Weapon_Shotgun.Special1" )
                     else
-                        vmEnt:PlayAnim( reloadTime[ 3 ][ 1 ] )
+                        wepent:PlayViewMdlAnim( reloadTime[ 3 ][ 1 ] )
                         coroutine.wait( reloadTime[ 3 ][ 2 ] )
                     end
     
@@ -252,10 +249,8 @@ for index, swep in ipairs( weapons.GetList() ) do
                     lambda:SetIsReloading( false )
                 end, "TFA_ShotgunReload" )
             else
-                vmEnt:SetSequence( vmEnt.l_reloadanim )
-                vmEnt:ResetSequenceInfo()
-                vmEnt:SetCycle( 0 )
-    
+                wepent:PlayViewMdlAnim( wepent.l_tfa_reloadanim )
+
                 local reloadLayer = lambda:AddGesture( reloadAnim )
                 lambda:SetLayerPlaybackRate( reloadLayer, ( lambda:GetLayerDuration( reloadLayer ) / reloadTime ) )
     

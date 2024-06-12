@@ -1,6 +1,6 @@
-local random = math.random
+
 local CurTime = CurTime
-local Rand = math.Rand
+
 local ents_Create = ents.Create
 local Angle = Angle
 local IsValid = IsValid
@@ -24,8 +24,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         OnDeploy = function( self, wepent )
             self.l_AntlionCount = 0
             
-            wepent.NextSqueezeTime = ( CurTime() + random( 20 ) )
-            wepent.NextThrowTime = ( CurTime() + random( 10 ) )
+            wepent.NextSqueezeTime = ( CurTime() + LambdaRNG( 20 ) )
+            wepent.NextThrowTime = ( CurTime() + LambdaRNG( 10 ) )
         end,
 
         OnHolster = function( self, wepent )
@@ -34,6 +34,10 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         OnAttack = function( self, wepent, target )
+            if !self.l_AntlionCount then
+                self.l_AntlionCount = 0
+                return true
+            end
             if self.l_AntlionCount >= antLimit:GetInt() then return true end
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
@@ -48,7 +52,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             bait:SetCollisionGroup( COLLISION_GROUP_WEAPON )
 
             bait:SetVelocity( ( ( ( isvector( target ) and target or target:GetPos() ) + VectorRand( -60, 60 ) ) - wepent:GetPos() ):GetNormalized() * 1000 )
-            bait:SetLocalAngularVelocity( Angle( 600, random( -1200, 1200 ), 0 ) )
+            bait:SetLocalAngularVelocity( Angle( 600, LambdaRNG( -1200, 1200 ), 0 ) )
 
             bait:CallOnRemove( "LambdaPlayers_BugbaitSpawnAntlion" .. bait:GetCreationID(), function()
                 if !IsValid( self ) then return end
@@ -67,17 +71,17 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if isDead then return end
 
             if CurTime() >= wepent.NextSqueezeTime then
-                wepent.NextSqueezeTime = ( CurTime() + random( 20 ) )
-                wepent:EmitSound( "weapons/bugbait/bugbait_squeeze" .. random( 3 ) .. ".wav", 65, 100, 10, CHAN_WEAPON )
+                wepent.NextSqueezeTime = ( CurTime() + LambdaRNG( 20 ) )
+                wepent:EmitSound( "weapons/bugbait/bugbait_squeeze" .. LambdaRNG( 3 ) .. ".wav", 65, 100, 10, CHAN_WEAPON )
             end
 
             if CurTime() >= wepent.NextThrowTime then 
-                wepent.NextThrowTime = ( CurTime() + random( 10 ) )
+                wepent.NextThrowTime = ( CurTime() + LambdaRNG( 10 ) )
 
                 if self.l_AntlionCount < antLimit:GetInt() then
                     local rndPos = self:GetRandomPosition( nil, 750 )
                     self:LookTo( rndPos, 3 )
-                    self:SimpleWeaponTimer( Rand( 1, 2 ), function() self:UseWeapon( rndPos ) end )
+                    self:SimpleWeaponTimer( LambdaRNG( 1, 2, true ), function() self:UseWeapon( rndPos ) end )
                 end
             end
 

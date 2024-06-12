@@ -1,6 +1,6 @@
 local IsValid = IsValid
 local CurTime = CurTime
-local random = math.random
+
 local RandAngle = AngleRand
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
@@ -20,7 +20,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         tracername = "Tracer",
         damage = 4,
         spread = 0.15,
-        rateoffire = 0.075,
+        rateoffiremin = 0.075,
+        rateoffiremax = 0.175,
         muzzleflash = 1,
         shelleject = "ShellEject",
         shelloffpos = Vector( 3, 5, 5 ),
@@ -35,7 +36,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         OnAttack = function( self, wepent, target )
             -- Secondary grenade launcher
-            if random( 75 ) != 1 or !self:IsInRange( target, 1000 ) then return end
+            if LambdaRNG( 75 ) != 1 or !self:IsInRange( target, 1000 ) then return end
             
             local grenade = ents.Create( "grenade_ar2" )
             if !IsValid( grenade ) then return end

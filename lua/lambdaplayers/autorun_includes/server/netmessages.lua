@@ -5,7 +5,6 @@ local print = print
 local RealTime = RealTime
 local concommand_Run = concommand.Run
 local hook_Run = hook.Run
-local ipairs = ipairs
 
 -- Due to how some sound files are not .wav, Garry's Mod's SoundDuration() function is completely useless.
 -- So we ask for the help of the client to send us the duration of the sound a Lambda Player is playing-

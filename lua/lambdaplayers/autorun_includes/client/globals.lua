@@ -2,7 +2,7 @@ local sin = math.sin
 local IsValid = IsValid
 local null_vector = Vector(0, 0, 0)
 local color_white_vector = Vector(1, 1, 1)
-local random = math.random
+
 local Vector = Vector
 local CurTime = CurTime
 local LerpVector = LerpVector
@@ -55,16 +55,16 @@ function EntMeta:LambdaDisintegrate()
     if self.l_IsDisintegrating then return end
     if #disintegratingents > 8 then if self.isclientside then self:Remove() end return end -- The effect is limitted so we don't overload the emitters
 
-    local id = random( 10000000 )
+    local id = LambdaRNG( 10000000 )
     local curpos
     local pos
     local nextparticle = 0
     local endtime = RealTime() + 5
-    local norm = Angle( 0, random( 360 ), 0 ):Forward()
+    local norm = Angle( 0, LambdaRNG( 360 ), 0 ):Forward()
 
     self.l_IsDisintegrating = true
     self:SetRenderClipPlaneEnabled( true )
-    self:EmitSound( "lambdaplayers/misc/disintegrate" .. random( 3 ) .. ".mp3", 65, random( 80, 100 ) )
+    self:EmitSound( "lambdaplayers/misc/disintegrate" .. LambdaRNG( 3 ) .. ".mp3", 65, LambdaRNG( 80, 100 ) )
 
     table_insert( disintegratingents, self )
     
@@ -92,7 +92,7 @@ function EntMeta:LambdaDisintegrate()
                     part:SetStartSize( 3 )
                     part:SetEndSize( 0 )
                     part:SetCollide( true )
-                    part:SetGravity( random( 10 ) == 1 and upvector or downvector )
+                    part:SetGravity( LambdaRNG( 10 ) == 1 and upvector or downvector )
                     part:SetVelocity( VectorRand() * 40 )
                     part:SetAngleVelocity( AngleRand( -10, 10 ) )
                     part:SetColor( 255, 174, 0 )

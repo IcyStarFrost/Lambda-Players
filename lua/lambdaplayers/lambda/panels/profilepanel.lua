@@ -196,7 +196,7 @@ local function OpenProfilePanel( ply )
                         voicepitch = profiletbl.voicepitch and round( profiletbl.voicepitch, 0 ) or 100,
                         voice = profiletbl.personality and round( profiletbl.personality.voice, 0 ) or 30,
                         voiceprofile = profiletbl.voicepack or nil,
-                        pingrange = random( 60 ),
+                        pingrange = LambdaRNG( 60 ),
 
                         personality = {
                             Build = profiletbl.personality and profiletbl.personality.build or 30,
@@ -410,7 +410,7 @@ local function OpenProfilePanel( ply )
     local favoriteweapon = "none"
     LAMBDAPANELS:CreateButton( mainscroll, TOP, "Select Favorite Weapon", function()
         LambdaWeaponSelectPanel( favoriteweapon, function( selectedWep )
-            favoriteweapon = selectedWep
+            favoriteweapon = favoriteweapon
         end, true )
     end )
 
@@ -523,6 +523,7 @@ local function OpenProfilePanel( ply )
     playermodelpreview:SetSize( 300, 400)
     playermodelpreview:Dock( TOP )
     playermodelpreview:SetModel( "models/error.mdl" )
+    playermodelpreview:SetFOV( 45 )
 
     local mdlPreviewAng = Angle()
     function playermodelpreview:LayoutEntity( Entity )
@@ -537,8 +538,7 @@ local function OpenProfilePanel( ply )
 
     function model:OnChange() 
         local mdlPath = model:GetText()
-        if !file_Exists( mdlPath, "GAME" ) then return end
-
+        if !file.Exists( mdlPath, "GAME" ) or mdlPath == "" then return end
         playermodelpreview:SetModel( mdlPath )
         if isfunction( UpdateSBSliders ) then UpdateSBSliders() end
     end
@@ -759,6 +759,7 @@ local function OpenProfilePanel( ply )
 
         if infotable.bodygroups then
             for k, v in pairs( infotable.bodygroups ) do
+                if !bodygroupdata[ k ] then continue end
                 bodygroupdata[ k ]:SetValue( v )
                 ent:SetBodygroup( k, v )
             end

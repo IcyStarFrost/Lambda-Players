@@ -87,6 +87,8 @@ local function OpenNamePanel( ply )
         if value == "" or !hasdata then return end
         addtextentry:SetText( "" )
 
+        addtextentry:RequestFocus()
+        
         -- Since we get a copy of the Server's name data, we can safely prevent duplicates from here
         if table.HasValue( names, value ) then chat.AddText( "Server already has this name!" ) return end
 
@@ -106,11 +108,31 @@ local function OpenNamePanel( ply )
         listview:RemoveLine( id )
     end
 
-    chat.AddText( "Requesting Names from Server.." )
+    if !LocalPlayer():IsListenServerHost() then
+        chat.AddText( "Requesting Names from Server.." )
+        LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/customnames.json", "json", function( data )
+            hasdata = true
+            
+            if !data then return end
 
-    LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/customnames.json", "json", function( data )
+            LAMBDAPANELS:SortStrings( data )
+            table.Merge( names, data ) 
+            
+            
+
+            for k, v in ipairs( data ) do
+                local line = listview:AddLine( v )
+                line:SetSortValue( 1, v )
+            end
+
+            listview:InvalidateLayout()
+
+        end )
+    else
+        local data = LAMBDAFS:ReadFile( "lambdaplayers/customnames.json", "json" )
+
         hasdata = true
-        
+            
         if !data then return end
 
         LAMBDAPANELS:SortStrings( data )
@@ -124,8 +146,7 @@ local function OpenNamePanel( ply )
         end
 
         listview:InvalidateLayout()
-
-    end )
+    end
 
 end
 

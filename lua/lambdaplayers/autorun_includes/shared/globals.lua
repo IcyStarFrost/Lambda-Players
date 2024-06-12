@@ -7,7 +7,13 @@ local PlaySound = ( CLIENT and surface.PlaySound )
 local AddNotification = ( CLIENT and notification.AddLegacy )
 local ipairs = ipairs
 local SortedPairs = SortedPairs
+local os_time = os.time
+local SysTime = SysTime
 local max = math.max
+local Rand = math.Rand
+local random = math.random
+local randomseed = math.randomseed
+local NormalizeAngle = math.NormalizeAngle
 
 _LAMBDAPLAYERSWEAPONS = {}
 
@@ -35,8 +41,8 @@ function LambdaMergeWeapons()
         data.notagprettyname = ( data.prettyname != nil and data.prettyname or "" )
         data.prettyname = "[" .. data.origin .. "] " .. data.prettyname
 
-        if ( CLIENT ) then 
-            _LAMBDAPLAYERSWEAPONORIGINS[ data.origin ] = data.origin 
+        if ( CLIENT ) then
+            _LAMBDAPLAYERSWEAPONORIGINS[ data.origin ] = data.origin
 
             local killIcon = data.killicon
             if killIcon then
@@ -80,7 +86,7 @@ function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc, showAll, includeRn
     local isCvar = ( type( wepSelectVar ) == "ConVar" )
 
     local currentWep = ( isCvar and wepSelectVar:GetString() or wepSelectVar )
-    if currentWep == "random" then 
+    if currentWep == "random" then
         currentWep = "Random Weapon"
     else
         currentWep = ( _LAMBDAPLAYERSWEAPONS[ currentWep ] and _LAMBDAPLAYERSWEAPONS[ currentWep ].prettyname or "!!NON EXISTENT WEAPON!!" )
@@ -96,7 +102,7 @@ function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc, showAll, includeRn
 
         function originlist:DoDoubleClick( id, line )
             local selectedWep = line:GetSortValue( 1 )
-            if ( !onSelectFunc or onSelectFunc( selectedWep ) != true ) and isCvar then 
+            if ( !onSelectFunc or onSelectFunc( selectedWep ) != true ) and isCvar then
                 wepSelectVar:SetString( selectedWep )
             end
 
@@ -128,7 +134,7 @@ function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc, showAll, includeRn
                     if v != line then v:SetSelected( false ) end
                 end
             end
-            
+
             weplinelist[ #weplinelist + 1 ] = line
         end
 
@@ -156,14 +162,14 @@ function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc, showAll, includeRn
 
     LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select None", function()
         local selectedWep = "none"
-        if ( !onSelectFunc or onSelectFunc( selectedWep ) != true ) and isCvar then 
+        if ( !onSelectFunc or onSelectFunc( selectedWep ) != true ) and isCvar then
             wepSelectVar:SetString( selectedWep )
         end
 
         if showNotif then
             AddNotification( "Selected none as a weapon!", NOTIFY_GENERIC, 3 )
         end
-        
+
         PlaySound( "buttons/button15.wav" )
         mainframe:Close()
     end )
@@ -171,7 +177,7 @@ function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc, showAll, includeRn
     if includeRnd then
         LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Select Random", function()
             local selectedWep = "random"
-            if ( !onSelectFunc or onSelectFunc( selectedWep ) != true ) and isCvar then 
+            if ( !onSelectFunc or onSelectFunc( selectedWep ) != true ) and isCvar then
                 wepSelectVar:SetString( selectedWep )
             end
 
@@ -185,11 +191,11 @@ function LambdaWeaponSelectPanel( wepSelectVar, onSelectFunc, showAll, includeRn
     end
 end
 
-local function OpenWeaponPermissionPanel( ply ) 
-    if !ply:IsSuperAdmin() then 
+local function OpenWeaponPermissionPanel( ply )
+    if !ply:IsSuperAdmin() then
         AddNotification( "You must be a Super Admin in order to use this!", 1, 4 )
-        PlaySound( "buttons/button10.wav" ) 
-        return 
+        PlaySound( "buttons/button10.wav" )
+        return
     end
 
     local mainframe = LAMBDAPANELS:CreateFrame( "Weapon Permissions", 700, 500 )
@@ -292,25 +298,22 @@ end
 
 local EntMeta = FindMetaTable("Entity")
 
+local mouthFlexes = {
+    "jaw_drop",
+    "left_drop",
+    "left_mouth_drop",
+    "right_drop",
+    "right_mouth_drop",
+}
 function EntMeta:LambdaMoveMouth( weight )
-    local flexID = self:GetFlexIDByName("jaw_drop")
-    if flexID then self:SetFlexWeight(flexID, weight) end
-
-    flexID = self:GetFlexIDByName("left_drop")
-    if flexID then self:SetFlexWeight(flexID, weight) end
-
-    flexID = self:GetFlexIDByName("right_drop")
-    if flexID then self:SetFlexWeight(flexID, weight) end
-
-    flexID = self:GetFlexIDByName("left_mouth_drop")
-    if flexID then self:SetFlexWeight(flexID, weight) end
-
-    flexID = self:GetFlexIDByName("right_mouth_drop")
-    if flexID then self:SetFlexWeight(flexID, weight) end
+    for i = 1, #mouthFlexes do
+        local flexID = self:GetFlexIDByName( mouthFlexes[ i ] )
+        if flexID then self:SetFlexWeight( flexID, weight ) end
+    end
 end
 
 function EntMeta:SetNWVar( key, value )
-    
+
     if IsEntity( value ) then
         self:SetNWEntity( key, value )
     elseif isvector( value ) then
@@ -324,7 +327,7 @@ function EntMeta:SetNWVar( key, value )
     elseif isnumber( value ) then
         self:SetNWInt( key, value )
     end
-    
+
 end
 
 function EntMeta:LambdaHookTick( name, func )
@@ -345,8 +348,8 @@ function EntMeta:GetBodyGroupData()
     local data = {}
     for _, group in ipairs( self:GetBodyGroups() ) do
         local subMdls = #group.submodels
-        if subMdls == 0 then continue end 
-        
+        if subMdls == 0 then continue end
+
         local index = group.id
         data[ index ] = self:GetBodygroup( index )
     end
@@ -361,17 +364,18 @@ end
 
 _LambdaOldEyeAngles = _LambdaOldEyeAngles or EntMeta.EyeAngles
 function EntMeta:EyeAngles()
-    if self.IsLambdaPlayer then 
+    if self.IsLambdaPlayer then
         local eyes = self:GetAttachmentPoint( "eyes" )
         local eyeAng = eyes.Ang
-        
+
         local facePos = self:GetNW2Vector( "lambda_facepos", vector_origin )
-        if !facePos:IsZero() then 
+        if !facePos:IsZero() then
             eyeAng = ( facePos - eyes.Pos ):Angle()
         elseif !self:IsPlayingTaunt() then
             eyeAng.y = self:GetAngles().y
         end
 
+        eyeAng.x = NormalizeAngle( eyeAng.x )
         eyeAng.z = 0
         return eyeAng
     end
@@ -437,60 +441,60 @@ function LambdaHijackGmodEntity( ent, lambda )
     function ent:SetPlayer( ply )
 
         self.Founder = ply
-    
+
         if ( IsValid( ply ) ) then
-    
+
             self:SetNWString( "FounderName", ply:Nick() )
 
         else
-    
+
             self:SetNWString( "FounderName", "" )
-    
+
         end
-    
+
     end
 
 	function ent:GetOverlayText()
 
 		local txt = self:GetNWString( "GModOverlayText" )
-	
+
 		if ( txt == "" ) then
 			return ""
 		end
-	
+
 		local PlayerName = self:GetPlayerName()
-	
+
 		return txt .. "\n(" .. PlayerName .. ")"
-	
+
 	end
 
     function ent:GetPlayer()
 
         if ( self.Founder == nil ) then
-    
+
             -- SetPlayer has not been called
             return NULL
-    
+
         elseif ( IsValid( self.Founder ) ) then
-    
+
             -- Normal operations
             return self.Founder
-    
+
         end
-    
+
         -- See if the player has left the server then rejoined
         local ply = lambda
         if ( !IsValid( ply ) ) then
-    
+
             -- Oh well
             return NULL
-    
+
         end
-    
+
         -- Save us the check next time
         self:SetPlayer( ply )
         return ply
-    
+
     end
 
 end
@@ -515,8 +519,8 @@ function GetLambdaPlayerByName( name )
 end
 
 function LambdaCreateThread( func )
-    local thread = coroutine.create( func ) 
-    hook.Add( "Think", "lambdaplayersThread_" .. tostring( func ), function() 
+    local thread = coroutine.create( func )
+    hook.Add( "Think", "lambdaplayersThread_" .. tostring( func ), function()
         if coroutine.status( thread ) != "dead" then
             local ok, msg = coroutine.resume( thread )
             if !ok then ErrorNoHaltWithStack( msg ) end
@@ -524,4 +528,14 @@ function LambdaCreateThread( func )
             hook.Remove( "Think", "lambdaplayersThread_" .. tostring( func ) )
         end
     end )
+end
+
+local rngCalled = 0
+function LambdaRNG( min, max, float )
+    rngCalled = ( rngCalled + 1 )
+    if rngCalled > 32768 then rngCalled = 0 end
+    randomseed( os_time() + SysTime() + rngCalled )
+
+    if !min and !max then return random() end
+    return ( float and Rand( min, max ) or ( max and random( min, max ) or random( min ) ) )
 end

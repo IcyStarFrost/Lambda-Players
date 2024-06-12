@@ -20,3 +20,29 @@ function ENT:UseTool( toolname, ent, checkallowed )
         tbl[ 3 ]( self, ent )
     end
 end
+
+-- Uses a random tool on the target.
+function ENT:UseRandomToolOn( target )
+    self:SwitchWeapon( "toolgun" )
+    if self.l_Weapon != "toolgun" then return end
+
+    self.l_IsUsingTool = true
+    self:PreventWeaponSwitch( true )
+
+    -- Loops through random tools and only stops if a tool tells us it actually got used by returning true
+    for index, tooltable in RandomPairs( LambdaToolGunTools ) do
+        if !tooltable[ 2 ]:GetBool() then continue end -- If the tool is allowed
+
+        local name = tooltable[ 1 ]
+        if LambdaRunHook( "LambdaOnToolUse", self, name ) == true then break end
+
+        local result
+        local ok, msg = pcall( function() result = tooltable[ 3 ]( self, target ) end )
+
+        if !ok then ErrorNoHaltWithStack( name .. " Tool had a error! If this is from a addon, report it to the author!", msg ) end
+        if result then self:DebugPrint( "Used " .. name .. " Tool" ) break end
+    end
+
+    self.l_IsUsingTool = false
+    self:PreventWeaponSwitch( false )
+end

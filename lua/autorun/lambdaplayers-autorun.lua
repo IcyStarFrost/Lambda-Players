@@ -3,11 +3,15 @@
 
 LambdaIsForked = true -- For some things...
 
+local redundantFiles = {
+    [ "lambda-nextbotfear-module.lua" ] = true
+}
+
 -- Base Addon includes --
 
 function LambdaReloadAddon( ply )
 
-    if SERVER and IsValid( ply ) then 
+    if SERVER and IsValid( ply ) then
         if !ply:IsSuperAdmin() then return end -- No lol
         PrintMessage( HUD_PRINTTALK, "SERVER is reloading all Lambda Lua files.." )
     end
@@ -17,6 +21,11 @@ function LambdaReloadAddon( ply )
         local serversidefiles = file.Find( "lambdaplayers/autorun_includes/server/*", "LUA", "nameasc" )
 
         for k, luafile in ipairs( serversidefiles ) do
+            if redundantFiles[ luafile ] then
+                print( "Lambda Players: Ignored The Following Lua File: " .. luafile )
+                continue
+            end
+
             include( "lambdaplayers/autorun_includes/server/" .. luafile )
             print( "Lambda Players: Included Server Side Lua File [ " .. luafile .. " ]" )
         end
@@ -28,6 +37,11 @@ function LambdaReloadAddon( ply )
     local sharedfiles = file.Find( "lambdaplayers/autorun_includes/shared/*", "LUA", "nameasc" )
 
     for k, luafile in ipairs( sharedfiles ) do
+        if redundantFiles[ luafile ] then
+            print( "Lambda Players: Ignored The Following Lua File: " .. luafile )
+            continue
+        end
+
         if SERVER then
             AddCSLuaFile( "lambdaplayers/autorun_includes/shared/" .. luafile )
         end
@@ -41,6 +55,11 @@ function LambdaReloadAddon( ply )
     local clientsidefiles = file.Find( "lambdaplayers/autorun_includes/client/*", "LUA", "nameasc" )
 
     for k, luafile in ipairs( clientsidefiles ) do
+        if redundantFiles[ luafile ] then
+            print( "Lambda Players: Ignored The Following Lua File: " .. luafile )
+            continue
+        end
+
         if SERVER then
             AddCSLuaFile( "lambdaplayers/autorun_includes/client/" .. luafile )
         elseif CLIENT then
@@ -58,6 +77,11 @@ function LambdaReloadAddon( ply )
         local serversidefiles = file.Find( "lambdaplayers/extaddon/server/*", "LUA", "nameasc" )
 
         for k, luafile in ipairs( serversidefiles ) do
+            if redundantFiles[ luafile ] then
+                print( "Lambda Players: Ignored The Following Lua File: " .. luafile )
+                continue
+            end
+
             include( "lambdaplayers/extaddon/server/" .. luafile )
             print( "Lambda Players: Included Server Side External Lua File [ " .. luafile .. " ]" )
         end
@@ -69,6 +93,11 @@ function LambdaReloadAddon( ply )
     local sharedfiles = file.Find( "lambdaplayers/extaddon/shared/*", "LUA", "nameasc" )
 
     for k, luafile in ipairs( sharedfiles ) do
+        if redundantFiles[ luafile ] then
+            print( "Lambda Players: Ignored The Following Lua File: " .. luafile )
+            continue
+        end
+
         if SERVER then
             AddCSLuaFile( "lambdaplayers/extaddon/shared/" .. luafile )
         end
@@ -82,6 +111,11 @@ function LambdaReloadAddon( ply )
     local clientsidefiles = file.Find( "lambdaplayers/extaddon/client/*", "LUA", "nameasc" )
 
     for k, luafile in ipairs( clientsidefiles ) do
+        if redundantFiles[ luafile ] then
+            print( "Lambda Players: Ignored The Following Lua File: " .. luafile )
+            continue
+        end
+
         if SERVER then
             AddCSLuaFile( "lambdaplayers/extaddon/client/" .. luafile )
         elseif CLIENT then
@@ -94,7 +128,7 @@ function LambdaReloadAddon( ply )
     hook.Run( "LambdaOnModulesLoaded" )
     --
 
-    if SERVER and IsValid( ply ) then 
+    if SERVER and IsValid( ply ) then
         PrintMessage( HUD_PRINTTALK, "SERVER has reloaded all Lambda Lua files" )
     end
 
@@ -124,7 +158,9 @@ LambdaPlayerSprays = LambdaPlayerSprays or LAMBDAFS:GetSprays()
 LambdaTextTable = LambdaTextTable or LAMBDAFS:GetTextTable()
 LambdaTextProfiles = LambdaTextProfiles or LAMBDAFS:GetTextProfiles()
 LambdaModelVoiceProfiles = LambdaModelVoiceProfiles or LAMBDAFS:GetModelVoiceProfiles()
+LambdaPlayermodelBodySkinSets = LambdaPlayermodelBodySkinSets or LAMBDAFS:GetPlayermodelBodySkinSets()
 LambdaQuickNades = LambdaQuickNades or LAMBDAFS:GetQuickNadeWeapons()
+LambdaEntsToFearFrom = LambdaEntsToFearFrom or LAMBDAFS:GetEntsToFearFrom()
 --
 
 -- Voice Profiles --
@@ -134,7 +170,7 @@ local combotable = {}
 for k, v in pairs( LambdaVoiceProfiles ) do
     combotable[ k ] = k
 end
-combotable[ "None" ] = "" 
+combotable[ "None" ] = ""
 
 CreateLambdaConvar( "lambdaplayers_lambda_voiceprofile", "", true, true, true, "The Voice Profile your newly spawned Lambda Players should spawn with. Note: This will only work if the server has the specified Voice Profile", 0, 1, { type = "Combo", options = combotable, name = "Voice Profile", category = "Lambda Player Settings" } )
 --
@@ -145,7 +181,7 @@ combotable = {}
 for k, v in pairs( LambdaTextProfiles ) do
     combotable[ k ] = k
 end
-combotable[ "None" ] = "" 
+combotable[ "None" ] = ""
 
 CreateLambdaConvar( "lambdaplayers_lambda_textprofile", "", true, true, true, "The Text Profile your newly spawned Lambda Players should spawn with. Note: This will only work if the server has the specified Text Profile", 0, 1, { type = "Combo", options = combotable, name = "Text Profile", category = "Lambda Player Settings" } )
 --

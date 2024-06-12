@@ -1,13 +1,17 @@
 local CurTime = CurTime
-local random = math.random
-local Rand = math.Rand
+
+
 local coroutine_wait = coroutine.wait
 local bulletData = {
     Damage = 8,
-    Force = 8,
+    Force = 5,
     HullSize = 5,
     TracerName = "Tracer",
-    Spread = Vector( 0.1, 0.1, 0 )
+    Spread = Vector( 0.1, 0.1, 0 ),
+    Callback = function( attacker, trace, dmginfo )
+        if dmginfo:IsDamageType( DMG_BUCKSHOT ) then return end
+        dmginfo:SetDamageType( dmginfo:GetDamageType() + DMG_BUCKSHOT )
+    end
 }
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
@@ -28,13 +32,13 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
 
             -- Secondary double barrel attack
-            if self.l_Clip >= 2 and random( 8 ) == 1 and self:IsInRange( target, 400 ) then
-                self.l_WeaponUseCooldown = CurTime() + Rand( 1.2, 1.8 )
+            if self.l_Clip >= 2 and LambdaRNG( 8 ) == 1 and self:IsInRange( target, 400 ) then
+                self.l_WeaponUseCooldown = CurTime() + LambdaRNG( 1.2, 1.8, false )
                 wepent:EmitSound( "Weapon_Shotgun.Double" )
                 bulletData.Num = 12
                 self.l_Clip = self.l_Clip - 2
             else
-                self.l_WeaponUseCooldown = CurTime() + Rand( 1, 1.5 )
+                self.l_WeaponUseCooldown = CurTime() + LambdaRNG( 1, 1.5, false )
                 wepent:EmitSound( "Weapon_Shotgun.Single" )
                 bulletData.Num = 7
                 self.l_Clip = self.l_Clip - 1
@@ -75,14 +79,14 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                 while ( self.l_Clip < self.l_MaxClip ) do
                     local ene = self:GetEnemy()
-                    if self.l_Clip > 0 and random( 2 ) == 1 and self:InCombat() and self:IsInRange( ene, 512 ) and self:CanSee( ene ) then break end
+                    if self.l_Clip > 0 and LambdaRNG( 2 ) == 1 and self:InCombat() and self:IsInRange( ene, 512 ) and self:CanSee( ene ) then break end
                     self.l_Clip = self.l_Clip + 1
                     wepent:EmitSound( "Weapon_Shotgun.Reload" )
                     coroutine_wait( 0.5 )
                 end
 
                 local ene = self:GetEnemy()
-                if self.l_Clip > 0 and random( 2 ) == 1 and self:InCombat() and self:IsInRange( ene, 512 ) and self:CanSee( ene ) then 
+                if self.l_Clip > 0 and LambdaRNG( 2 ) == 1 and self:InCombat() and self:IsInRange( ene, 512 ) and self:CanSee( ene ) then 
                     wepent:EmitSound( "Weapon_Shotgun.Special1" )
                 else
                     coroutine_wait( 0.4 )

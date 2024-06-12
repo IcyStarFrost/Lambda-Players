@@ -57,15 +57,12 @@ hook.Add( "PreDrawEffects", "lambdaplayers-debughelper", function()
                 end
 
                 -- Bools
-                AddTextToQueue( queue, "LAMBDA IS CROUCHING: " .. tostring( lambda:GetCrouch() ), boolcol )
+                
+                AddTextToQueue( queue, "LAMBDA IS PROFILE: " .. tostring( LambdaPersonalProfiles[ lambda:GetLambdaName() ] != nil ), boolcol )
                 AddTextToQueue( queue, "LAMBDA IS DEAD: " .. tostring( lambda:GetIsDead() ), boolcol )
-                AddTextToQueue( queue, "LAMBDA IS TYPING: " .. tostring( lambda:GetIsTyping() ), boolcol )
-                AddTextToQueue( queue, "LAMBDA IS RELOADING: " .. tostring( lambda:GetIsReloading() ), boolcol )
-                AddTextToQueue( queue, "LAMBDA IS NOCLIPPING: " .. tostring( lambda:GetNoClip() ), boolcol )
                 AddTextToQueue( queue, "LAMBDA IS DISABLED: " .. tostring( lambda:GetNW2Bool( "lambda_isdisabled", false ) ), boolcol )
                 
                 -- Strings
-                AddTextToQueue( queue, "LAMBDA FAKE STEAMID: " .. lambda:GetNW2String( "lambda_steamid", "{ UNAVAILABLE }" ), stringcol )
                 AddTextToQueue( queue, "LAMBDA TEXT PROFILE: " .. lambda:GetNW2String( "lambda_tp", "{ UNAVAILABLE }" ), stringcol )
                 AddTextToQueue( queue, "LAMBDA VOICE PROFILE: " .. lambda:GetNW2String( "lambda_vp", "{ UNAVAILABLE }" ), stringcol )
                 AddTextToQueue( queue, "LAMBDA LAST STATE: " .. lambda:GetNW2String( "lambda_laststate", "{ UNAVAILABLE }" ), stringcol )

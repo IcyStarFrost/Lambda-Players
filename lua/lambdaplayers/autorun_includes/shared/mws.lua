@@ -7,15 +7,13 @@ local navmeshspawning = CreateLambdaConvar( "lambdaplayers_mws_spawnonnavmesh", 
 local navmeshspawndist = CreateLambdaConvar( "lambdaplayers_mws_navmeshspawndist", 0, true, false, false, "If (Random Navmesh Spawn Points) is enabled, sets the limit in what distance should the real player be from the area Lambda Player can spawn in. Set to zero for unlimited spawn distance", 0, 10000, { type = "Slider", decimals = 0, name = "Navmesh Spawn Distance Limit", category = "MWS"} )
 
 local table_insert = table.insert
-local rand = math.Rand
-local random = math.random
+
+
 local net = net
 local tonumber = tonumber
 local PlaySound = ( CLIENT and surface.PlaySound )
 local AddNotification = ( CLIENT and notification.AddLegacy )
 local ipairs = ipairs
-local SortedPairs = SortedPairs
-local max = math.max
 
 local personalitypresets = {
     [ "custom" ] = function( self ) -- Custom Personality set by Sliders
@@ -30,10 +28,10 @@ local personalitypresets = {
     [ "customrandom" ] = function( self ) -- Same thing as Custom except the values from Sliders are used in RNG
         local tbl = {}
         for k, v in ipairs( LambdaPersonalityConVars ) do
-            tbl[ v[ 1 ] ] = random( GetConVar( "lambdaplayers_personality_" .. v[ 1 ] .. "chance" ):GetInt() )
+            tbl[ v[ 1 ] ] = LambdaRNG( GetConVar( "lambdaplayers_personality_" .. v[ 1 ] .. "chance" ):GetInt() )
         end
-        self:SetVoiceChance( random( 0, GetConVar( "lambdaplayers_personality_voicechance" ):GetInt() ) )
-        self:SetTextChance( random( 0, GetConVar( "lambdaplayers_personality_textchance" ):GetInt() ) )
+        self:SetVoiceChance( LambdaRNG( 0, GetConVar( "lambdaplayers_personality_voicechance" ):GetInt() ) )
+        self:SetTextChance( LambdaRNG( 0, GetConVar( "lambdaplayers_personality_textchance" ):GetInt() ) )
         return tbl
     end,
     [ "fighter" ] = function( self ) -- Focused on Combat
@@ -51,7 +49,7 @@ local personalitypresets = {
     [ "builder" ] = function( self ) -- Focused on Building
         local tbl = {}
         for k, v in ipairs( LambdaPersonalityConVars ) do
-            tbl[ v[ 1 ] ] = random( 100 )
+            tbl[ v[ 1 ] ] = LambdaRNG( 100 )
         end
         tbl[ "Build" ] = 80
         tbl[ "Combat" ] = 5
@@ -183,7 +181,7 @@ hook.Add( "Tick", "lambdaplayers_MWS", function()
             end
         end
 
-        nextspawn = ( curTime + ( rndSpawnRate and rand( 0.1, spawnRate ) or spawnRate ) )
+        nextspawn = ( curTime + ( rndSpawnRate and LambdaRNG( 0.1, spawnRate, true ) or spawnRate ) )
         return
     end
 
@@ -199,14 +197,14 @@ hook.Add( "Tick", "lambdaplayers_MWS", function()
             if !useNavmesh then
                 local spawns = LambdaGetPossibleSpawns()
 
-                local point = spawns[ random( #spawns ) ]
+                local point = spawns[ LambdaRNG( #spawns ) ]
                 if !IsValid( point ) then failtimes = failtimes + 1; return end
 
                 pos = point:GetPos()
                 ang = point:GetAngles()
             else
                 pos = GetRandomSpawnPoint()
-                ang = Angle( 0, random( -180, 180 ), 0 )
+                ang = Angle( 0, LambdaRNG( -180, 180 ), 0 )
             end
 
             local lambda = ents_Create( "npc_lambdaplayer" )
@@ -223,7 +221,7 @@ hook.Add( "Tick", "lambdaplayers_MWS", function()
             local personality = perspreset:GetString()
             if personality != "random" then lambda:BuildPersonalityTable( personalitypresets[ personality ]( lambda ) ) end
 
-            nextspawn = curTime + ( rndSpawnRate and rand( 0.1, spawnRate ) or spawnRate )
+            nextspawn = curTime + ( rndSpawnRate and LambdaRNG( 0.1, spawnRate, true ) or spawnRate )
         end
     elseif #SpawnedLambdaPlayers > maxlambdacount:GetInt() then
         local lambda = SpawnedLambdaPlayers[ #SpawnedLambdaPlayers ]
@@ -265,7 +263,7 @@ hook.Add( "LambdaOnRespawn", "lambdaplayers_MWS_OnRespawn", function( self )
     self:SetPos( pos )
     self.l_SpawnPos = pos
     
-    local ang = Angle( 0, random( -180, 180 ), 0 )
+    local ang = Angle( 0, LambdaRNG( -180, 180 ), 0 )
     self:SetAngles( ang )
     self.l_SpawnAngles = ang
 end )

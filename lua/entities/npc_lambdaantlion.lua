@@ -31,8 +31,8 @@ else
     local yield = coroutine.yield
     local max = math.max
     local Clamp = math.Clamp
-    local Rand = math.Rand
-    local random = math.random
+    
+    
     local DamageInfo = DamageInfo
     local Vector = Vector
     local TraceHull = util.TraceHull
@@ -57,7 +57,7 @@ else
         self:SetHealth( hp )
         self:SetMaxHealth( hp )
 
-        self:SetSkin( random( 0, ( self:SkinCount() - 1 ) ) )
+        self:SetSkin( LambdaRNG( 0, ( self:SkinCount() - 1 ) ) )
         self:AddFlags( FL_OBJECT )
         self:SetShouldServerRagdoll( true )
 
@@ -277,7 +277,7 @@ else
 
                     self.IsBusyActioning = true
 
-                    self:SetSequence( attackAnims[ random( #attackAnims ) ] )
+                    self:SetSequence( attackAnims[ LambdaRNG( #attackAnims ) ] )
                     self:ResetSequenceInfo()
                     self:SetCycle( 0 )
                     self:SetPlaybackRate( 1.5 )
@@ -295,7 +295,7 @@ else
                         wait( 0.5 )
                     end
                 else
-                    local rndPos = ( self:GetPos() + ( Vector( Rand( -1, 1 ), Rand( -1, 1 ), 0 ) * 750 ) )
+                    local rndPos = ( self:GetPos() + ( Vector( LambdaRNG( -1, 1, true ), LambdaRNG( -1, 1, true ), 0 ) * 750 ) )
                     local nearArea = GetNearestNavArea( rndPos )
                     if IsValid( nearArea ) then rndPos = nearArea:GetClosestPointOnArea( rndPos ) end
                     self:MoveToPosition( rndPos, nil, true, false )
@@ -331,7 +331,7 @@ else
 
             if isEnt then
                 local distSqr = self:GetRangeSquaredTo( goalPos )
-                if distSqr > 360000 and distSqr <= 2250000 and self.loco:IsOnGround() and self:VisibleVec( goal:WorldSpaceCenter() ) and random( 50 ) == 1 then
+                if distSqr > 360000 and distSqr <= 2250000 and self.loco:IsOnGround() and self:VisibleVec( goal:WorldSpaceCenter() ) and LambdaRNG( 50 ) == 1 then
                     SimpleTimer( 0.5, function()
                         if !IsValid( self ) or !IsValid( goal ) then return end
                         self:SetBodygroup( 1, 1 )
@@ -374,7 +374,7 @@ else
 
         local owner = self:GetOwner()
         local area = ( IsValid( owner ) and GetNavArea( owner:GetPos(), 120 ) or GetNavAreas( self:GetPos(), 750, 256, 256 ) )
-        if IsValid( area ) then self:SetPos( istable( area ) and area[ random( #area ) ]:GetRandomPoint() or area:GetRandomPoint() ) end
+        if IsValid( area ) then self:SetPos( istable( area ) and area[ LambdaRNG( #area ) ]:GetRandomPoint() or area:GetRandomPoint() ) end
 
         self:DrawShadow( true )
         self:EmitSound( "NPC_Antlion.BurrowOut" )
