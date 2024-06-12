@@ -25,6 +25,8 @@ Color( 179, 107, 0)
 
 -- Fixed a issue where profile chance at 100% would have a 1% chance to fail
 
+-- Fixed errors relating to Ultrakill Base
+
 /e
 Color( 0, 140, 255)
 ---- (Pyri) Pull Request #125 ----
