@@ -3,7 +3,33 @@ local math_min = math.min
 local CurTime = CurTime
 
 local useReworkedVariant = CreateLambdaConvar( "lambdaplayers_weapons_fistsreworked", 0, true, false, true, "If Lambda Player's fists should use their reworked stats instead of default Gmod ones.", 0, 1, { type = "Bool", name = "Fists - Use Reworked Stats", category = "Weapon Utilities" } )
-local useAltSounds = CreateLambdaConvar( "lambdaplayers_weapons_fistsaltsounds", 0, true, false, true, "If Lambda Player's fists should use alternate sounds instead of Half-Life 2 sounds.", 0, 1, { type = "Bool", name = "Fists - Use Alternate Sounds", category = "Weapon Utilities" } )
+local useAltSounds = CreateLambdaConvar( "lambdaplayers_weapons_fistsaltsounds", 0, true, false, true, "If Lambda Player's fists should use alternate sounds from different games. 0 = HL2, 1 = TC:NYC, 2 = Bully", 0, 2, { type = "Slider", decimals = 0, name = "Fists - Use Alternate Sounds", category = "Weapon Utilities" } )
+
+local function playSound( type )
+    local snd
+    local useAltSoundsValue = useAltSounds:GetInt()
+
+    if type == "swing" then
+        if useAltSoundsValue == 0 then -- Default HL2
+            snd = "WeaponFrag.Throw"
+        elseif useAltSoundsValue == 1 then -- True Crime: NYC
+            snd = "lambdaplayers/weapons/fist/whoosh_street_" .. LambdaRNG( 5 ) .. ".mp3"
+        elseif useAltSoundsValue == 2 then -- Bully (PS2)
+            snd = "lambdaplayers/weapons/fist/bully/throw_" .. LambdaRNG( 2 ) .. ".mp3"
+        end
+
+    elseif type == "hit" then
+        if useAltSoundsValue == 0 then -- Default HL2
+            snd = "Flesh.ImpactHard"
+        elseif useAltSoundsValue == 1 then -- True Crime: NYC
+            snd = "lambdaplayers/weapons/fist/strike_faceblow_" .. LambdaRNG( 3 ) .. ".mp3"
+        elseif useAltSoundsValue == 2 then -- Bully (PS2)
+            snd = "lambdaplayers/weapons/fist/bully/punch_" .. LambdaRNG( 8 ) .. ".mp3"
+        end
+    end
+
+    return snd
+end
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
     gmod_fists = {
@@ -54,7 +80,9 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             self.l_WeaponUseCooldown = ( CurTime() + ( reworkStats and LambdaRNG( 0.4, 0.6, true ) or 0.9 ) )
             wepent.FistComboTime = ( self.l_WeaponUseCooldown + 0.1 )
-            wepent:EmitSound( ( !useAltSounds:GetBool() and "WeaponFrag.Throw" or "lambdaplayers/weapons/fist/whoosh_street_" .. LambdaRNG( 5 ) .. ".mp3" ), 75 ) 
+            
+            local swingSound = playSound( "swing" )
+            wepent:EmitSound( swingSound, 75 )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_FIST )
             local fistSeqID = self:LookupSequence( "range_fists_" .. ( LambdaRNG( 2 ) == 1 and "r" or "l" ) )
@@ -88,7 +116,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 dmginfo:SetDamageForce( attackForce )
 
                 target:TakeDamageInfo( dmginfo )
-                wepent:EmitSound( ( !useAltSounds:GetBool() and "Flesh.ImpactHard" or "lambdaplayers/weapons/fist/strike_faceblow_" .. LambdaRNG( 3 ) .. ".mp3" ), 75 )
+                local strikeSound = playSound( "hit" )
+                wepent:EmitSound( strikeSound, 75 )
             end)
 
             return true

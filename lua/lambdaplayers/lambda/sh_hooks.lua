@@ -210,7 +210,7 @@ if SERVER then
         local wepent = self.WeaponEnt
 
         local dropEnt = self.l_WeaponDropEntity
-        if !dropEnt or !dropweaponents:GetBool() then
+        if ( !dropEnt or !dropweaponents:GetBool() ) and IsValid( wepent ) then
             net.Start( "lambdaplayers_createclientsidedroppedweapon" )
                 net.WriteEntity( wepent )
                 net.WriteString( wepent:GetModel() )
@@ -227,7 +227,7 @@ if SERVER then
         else
             dropEnt = ents_Create( dropEnt )
 
-            if IsValid( dropEnt ) then
+            if IsValid( dropEnt ) and IsValid( wepent ) then
                 dropEnt:SetPos( wepent:GetPos() )
                 dropEnt:SetAngles( wepent:GetAngles() )
                 dropEnt:Spawn()
@@ -725,7 +725,7 @@ if SERVER then
         [ "builder" ] = function( ply, lambda ) -- Focused on Building
             local tbl = {}
             for k, v in ipairs( LambdaPersonalityConVars ) do
-                tbl[ v[ 1 ] ] = LambdaRNG( 100 )
+                tbl[ v[ 1 ] ] = LambdaRNG( 10 )
             end
             tbl[ "Build" ] = 80
             tbl[ "Combat" ] = 5
@@ -1004,7 +1004,7 @@ function ENT:InitializeMiniHooks()
                 -- ULTRAKILL SNPCs insta-kill moment (THIS WILL HURT/DIE)
                 local isUkNPC = attacker.IsUltrakillNextbot
                 if isUkNPC then
-                    info:SetDamage( ( info:GetDamage() / UltrakillBase.ConVars.DmgMult:GetFloat() ) / 10 )
+                    info:SetDamage( ( info:GetDamage() / UltrakillBase.ConVar_DmgMult:GetFloat() ) / 10 )
                 -- BOOTY PLS PLEY DEE EMM CEE TOO, ITS DA BEST GAEM!!!
                 elseif attacker.DevilTrigger then
                     info:SetDamage( info:GetDamage() * 0.1 )
@@ -1024,10 +1024,20 @@ function ENT:InitializeMiniHooks()
                     local tookDmg = info:GetDamage()
                     local maxHp = self:GetMaxHealth()
                     if tookDmg > 0 and floor( ( self:Health() - ceil( tookDmg ) ) + tookDmg ) <= maxHp then
-                        local diffInfo = UltrakillBase.DifficultyGetInformation( "Healing" )
-                        local perc = diffInfo.Percentage
-                        local hardDmg = ( tookDmg * perc * ukHeal_HardDmg_Mult:GetFloat() )
-                        local time = ( Clamp( ( tookDmg / 20 ) + diffInfo.Delay, 0, 5 ) / ukHeal_HardDmg_RecoveryMult:GetFloat() )
+                        local diffInfo = UltrakillBase.GetDifficulty()
+                        local fDelay = 1
+
+                        if diffInfo <= 2 then
+                            fDelay = 1
+                        elseif diffInfo == 3 then
+                            fDelay = 2
+                        else
+                            fDelay = 2.5
+                        end
+
+                        
+                        local hardDmg = ( tookDmg * ukHeal_HardDmg_Mult:GetFloat() )
+                        local time = ( Clamp( ( tookDmg / 20 ) + fDelay, 0, 5 ) / ukHeal_HardDmg_RecoveryMult:GetFloat() )
 
                         self:SetNW2Int( "UltrakillBase_HardDamage", Clamp( ( self:GetNW2Int( "UltrakillBase_HardDamage", 0 ) + hardDmg ), 0, ( maxHp - 1 ) ) )
                         self:SetNW2Float( "UltrakillBase_HardDamage_Time", ( time + CurTime() ) )
@@ -1127,7 +1137,7 @@ function ENT:InitializeMiniHooks()
                     if curAnger > target.BecomeEnemyToPlayerLevel then
                         if target:Disposition( self ) != D_HT then
                             target:CustomOnBecomeEnemyToPlayer( info, target:GetLastDamageHitGroup() )
-                            if target.IsFollowing && target.FollowData.Ent == self then
+                            if target.IsFollowing and target.FollowData.Ent == self then
                                 target:FollowReset()
                             end
 

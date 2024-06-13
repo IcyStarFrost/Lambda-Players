@@ -13,7 +13,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         dropentity = "weapon_crowbar",
 
         damage = 10,
-        rateoffire = 0.4,
+        rateoffiremin = 0.04,
+        rateoffiremax = 0.75,
         attackanim = ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE,
         attacksnd = "Weapon_Crowbar.Single",
         hitsnd = "Weapon_Crowbar.Melee_Hit",

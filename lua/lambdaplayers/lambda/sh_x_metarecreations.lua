@@ -82,11 +82,6 @@ end
 ENT.GetEyeTraceNoCursor = ENT.GetEyeTrace
 
 -- Return random fake steam ids
-function ENT:SteamID64()
-    return self:GetSteamID64()
-end
-
--- Return random fake steam ids
 function ENT:SteamID()
     return self:GetNW2String( "lambda_steamid", "STEAM_0:0:0" )
 end
@@ -186,11 +181,6 @@ function ENT:GetPlayerColor()
     return self:GetPlyColor()
 end
 
--- Returns if our flashlight is currently on
-function ENT:FlashlightIsOn()
-    return self:GetFlashlightOn()
-end
-
 -- Returns our weapon (physgun) color
 function ENT:GetWeaponColor()
     return self:GetPhysColor()
@@ -213,7 +203,22 @@ end
 
 -- Returns our fake account ID
 function ENT:AccountID()
-    return SharedRandom( "accountid", 1, 1000000, self:EntIndex() )
+    return SharedRandom( "accountid" .. self:Name(), 1, 1000000, self:EntIndex() )
+end
+
+-- Returns a fake UID
+function ENT:UniqueID()
+    return SharedRandom(  "uniqueid" .. self:Name(), 1, 10000000000, self:EntIndex() )
+end
+
+-- Returns a fake SteamID
+function ENT:SteamID()
+    return "STEAM_0:0:" .. SharedRandom(  "steamid" .. self:Name(), 1, 200000000, self:EntIndex() )
+end
+
+-- Returns a fake community ID
+function ENT:SteamID64()
+    return 90071996842377216 + SharedRandom(  "steamid64" .. self:Name(), 1, 10000000000, self:EntIndex() )
 end
 
 -- Returns our ragdoll entity
@@ -408,6 +413,11 @@ if SERVER then
 end
 
 if ( CLIENT ) then
+    -- Returns if our flashlight is currently on
+    function ENT:FlashlightIsOn()
+        return self.l_flashlighton
+    end
+
     -- Returns whether our player model will be drawn at the time the function is called
     function ENT:ShouldDrawLocalPlayer()
         return self:IsBeingDrawn()
@@ -415,10 +425,6 @@ if ( CLIENT ) then
 
     function ENT:IsMuted() 
         return self.l_ismuted
-    end
-
-    function ENT:VoiceVolume()
-        return self:GetVoiceLevel()
     end
 
     function ENT:SetMuted( bool )

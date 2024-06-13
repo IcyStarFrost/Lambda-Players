@@ -14,8 +14,6 @@ local tonumber = tonumber
 local PlaySound = ( CLIENT and surface.PlaySound )
 local AddNotification = ( CLIENT and notification.AddLegacy )
 local ipairs = ipairs
-local SortedPairs = SortedPairs
-local max = math.max
 
 local personalitypresets = {
     [ "custom" ] = function( self ) -- Custom Personality set by Sliders

@@ -1,7 +1,6 @@
 local string = string
 local table = table
 local math = math
-local hook_GetTable = hook.GetTable
 local hook_Add = hook.Add
 local hook_Remove = hook.Remove
 local RandomPairs = RandomPairs
@@ -13,7 +12,6 @@ local CurTime = CurTime
 local RealTime = RealTime
 local IsValid = IsValid
 local file_Find = file.Find
-
 local abs = math.abs
 local max = math.max
 local Clamp = math.Clamp
@@ -21,7 +19,6 @@ local FindInSphere = ents.FindInSphere
 local file_Find = file.Find
 local table_Empty = table.Empty
 local table_IsEmpty = table.IsEmpty
-local table_remove = table.remove
 local table_RemoveByValue = table.RemoveByValue
 local table_Copy = table.Copy
 local table_Add = table.Add
@@ -42,7 +39,6 @@ local string_sub = string.sub
 local next = next
 local floor = math.floor
 local table_concat = table.concat
-local string_Replace = string.Replace
 local string_Explode = string.Explode
 local string_match = string.match
 local table_insert = table.insert
@@ -192,7 +188,6 @@ function ENT:NamedTimer( name, delay, repeattimes, func, ignoredead )
     local intname = "lambdaplayers_" .. name .. id
     self:DebugPrint( "Created a Timer: " .. name )
 
-    local lastDeathT = self.l_LastDeathTime
     timer_create( intname, delay, repeattimes, function()
         if !IsValid( self ) or !ignoredead and !self:Alive() then return end
         local result = func( self )
@@ -505,8 +500,6 @@ if SERVER then
             self:SetNW2String( "lambda_tp", self.l_TextProfile )
             -- Non Personal Data --
             self:SetRespawn( info.respawn or self:GetRespawn() )
-
-            local spawnwep = self:WeaponDataExists( info.spawnwep ) and info.spawnwep or self.l_SpawnWeapon
             self:SwitchToSpawnWeapon()
             self:SetNW2String( "lambda_spawnweapon", self.l_SpawnWeapon )
 
@@ -1239,7 +1232,7 @@ if SERVER then
                 line = keyLine
             end
 
-            if textLinks[ line ] or string_match( line, "(https?://%S+)" ) != nil then
+            if textLinks[ line ] or ( string_match( line, "(https?://%S+)" ) != nil and LambdaRNG( #tbl ) == 1 ) then
                 validLines[ #validLines + 1 ] = line
                 textLinks[ line ] = true
             else
@@ -1249,7 +1242,7 @@ if SERVER then
 
         if #feedLines != 0 then
             local markovtable = generate_markov_table( table_concat( feedLines, "\n" ) )
-            local generated = generate_markov_text( 1000, markovtable )
+            local generated = generate_markov_text( 2000, markovtable )
             validLines = table_Add( validLines, string_Explode( "\n", generated ) )
         elseif #validLines == 0 then
             return tbl[ LambdaRNG( #tbl ) ]
@@ -1324,7 +1317,7 @@ if SERVER then
         net.Start( "lambdaplayers_playsoundfile" )
             net.WriteEntity( self )
             net.WriteBool( self:Alive() )
-            net.WriteString( filepath )
+            net.WriteString( "sound/" .. filepath )
             net.WriteUInt( self:GetCreationID(), 32 )
             net.WriteVector( self:GetPos() )
             net.WriteFloat( delay )
@@ -1626,7 +1619,48 @@ if ( CLIENT ) then
     -- Very expensive to run. Try to cache the result so this can only be ran once
     function ENT:GetPFPMat()
         local pfp = self:GetProfilePicture()
+        local replace = "materials" .. string.Replace( pfp, "/", "" ):lower()
 
+        if !LocalPlayer():IsListenServerHost() and GetConVar( "lambdaplayers_lambda_downloadassets" ):GetBool() and !file.Exists( "materials/" .. pfp, "GAME" ) and !file.Exists( "lambdaplayers/fileshare/" .. replace, "DATA" ) then
+            LambdaRequestFile( "materials/" .. pfp, function( path )
+                local isVTF = string.EndsWith( path, ".vtf" )
+                local profilepicturematerial
+        
+                -- VTF ( Valve Texture Format ) support. This allows animated Profile Pictures
+                if isVTF then
+                    _LambdaPfpIndex = _LambdaPfpIndex + 1
+                    profilepicturematerial = CreateMaterial( "lambdaprofilepicVTFmaterial" .. _LambdaPfpIndex, "UnlitGeneric", {
+                        [ "$basetexture" ] = "../data/" .. path,
+                        [ "$translucent" ] = 1,
+                        [ "Proxies" ] = {
+                            [ "AnimatedTexture" ] = {
+                                [ "animatedTextureVar" ] = "$basetexture",
+                                [ "animatedTextureFrameNumVar" ] = "$frame",
+                                [ "animatedTextureFrameRate" ] = framerateconvar:GetInt()
+                            }
+                        }
+                    })
+                else
+                    profilepicturematerial = Material( "../data/" .. path )
+                end
+
+                if profilepicturematerial:IsError() then
+                    local model = self:GetModel()
+                    profilepicturematerial = Material( "spawnicons/" .. string.sub( model, 1, #model - 4 ) .. ".png" )
+                end
+
+                if self.ScoreEntry then
+                    self.ScoreEntry:Setup( self )
+                end
+                self.l_name_display_mat_cache = profilepicturematerial
+            end )
+        end
+
+        
+        if !file.Exists( "materials/" .. pfp, "GAME" ) and file.Exists( "lambdaplayers/fileshare/" .. replace, "DATA" ) then
+            pfp = "../data/" .. "lambdaplayers/fileshare/" .. replace
+        end
+        
         local isVTF = string.EndsWith( pfp, ".vtf" )
         local profilepicturematerial
 

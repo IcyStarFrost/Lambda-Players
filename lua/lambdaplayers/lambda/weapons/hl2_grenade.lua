@@ -20,7 +20,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local grenade = ents_Create( "npc_grenade_frag" )
             if !IsValid( grenade ) then return end
 
-            self.l_WeaponUseCooldown = CurTime() + 1.8
+            self.l_WeaponUseCooldown = CurTime() + LambdaRNG( 1.8, 2.25, false )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )

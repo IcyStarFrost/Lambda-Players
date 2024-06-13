@@ -1,6 +1,5 @@
 if ( CLIENT ) then return end
 
-local LambdaIsValid = LambdaIsValid
 local dev = GetConVar( "lambdaplayers_debug_path" )
 local IsValid = IsValid
 local math_max = math.max
@@ -718,7 +717,6 @@ local CNavArea_IsClosed                              = CNavAreaMeta.IsClosed
 local CNavArea_RemoveFromClosedList                  = CNavAreaMeta.RemoveFromClosedList
 local CNavArea_ComputeAdjacentConnectionHeightChange = CNavAreaMeta.ComputeAdjacentConnectionHeightChange
 local CNavArea_GetAttributes                         = CNavAreaMeta.GetAttributes
-local CNavArea_HasAttributes                         = CNavAreaMeta.HasAttributes
 --
 
 -- CNavLadder --

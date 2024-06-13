@@ -12,7 +12,6 @@ if ( CLIENT ) then
     local Color = Color
     local Clamp = math.Clamp
     local ceil = math.ceil
-    local sub = string.sub
     local RoundedBox = draw.RoundedBox
     local SimpleText = draw.SimpleText
     local player_GetAll = player.GetAll
@@ -88,6 +87,7 @@ if ( CLIENT ) then
                 if !ply.IsLambdaPlayer then
                     self.Avatar:SetPlayer( ply )
                 else
+                    ply.ScoreEntry = self
                     local pfpMat = ply:GetPFPMat()
                     self.LastLambdaPfp = pfpMat
                     self.LambdaAvatar:SetMaterial( pfpMat )
@@ -103,14 +103,6 @@ if ( CLIENT ) then
                     self:SetZPos( 9999 ) -- Causes a rebuild
                     self:Remove()
                     return
-                end
-
-                if ply.IsLambdaPlayer then
-                    local pfpMat = ply:GetPFPMat()
-                    if pfpMat != self.LastLambdaPfp then
-                        self.LambdaAvatar:SetMaterial( pfpMat )
-                        self.LastLambdaPfp = pfpMat
-                    end
                 end
 
                 if self.PName == nil or self.PName != ply:Nick() then
@@ -388,6 +380,7 @@ if ( CLIENT ) then
         end
     end )
 end
+
 
 if ( SERVER ) then
     hook.Add( "Initialize", "lambdaplayers_overridegamemodehooks", function() 

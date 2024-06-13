@@ -33,14 +33,24 @@ local function OpenQuickNadePanel( ply )
         line:SetSortValue( 1, weapon )
     end
 
-    LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/quicknades.json", "json", function( data ) 
+    if !LocalPlayer():IsListenServerHost() then
+        LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/quicknades.json", "json", function( data ) 
+            if !data then return end
+            table_Merge( nades, data )
+
+            for _, nade in ipairs( data ) do
+                AddWeaponToNades( nade )
+            end
+        end )
+    else
+        local data = LAMBDAFS:ReadFile( "lambdaplayers/quicknades.json", "json" )
         if !data then return end
         table_Merge( nades, data )
 
         for _, nade in ipairs( data ) do
             AddWeaponToNades( nade )
         end
-    end )
+    end
 
     LAMBDAPANELS:CreateButton( mainframe, BOTTOM, "Add Weapon", function()
         LambdaWeaponSelectPanel( "none", function( chosenWeapon )

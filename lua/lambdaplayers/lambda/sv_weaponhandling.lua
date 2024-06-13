@@ -3,13 +3,11 @@ local IsFirstTimePredicted = IsFirstTimePredicted
 local isfunction = isfunction
 local istable = istable
 local isstring = isstring
-
-local RandomPairs = RandomPairs
-
 local ipairs = ipairs
 local Effect = util.Effect
 local CurTime = CurTime
 local string_find = string.find
+local meleeonly = GetConVar( "lambdaplayers_combat_weaponmeleeonly" )
 
 function ENT:WeaponDataExists( weaponname )
     return _LAMBDAPLAYERSWEAPONS[ weaponname ] != nil
@@ -160,6 +158,7 @@ local bullettbl = {
 -- I like this way more than before
 local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabletbl )
     if self.l_Clip == 0 then self:ReloadWeapon() return end
+    if !IsValid( target ) then return end
 
     disabletbl = disabletbl or {}
 
@@ -167,10 +166,10 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
     if !fireRate then
         local randMin = weapondata.rateoffiremin
         local randMax = weapondata.rateoffiremax
-        if randMin and randMax then fireRate = LambdaRNG( randMin, randMax, true ) end
+        if randMin and randMax then fireRate = LambdaRNG( randMin, randMax, false ) end
     end
     if fireRate and fireRate != true then
-        local cooldown = weapondata.rateoffire or LambdaRNG( weapondata.rateoffiremin, weapondata.rateoffiremax, true )
+        local cooldown = weapondata.rateoffire or LambdaRNG( weapondata.rateoffiremin, weapondata.rateoffiremax, false )
         self.l_WeaponUseCooldown = CurTime() + cooldown
     end
 
@@ -219,9 +218,10 @@ local function DefaultRangedWeaponFire( self, wepent, target, weapondata, disabl
 end
 
 local function DefaultMeleeWeaponUse( self, wepent, target, weapondata, disabletbl )
+    if !IsValid( target ) then return end
     disabletbl = disabletbl or {}
 
-    local fireRate = ( disabletbl.cooldown or weapondata.rateoffire or LambdaRNG( weapondata.rateoffiremin, weapondata.rateoffiremax, true ) )
+    local fireRate = ( disabletbl.cooldown or weapondata.rateoffire or LambdaRNG( weapondata.rateoffiremin, weapondata.rateoffiremax, false ) )
     if fireRate and fireRate != true then
         local cooldown = weapondata.rateoffire or LambdaRNG( weapondata.rateoffiremin, weapondata.rateoffiremax, true )
         self.l_WeaponUseCooldown = CurTime() + cooldown
@@ -386,7 +386,11 @@ function ENT:SwitchToRandomWeapon( returnOnly )
     local wepRestricts = self.l_WeaponRestrictions
     for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
         if wepRestricts and !wepRestricts[ name ] and !freeRestrictWeps[ name ] then continue end
-        if name == curWep or data.cantbeselected or !self:CanEquipWeapon( name, data ) then continue end
+        if !meleeonly:GetBool() then
+            if name == curWep or data.cantbeselected or !self:CanEquipWeapon( name ) then continue end
+        elseif meleeonly:GetBool() then
+            if name == curWep or !data.ismelee or data.cantbeselected or !self:CanEquipWeapon( name ) then continue end
+        end
 
         if !hasFavWep then hasFavWep = ( name == favWep ) end
         wepList[ #wepList + 1 ] = name
@@ -408,7 +412,11 @@ function ENT:SwitchToLethalWeapon()
     local wepRestricts = self.l_WeaponRestrictions
     for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
         if wepRestricts and !wepRestricts[ name ] and !freeRestrictWeps[ name ] then continue end
-        if name == curWep or !data.islethal or data.cantbeselected or !self:CanEquipWeapon( name, data ) then continue end
+        if !meleeonly:GetBool() then
+            if name == curWep or !data.islethal or data.cantbeselected or !self:CanEquipWeapon( name ) then continue end
+        elseif meleeonly:GetBool() then
+            if name == curWep or !data.islethal or !data.ismelee or data.cantbeselected or !self:CanEquipWeapon( name ) then continue end
+        end
 
         if !hasFavWep then hasFavWep = ( name == favWep ) end
         wepList[ #wepList + 1 ] = name

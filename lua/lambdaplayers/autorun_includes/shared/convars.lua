@@ -48,7 +48,7 @@ function CreateLambdaConvar( name, val, shouldsave, isclient, userinfo, desc, mi
     return convar
 end
 
-local function AddSourceConVarToSettings( cvarname, desc, settingstbl )
+--[[ local function AddSourceConVarToSettings( cvarname, desc, settingstbl )
     if CLIENT and settingstbl and !_LAMBDAConVarNames[ cvarname ] then
         settingstbl.convar = cvarname
         settingstbl.isclient = false
@@ -57,7 +57,7 @@ local function AddSourceConVarToSettings( cvarname, desc, settingstbl )
         _LAMBDAConVarNames[ cvarname ] = true
         table_insert( _LAMBDAConVarSettings, settingstbl )
     end
-end
+end ]]
 
 function CreateLambdaColorConvar( name, defaultcolor, isclient, userinfo, desc, settingstbl )
     local nameR = name .. "_r"
@@ -123,8 +123,11 @@ CreateLambdaConvar( "lambdaplayers_viewshots_saveaspng", 0, true, true, false, "
 --
 
 -- Other Convars
+CreateLambdaConvar( "lambdaplayers_lambda_allowfilesharing", 0, true, false, false, "If the addon should automatically network voice lines, profile pictures, and sprays to clients that don't have them\n\nNOTE!! THIS MAY CAUSE MINOR LAG SPIKES WHEN SUCH FILES ARE NETWORKED! If you don't care about lag then this should not concern you.", 0, 1, { type = "Bool", name = "Allow Sharing Files", category = "Utilities" } )
+
 CreateLambdaConvar( "lambdaplayers_uiscale", 0, true, true, false, "How much to scale UI such as Voice popups, name pop ups, ect.", ( CLIENT and -ScrW() or 1 ), ( CLIENT and ScrW() or 1 ), { type = "Slider", name = "UI Scale", decimals = 1, category = "Misc" } )
-CreateLambdaConvar( "lambdaplayers_useplayermodelcolorasdisplaycolor", 0, true, true, true, "If Lambda Player's Playermodel Color should be its Display Color. This has priority over the Display Color below", 0, 1, { type = "Bool", name = "Playermodel Color As Display Color", category = "Misc" } )
+CreateLambdaConvar( "lambdaplayers_useplayermodelcolorasdisplaycolor", 1, true, true, true, "If Lambda Player's Playermodel Color should be its Display Color. This has priority over the Display Color below", 0, 1, { type = "Bool", name = "Playermodel Color As Display Color", category = "Misc" } )
+CreateLambdaConvar( "lambdaplayers_displayprofilepicture", 0, true, true, true, "If Lambda Player's Profile Picture should appear on the Name Display when the curso hovers over them.", 0, 1, { type = "Bool", name = "Display Profile Picture on Hover", category = "Misc" } )
 CreateLambdaColorConvar( "lambdaplayers_displaycolor", defDisplayClr, true, true, "The display color to use for Name Display and others", { name = "Display Color", category = "Misc" } )
 CreateLambdaConvar( "lambdaplayers_randomizepathingcost", 0, true, false, false, "Randomizes Pathfinding in a way that will make Lambdas try different approaches to reaching their destination rather than finding the fastest and closest route", 0, 1, { type = "Bool", name = "Randomize PathFinding Cost", category = "Misc" } )
 CreateLambdaConvar( "lambdaplayers_randomizepathingcost_min", 0.8, true, false, false, "Minimum value to how much Lambdas can scale their pathing cost.", 0.1, 20.0, { type = "Slider", decimals = 1, name = "Min Random Cost Scale", category = "Misc" } )
@@ -139,7 +142,7 @@ CreateLambdaConvar( "lambdaplayers_weapons_bugbait_antlionlimit", 4, true, false
 -- Playermodel Related
 CreateLambdaConvar( "lambdaplayers_lambda_allowrandomaddonsmodels", 0, true, false, false, "If Lambda Players can use random addon playermodels", 0, 1, { type = "Bool", name = "Addon Playermodels", category = "Playermodels" } )
 CreateLambdaConvar( "lambdaplayers_lambda_onlyaddonmodels", 0, true, false, false, "If Lambda Players should only use playermodels that are from addons. Addon Playermodels should be enabled to work.", 0, 1, { type = "Bool", name = "Only Addon Playermodels", category = "Playermodels" } )
-CreateLambdaConvar( "lambdaplayers_lambda_forceplayermodel", "", true, false, false, "The path of the playermodel the next spawned Lambda Player will use. Make empty to disable", 0, 1, { type = "Text", name = "Force Playermodel", category = "Playermodels" } )
+CreateLambdaConvar( "lambdaplayers_lambda_forceplayermodel", "", true, false, false, "The path of the playermodel the next spawned Lambda Player will use. Make empty to disable.\n\nSupports multiple model paths separated by a comma. I.e model_path1,model_path2", 0, 1, { type = "Text", name = "Force Playermodel", category = "Playermodels" } )
 CreateLambdaConvar( "lambdaplayers_lambda_switchplymdlondeath", "0", true, false, false, "The chance that the Lambda Player will change its playermodel after respawning. Doesn't affect Lambda Profiles. Set to 0 to disable", 0, 100, { type = "Slider", decimals = 0, name = "Change Playermodel On Respawn Chance", category = "Playermodels" } )
 CreateLambdaConvar( "lambdaplayers_lambda_allowrandomskinsandbodygroups", 1, true, false, false, "If Lambda Players can have their model's skins and bodygroups randomized", 0, 1, { type = "Bool", name = "Random Skins & Bodygroups", category = "Playermodels" } )
 CreateLambdaConvar( "lambdaplayers_lambda_enablemdlbodygroupsets", 1, true, false, false, "If Lambda Players that use a playermodel with bodygroup sets be spawned with them instead of randomized ones", 0, 1, { type = "Bool", name = "Enable Model Bodygroup Sets", category = "Playermodels" } )
@@ -182,6 +185,7 @@ CreateLambdaConvar( "lambdaplayers_lambda_nostepsndspeed", 125, true, false, fal
 CreateLambdaConvar( "lambdaplayers_lambda_overridegamemodehooks", 1, true, false, false, "If the addon is allowed to override the following GAMEMODE hooks to support Lambda Players: GM:PlayerDeath() GM:PlayerStartVoice() GM:PlayerEndVoice() GM:OnNPCKilled() GM:CreateEntityRagdoll() Default SandBox Scoreboard : Changing this requires you to restart the server/game for the changes to apply!", 0, 1, { type = "Bool", name = "Override Gamemode Hooks", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_callonnpckilledhook", 0, true, false, false, "If killed Lambda Players should call the OnNPCKilled hook. Best used with the Override Gamemode Hooks option!", 0, 1, { type = "Bool", name = "Call OnNPCKilled Hook On Death", category = "Lambda Server Settings" } )
 CreateLambdaConvar( "lambdaplayers_lambda_overridedeathnoticehook", 1, true, false, false, "If the addon is allowed to override the death notice hooks to support Lambda Players. This get rid of duplicate death notice appearing after Lambda Player either dies or kills someone : Changing this requires the Override Gamemode Hooks option to be enabled and you to restart the server/game for the changes to apply!", 0, 1, { type = "Bool", name = "Override Death Notice Hooks", category = "Lambda Server Settings" } )
+CreateLambdaConvar( "lambdaplayers_lambda_profilenorepeats", 1, true, false, false, "If Lambda Profiles should not repeat and remain unique", 0, 1, { type = "Bool", decimals = 0, name = "Profiles Don't Repeat", category = "Lambda Server Settings" } )
 --
 
 -- Combat Convars
@@ -207,6 +211,8 @@ CreateLambdaConvar( "lambdaplayers_combat_weapondmgmultiplier_players", 1, true,
 CreateLambdaConvar( "lambdaplayers_combat_weapondmgmultiplier_lambdas", 1, true, false, false, "Multiplies the damage that Lambda Player deals with its weapon to other Lambda Players", 0, 100, { type = "Slider", decimals = 2, name = "Weapon Damage Scale - Lambda Players", category = "Lambda Weapons" } )
 CreateLambdaConvar( "lambdaplayers_combat_weapondmgmultiplier_misc", 1, true, false, false, "Multiplies the damage that Lambda Player deals with its weapon to NPCs, Nextbots, and other types of entities", 0, 100, { type = "Slider", decimals = 2, name = "Weapon Damage Scale - Misc.", category = "Lambda Weapons" } )
 CreateLambdaConvar( "lambdaplayers_combat_allownadeusage", 0, true, false, false, "If Lambda Players are allowed to use and throw quick nades at their enemy.", 0, 1, { type = "Bool", name = "Allow Quick Nade Usage", category = "Lambda Weapons" } )
+CreateLambdaConvar( "lambdaplayers_combat_weaponmeleeonly", 0, true, false, false, "If Lambda Players should only use melee weapons.", 0, 1, { type = "Bool", name = "Only Use Melee Weapons", category = "Lambda Weapons" } )
+
 --
 
 -- Lambda Player Convars
@@ -260,6 +266,8 @@ CreateLambdaConvar( "lambdaplayers_text_typenameonrespond", 1, true, false, fals
 CreateLambdaConvar( "lambdaplayers_force_radius", 750, true, false, false, "The Distance for which Lambda Players are affected by Force Menu options.", 250, 25000, { type = "Slider", name = "Force Radius", decimals = 0, category = "Force Menu" } )
 CreateLambdaConvar( "lambdaplayers_force_spawnradiusply", 3000, true, false, false, "The Distance for which Lambda Players can spawn around the player. Set to 0 to disable.", 0, 25000, { type = "Slider", name = "Spawn Around Player Radius", decimals = 0, category = "Force Menu" } )
 CreateLambdaConvar( "lambdaplayers_lambda_spawnatplayerspawns", 0, true, false, false, "If spawned Lambda Players should spawn at player spawn points", 0, 1, { type = "Bool", name = "Spawn at Player Spawns", category = "Force Menu" } )
+CreateLambdaConvar( "lambdaplayers_lambda_spawnatplyheight", 0, true, false, false, "If spawned Lambda Players should spawn at the same height level as the player who triggered it?", 0, 1, { type = "Bool", name = "Spawn at Player Height", category = "Force Menu" } )
+CreateLambdaConvar( "lambdaplayers_lambda_spawnamount", 1, true, false, false, "How many Lambda Players should spawn when called?", 1, 12, { type = "Slider", decimals = 0, name = "Spawn Amount", category = "Force Menu" } )
 --
 
 -- DEBUGGING CONVARS. Server-side only
@@ -267,7 +275,6 @@ CreateLambdaConvar( "lambdaplayers_debug", 0, false, false, false, "Enables the 
 CreateLambdaConvar( "lambdaplayers_debughelper_drawscale", 0.1, true, true, false, "The Scale the Debug Helper should size at", 0, 1, { type = "Slider", decimals = 2, name = "Debug Helper Scale", category = "Debugging" } )
 CreateLambdaConvar( "lambdaplayers_debug_path", 0, false, false, false, "Draws Lambda Player's current path they're moving through.", 0, 1, { type = "Bool", name = "Enable Path Drawing", category = "Debugging" } )
 CreateLambdaConvar( "lambdaplayers_debug_eyetracing", 0, false, false, false, "Draws a line from Lambda Player's eye position to where they're looking at. Developer mode should be enabled.", 0, 1, { type = "Bool", name = "Enable Eyetracing Line", category = "Debugging" } )
-AddSourceConVarToSettings( "developer", "Enables Source's Developer mode", { type = "Bool", name = "Developer", category = "Debugging" } )
 --
 
 -- Note, Weapon allowing convars are located in the shared/globals.lua

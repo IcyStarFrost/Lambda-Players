@@ -1,14 +1,10 @@
 
-local LambdaIsValid = LambdaIsValid
 local table_insert = table.insert
 local table_Count = table.Count
 local RealTime = RealTime
 local IsValid = IsValid
 local CurTime = CurTime
-local FrameTime = FrameTime
 local math_Clamp = math.Clamp
-
-local sub = string.sub
 local Start3D2D = cam.Start3D2D
 local End3D2D = cam.End3D2D
 local surface_SetDrawColor = surface.SetDrawColor
@@ -17,19 +13,14 @@ local surface_DrawTexturedRect = surface.DrawTexturedRect
 local surface_PlaySound = surface.PlaySound
 local notification_AddLegacy = notification.AddLegacy
 local net = net
-local hook_Run = hook.Run
-local LocalPlayer = LocalPlayer
 local pairs = pairs
 local ipairs = ipairs
 local CreateClientProp = ents.CreateClientProp
-local ClientsideRagdoll = ClientsideRagdoll
 local EyeAngles = EyeAngles
 local EyePos = EyePos
 local istable = istable
-local tobool = tobool
 local sound_PlayFile = sound.PlayFile
 local coroutine_yield = coroutine.yield
-local origin = Vector()
 local cleanuptime = GetConVar( "lambdaplayers_corpsecleanuptime" )
 local cleaneffect = GetConVar( "lambdaplayers_corpsecleanupeffect" )
 local speaklimit = GetConVar( "lambdaplayers_voice_talklimit" )
@@ -164,8 +155,15 @@ local baseTeams = {
 
 _LAMBDAPLAYERS_VoiceChannels = {}
 
-local function PlaySoundFile( ent, soundName, index, origin, delay, is3d )
+local function PlaySoundFile( ent, soundName, index, origin, delay, is3d, fallback )
     if !IsValid( ent ) then return end
+
+    if !LocalPlayer():IsListenServerHost() and GetConVar( "lambdaplayers_lambda_downloadassets" ):GetBool() and !fallback and !file.Exists( soundName, "GAME" ) then
+        LambdaRequestFile( soundName, function( path )
+            PlaySoundFile( ent, "data/" .. path, index, origin, delay, is3d, true )
+        end )
+        return
+    end
 
     local talkLimit = speaklimit:GetInt()
     if talkLimit > 0 and table_Count( _LAMBDAPLAYERS_VoiceChannels ) >= talkLimit then return end
@@ -177,7 +175,7 @@ local function PlaySoundFile( ent, soundName, index, origin, delay, is3d )
     end
     if LambdaRunHook( "LambdaOnPlaySound", ent, soundName ) == true then return end
 
-    sound_PlayFile( "sound/" .. soundName, "noplay " .. ( is3d and "3d" or "" ), function( snd, errorId, errorName )
+    sound_PlayFile( soundName, "noplay " .. ( is3d and "3d" or "" ), function( snd, errorId, errorName )
         if errorId == 21 then
             if stereowarn:GetBool() then print( "Lambda Players Voice Chat Warning: Sound file " ..soundName .. " has a stereo track and won't be played in 3d. Sound will continue to play. You can disable these warnings in Lambda Player>Utilities" ) end
             PlaySoundFile( ent, soundName, index, origin, delay, false )
@@ -287,7 +285,6 @@ hook.Add( "Tick", "lambdavc_updatesounds", function()
         if !IsValid( ent ) or !IsValid( snd ) or !playTime and snd:GetState() == GMOD_CHANNEL_STOPPED then
             if IsValid( snd ) then snd:Stop() end
             if IsValid( lastSrcEnt ) then lastSrcEnt:LambdaMoveMouth( 0 ) end
-            if IsValid( ent ) then ent:SetVoiceLevel( 0 ) end
 
             _LAMBDAPLAYERS_VoiceChannels[ ent ] = nil
             continue
@@ -307,7 +304,6 @@ hook.Add( "Tick", "lambdavc_updatesounds", function()
 
         local leftC, rightC = snd:GetLevel()
         local voiceLvl = ( ( leftC + rightC ) / 2 )
-        ent:SetVoiceLevel( voiceLvl )
 
         local lastPos = sndData.LastSndPos
         if !srcEnt:IsDormant() then
@@ -492,6 +488,10 @@ local framerateconvar = GetConVar( "lambdaplayers_animatedpfpsprayframerate" )
 _LambdaMaterialSprayIndexes = ( _LambdaMaterialSprayIndexes or 0 )
 
 local function Spray( spraypath, tracehitpos, tracehitnormal, attemptedfallback )
+    if !spraypath and !attemptedfallback then
+        Spray( LambdaPlayerSprays[ LambdaRNG( #LambdaPlayerSprays ) ], tracehitpos, tracehitnormal, true )
+        return
+    end
     local material
 
     -- The file is a Valve Texture Format ( VTF )
@@ -614,7 +614,6 @@ net.Receive( "lambdaplayers_takeviewshot", function()
 
     local shotPos = net.ReadVector()
     local shotAng = net.ReadAngle()
-    local noPos = ( shotPos == vector_origin )
     local lambdaCorpse = nil
 
     local headBone = lambda:LookupBone( "ValveBiped.Bip01_Head1" )

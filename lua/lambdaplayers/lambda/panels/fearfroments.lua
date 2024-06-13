@@ -107,7 +107,22 @@ local function OpenNPCFearListPanel( ply )
         LAMBDAFS:RemoveVarFromKVFile( "lambdaplayers/npcstofear.json", class, "json" )
     end
 
-    LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/npcstofear.json", "json", function( data )
+    if !LocalPlayer():IsListenServerHost() then
+        LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/npcstofear.json", "json", function( data )
+            if !data then return end
+
+            for class, _ in pairs( data ) do
+                local listData = npcList[ class ]
+                local prettyName = ( listData and listData.Name or false )
+                npcListPanel:AddLine( ( prettyName and prettyName .. " (" .. class .. ")" or class ), class )
+
+                for _, panel in ipairs( npcIconLayout:GetChildren() ) do
+                    if panel:GetNPC() == class then panel:Remove() break end
+                end
+            end
+        end )
+    else 
+        local data = LAMBDAFS:ReadFile( "lambdaplayers/npcstofear.json", "json" )
         if !data then return end
 
         for class, _ in pairs( data ) do
@@ -119,7 +134,7 @@ local function OpenNPCFearListPanel( ply )
                 if panel:GetNPC() == class then panel:Remove() break end
             end
         end
-    end )
+    end
 end
 
 RegisterLambdaPanel( "Entities To Fear From", "Opens a panel that allows you to add a specific entity that Lambda Players will fear and run away from.\nNote that the list only has NPCs, but you can add any entity by its classname and it will work fine. YOU MUST UPDATE LAMBDA DATA AFTER ANY CHANGES! You must be a Super Admin to use this panel!", OpenNPCFearListPanel )

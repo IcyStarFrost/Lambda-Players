@@ -90,12 +90,12 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 
                             if phys:IsValid() then
                                 phys:EnableMotion( true )
-                                local dist = ( !lambda.l_physholdpos and ( wepent:GetPos() + wepent:GetForward() * lambda.l_physdistance ) or lambda.l_physholdpos ) - lambda.l_physgungrabbedent:GetPos()
+                                local dist = ( !lambda.l_physholdpos and ( wepent:GetPos() + wepent:GetUp() * lambda.l_physdistance ) or lambda.l_physholdpos ) - lambda.l_physgungrabbedent:GetPos()
                                 local dir = dist:GetNormalized()
 
                                 local speed = min( 5000 / 2, dist:Dot( dir ) * 5 ) * dir + lambda.l_physgungrabbedent:GetVelocity() * 0.5
                                 speed = max( min( 5000, speed:Dot( dir ) ), -1000 )
-                                    
+
                                 phys:SetVelocity( ( speed ) * dir )
 
                                 if lambda.l_physholdang then

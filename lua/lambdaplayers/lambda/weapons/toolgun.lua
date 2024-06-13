@@ -14,6 +14,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         dropentity = "gmod_tool",
 
         OnAttack = function( self, wepent, target )
+            if isentity( target ) and !IsValid( target ) then return end
 
             wepent:EmitSound( "weapons/airboat/airboat_gun_lastshot" .. LambdaRNG( 2 ) .. ".wav", 70, 100, 1, CHAN_WEAPON )
 

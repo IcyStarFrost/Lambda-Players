@@ -49,10 +49,17 @@ local function OpenPMBodyGroupSetsPanel( ply )
     LAMBDAPANELS:CreateLabel( "Left click on a set in a row on the left to copy the values from it, or right click to remove it. Setting the slider to -1 will make the model use a random skin or bodygroup from it.", frame, TOP )
 
     local mdlSetList = {}
-    LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/pmbodygroupsets.json", "json", function( data )
+
+    if !LocalPlayer():IsListenServerHost() then
+        LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/pmbodygroupsets.json", "json", function( data )
+            if !data then return end
+            mdlSetList = data
+        end )
+    else
+        local data = LAMBDAFS:ReadFile( "lambdaplayers/pmbodygroupsets.json", "json" )
         if !data then return end
         mdlSetList = data
-    end )
+    end
 
     local listPanel = LAMBDAPANELS:CreateBasicPanel( frame, LEFT )
     listPanel:SetSize( 100, 600 )

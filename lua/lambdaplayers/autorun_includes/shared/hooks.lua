@@ -1,19 +1,12 @@
-local CurTime = CurTime
 local IsValid = IsValid
 local ipairs = ipairs
-local table_remove = table.remove
 local RealTime = RealTime
-local isnumber = isnumber
 local isfunction = isfunction
 local LambdaScreenScale = LambdaScreenScale
-local Left = string.Left
-local match = string.match
 local gmatch = string.gmatch
 local RunString = RunString
 local ScrW = ScrW
 local ScrH = ScrH
-local IsValidRagdoll = util.IsValidRagdoll
-local invisClr = Color( 0, 0, 0, 0 )
 
 if SERVER then
 
@@ -40,7 +33,7 @@ if SERVER then
             local attacker = dmginfo:GetAttacker()
             if IsValid( attacker ) and attacker.IsLambdaPlayer then
                 if ent.IsUltrakillNextbot then
-                    dmginfo:SetDamage( ( ( dmginfo:GetDamage() / UltrakillBase.ConVars.TakeDmgMult:GetFloat() ) * UltrakillBase.ConVars.PlyDmgMult:GetFloat() ) * 10 )
+                    dmginfo:SetDamage( ( ( dmginfo:GetDamage() / UltrakillBase.ConVar_TakeDmgMult:GetFloat() ) * UltrakillBase.ConVar_PlyDmgMult:GetFloat() ) * 10 )
                 else
                     local class = ent:GetClass()
                     if class == "nb_klk_ryuko" or class == "nb_klk_satsuki" or class == "nb_klk_nui" then
@@ -79,7 +72,6 @@ if SERVER then
 
     --
 
-    local SimpleTimer = timer.Simple
     local ai_ignoreplayers = GetConVar( "ai_ignoreplayers" )
     local GetConVar = GetConVar
     local FindInSphere = ents.FindInSphere
@@ -224,7 +216,6 @@ if SERVER then
     --
 
     local ukParryConVar
-    local Clamp = math.Clamp
     local parryFlash = Color( 255, 255, 255, 40 )
 
     function UltrakillCheckParry( self, Dmg )
@@ -240,18 +231,44 @@ if SERVER then
         self:OnParry( Ply, Dmg )
     end
 
-    function UltrakillOnParryPlayer( Ply )
+    local function RefreshStamina( Ply )
+
+        local MaxStamina = GetConVar( "ultrakill_max_stamina" ):GetInt()
+        local Stamina = Ply:GetNW2Int( "AbilityStamina" )
+    
+        if Stamina >= MaxStamina then return end
+    
+        Ply:SetNW2Int( "AbilityStamina", math.Min( Stamina + 3, MaxStamina ) ) -- Cap Stamina Parry Regen at 3!
+        Ply.StaminaRegenTime = nil
+    
+        net.Start( "ULTRAKILL_UpdateStaminaCount" )
+    
+            net.WriteUInt( Ply:GetNW2Int( "AbilityStamina", MaxStamina ), 31 )
+            net.WriteBool( false )
+    
+        net.Send( Ply )
+    
+    end
+
+    function UltrakillBaseOnParryPlayer( Ply )
+
         if !Ply.IsLambdaPlayer then
             if UltrakillBase.UltrakillMechanicsInstalled then
                 RefreshStamina( Ply )
             end
             Ply:ScreenFade( SCREENFADE.IN, parryFlash, 0.1, 0.25 )
         end
-
-        local health, mHealth = Ply:Health(), Ply:GetMaxHealth()
-        Ply:SetHealth( health > mHealth and health or Clamp( mHealth, 0, mHealth - Ply:GetNW2Int( "UltrakillBase_HardDamage" ) ) )    
+    
+        local HP, MaxHP = Ply:Health(), Ply:GetMaxHealth()
+        local HardDamage = UltrakillBase.GetHardDamage( Ply )
+        local Healing = HP < MaxHP and MaxHP - HardDamage or HP
+    
+        Ply:SetHealth( Healing )
+        util.ScreenShake( Ply:GetPos(), 50, 1, 0.3, 10, true )
+    
+        UltrakillBase.SoundScript( "Ultrakill_HP", Ply:GetPos(), Ply )
+    
     end
-
     --
 
     -- Fixes ReAgdoll throwing errors when a ragdoll doesn't have bones it need to use (like head)
@@ -268,7 +285,7 @@ if SERVER then
 
         -- Feedbacker + "F" + Enemy = Parry
         if ent.IsUltrakillNextbot then
-            UltrakillBase.OnParryPlayer = UltrakillOnParryPlayer
+            UltrakillBase.OnParryPlayer = UltrakillBaseOnParryPlayer
             ent.CheckParry = UltrakillCheckParry
             return
         end
@@ -298,7 +315,7 @@ if SERVER then
                 ACTIVATOR = activator
                 CALLER = caller
 
-                if IsValid( activator ) && ( activator.IsLambdaPlayer or activator:IsPlayer() ) then
+                if IsValid( activator ) and ( activator.IsLambdaPlayer or activator:IsPlayer() ) then
                     TRIGGER_PLAYER = activator
                 end
             end
@@ -350,7 +367,11 @@ elseif CLIENT then
     local input_LookupBinding = input.LookupBinding
     local input_GetKeyCode = input.GetKeyCode
     local input_IsKeyDown = input.IsKeyDown
+    local surface_SetMaterial = surface.SetMaterial
+    local surface_SetDrawColor = surface.SetDrawColor
+    local surface_DrawTexturedRect = surface.DrawTexturedRect
 
+    local displayProfilePicture = GetConVar( "lambdaplayers_displayprofilepicture" )
     local displayArmor = GetConVar( "lambdaplayers_displayarmor" )
 
     -- The little name and health display when you look at Lambdas
@@ -361,7 +382,7 @@ elseif CLIENT then
         if LambdaIsValid( traceent ) and traceent.IsLambdaPlayer then
             local result = LambdaRunHook( "LambdaShowNameDisplay", traceent )
             if result == false then return end
-
+            
             local name = traceent:GetLambdaName()
             local color = traceent:GetDisplayColor()
             local hp = traceent:GetNW2Float( "lambda_health", "NAN" )
@@ -376,6 +397,13 @@ elseif CLIENT then
 
             DrawText( name, "lambdaplayers_displayname", ( sw / 2 ), ( sh / 1.95 ) , color, TEXT_ALIGN_CENTER )
             DrawText( tostring( hp ) .. "%", "lambdaplayers_healthfont", ( sw / hpW ), ( sh / 1.87 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), color, TEXT_ALIGN_CENTER)
+            
+            if displayProfilePicture:GetBool() then
+                traceent.l_name_display_mat_cache = traceent.l_name_display_mat_cache or traceent:GetPFPMat()
+                surface_SetMaterial( traceent.l_name_display_mat_cache )
+                surface_SetDrawColor(color_white)
+                surface_DrawTexturedRect( ( sw / 1.9 ) + ( #name * 2.5 ), ( sh / 2.1 ) + LambdaScreenScale( 1 + uiscale:GetFloat() ), LambdaScreenScale( 30 ), LambdaScreenScale( 30 ) )
+            end
         end
 
     end )
@@ -439,7 +467,6 @@ elseif CLIENT then
 
             local sndVol = 0
             local snd = vcData.Sound
-            local lastPlayTime = vcData.LastPlayTime
             if IsValid( snd ) and snd:GetState() == GMOD_CHANNEL_PLAYING then
                 local leftChan, rightChan = snd:GetLevel()
                 sndVol = ( ( leftChan + rightChan ) * 0.5 )

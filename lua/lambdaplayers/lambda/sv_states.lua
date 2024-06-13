@@ -9,7 +9,6 @@ local CurTime = CurTime
 local ceil = math.ceil
 local IsValid = IsValid
 local bit_band = bit.band
-local Vector = Vector
 local coroutine_wait = coroutine.wait
 local table_insert = table.insert
 local ignoreLambdas = GetConVar( "lambdaplayers_combat_dontrdmlambdas" )

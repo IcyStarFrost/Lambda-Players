@@ -30,7 +30,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if !IsValid( bolt ) then return end
 
             self.l_Clip = self.l_Clip - 1
-            self.l_WeaponUseCooldown = CurTime() + LambdaRNG( 0.4, 1.0, true )
+            self.l_WeaponUseCooldown = CurTime() + LambdaRNG( 0.4, 1.0, false )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )

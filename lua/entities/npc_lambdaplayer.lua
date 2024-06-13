@@ -112,7 +112,9 @@ end
     local lower = string.lower
     local gmatch = string.gmatch
     local string_Replace = string.Replace
+    local string_Explode = string.Explode
     local RealTime = RealTime
+    local table_remove = table.remove
     local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
     local maxHealth = GetConVar( "lambdaplayers_lambda_maxhealth" )
     local debugmode = GetConVar( "lambdaplayers_debug" )
@@ -127,7 +129,6 @@ end
     local noclipSpeed = GetConVar( "lambdaplayers_lambda_noclipspeed" )
     local jumpHeight = GetConVar( "lambdaplayers_lambda_jumpheight" )
     local silentStepsSpeed = GetConVar( "lambdaplayers_lambda_nostepsndspeed" )
-    local ignorePlys = GetConVar( "ai_ignoreplayers" )
     local sv_gravity = GetConVar( "sv_gravity" )
     local physUpdateTime = GetConVar( "lambdaplayers_lambda_physupdatetime" )
     local lethalWaters = GetConVar( "lambdaplayers_lambda_lethalwaters" )
@@ -144,6 +145,7 @@ end
     local fearRange = GetConVar( "lambdaplayers_fear_detectrange" )
     local animSprint = GetConVar( "AnimatedSprinting_enabled" )
     local mfeAllowed = GetConVar( "lambdaplayers_combat_mightyfootengaged" )
+    local profilesNoRepeat = GetConVar( "lambdaplayers_lambda_profilenorepeats" )
 --
 
 if CLIENT then
@@ -166,10 +168,18 @@ function ENT:Initialize()
     if SERVER then
 
         local spawnMdl = "models/player/kleiner.mdl"
+        local forceMdl = forcePlyMdl:GetString()
+        local cvarMdls = string_Explode( ',', forceMdl )
         if !self.l_NoRandomModel then
-            local forceMdl = forcePlyMdl:GetString()
-            if forceMdl != "" and IsValidModel( forceMdl ) then
-                spawnMdl = forceMdl
+
+            for i = #cvarMdls, 1, -1 do
+                if !IsValidModel( cvarMdls[ i ] ) then
+                    table_remove( cvarMdls, i )
+                end
+            end
+
+            if #cvarMdls > 0 then
+                spawnMdl = cvarMdls[ LambdaRNG( 1, #cvarMdls ) ]
             else
                 local mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels
                 if allowaddonmodels:GetBool() then
@@ -300,11 +310,8 @@ function ENT:Initialize()
         local rndpingrange = LambdaRNG( 150 )
         self:SetAvgPing( rndpingrange )  -- Our average ping we'll use for calculations
         self:SetPing( rndpingrange ) -- Our actual fake ping
-        self:SetSteamID64( 90071996842377216 + LambdaRNG( 10000000 ) )
         self:SetTextPerMinute( LambdaRNG( 4, 8 ) * 100 ) -- The amount of characters we can type within a minute
         self:SetTeam( 1001 )
-        self:SetNW2String( "lambda_steamid", "STEAM_0:0:" .. LambdaRNG( 200000000 ) )
-        self:SetNW2String( "lambda_ip", "192." .. LambdaRNG( 10, 200 ) .. "." .. LambdaRNG( 10 ).. "." .. LambdaRNG( 10, 200 ) .. ":27005" )
         self:SetNW2String( "lambda_state", "Idle" )
         self:SetNW2String( "lambda_laststate", "Idle" )
         self:SetNW2Int( "lambda_curanimgesture", -1 )
@@ -438,9 +445,9 @@ function ENT:Initialize()
         self:HandleAllValidNPCRelations()
         self:SetAllowFlashlight( true )
 
-        if LambdaPersonalProfiles and LambdaRNG( 0, 100 ) < profilechance:GetInt() then
+        if LambdaPersonalProfiles and LambdaRNG( 0, 100 ) <= profilechance:GetInt() then
             for k, v in RandomPairs( LambdaPersonalProfiles ) do
-                if self:IsNameOpen( k ) then
+                if !profilesNoRepeat:GetBool() or self:IsNameOpen( k ) then
                     self:SetLambdaName( k )
                 end
             end
@@ -548,18 +555,18 @@ function ENT:SetupDataTables()
     self:NetworkVar( "String", 1, "WeaponName" )
     self:NetworkVar( "String", 2, "ProfilePicture" )
 
-    self:NetworkVar( "Bool", 0, "Crouch" )
-    self:NetworkVar( "Bool", 1, "IsDead" )
-    self:NetworkVar( "Bool", 2, "Respawn" )
-    self:NetworkVar( "Bool", 3, "HasCustomDrawFunction" )
-    self:NetworkVar( "Bool", 4, "IsReloading" )
-    self:NetworkVar( "Bool", 5, "Run" )
-    self:NetworkVar( "Bool", 6, "NoClip" )
-    self:NetworkVar( "Bool", 7, "FlashlightOn" )
-    self:NetworkVar( "Bool", 8, "IsFiring" )
-    self:NetworkVar( "Bool", 9, "IsTyping" )
-    self:NetworkVar( "Bool", 10, "SlowWalk" )
-    self:NetworkVar( "Bool", 11, "AllowFlashlight" )
+    self:NetworkVar( "Bool", 0, "IsDead" )
+    self:NetworkVar( "Bool", 1, "HasCustomDrawFunction" )
+    self:NetworkVar( "Bool", 3, "AllowFlashlight" )
+    AccessorFunc( self, "l_noclip", "NoClip", FORCE_BOOL)
+    AccessorFunc( self, "l_isreloading", "IsReloading", FORCE_BOOL)
+    AccessorFunc( self, "l_respawn", "Respawn", FORCE_BOOL)
+    AccessorFunc( self, "l_crouch", "Crouch", FORCE_BOOL)
+    AccessorFunc( self, "l_run", "Run", FORCE_BOOL)
+    AccessorFunc( self, "l_isfiring", "IsFiring", FORCE_BOOL)
+    AccessorFunc( self, "l_istyping", "IsTyping", FORCE_BOOL)
+    AccessorFunc( self, "l_slowwalk", "SlowWalk", FORCE_BOOL)
+    
 
     self:NetworkVar( "Entity", 0, "WeaponENT" )
     self:NetworkVar( "Entity", 1, "Enemy" )
@@ -576,18 +583,17 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Int", 6, "AvgPing" )
     self:NetworkVar( "Int", 7, "Armor" )
     self:NetworkVar( "Int", 8, "MaxArmor" )
-    self:NetworkVar( "Int", 9, "SteamID64" )
-    self:NetworkVar( "Int", 10, "WalkSpeed" )
-    self:NetworkVar( "Int", 11, "RunSpeed" )
-    self:NetworkVar( "Int", 12, "CrouchSpeed" )
     self:NetworkVar( "Int", 13, "Team" )
-    self:NetworkVar( "Int", 14, "TextPerMinute" )
     self:NetworkVar( "Int", 15, "TextChance" )
     self:NetworkVar( "Int", 16, "SlowWalkSpeed" )
-
-    self:NetworkVar( "Float", 0, "LastSpeakingTime" )
-    self:NetworkVar( "Float", 1, "VoiceLevel" )
-    self:NetworkVar( "Float", 2, "PingUpdateTime" )
+    AccessorFunc( self, "l_crouchspeed", "CrouchSpeed", FORCE_NUMBER )
+    AccessorFunc( self, "l_walkspeed", "WalkSpeed", FORCE_NUMBER )
+    AccessorFunc( self, "l_runspeed", "RunSpeed", FORCE_NUMBER )
+    AccessorFunc( self, "l_textperminute", "TextPerMinute", FORCE_NUMBER )
+    AccessorFunc( self, "l_lastspeakingtime", "LastSpeakingTime", FORCE_NUMBER )
+    AccessorFunc( self, "l_pingupdatetime", "PingUpdateTime", FORCE_NUMBER )
+    self:SetLastSpeakingTime( 0 )
+    self:SetPingUpdateTime( CurTime() + 1 )
 
 end
 
@@ -682,11 +688,12 @@ function ENT:Think()
     local wepent = self:GetWeaponENT()
     
     -- Handle our ping rising or dropping
-    if curTime >= self:GetPingUpdateTime() then
+    if CLIENT and curTime >= self:GetPingUpdateTime() then
+        
         self:SetPingUpdateTime( curTime + 1 )
         
-        if ( SERVER or self:IsDormant() ) and LambdaRNG( 3 ) == 1 then
-            local curPing, avgPing = self:GetPing(), self:GetAvgPing()
+        if ( self:IsDormant() ) and LambdaRNG( 3 ) == 1 then
+            local avgPing = self:GetAvgPing()
             local newPing = Clamp( LambdaRNG( avgPing - ( avgPing / 2 ), avgPing + ( avgPing / ( LambdaRNG( 15, 20 ) * 0.1 ) ) ), 0, 999 )
             self:SetPing( newPing )
         end
@@ -1004,7 +1011,7 @@ function ENT:Think()
         -- UA, Universal Actions
         -- See sv_x_universalactions.lua
         if !isDisabled and curTime >= self.l_nextUA then
-            local UAfunc, UAname = table_Random( LambdaUniversalActions )
+            local UAfunc = table_Random( LambdaUniversalActions )
             UAfunc( self )
             self.l_nextUA = ( curTime + LambdaRNG( 1, 15 ) )
         end

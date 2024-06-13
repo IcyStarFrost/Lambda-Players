@@ -82,7 +82,21 @@ local function OpenNPCPanel( ply )
         LAMBDAPANELS:WriteServerFile( "lambdaplayers/npclist.json", classes, "json" ) 
     end
 
-    LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/npclist.json", "json", function( data )
+    if !LocalPlayer():IsListenServerHost() then
+        LAMBDAPANELS:RequestDataFromServer( "lambdaplayers/npclist.json", "json", function( data )
+            if !data then return end
+
+            for k, class in ipairs( data ) do
+                npclistpanel:AddLine( ( npclist[ class ] and npclist[ class ].Name or class ), class )
+
+                for _, pnl in pairs( npclayout:GetChildren() ) do
+                    if pnl:GetNPC() == class then pnl:Remove() break end 
+                end
+            end
+        
+        end )
+    else
+        local data = LAMBDAFS:ReadFile( "lambdaplayers/npclist.json", "json" )
         if !data then return end
 
         for k, class in ipairs( data ) do
@@ -92,8 +106,7 @@ local function OpenNPCPanel( ply )
                 if pnl:GetNPC() == class then pnl:Remove() break end 
             end
         end
-    
-    end )
+    end
 
 end
 RegisterLambdaPanel( "NPC Spawnlist", "Opens a panel that allows you to choose what NPCs Lambdas are allowed to spawn. You must be a Super Admin to use this Panel.", OpenNPCPanel )
