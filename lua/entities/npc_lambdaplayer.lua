@@ -1254,10 +1254,7 @@ function ENT:Think()
         local lookAng, lookPos = angle_zero, vector_origin
         local lookPoseOnly, lookEye = false, false
 
-        if self.l_issmoving and !locoVel:IsZero() then
-            if !eyeAttach then eyeAttach = self:GetAttachmentPoint( "eyes" ) end
-            lookPos = ( eyeAttach.Pos + ( locoVel * 2 ) )
-        elseif self.l_RndEyeTargPos then
+        if self.l_RndEyeTargPos and ( !self.l_issmoving or locoVel:IsZero() ) then
             lookPos = self.l_RndEyeTargPos
             lookEye = true
             lookPoseOnly = true
