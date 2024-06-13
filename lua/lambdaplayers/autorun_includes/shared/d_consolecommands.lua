@@ -104,16 +104,21 @@ CreateLambdaConsoleCommand( "lambdaplayers_cmd_cacheassets", function( ply )
     if IsValid( ply ) and !ply:IsAdmin() then return end
 
     -- Cache player models
-    for k,v in pairs( player_manager.AllValidModels() ) do util_PrecacheModel( v ) end
-
-    -- Cache weapon assets
-    for k, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
-        if data.model then
-            util_PrecacheModel( data.model )
-        end
+    for _, mdl in ipairs( _LAMBDAPLAYERS_AllPlayermodels ) do
+        util_PrecacheModel( mdl )
     end
 
-    LambdaPlayers_Notify( ply, " Lambda assets cached!", 0, "plats/elevbell1.wav" )
+    -- Cache weapon assets
+    for _, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
+        if data.nodraw then continue end
+
+        local mdl = data.model
+        if !mdl then continue end
+
+        util_PrecacheModel( mdl )
+    end
+
+    LambdaPlayers_Notify( ply, "Lambda assets cached!", 0, "plats/elevbell1.wav" )
 end, false, "WARNING: Your game will freeze for a few seconds. This will vary on the amount of assets you have installed.", { name = "Cache Assets", category = "Utilities" } )
 
 CreateLambdaConsoleCommand( "lambdaplayers_cmd_debugtogglegod", function( ply )

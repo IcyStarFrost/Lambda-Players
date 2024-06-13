@@ -165,21 +165,21 @@ function ENT:Initialize()
     -- Has to be here so the client can run this too. Originally was under Personal Stats
     self:BuildPersonalityTable() -- Builds all personality chances from autorun_includes/shared/lambda_personalityfuncs.lua for use in chance testing and creates Get/Set functions for each one
 
-    if SERVER then
+    if ( SERVER ) then
 
         local spawnMdl = "models/player/kleiner.mdl"
-        local forceMdl = forcePlyMdl:GetString()
-        local cvarMdls = string_Explode( ',', forceMdl )
         if !self.l_NoRandomModel then
+            local forceMdl = forcePlyMdl:GetString()
+            local cvarMdls = string_Explode( ',', forceMdl )
 
-            for i = #cvarMdls, 1, -1 do
-                if !IsValidModel( cvarMdls[ i ] ) then
-                    table_remove( cvarMdls, i )
-                end
+            local rndMdl = nil
+            for _, mdl in RandomPairs( cvarMdls ) do
+                if !IsValidModel( mdl ) then continue end
+                rndMdl = mdl; break
             end
 
-            if #cvarMdls > 0 then
-                spawnMdl = cvarMdls[ LambdaRNG( 1, #cvarMdls ) ]
+            if rndMdl then
+                spawnMdl = rndMdl
             else
                 local mdlTbl = _LAMBDAPLAYERS_DefaultPlayermodels
                 if allowaddonmodels:GetBool() then
@@ -557,7 +557,7 @@ function ENT:SetupDataTables()
 
     self:NetworkVar( "Bool", 0, "IsDead" )
     self:NetworkVar( "Bool", 1, "HasCustomDrawFunction" )
-    self:NetworkVar( "Bool", 3, "AllowFlashlight" )
+    self:NetworkVar( "Bool", 2, "AllowFlashlight" )
     AccessorFunc( self, "l_noclip", "NoClip", FORCE_BOOL)
     AccessorFunc( self, "l_isreloading", "IsReloading", FORCE_BOOL)
     AccessorFunc( self, "l_respawn", "Respawn", FORCE_BOOL)
@@ -1427,7 +1427,6 @@ function ENT:Think()
             elseif !isAtLight then
                 self.l_flashlighton = true
             end
-            self:SetFlashlightOn( self.l_flashlighton )
         end
 
         local flashlight = self.l_flashlight
