@@ -136,6 +136,30 @@ local function InstallMPConVarHandling( PANEL, convar, paneltype, isserverside )
     end
 end
 
+-- For some reason the panel:ToolPresets() function just fails to load any custom presets on its own.
+-- We have to do it ourselves.
+local function ControlPreset( group, cvarlist, panel)
+    local preset = vgui.Create( "ControlPresets", panel )
+
+    preset:SetPreset( group )
+
+    local presets = file.Find( "settings/presets/" .. group .. "/*", "GAME" )
+
+    preset:AddOption( "#preset.default", cvarlist )
+
+    for k, file_ in ipairs( presets ) do
+        local name = string.StripExtension( string.sub( file_, 3 ) )
+        local tbl = util.KeyValuesToTable( file.Read( "settings/presets/" .. group .. "/" .. file_, "GAME" ) )
+        preset:AddOption( name, tbl )
+    end
+
+    for k, v in pairs( cvarlist ) do
+        preset:AddConVar( k )
+    end
+
+    panel:AddItem( preset )
+end
+
 local function AddLambdaPlayersOptions()
     local categories = {}
     for _, v in ipairs( _LAMBDAConVarSettings ) do -- See convars.lua 
@@ -231,13 +255,14 @@ local function AddLambdaPlayersOptions()
             end
             
             if foundCls then
-                panel:ToolPresets( "lambdaclientcvarpreset_" .. categoryname, clientList )
+                ControlPreset( "lambdaclientcvarpreset_" .. categoryname, clientList, panel )
                 local clPresetInfo = panel:ControlHelp( "Client (User) Preset:" )
                 clPresetInfo:SetColor( clientcolor )
             end
 
             if foundSvs then
-                panel:ToolPresets( "lambdaservercvarpreset_" .. categoryname, serverList )
+                ControlPreset( "lambdaservercvarpreset_" .. categoryname, serverList, panel )
+                --panel:ToolPresets( "lambdaservercvarpreset_" .. categoryname, serverList )
                 local svPresetInfo = panel:ControlHelp( "Server (Admin) Preset:" )
                 svPresetInfo:SetColor( servercolor )
             end

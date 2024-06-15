@@ -29,6 +29,8 @@ Color( 179, 107, 0)
 
 -- Fixed Lambdas not pathfinding up stairs
 
+-- Fixed an issue where presets would no longer show up when joining a new session after creating one.
+
 /e
 Color( 0, 140, 255)
 ---- (Pyri) Pull Request #125 ----
