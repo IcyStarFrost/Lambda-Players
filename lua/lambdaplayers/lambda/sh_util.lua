@@ -674,8 +674,8 @@ if SERVER then
     -- We use both NW2 and NW because in multiplayer NW2 sometimes fails so we use NW as a backup
     function ENT:UpdateHealthDisplay( overrideHP )
         overrideHP = overrideHP or self:Health()
-        self:SetNW2Float( "lambda_health", overrideHP )
-        self:SetNWFloat( "lambda_health", overrideHP )
+        self:SetNW2Float( "lambda_health", math.Round( overrideHP ) )
+        self:SetNWFloat( "lambda_health", math.Round( overrideHP ) )
     end
 
     -- Gets a name that is currently not being used.
