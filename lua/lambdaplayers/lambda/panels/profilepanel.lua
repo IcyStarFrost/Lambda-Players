@@ -410,7 +410,7 @@ local function OpenProfilePanel( ply )
     local favoriteweapon = "none"
     LAMBDAPANELS:CreateButton( mainscroll, TOP, "Select Favorite Weapon", function()
         LambdaWeaponSelectPanel( favoriteweapon, function( selectedWep )
-            favoriteweapon = favoriteweapon
+            favoriteweapon = selectedWep
         end, true )
     end )
 
