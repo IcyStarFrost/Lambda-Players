@@ -31,6 +31,8 @@ Color( 179, 107, 0)
 
 -- Fixed an issue where presets would no longer show up when joining a new session after creating one.
 
+-- Updated the default size of the Profile Panel
+
 /e
 Color( 0, 140, 255)
 ---- (Pyri) Pull Request #125 ----
