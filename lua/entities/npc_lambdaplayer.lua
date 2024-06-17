@@ -318,7 +318,7 @@ function ENT:Initialize()
 
         -- Randomize my model's skingroup and bodygroups
         if rndBodyGroups:GetBool() then
-            local mdlSets = LambdaPlayermodelBodySkinSets[ spawnMdl ]
+            local mdlSets = LambdaPlayermodelBodySkinSets[ lower( spawnMdl ) ]
             if mdlSets and #mdlSets != 0 and allowMdlBgSets:GetBool() then
                 local rndSet = mdlSets[ LambdaRNG( #mdlSets ) ]
 

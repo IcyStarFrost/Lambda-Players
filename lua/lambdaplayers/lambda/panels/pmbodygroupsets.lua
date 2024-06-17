@@ -288,7 +288,7 @@ local function OpenPMBodyGroupSetsPanel( ply )
         
         table_Empty( mdlIcons )
         for _, mdl in SortedPairs( validMdls ) do
-            if filter and filter( mdl ) == true then continue end
+            if filter and filter( lower( mdl ) ) == true then continue end
             CreateModelButton( mdl )
         end
         
