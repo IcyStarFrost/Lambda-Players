@@ -797,16 +797,12 @@ function ENT:PathGenerator( canUpdate, isLambdaCheck )
         if !isInNoClip then
             if !IsValid( ladder ) then
                 local deltaZ = CNavArea_ComputeAdjacentConnectionHeightChange( fromArea, area )
-                if !areaPos:IsUnderwater() then
-                    local height = -deltaZ
-                    local fallDamage = self:GetFallDamageFromHeight( height )
+                if !areaPos:IsUnderwater() then                    
+                    local fallDamage = self:GetFallDamageFromHeight( -deltaZ )
                     if fallDamage > 0 then
-                        if fallDamage >= thirdHealth then
-                            return -1
-                        end
+                        if fallDamage >= thirdHealth then return -1 end
                         cost = ( cost + dist * ( fallDamage * 2 ) )
                     end
-                    --cost = ( cost + dist * LambdaRNG( height * 0.5, height ) )
                 end
 
                 if !fromPos:IsUnderwater() then
