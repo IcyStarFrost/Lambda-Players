@@ -806,7 +806,7 @@ function ENT:PathGenerator( canUpdate, isLambdaCheck )
                         end
                         cost = ( cost + dist * ( fallDamage * 2 ) )
                     end
-                    cost = ( cost + dist * LambdaRNG( height * 0.5, height ) )
+                    --cost = ( cost + dist * LambdaRNG( height * 0.5, height ) )
                 end
 
                 if !fromPos:IsUnderwater() then

@@ -30,7 +30,7 @@ end
 local function OpenProfilePanel( ply )
     if !IsValid( ply ) then return end
 
-    local frame = LAMBDAPANELS:CreateFrame( "Profile Editor", 700, 350 )
+    local frame = LAMBDAPANELS:CreateFrame( "Profile Editor", ScrW() * 0.7, ScrH() * 0.5 )
 
     function frame:OnClose()
         chat.AddText( "Remember to Update Lambda Data after any changes!" )
@@ -410,7 +410,7 @@ local function OpenProfilePanel( ply )
     local favoriteweapon = "none"
     LAMBDAPANELS:CreateButton( mainscroll, TOP, "Select Favorite Weapon", function()
         LambdaWeaponSelectPanel( favoriteweapon, function( selectedWep )
-            favoriteweapon = favoriteweapon
+            favoriteweapon = selectedWep
         end, true )
     end )
 
