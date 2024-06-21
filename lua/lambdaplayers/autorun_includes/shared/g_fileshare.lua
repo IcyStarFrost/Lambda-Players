@@ -77,7 +77,7 @@ elseif CLIENT then
     local datachunks = {} -- Table holding in progress data chunks
 
     -- Clear the fileshare folder on load to save storage
-    for k, v in ipairs( file.Find( "lambdaplayers/fileshare", "DATA" ) ) do
+    for k, v in ipairs( file.Find( "lambdaplayers/fileshare/*", "DATA" ) ) do
         file.Delete( "lambdaplayers/fileshare/" .. v, "DATA" )
     end
 
