@@ -1,4 +1,4 @@
-_LambdaAddonVersion = "V1.0.6"
+_LambdaAddonVersion = "V1.0.7"
 _LambdaAddonNotes = [[
 
 Color( 179, 107, 0)
@@ -18,7 +18,7 @@ Color( 179, 107, 0)
 
 -- Fixed major performance problems when looking at the default scoreboard
 
--- Added Experimental Asset Downloading to network voice lines and PFPs to players. Option located at Lambda Players > Utilities > Allow Sharing Files
+-- Added Experimental Asset Downloading to network voice lines, PFPs, and sprays to players. Option located at Lambda Players > Utilities > Allow Sharing Files
 /e
 Color( 179, 107, 0)
 -- Considerable performance improvement by the removal of several constantly networked variables

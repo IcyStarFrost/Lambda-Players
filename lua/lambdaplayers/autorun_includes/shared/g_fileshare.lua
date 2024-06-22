@@ -1,5 +1,7 @@
 -- TODO: Make this work with sprays
 
+local bandwidth = GetConVar( "lambdaplayers_lambda_filesharing_networkspeed" )
+
 -- Purpose of this system here is to network files such as voice lines and pfps so other clients can hear and see them without the need of addons
 if SERVER then
 
@@ -12,7 +14,7 @@ if SERVER then
         for i = 0, #data do
             buffer[ #buffer + 1 ] = string.sub( data, i, i )
                     
-            if #buffer == 10000 then
+            if #buffer == bandwidth:GetInt() then
                 result[ #result + 1 ] = table.concat( buffer )
                     index = index + 1
                 buffer = {}
@@ -24,11 +26,21 @@ if SERVER then
         return result
     end
 
+    local active_streams = {}
+
+    -- Stop the specified data sharing as the client requested
+    net.Receive( "lambdaplayers_cancelfiletransfer", function( len, ply )
+        local filepath = net.ReadString()
+        active_streams[ ply ][ filepath ] = nil
+    end )
+
     net.Receive( "lambdaplayers_sendfile", function( len, ply )
         local filepath = net.ReadString()
         local bytes = 0
 
         -- Read the file in binary mode. For some reason file.Read() is restricted(?) from reading the sounds folder. I presume it's the same for materials
+        print( "Lambda Players Net: Reading data from " .. filepath .. " for transfer to " .. ply:Name() .. " | " .. ply:SteamID() )
+
         local file_ = file.Open( filepath, "rb", "GAME" )
 
         data = file_:Read()
@@ -43,6 +55,15 @@ if SERVER then
             
             print( "Lambda Players Net: Preparing to send data from " .. filepath .. " to " .. ply:Name() .. " | " .. ply:SteamID() )
 
+            active_streams[ ply ] = active_streams[ ply ] or {}
+
+            if active_streams[ ply ][ filepath ] then 
+                print( "Lambda Players Net: Aborting! Client is already being sent " .. filepath .. "!" )
+                return 
+            end
+
+            active_streams[ ply ][ filepath ] = true
+
             LambdaCreateThread( function()
                 
                 -- Compress the data to speed up file transfer over the network
@@ -51,12 +72,19 @@ if SERVER then
 
                 -- Send each chunk to the client that sent the net message
                 for k, block in ipairs( chunks ) do
+                    if !active_streams[ ply ][ filepath ] then
+                        print( "Lambda Players Net: Aborting! " .. ply:Name() .. " | " .. ply:SteamID() .. " Requested net streaming for " .. filepath .. " to cease!" )
+                        return
+                    end
+
+                    print( "Lambda Players Net: Sent " .. #block .. " bytes (" .. ( math.Round( k / #chunks * 100, 0 ) ) .. "%) to " .. ply:Name() .. " | " .. ply:SteamID() )
 
                     net.Start( "lambdaplayers_sendfile" )
                     net.WriteUInt( #block, 32 )
                     net.WriteData( block, #block )
                     net.WriteBool( k == #chunks )
                     net.WriteString( filepath )
+                    net.WriteString( math.Round( k / #chunks * 100, 0 ) .. "%" )
                     net.Send( ply )
 
                     bytes = bytes + #block
@@ -82,13 +110,15 @@ elseif CLIENT then
     end
 
     -- Function to request files RESTRICTED to sound and material folder
-    function LambdaRequestFile( filepath, callback )
+
+    -- If continue_callback is provided a function, if the function returns false, the data stream will be terminated.
+    function LambdaRequestFile( filepath, callback, continue_callback )
         if requestedfiles[ filepath ] then return end
         if file.Exists( "lambdaplayers/fileshare/" .. string.Replace( filepath, "/", "" ), "DATA" ) then -- Already exists.
             return "lambdaplayers/fileshare/" .. string.Replace( filepath, "/", "" )
         end
 
-        requestedfiles[ filepath ] = callback
+        requestedfiles[ filepath ] = { callback, continue_callback }
 
         net.Start( "lambdaplayers_sendfile" )
         net.WriteString( filepath )
@@ -101,6 +131,22 @@ elseif CLIENT then
         local data = net.ReadData( size )
         local isdone = net.ReadBool()
         local filepath = net.ReadString()
+        local percent_done = net.ReadString()
+
+        hook.Add( "Think", "lambdaplayers_fileshare_" .. filepath, function()
+            local should_continue = requestedfiles[ filepath ][ 2 ] and requestedfiles[ filepath ][ 2 ]() or !requestedfiles[ filepath ][ 2 ] and true
+            if should_continue == false then
+                print( "Lambda Players Net: Aborting request for " .. filepath )
+                net.Start( "lambdaplayers_cancelfiletransfer" )
+                net.WriteString( filepath )
+                net.SendToServer()
+                hook.Remove( "Think", "lambdaplayers_fileshare_" .. filepath )
+                return
+            end
+        end )
+        local should_continue = requestedfiles[ filepath ][ 2 ] and requestedfiles[ filepath ][ 2 ]() or true
+        print( "Lambda Players Net: Received " .. size .. " bytes (" .. percent_done .. ") for " .. filepath, should_continue )
+
 
         -- Build the chunks together
         local holder = datachunks[ filepath ] or ""
@@ -109,6 +155,7 @@ elseif CLIENT then
 
         -- Decompress, write to a file, and return the file path to the callback
         if isdone then
+            hook.Remove( "Think", "lambdaplayers_fileshare_" .. filepath )
             local uncompressed = util.Decompress( datachunks[ filepath ] )
             datachunks[ filepath ] = nil 
 
@@ -118,7 +165,7 @@ elseif CLIENT then
 
             print( "Lambda Players Net: Created file in ", "lambdaplayers/fileshare/" .. string.Replace( filepath, "/", "" ))
 
-            requestedfiles[ filepath ]( "lambdaplayers/fileshare/" .. string.Replace( filepath, "/", "" ) )
+            requestedfiles[ filepath ][ 1 ]( "lambdaplayers/fileshare/" .. string.Replace( filepath, "/", "" ) )
             requestedfiles[ filepath ] = nil
         end
 

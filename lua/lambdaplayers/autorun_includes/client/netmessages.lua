@@ -485,11 +485,19 @@ local Material = Material
 local color_white = color_white
 local DecalEx = util.DecalEx
 local framerateconvar = GetConVar( "lambdaplayers_animatedpfpsprayframerate" )
+local fileshare = GetConVar( "lambdaplayers_lambda_allowfilesharing" )
 _LambdaMaterialSprayIndexes = ( _LambdaMaterialSprayIndexes or 0 )
 
+--LambdaRequestFile( filepath, callback )
 local function Spray( spraypath, tracehitpos, tracehitnormal, attemptedfallback )
-    if !spraypath and !attemptedfallback then
-        Spray( LambdaPlayerSprays[ LambdaRNG( #LambdaPlayerSprays ) ], tracehitpos, tracehitnormal, true )
+    if !spraypath and !attemptedfallback or ( !file.Exists( "materials/" .. spraypath, "GAME" ) and !file.Exists( spraypath, "DATA" ) ) then
+        if !fileshare:GetBool() then
+            Spray( LambdaPlayerSprays[ LambdaRNG( #LambdaPlayerSprays ) ], tracehitpos, tracehitnormal, true )
+        else
+            LambdaRequestFile( "materials/" .. spraypath, function( path )
+                Spray( "../data/" .. path, tracehitpos, tracehitnormal, true )
+            end )
+        end
         return
     end
     local material
