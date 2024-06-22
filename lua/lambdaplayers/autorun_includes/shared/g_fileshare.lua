@@ -1,6 +1,7 @@
 -- TODO: Make this work with sprays
 
 local bandwidth = GetConVar( "lambdaplayers_lambda_filesharing_networkspeed" )
+local debug_mode = GetConVar( "lambdaplayers_debug" )
 
 -- Purpose of this system here is to network files such as voice lines and pfps so other clients can hear and see them without the need of addons
 if SERVER then
@@ -39,8 +40,9 @@ if SERVER then
         local bytes = 0
 
         -- Read the file in binary mode. For some reason file.Read() is restricted(?) from reading the sounds folder. I presume it's the same for materials
-        print( "Lambda Players Net: Reading data from " .. filepath .. " for transfer to " .. ply:Name() .. " | " .. ply:SteamID() )
-
+        if debug_mode:GetBool() then
+            print( "Lambda Players Net: Reading data from " .. filepath .. " for transfer to " .. ply:Name() .. " | " .. ply:SteamID() )
+        end
         local file_ = file.Open( filepath, "rb", "GAME" )
 
         data = file_:Read()
@@ -52,13 +54,13 @@ if SERVER then
 
         -- Do not trust the client
         if string.StartWith( filepath, "sound/lambdaplayers/" ) or string.StartWith( filepath, "materials/lambdaplayers/" ) then
-            
-            print( "Lambda Players Net: Preparing to send data from " .. filepath .. " to " .. ply:Name() .. " | " .. ply:SteamID() )
-
+            if debug_mode:GetBool() then
+                print( "Lambda Players Net: Preparing to send data from " .. filepath .. " to " .. ply:Name() .. " | " .. ply:SteamID() )
+            end
             active_streams[ ply ] = active_streams[ ply ] or {}
 
             if active_streams[ ply ][ filepath ] then 
-                print( "Lambda Players Net: Aborting! Client is already being sent " .. filepath .. "!" )
+                if debug_mode:GetBool() then print( "Lambda Players Net: Aborting! Client is already being sent " .. filepath .. "!" ) end
                 return 
             end
 
@@ -73,11 +75,15 @@ if SERVER then
                 -- Send each chunk to the client that sent the net message
                 for k, block in ipairs( chunks ) do
                     if !active_streams[ ply ][ filepath ] then
-                        print( "Lambda Players Net: Aborting! " .. ply:Name() .. " | " .. ply:SteamID() .. " Requested net streaming for " .. filepath .. " to cease!" )
+                        if debug_mode:GetBool() then
+                            print( "Lambda Players Net: Aborting! " .. ply:Name() .. " | " .. ply:SteamID() .. " Requested net streaming for " .. filepath .. " to cease!" )
+                        end
                         return
                     end
 
-                    print( "Lambda Players Net: Sent " .. #block .. " bytes (" .. ( math.Round( k / #chunks * 100, 0 ) ) .. "%) to " .. ply:Name() .. " | " .. ply:SteamID() )
+                    if debug_mode:GetBool() then
+                        print( "Lambda Players Net: Sent " .. #block .. " bytes (" .. ( math.Round( k / #chunks * 100, 0 ) ) .. "%) to " .. ply:Name() .. " | " .. ply:SteamID() )
+                    end
 
                     net.Start( "lambdaplayers_sendfile" )
                     net.WriteUInt( #block, 32 )
@@ -91,8 +97,9 @@ if SERVER then
                     coroutine.wait( 0.3 )
                 end
                 
-            
-                print( "Lambda Players Net: Sent " .. string.NiceSize( bytes ) .. " to " .. ply:Name() .. " | " .. ply:SteamID() )
+                if debug_mode:GetBool() then
+                    print( "Lambda Players Net: Sent " .. string.NiceSize( bytes ) .. " to " .. ply:Name() .. " | " .. ply:SteamID() )
+                end
             end )
 
         end
@@ -136,7 +143,9 @@ elseif CLIENT then
         hook.Add( "Think", "lambdaplayers_fileshare_" .. filepath, function()
             local should_continue = requestedfiles[ filepath ][ 2 ] and requestedfiles[ filepath ][ 2 ]() or !requestedfiles[ filepath ][ 2 ] and true
             if should_continue == false then
-                print( "Lambda Players Net: Aborting request for " .. filepath )
+                if debug_mode:GetBool() then
+                    print( "Lambda Players Net: Aborting request for " .. filepath )
+                end
                 net.Start( "lambdaplayers_cancelfiletransfer" )
                 net.WriteString( filepath )
                 net.SendToServer()
@@ -145,8 +154,9 @@ elseif CLIENT then
             end
         end )
         local should_continue = requestedfiles[ filepath ][ 2 ] and requestedfiles[ filepath ][ 2 ]() or true
-        print( "Lambda Players Net: Received " .. size .. " bytes (" .. percent_done .. ") for " .. filepath, should_continue )
-
+        if debug_mode:GetBool() then
+            print( "Lambda Players Net: Received " .. size .. " bytes (" .. percent_done .. ") for " .. filepath, should_continue )
+        end
 
         -- Build the chunks together
         local holder = datachunks[ filepath ] or ""
@@ -163,8 +173,10 @@ elseif CLIENT then
             file_:Write( uncompressed )
             file_:Close()
 
-            print( "Lambda Players Net: Created file in ", "lambdaplayers/fileshare/" .. string.Replace( filepath, "/", "" ))
-
+            if debug_mode:GetBool() then
+                print( "Lambda Players Net: Created file in ", "lambdaplayers/fileshare/" .. string.Replace( filepath, "/", "" ))
+            end
+            
             requestedfiles[ filepath ][ 1 ]( "lambdaplayers/fileshare/" .. string.Replace( filepath, "/", "" ) )
             requestedfiles[ filepath ] = nil
         end
