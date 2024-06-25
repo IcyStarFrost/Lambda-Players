@@ -384,13 +384,10 @@ function ENT:SwitchToRandomWeapon( returnOnly )
     local hasFavWep = false
 
     local wepRestricts = self.l_WeaponRestrictions
+    local meleeOnly = meleeonly:GetBool()
     for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
         if wepRestricts and !wepRestricts[ name ] and !freeRestrictWeps[ name ] then continue end
-        if !meleeonly:GetBool() then
-            if name == curWep or data.cantbeselected or !self:CanEquipWeapon( name ) then continue end
-        elseif meleeonly:GetBool() then
-            if name == curWep or !data.ismelee or data.cantbeselected or !self:CanEquipWeapon( name ) then continue end
-        end
+        if name == curWep or data.cantbeselected or meleeOnly and !data.ismelee or !self:CanEquipWeapon( name ) then continue end
 
         if !hasFavWep then hasFavWep = ( name == favWep ) end
         wepList[ #wepList + 1 ] = name
@@ -410,13 +407,10 @@ function ENT:SwitchToLethalWeapon()
     local hasFavWep = false
 
     local wepRestricts = self.l_WeaponRestrictions
+    local meleeOnly = meleeonly:GetBool()
     for name, data in pairs( _LAMBDAPLAYERSWEAPONS ) do
         if wepRestricts and !wepRestricts[ name ] and !freeRestrictWeps[ name ] then continue end
-        if !meleeonly:GetBool() then
-            if name == curWep or !data.islethal or data.cantbeselected or !self:CanEquipWeapon( name ) then continue end
-        elseif meleeonly:GetBool() then
-            if name == curWep or !data.islethal or !data.ismelee or data.cantbeselected or !self:CanEquipWeapon( name ) then continue end
-        end
+        if name == curWep or data.cantbeselected or !data.islethal or meleeOnly and !data.ismelee or !self:CanEquipWeapon( name ) then continue end
 
         if !hasFavWep then hasFavWep = ( name == favWep ) end
         wepList[ #wepList + 1 ] = name

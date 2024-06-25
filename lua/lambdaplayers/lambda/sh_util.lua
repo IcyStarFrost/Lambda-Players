@@ -36,6 +36,7 @@ local EndsWith = string.EndsWith
 local tobool = tobool
 local isstring = isstring
 local string_sub = string.sub
+local string_lower = string.lower
 local next = next
 local floor = math.floor
 local table_concat = table.concat
@@ -801,7 +802,7 @@ if SERVER then
         self:SetModel( mdl )
 
         if !noBodygroups and rndBodyGroups:GetBool() then
-            local mdlSets = LambdaPlayermodelBodySkinSets[ mdl ]
+            local mdlSets = LambdaPlayermodelBodySkinSets[ string_lower( mdl ) ]
             if mdlSets and #mdlSets != 0 and allowMdlBgSets:GetBool() then
                 local rndSet = mdlSets[ LambdaRNG( #mdlSets ) ]
 

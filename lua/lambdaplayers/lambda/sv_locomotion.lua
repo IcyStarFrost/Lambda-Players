@@ -55,15 +55,21 @@ function ENT:MoveToPos( pos, options )
 
     self.l_issmoving = true
     options = ( options or {} )
-
+    
     local overridePath, overrideOptions = LambdaRunHook( "LambdaOnBeginMove", self, movePos, true, options )
-    if overridePath then movePos = overridePath end
+    if overridePath then 
+        movePos = ( isvector( overridePath ) and overridePath or ( IsValid( overridePath ) and overridePath:GetPos() or nil ) )
+        if !movePos then 
+            self.l_issmoving = false
+            return "failed"
+        end
+    end
     if overrideOptions then options = overrideOptions end
 
     local costFunctor = self:PathGenerator( options.update )
     local path = Path( "Follow" )
 
-    path:Compute( self, overridePath or movePos, costFunctor )
+    path:Compute( self, movePos, costFunctor )
     if !IsValid( path ) then self.l_issmoving = false; return "failed" end
 
     path:SetGoalTolerance( options.tol or 20 )
@@ -791,16 +797,12 @@ function ENT:PathGenerator( canUpdate, isLambdaCheck )
         if !isInNoClip then
             if !IsValid( ladder ) then
                 local deltaZ = CNavArea_ComputeAdjacentConnectionHeightChange( fromArea, area )
-                if !areaPos:IsUnderwater() then
-                    local height = -deltaZ
-                    local fallDamage = self:GetFallDamageFromHeight( height )
+                if !areaPos:IsUnderwater() then                    
+                    local fallDamage = self:GetFallDamageFromHeight( -deltaZ )
                     if fallDamage > 0 then
-                        if fallDamage >= thirdHealth then
-                            return -1
-                        end
+                        if fallDamage >= thirdHealth then return -1 end
                         cost = ( cost + dist * ( fallDamage * 2 ) )
                     end
-                    --cost = ( cost + dist * LambdaRNG( height * 0.5, height ) )
                 end
 
                 if !fromPos:IsUnderwater() then

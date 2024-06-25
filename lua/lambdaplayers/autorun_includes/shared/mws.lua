@@ -129,6 +129,11 @@ local ents_Create = ents.Create
 local GetAllNavAreas = navmesh.GetAllNavAreas
 local IsNavmeshLoaded = navmesh.IsLoaded
 local util_TraceHull = util.TraceHull
+local stuckTr = {
+    mins = Vector( -16, -16, 0 ),
+    maxs = Vector( 16, 16, 72 ),
+    mask = MASK_PLAYERSOLID
+}
 
 local SpawnedLambdaPlayers = {}
 local shutdown = false
@@ -162,17 +167,11 @@ local function GetRandomSpawnPoint()
 
         -- Attempt to find a spot that doesn't get them stuck
         local rndPos = area:GetRandomPoint()
-        local tr = util_TraceHull({
-            start = rndPos + Vector( 0, 0, 1 ),
-            endpos = rndPos + Vector( 0, 0, 2 ),
-            mins = Vector( -16, -16, 0 ),
-            maxs = Vector( 16, 16, 72 ),
-            mask = MASK_PLAYERSOLID
-        })
+        stuckTr.start = ( rndPos + vector_up * 1 )
+        stuckTr.endpos = ( rndPos + vector_up * 2 )
 
-        if !tr.Hit then
-            return rndPos
-        end
+        local tr = util_TraceHull( stuckTr )
+        if !tr.Hit then return rndPos end
     end
 
     return false
