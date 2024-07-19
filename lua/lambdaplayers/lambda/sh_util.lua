@@ -1622,7 +1622,7 @@ if ( CLIENT ) then
         local pfp = self:GetProfilePicture()
         local replace = "materials" .. string.Replace( pfp, "/", "" ):lower()
 
-        if !LocalPlayer():IsListenServerHost() and GetConVar( "lambdaplayers_lambda_downloadassets" ):GetBool() and !file.Exists( "materials/" .. pfp, "GAME" ) and !file.Exists( "lambdaplayers/fileshare/" .. replace, "DATA" ) then
+        if !LocalPlayer():IsListenServerHost() and GetConVar( "lambdaplayers_lambda_allowfilesharing" ):GetBool() and !file.Exists( "materials/" .. pfp, "GAME" ) and !file.Exists( "lambdaplayers/fileshare/" .. replace, "DATA" ) then
             LambdaRequestFile( "materials/" .. pfp, function( path )
                 local isVTF = string.EndsWith( path, ".vtf" )
                 local profilepicturematerial
