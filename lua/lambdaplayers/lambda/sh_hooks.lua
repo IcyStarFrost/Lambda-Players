@@ -704,7 +704,7 @@ if SERVER then
         [ "customrandom" ] = function( ply, lambda ) -- Same thing as Custom except the values from Sliders are used in RNG
             local tbl = {}
             for k, v in ipairs( LambdaPersonalityConVars ) do
-                tbl[ v[ 1 ] ] = LambdaRNG( ply:GetInfoNum( "lambdaplayers_personality_" .. v[ 1 ] .. "chance", 30 ) )
+                tbl[ v[ 1 ] ] = LambdaRNG( 0, ply:GetInfoNum( "lambdaplayers_personality_" .. v[ 1 ] .. "chance", 30 ) )
             end
             lambda:SetVoiceChance( LambdaRNG( 0, ply:GetInfoNum( "lambdaplayers_personality_voicechance", 30 ) ) )
             lambda:SetTextChance( LambdaRNG( 0, ply:GetInfoNum( "lambdaplayers_personality_textchance", 30 ) ) )
