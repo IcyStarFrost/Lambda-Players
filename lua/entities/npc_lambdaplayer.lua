@@ -97,9 +97,7 @@ end
         mins = collisionmins,
         maxs = standingcollisionmaxs
     }
-    local invisiblenpcs = {
-        [ "npc_enemyfinder" ] = true,
-    }
+
     local twoHandedHoldTypes = {
         [ "ar2" ] = true,
         [ "smg" ] = true,
@@ -775,7 +773,7 @@ function ENT:Think()
                 end
             elseif !self:InCombat() or self:IsPanicking() and !LambdaIsValid( self:GetEnemy() ) then
                 local npcs = self:FindInSphere( nil, 2000, function( ent )
-                    return !invisiblenpcs[ ent:GetClass() ] and ( IsValid( ent ) and ( ent:IsNPC() or ent:IsNextBot() and !self:ShouldTreatAsLPlayer( ent ) ) and self:CanTarget( ent ) and self:CanSee( ent ) )
+                    return ( IsValid( ent ) and ( ent:IsNPC() or ent:IsNextBot() and !self:ShouldTreatAsLPlayer( ent ) ) and self:CanTarget( ent ) and self:CanSee( ent ) )
                 end )
                 if #npcs != 0 then
                     local rndNpc = npcs[ LambdaRNG( #npcs ) ]

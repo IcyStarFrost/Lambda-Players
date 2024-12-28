@@ -83,6 +83,9 @@ local allowaddonmodels = GetConVar( "lambdaplayers_lambda_allowrandomaddonsmodel
 local onlyaddonmodels = GetConVar( "lambdaplayers_lambda_onlyaddonmodels" )
 local rndBodyGroups = GetConVar( "lambdaplayers_lambda_allowrandomskinsandbodygroups" )
 local allowMdlBgSets = GetConVar( "lambdaplayers_lambda_enablemdlbodygroupsets" )
+local invisiblenpcs = {
+    [ "npc_enemyfinder" ] = true,
+}
 
 ---- Anything Shared can go here ----
 
@@ -585,6 +588,8 @@ if SERVER then
         else
             return false
         end
+
+        if invisiblenpcs[ ent:GetClass() ] then return end
 
         if LambdaRunHook( "LambdaCanTarget", self, ent ) == true then return false end
         return true
